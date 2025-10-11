@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VibeXpert - Your College Social Hub</title>
+  <link rel="stylesheet" href="vibemap.css" />
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="animated-bg" id="animatedBg"></div>
+
+  <!-- Authentication Page -->
+  <div class="auth-container" id="authPage">
+    <div class="auth-box">
+      <h2 class="auth-title">VibeXpert</h2>
+      <p class="auth-subtitle">Connect • Discover • Vibe Together</p>
+
+      <div id="alertContainer"></div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Sign In</button>
+        <button class="auth-tab" data-tab="signup">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <div class="form-section active" id="login-section">
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="loginUsername">Email or Registration Number</label>
+            <input type="text" class="form-input" id="loginUsername" placeholder="Enter your email or reg number" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" required />
+          </div>
+          <button type="submit" class="auth-button">Sign In to VibeXpert</button>
+          <div class="forgot-password">
+            <a href="#">Forgot your password?</a>
+          </div>
+        </form>
+      </div>
+      <!-- Forgot Password Section -->
+<div id="forgot-section" class="form-section">
+  <h2 class="auth-title">Forgot Password</h2>
+  <form id="forgotForm">
+    <div class="form-group">
+      <label class="form-label">Enter your Email</label>
+      <input type="email" id="forgotEmail" class="form-input" placeholder="example@email.com" required>
+    </div>
+    <button type="submit" class="auth-button">Send Reset Code</button>
+  </form>
+
+  <div id="resetCodeContainer" style="display:none; margin-top:20px;">
+    <div class="form-group">
+      <label class="form-label">Enter Reset Code</label>
+      <input type="text" id="resetCodeInput" class="form-input" placeholder="6-digit code" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">New Password</label>
+      <input type="password" id="newPassword" class="form-input" placeholder="New password" required>
+    </div>
+    <button id="resetPasswordBtn" class="auth-button">Reset Password</button>
+  </div>
+
+  <p class="forgot-password"><a href="#" onclick="switchAuthTab('login')">Back to Login</a></p>
+</div>
+
+
+      <!-- Signup Form -->
+      <div class="form-section" id="signup-section">
+        <form id="signupForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="signupName">Full Name</label>
+            <input type="text" class="form-input" id="signupName" placeholder="Enter your full name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signupEmail">Email</label>
+            <input type="email" class="form-input" id="signupEmail" placeholder="Enter your email" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signupRegNumber">Registration Number</label>
+            <input type="text" class="form-input" id="signupRegNumber" placeholder="Enter your college reg number" required />
+          </div>
+
+          <!-- EXTRA FIELDS -->
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <div class="custom-options-container">
+              <label class="custom-option"><input type="radio" name="gender" value="Male" required /><span class="custom-radio"></span><span class="option-text">♂️ Male</span></label>
+              <label class="custom-option"><input type="radio" name="gender" value="Female" /><span class="custom-radio"></span><span class="option-text">♀️ Female</span></label>
+              <label class="custom-option"><input type="radio" name="gender" value="Other" /><span class="custom-radio"></span><span class="option-text">⚧️ Other</span></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <div class="custom-options-container">
+              <label class="custom-option"><input type="radio" name="usertype" value="Extrovert" required /><span class="custom-radio"></span><span class="option-text">😃 Extrovert</span></label>
+              <label class="custom-option"><input type="radio" name="usertype" value="Introvert" /><span class="custom-radio"></span><span class="option-text">🦉 Introvert</span></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Interested In</label>
+            <div class="custom-options-container checkbox-container">
+              <label class="custom-option"><input type="checkbox" name="interests" value="Games" /><span class="custom-checkbox"></span><span class="option-text">🎮 Games</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="Sports" /><span class="custom-checkbox"></span><span class="option-text">⚽ Sports</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="Music" /><span class="custom-checkbox"></span><span class="option-text">🎵 Music</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="Gossips" /><span class="custom-checkbox"></span><span class="option-text">🗨️ Gossips</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="Photos" /><span class="custom-checkbox"></span><span class="option-text">📸 Photos</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="Food" /><span class="custom-checkbox"></span><span class="option-text">🍔 Food</span></label>
+              <label class="custom-option"><input type="checkbox" name="interests" value="love" /><span class="custom-checkbox"></span><span class="option-text">❤️Love</span></label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signupHobbies">Hobbies</label>
+            <input type="text" class="form-input" id="signupHobbies" name="hobbies" placeholder="E.g. painting, football, coding" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signupPassword">Password</label>
+            <input type="password" class="form-input" id="signupPassword" placeholder="Create a password" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signupConfirmPassword">Confirm Password</label>
+            <input type="password" class="form-input" id="signupConfirmPassword" placeholder="Confirm your password" required />
+          </div>
+          <button type="submit" class="auth-button">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Page -->
+  <div class="main-page" id="mainPage" style="display:none;">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">VibeXpert</div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-page="home">Home</a>
+        <a href="#" class="nav-item" data-page="communities">Communities</a>
+        <a href="#" class="nav-item" data-page="posts">Posts</a>
+        <a href="#" class="nav-item" data-page="subscriptions">Subscriptions</a>
+        <div class="search-container">
+          <input type="text" class="search-box" placeholder="Connect to more friends..." id="searchBox" />
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </nav>
+      <div class="user-greeting" id="userGreeting">
+        <span>Hi! Welcome Back</span>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container" id="mainContent">
+      <!-- Home Content -->
+      <div class="content-section active" id="home-content">
+        <section class="welcome-section fade-in">
+          <h1 class="welcome-title">Exploring VibeXpert?</h1>
+          <p class="welcome-description">Your ultimate college community hub where stories meet, flavors connect, and friendships bloom!</p>
+          <div class="daily-users">
+            <h3>Today's Active Vibers</h3>
+            <div class="user-list">
+              <div class="user-card">Ritwik G. - Food Blogger</div>
+              <div class="user-card">Priya S. - Art Enthusiast</div>
+              <div class="user-card">Rohit M. - Tech Geek</div>
+              <div class="user-card">Sneha R. - Music Lover</div>
+              <div class="user-card">Dev P. - Sports Fan</div>
+              <div class="user-card">Amaira S. - Book Worm</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- College Section -->
+        <section class="college-section fade-in">
+          <h2 class="page-title">VIT Bhopal University</h2>
+          <div class="college-photos">
+            <div class="college-photo"><img src="Screenshot 2025-09-13 003921.png" alt="Main Campus"><div class="photo-overlay">Main Campus</div></div>
+            <div class="college-photo"><img src="Screenshot 2025-09-13 004254.png" alt="Library"><div class="photo-overlay">Library</div></div>
+            <div class="college-photo"><img src="Screenshot 2025-09-13 004439.png" alt="Sports Complex"><div class="photo-overlay">Sports Complex</div></div>
+            <div class="college-photo"><img src="Screenshot 2025-09-13 004527.png" alt="Academic Blocks"><div class="photo-overlay">Academic Blocks</div></div>
+          </div>
+
+          <!-- Canteens -->
+          <div class="canteens-section fade-in">
+            <h3 class="page-title">Campus Canteens</h3>
+            <div class="canteens-grid">
+              <div class="canteen-card"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=300&q=80"><div class="canteen-info"><h3>AB Dakshin</h3><p>South Indian delicacies</p></div></div>
+              <div class="canteen-card"><img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80"><div class="canteen-info"><h3>Bistro</h3><p>Continental and fusion</p></div></div>
+              <div class="canteen-card"><img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=300&q=80"><div class="canteen-info"><h3>Mayuri</h3><p>Traditional Indian flavors</p></div></div>
+              <div class="canteen-card"><img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=300&q=80"><div class="canteen-info"><h3>Underbelly</h3><p>Street food paradise</p></div></div>
+              <div class="canteen-card"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=300&q=80"><div class="canteen-info"><h3>Safal</h3><p>Healthy & nutritious meals</p></div></div>
+            </div>
+          </div>
+
+          <!-- Posts -->
+          <div class="posts-section fade-in">
+            <h3 class="page-title">Latest Canteen Buzz</h3>
+            <div class="posts-container">
+              <div class="post"><div class="post-header"><div class="post-author">@foodie_raj</div><div class="post-time">2h ago</div></div><p>"Mysore Masala Dosa at AB Dakshin is 🔥"</p></div>
+              <div class="post"><div class="post-header"><div class="post-author">@hangry_student</div><div class="post-time">4h ago</div></div><p>"Bistro pasta night every Thursday 😋"</p></div>
+              <div class="post"><div class="post-header"><div class="post-author">@spice_lover</div><div class="post-time">6h ago</div></div><p>"Mayuri’s weekend thali feels like home"</p></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Other Pages -->
+      <div class="content-section" id="communities-content"><h2 class="page-title">Communities</h2><p class="page-description">Join communities based on your interests and connect with like-minded people.</p><div class="coming-soon"><h3>Coming Soon!</h3><p>We're working on amazing features.</p></div></div>
+      <div class="content-section" id="posts-content"><h2 class="page-title">Posts</h2><p class="page-description">Share your thoughts with your college community.</p><div class="coming-soon"><h3>Coming Soon!</h3></div></div>
+      <div class="content-section" id="subscriptions-content"><h2 class="page-title">Subscriptions</h2><p class="page-description">Manage your subscriptions easily.</p><div class="coming-soon"><h3>Coming Soon!</h3></div></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <h3>About Us</h3>
+        <p>VibeXpert connects VIT Bhopal students through shared experiences, food discoveries, and meaningful conversations.</p>
+        <p><strong>Created by:</strong>friends</p>
+        <p><strong>Email:</strong> <a href="mailto:smirfan9247@gmail.com">smirfan9247@gmail.com</a></p>
+        <p><strong>NAME:</strong>IRFAN.SM,RITWIK.G</p>
+        <p>© 2025 VibeXpert</p>
+      </div>
+    </footer>
+  </div>
+    ...
+  <script src="vibe1.js"></script>
+
+  <!-- 🎉 Signup Success Modal -->
+  <div id="signupPopup" class="popup-overlay">
+    <div class="popup-box">
+      <h2 id="popupTitle">Congratulations!</h2>
+      <p id="popupMessage">Thank you for signing up to VibeXpert.</p>
+      <button id="closePopup">OK</button>
+    </div>
+  </div>
+  <script src="vibemap.js"></script>
+</body>
+</html>
