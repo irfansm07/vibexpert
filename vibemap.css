@@ -379,6 +379,59 @@ body.light-theme .search-box {
   white-space: nowrap;
 }
 
+.options-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px;
+  transition: all 0.3s ease;
+}
+
+.options-btn span {
+  width: 24px;
+  height: 2.5px;
+  background: #4f74a3;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.options-btn:hover span {
+  background: #8da4d3;
+}
+
+.options-btn.active span:nth-child(1) {
+  transform: rotate(45deg) translate(8px, 8px);
+}
+
+.options-btn.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.options-btn.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+.options-menu {
+  position: absolute;
+  top: 65px;
+  right: 0;
+  background: rgba(15, 25, 45, 0.98);
+  border: 1px solid rgba(79, 116, 163, 0.2);
+  border-radius: 12px;
+  min-width: 240px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  animation: slideInDown 0.3s ease;
+  overflow: hidden;
+}
+
+body.light-theme .options-menu {
+  background: rgba(255, 255, 255, 0.98);
+}
+
 .hamburger-btn {
   background: none;
   border: none;
@@ -437,6 +490,7 @@ body.light-theme .hamburger-menu {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.options-menu .menu-item,
 .hamburger-menu .menu-item {
   padding: 14px 16px;
   color: #d0d0d0;
@@ -447,26 +501,31 @@ body.light-theme .hamburger-menu {
   font-size: 14px;
 }
 
+body.light-theme .options-menu .menu-item,
 body.light-theme .hamburger-menu .menu-item {
   color: #333;
 }
 
+.options-menu .menu-item:hover,
 .hamburger-menu .menu-item:hover {
   background: rgba(79, 116, 163, 0.1);
   color: #4f74a3;
   padding-left: 20px;
 }
 
+.options-menu .menu-item.logout,
 .hamburger-menu .menu-item.logout {
   color: #ff6b6b;
   border-bottom: none;
 }
 
+.options-menu .menu-item.logout:hover,
 .hamburger-menu .menu-item.logout:hover {
   background: rgba(255, 107, 107, 0.1);
   color: #ff8787;
 }
 
+.options-menu hr,
 .hamburger-menu hr {
   border: none;
   height: 1px;
@@ -1390,9 +1449,32 @@ body.light-theme footer {
   color: #666;
 }
 
-/* MOBILE RESPONSIVE - 768px and below */
+@media (min-width: 1025px) {
+  .options-btn {
+    display: flex;
+  }
+
+  .hamburger-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .options-btn {
+    display: flex;
+  }
+
+  .hamburger-btn {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .nav {
+    display: none;
+  }
+
+  .options-btn {
     display: none;
   }
 
