@@ -218,6 +218,9 @@ function showPage(name, e) {
     loadCommunities();
   }
   
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  
   window.scrollTo(0, 0);
 }
 
