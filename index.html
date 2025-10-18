@@ -130,17 +130,35 @@
       <input type="text" class="search-box" placeholder="Search...">
       <span class="user-name" id="userName">Hi, User</span>
       
-      <!-- THREE-LINE HAMBURGER MENU -->
+      <!-- DESKTOP/TABLET OPTIONS MENU -->
+      <button class="options-btn" onclick="toggleOptionsMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- OPTIONS DROPDOWN MENU (Desktop/Tablet) -->
+      <div class="options-menu" id="optionsMenu" style="display:none;">
+        <div class="menu-item" onclick="showProfileModal()">👤 Profile</div>
+        <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
+        <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
+        <hr>
+        <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+      </div>
+
+      <!-- MOBILE HAMBURGER MENU -->
       <button class="hamburger-btn" onclick="toggleHamburgerMenu()">
         <span></span>
         <span></span>
         <span></span>
       </button>
 
-      <!-- HAMBURGER DROPDOWN MENU -->
+      <!-- HAMBURGER DROPDOWN MENU (Mobile Only) -->
       <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
         <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
         <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
+        <div class="menu-item" onclick="showPage('communityPlus', event)">🔒 Community Plus</div>
         <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
         <div class="menu-item" onclick="showPage('subscriptions', event)">⭐ Subscriptions</div>
         <hr>
