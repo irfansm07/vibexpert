@@ -294,8 +294,6 @@ body.light-theme .auth-box form label {
   padding: 15px 30px;
   z-index: 100;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 body.light-theme .header {
@@ -317,8 +315,6 @@ body.light-theme .header {
   gap: 20px;
   flex: 1;
   margin: 0 40px;
-  order: 3;
-  width: 100%;
 }
 
 .nav-link {
@@ -1394,26 +1390,24 @@ body.light-theme footer {
   color: #666;
 }
 
-/* MOBILE RESPONSIVE */
-@media (max-width: 1024px) {
-  .nav {
-    display: flex !important;
-  }
-}
-
+/* MOBILE RESPONSIVE - 768px and below */
 @media (max-width: 768px) {
   .nav {
-    display: none !important;
-    order: 3;
-    width: 100%;
+    display: none;
   }
 
   .hamburger-btn {
-    display: flex !important;
+    display: flex;
   }
 
   .header {
+    flex-wrap: wrap;
     padding: 12px 15px;
+  }
+
+  .header-right {
+    width: 100%;
+    margin-top: 12px;
   }
 
   .search-box {
@@ -1423,11 +1417,6 @@ body.light-theme footer {
 
   .user-name {
     display: none;
-  }
-
-  .header-right {
-    width: 100%;
-    justify-content: space-between;
   }
 
   .hero {
@@ -1484,7 +1473,12 @@ body.light-theme footer {
   }
 
   .content {
-    padding: 15px 10px;
+    margin: 20px auto;
+    padding: 0 10px;
+  }
+
+  .auth-box {
+    padding: 25px 20px;
   }
 
   .modal-box {
