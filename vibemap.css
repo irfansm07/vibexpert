@@ -1588,40 +1588,101 @@ body.light-theme footer {
 
 
 
-/* Responsive improvements for VibeXpert */
+/* =====================
+   RESPONSIVE ENHANCEMENTS
+   ===================== */
 
+/* Tablet and medium screens */
 @media (max-width: 1024px) {
   .header, .auth-box, .hero, .cards, .post-box, .content {
     padding: 20px !important;
   }
+
   .cards, .colleges, .sub-cards, .postsFeed {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
   }
 }
 
+/* Mobile view adjustments */
 @media (max-width: 768px) {
-  .nav {display: none !important;}
-  .hamburger-btn {display: flex !important;}
+  .nav { display: none !important; }
+  .hamburger-btn { display: flex !important; }
+
   .auth-box, .modal-box, .hero, .card, .sub-card, .college-item {
     width: 100% !important;
     max-width: 95% !important;
   }
-  .hero h1 {font-size: 28px !important;}
-  .hero p {font-size: 16px !important;}
-  .header-right {width: 100%; justify-content: center; margin-top: 10px;}
-  .search-box {width: 100% !important;}
-  .content {padding: 10px 15px !important;}
+
+  .hero h1 {
+    font-size: 28px !important;
+  }
+
+  .hero p {
+    font-size: 16px !important;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .search-box {
+    width: 100% !important;
+  }
+
+  .content {
+    padding: 10px 15px !important;
+  }
+
+  .sub-cards,
+  .cards,
+  .colleges {
+    grid-template-columns: 1fr !important;
+  }
+
+  .auth-box form input,
+  .auth-box button {
+    width: 100% !important;
+  }
 }
 
+/* Small mobile and compact view */
 @media (max-width: 480px) {
-  .hero {padding: 20px 10px !important;}
-  .hero h1 {font-size: 22px !important;}
-  .auth-box {padding: 20px 15px !important;}
-  .auth-box h1 {font-size: 28px !important;}
-  .auth-box input, .auth-box button {font-size: 14px !important; padding: 12px !important;}
-  .title {font-size: 22px !important;}
-  .card h3, .sub-card h3 {font-size: 18px !important;}
-  .footer {font-size: 12px !important;}
+  .hero {
+    padding: 20px 10px !important;
+  }
+
+  .hero h1 {
+    font-size: 22px !important;
+  }
+
+  .auth-box {
+    padding: 20px 15px !important;
+  }
+
+  .auth-box h1 {
+    font-size: 28px !important;
+  }
+
+  .auth-box input,
+  .auth-box button {
+    font-size: 14px !important;
+    padding: 12px !important;
+  }
+
+  .title {
+    font-size: 22px !important;
+  }
+
+  .card h3,
+  .sub-card h3 {
+    font-size: 18px !important;
+  }
+
+  footer {
+    font-size: 12px !important;
+  }
 }
 
 
