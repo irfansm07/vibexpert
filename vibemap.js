@@ -1,4 +1,4 @@
-// VIBEXPERT - UPDATED WITH FORGOT PASSWORD & BUZZ FEATURES
+// VIBEXPERT - COMPLETE JAVASCRIPT WITH PROFILE PAGE
 
 let currentUser = null;
 let currentType = null;
@@ -10,7 +10,7 @@ let allColleges = [];
 const colleges = {
   nit: [
     {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
-    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourzela'},
     {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
     {name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur'},
     {name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur'},
@@ -55,27 +55,12 @@ const colleges = {
   ]
 };
 
-const activityMessages = [
-  '🎉 Priya joined NIT Bhopal community',
-  '📝 Rahul posted in IIT Delhi group',
-  '❤️ Isha liked a photo from VIT Pune',
-  '💬 Arjun commented on a post',
-  '✨ Sara started a new discussion',
-  '🔥 Post is trending in communities',
-  '🎓 New member joined the platform',
-  '🚀 Discussion gaining momentum',
-  '💡 Someone shared a helpful tip',
-  '🌟 Active member celebrating 1000 posts'
-];
-
 // INIT
 document.addEventListener('DOMContentLoaded', function() {
   initCursor();
   checkUser();
   loadTheme();
-  if(currentUser) {
-    initBuzzSection();
-  }
+  initProfilePage();
 });
 
 // CURSOR CHAIN
@@ -113,46 +98,6 @@ function initCursor() {
   });
 }
 
-// BUZZ SECTION - ACTIVE USERS & ACTIVITY
-function initBuzzSection() {
-  updateBuzzNumbers();
-  generateLiveActivity();
-  setInterval(updateBuzzNumbers, 5000);
-  setInterval(generateLiveActivity, 8000);
-}
-
-function updateBuzzNumbers() {
-  const activeUsers = Math.floor(Math.random() * (3000 - 1500)) + 1500;
-  const postsCount = Math.floor(Math.random() * (2500 - 1000)) + 1000;
-  const streakCount = Math.floor(Math.random() * (500 - 200)) + 200;
-  
-  const activeUsersEl = document.getElementById('activeUsersCount');
-  const postsEl = document.getElementById('postsCountBuzz');
-  const streakEl = document.getElementById('streakCountBuzz');
-  
-  if(activeUsersEl) activeUsersEl.textContent = activeUsers.toLocaleString();
-  if(postsEl) postsEl.textContent = postsCount.toLocaleString();
-  if(streakEl) streakEl.textContent = streakCount.toLocaleString();
-}
-
-function generateLiveActivity() {
-  const activityList = document.getElementById('activityList');
-  if(!activityList) return;
-  
-  const newActivity = activityMessages[Math.floor(Math.random() * activityMessages.length)];
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  const activityItem = document.createElement('div');
-  activityItem.className = 'activity-item';
-  activityItem.innerHTML = `${newActivity} <span class="time">${time}</span>`;
-  
-  activityList.insertBefore(activityItem, activityList.firstChild);
-  
-  if(activityList.children.length > 8) {
-    activityList.removeChild(activityList.lastChild);
-  }
-}
-
 // AUTH
 function login(e) {
   e.preventDefault();
@@ -173,28 +118,7 @@ function login(e) {
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
     document.getElementById('loginForm').reset();
-    initBuzzSection();
   }, 800);
-}
-
-// FORGOT PASSWORD
-function showForgotPasswordModal() {
-  document.getElementById('forgotPasswordModal').style.display = 'flex';
-}
-
-function sendResetEmail() {
-  const email = document.getElementById('resetEmail').value.trim();
-  
-  if(!email) {
-    msg('Enter email or registration number', 'error');
-    return;
-  }
-  
-  msg('Password reset link sent to ' + email, 'success');
-  document.getElementById('resetEmail').value = '';
-  setTimeout(() => {
-    closeModal('forgotPasswordModal');
-  }, 1000);
 }
 
 function signup(e) {
@@ -240,7 +164,6 @@ function signup(e) {
     document.getElementById('userName').textContent = 'Hi, ' + name;
     document.getElementById('signupForm').reset();
     goLogin();
-    initBuzzSection();
   }, 800);
 }
 
@@ -290,8 +213,8 @@ function showPage(name, e) {
   
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn')?.classList.remove('active');
-  document.querySelector('.hamburger-btn')?.classList.remove('active');
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
   
   window.scrollTo(0, 0);
 }
@@ -508,25 +431,12 @@ document.addEventListener('click', (e) => {
 });
 
 // MODALS
-function showProfileModal() {
-  if(currentUser) {
-    document.getElementById('profileName').textContent = currentUser.name || 'N/A';
-    document.getElementById('profileEmail').textContent = currentUser.email || 'N/A';
-    document.getElementById('profileReg').textContent = currentUser.reg || 'N/A';
-  }
-  document.getElementById('profileModal').style.display = 'flex';
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn')?.classList.remove('active');
-  document.querySelector('.hamburger-btn')?.classList.remove('active');
-}
-
 function showComplaintModal() {
   document.getElementById('complaintModal').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn')?.classList.remove('active');
-  document.querySelector('.hamburger-btn')?.classList.remove('active');
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
 }
 
 function submitComplaint() {
@@ -563,8 +473,8 @@ function toggleTheme() {
   }
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn')?.classList.remove('active');
-  document.querySelector('.hamburger-btn')?.classList.remove('active');
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
   msg('Theme updated!', 'success');
 }
 
@@ -577,8 +487,8 @@ function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn')?.classList.remove('active');
-  document.querySelector('.hamburger-btn')?.classList.remove('active');
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
 }
 
 function showPhotoModal() {
@@ -679,6 +589,308 @@ function loadChatMessages() {
   
   messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">No messages yet. Start the conversation!</div>';
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// ===== PROFILE PAGE FUNCTIONS =====
+
+function showProfilePage() {
+  loadProfileData();
+  document.getElementById('profilePageModal').style.display = 'flex';
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  window.scrollTo(0, 0);
+}
+
+function loadProfileData() {
+  loadProfileBasicInfo();
+  loadProfileStats();
+  loadUserPosts();
+  loadProfileLikes();
+}
+
+function loadProfileBasicInfo() {
+  if(!currentUser) return;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  
+  document.getElementById('profileDisplayName').textContent = currentUser.name || 'User';
+  document.getElementById('nicknameValue').textContent = profileData.nickname || currentUser.name;
+  document.getElementById('profileDescriptionText').textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  
+  document.getElementById('editNickname').value = profileData.nickname || '';
+  document.getElementById('editDescription').value = profileData.description || '';
+  
+  updateCharCounts();
+}
+
+function loadProfileStats() {
+  if(!currentUser) return;
+  
+  let userPosts = getUserPosts();
+  document.getElementById('profilePostsCount').textContent = userPosts.length;
+  
+  let profileLikes = getProfileLikes();
+  document.getElementById('profileLikesCount').textContent = profileLikes.length;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  let activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
+  document.getElementById('usedHoursCount').textContent = activeHours + 'h';
+}
+
+function getUserPosts() {
+  let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+  return allPosts.filter(p => p.author === currentUser.name);
+}
+
+function getProfileLikes() {
+  let likes = JSON.parse(localStorage.getItem('profileLikes_' + currentUser.email) || '[]');
+  return likes;
+}
+
+function loadUserPosts() {
+  let userPosts = getUserPosts();
+  let container = document.getElementById('userPostsContainer');
+  let noPostsMsg = document.getElementById('noPostsMessage');
+  
+  if(userPosts.length === 0) {
+    container.innerHTML = '';
+    noPostsMsg.style.display = 'block';
+  } else {
+    noPostsMsg.style.display = 'none';
+    container.innerHTML = '';
+    
+    userPosts.reverse().forEach((post, index) => {
+      let postHtml = `
+        <div class="user-post-card">
+          <div class="post-header">
+            <span class="post-time">${post.time}</span>
+            <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
+          </div>
+          <div class="post-content">${escapeHtml(post.text)}</div>
+          <div class="post-stats">
+            <span>Posted</span>
+          </div>
+        </div>
+      `;
+      container.innerHTML += postHtml;
+    });
+  }
+}
+
+function deleteUserPost(index) {
+  if(confirm('Are you sure you want to delete this post?')) {
+    let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+    let userPosts = allPosts.filter(p => p.author === currentUser.name);
+    
+    userPosts.reverse();
+    userPosts.splice(index, 1);
+    userPosts.reverse();
+    
+    let otherPosts = allPosts.filter(p => p.author !== currentUser.name);
+    let finalPosts = otherPosts.concat(userPosts);
+    
+    localStorage.setItem('posts', JSON.stringify(finalPosts));
+    loadUserPosts();
+    msg('Post deleted!', 'success');
+  }
+}
+
+function loadProfileLikes() {
+  let likes = getProfileLikes();
+  let container = document.getElementById('profileLikesContainer');
+  let noLikesMsg = document.getElementById('noLikesMessage');
+  
+  if(likes.length === 0) {
+    container.innerHTML = '';
+    noLikesMsg.style.display = 'block';
+  } else {
+    noLikesMsg.style.display = 'none';
+    container.innerHTML = '';
+    
+    likes.forEach(like => {
+      let likeHtml = `
+        <div class="like-card">
+          <div class="like-avatar">👤</div>
+          <div class="like-name">${escapeHtml(like.userName)}</div>
+          <div class="like-time">${like.time || 'Recently'}</div>
+        </div>
+      `;
+      container.innerHTML += likeHtml;
+    });
+  }
+}
+
+function openEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function cancelEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'none';
+  loadProfileBasicInfo();
+}
+
+function saveProfile() {
+  let nickname = document.getElementById('editNickname').value.trim();
+  let description = document.getElementById('editDescription').value.trim();
+  
+  if(!nickname) {
+    msg('Nickname cannot be empty', 'error');
+    return;
+  }
+  
+  if(!description) {
+    msg('Description cannot be empty', 'error');
+    return;
+  }
+  
+  if(nickname.length > 25) {
+    msg('Nickname must be less than 25 characters', 'error');
+    return;
+  }
+  
+  if(description.length > 150) {
+    msg('Description must be less than 150 characters', 'error');
+    return;
+  }
+  
+  let profileData = {
+    nickname: nickname,
+    description: description,
+    activeHours: JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}').activeHours || Math.floor(Math.random() * 24) + 1
+  };
+  
+  localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+  
+  msg('Profile updated successfully!', 'success');
+  document.getElementById('editProfileSection').style.display = 'none';
+  loadProfileBasicInfo();
+  loadProfileStats();
+}
+
+function updateCharCounts() {
+  let nicknameInput = document.getElementById('editNickname');
+  let descriptionInput = document.getElementById('editDescription');
+  
+  if(nicknameInput) {
+    nicknameInput.addEventListener('input', function() {
+      document.getElementById('nicknameCharCount').textContent = this.value.length + '/25';
+    });
+  }
+  
+  if(descriptionInput) {
+    descriptionInput.addEventListener('input', function() {
+      document.getElementById('descCharCount').textContent = this.value.length + '/150';
+    });
+  }
+}
+
+function switchProfileTab(tabName) {
+  document.querySelectorAll('.profile-tab-content').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.display = 'none';
+  });
+  
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  if(tabName === 'posts') {
+    let postsTab = document.getElementById('postsTab');
+    if(postsTab) {
+      postsTab.classList.add('active');
+      postsTab.style.display = 'block';
+    }
+  } else if(tabName === 'likes') {
+    let likesTab = document.getElementById('likesTab');
+    if(likesTab) {
+      likesTab.classList.add('active');
+      likesTab.style.display = 'block';
+    }
+  }
+  
+  event.target.classList.add('active');
+}
+
+function likeUserProfile(userName, userEmail) {
+  if(!currentUser) {
+    msg('Please login first', 'error');
+    return;
+  }
+  
+  if(currentUser.name === userName) {
+    msg('You cannot like your own profile', 'error');
+    return;
+  }
+  
+  let like = {
+    userName: currentUser.name,
+    time: new Date().toLocaleDateString()
+  };
+  
+  let likes = JSON.parse(localStorage.getItem('profileLikes_' + userEmail) || '[]');
+  
+  let alreadyLiked = likes.some(l => l.userName === currentUser.name);
+  
+  if(alreadyLiked) {
+    msg('You already liked this profile', 'error');
+    return;
+  }
+  
+  likes.push(like);
+  localStorage.setItem('profileLikes_' + userEmail, JSON.stringify(likes));
+  msg('Profile liked!', 'success');
+}
+
+function escapeHtml(text) {
+  let map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function updateActiveStatus() {
+  let activeText = document.getElementById('activeText');
+  let now = new Date().getHours();
+  
+  if(now >= 9 && now <= 23) {
+    activeText.textContent = 'Active Now';
+  } else {
+    activeText.textContent = 'Away';
+  }
+}
+
+function initProfilePage() {
+  updateActiveStatus();
+  
+  let nicknameInput = document.getElementById('editNickname');
+  let descriptionInput = document.getElementById('editDescription');
+  
+  if(nicknameInput) {
+    nicknameInput.addEventListener('input', function() {
+      let countElem = document.getElementById('nicknameCharCount');
+      if(countElem) countElem.textContent = this.value.length + '/25';
+    });
+  }
+  
+  if(descriptionInput) {
+    descriptionInput.addEventListener('input', function() {
+      let countElem = document.getElementById('descCharCount');
+      if(countElem) countElem.textContent = this.value.length + '/150';
+    });
+  }
+  
+  let postsTab = document.getElementById('postsTab');
+  if(postsTab) {
+    postsTab.classList.add('active');
+    postsTab.style.display = 'block';
+  }
 }
 
 // MESSAGES
