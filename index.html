@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no">
   <title>VibeXpert</title>
   <link rel="stylesheet" href="vibemap.css">
 </head>
@@ -14,27 +14,98 @@
     <div class="auth-box">
       <h1>VibeXpert</h1>
       <p>Connect With The Verse</p>
+      
       <div id="message"></div>
 
       <!-- LOGIN FORM -->
       <form id="loginForm" onsubmit="login(event)">
         <h2>Login</h2>
-        <input type="email" id="loginEmail" placeholder="Email or Reg Number" required>
+        <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button type="submit">Login</button>
-        <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
+        <p>Don't have account? <a href="#" onclick="goSignup()">Sign Up</a></p>
       </form>
 
-      <!-- SIGNUP FORM -->
+      <!-- SIGNUP FORM (HIDDEN) -->
       <form id="signupForm" onsubmit="signup(event)" style="display:none;">
         <h2>Create Account</h2>
+        
         <input type="text" id="signupName" placeholder="Full Name" required>
         <input type="email" id="signupEmail" placeholder="Email" required>
         <input type="text" id="signupReg" placeholder="Registration Number" required>
+        
+        <!-- GENDER SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
+        <div style="display:flex; gap:15px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
+            👨 Male
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Female" style="cursor:pointer;">
+            👩 Female
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Other" style="cursor:pointer;">
+            🌈 Other
+          </label>
+        </div>
+
+        <!-- TYPE SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Type</label>
+        <div style="display:flex; gap:15px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="type" value="Extrovert" required style="cursor:pointer;">
+            😊 Extrovert
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="type" value="Introvert" style="cursor:pointer;">
+            🎧 Introvert
+          </label>
+        </div>
+
+        <!-- INTERESTS SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Interested In</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Games" style="cursor:pointer;">
+            🎮 Games
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Sports" style="cursor:pointer;">
+            ⚽ Sports
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Music" style="cursor:pointer;">
+            🎵 Music
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Gossips" style="cursor:pointer;">
+            💬 Gossips
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Photos" style="cursor:pointer;">
+            📸 Photos
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Food" style="cursor:pointer;">
+            🍕 Food
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Love" style="cursor:pointer;">
+            ❤️ Love
+          </label>
+        </div>
+
+        <!-- HOBBIES -->
+        <input type="text" id="signupHobbies" placeholder="E.g. painting, football, coding" style="margin-bottom:14px; width:100%; padding:14px 16px; border:2px solid rgba(79, 116, 163, 0.3); background:rgba(20, 30, 50, 0.8); color:white; border-radius:10px; font-size:15px; transition:all 0.3s ease;">
+
+        <!-- PASSWORD -->
         <input type="password" id="signupPass" placeholder="Password" required>
         <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
-        <button type="submit">Sign Up</button>
-        <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
+        
+        <button type="submit">Create Account</button>
+        <p>Already have account? <a href="#" onclick="goLogin()">Login</a></p>
       </form>
     </div>
   </div>
@@ -42,70 +113,70 @@
 
 <!-- MAIN PAGE -->
 <div id="mainPage" class="main-page" style="display:none;">
-
+  
   <!-- HEADER -->
   <header class="header">
     <div class="logo" onclick="goHome()">VibeXpert</div>
-
+    
     <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
-      <a href="#" class="nav-link" onclick="showPage('universities', event)">Universities</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
+      <a href="#" class="nav-link" onclick="showPage('communityPlus', event)">Community Plus</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
       <a href="#" class="nav-link" onclick="showPage('subscriptions', event)">Subscriptions</a>
     </nav>
 
     <div class="header-right">
       <input type="text" class="search-box" placeholder="Search...">
+      <span class="user-name" id="userName">Hi, User</span>
       
-      <!-- USER PROFILE -->
-      <div class="profile-area" onclick="toggleMenu()">
-        <div class="avatar" id="avatarInitials">U</div>
-        <div class="hamburger">
-          <span></span><span></span><span></span>
-        </div>
-      </div>
+      <!-- THREE-LINE HAMBURGER MENU -->
+      <button class="hamburger-btn" onclick="toggleHamburgerMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
-      <!-- DROPDOWN MENU -->
-      <div class="menu" id="menu" style="display:none;">
-        <div class="menu-header">Settings</div>
+      <!-- HAMBURGER DROPDOWN MENU -->
+      <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
+        <div class="menu-item" onclick="showProfileModal()">👤 Profile</div>
+        <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
         <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
-        <div class="menu-item" onclick="showChatbot()">🤖 Chatbot</div>
         <hr>
         <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
       </div>
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
+  <!-- CONTENT -->
   <main class="content">
 
     <!-- HOME -->
     <section id="home" class="page active">
       <div class="hero">
-        <h1>Welcome to <span>VibeXpert</span></h1>
-        <p>Connect, Collaborate, and Celebrate Campus Life 🚀</p>
+        <h1>Welcome to VibeXpert</h1>
+        <p>Connect with students across 500+ universities!</p>
       </div>
 
-      <h2 class="title">Top Colleges</h2>
-      <div class="cards" id="topColleges">
-        <div class="card" onclick="selectUniversity('vit')">
-          <div class="icon">🎓</div>
-          <h3>VIT Colleges</h3>
-          <p>Engineering the Future</p>
+      <h2 class="title">500+ Active Universities</h2>
+      <div class="cards">
+        <div class="card" onclick="selectUniversity('nit')">
+          <div class="icon">🏛️</div>
+          <h3>NIT Colleges</h3>
+          <p>National Institutes of Technology</p>
           <button>Explore</button>
         </div>
         <div class="card" onclick="selectUniversity('iit')">
           <div class="icon">🏰</div>
           <h3>IIT Colleges</h3>
-          <p>Innovate & Inspire</p>
+          <p>Indian Institutes of Technology</p>
           <button>Explore</button>
         </div>
-        <div class="card" onclick="selectUniversity('nit')">
-          <div class="icon">🏛️</div>
-          <h3>NIT Colleges</h3>
-          <p>National Innovation Hub</p>
+        <div class="card" onclick="selectUniversity('vit')">
+          <div class="icon">🎓</div>
+          <h3>VIT Colleges</h3>
+          <p>VIT Bhopal & Other Campuses</p>
           <button>Explore</button>
         </div>
         <div class="card" onclick="selectUniversity('other')">
@@ -157,21 +228,27 @@
 
     <!-- COMMUNITIES -->
     <section id="communities" class="page" style="display:none;">
-      <h2 class="title">Communities</h2>
-      <div id="communitiesContent"></div>
-    </section>
-
-    <!-- COMMUNITY CHAT -->
-    <section id="communityChat" class="page" style="display:none;">
-      <div class="chat-container">
-        <div class="chat-header">
-          <h2 id="communityName">Community Chat</h2>
-          <button class="back-btn-chat" onclick="backToCommunities()">← Back</button>
+      <h2 class="title">Join Communities</h2>
+      <div class="cards">
+        <div class="card" onclick="selectUniversity('nit')">
+          <div class="icon">🏛️</div>
+          <h3>NIT Communities</h3>
+          <button>Browse</button>
         </div>
-        <div id="chatMessages" class="chat-messages"></div>
-        <div class="chat-input-box">
-          <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
-          <button onclick="sendMessage()" class="send-btn">Send</button>
+        <div class="card" onclick="selectUniversity('iit')">
+          <div class="icon">🏰</div>
+          <h3>IIT Communities</h3>
+          <button>Browse</button>
+        </div>
+        <div class="card" onclick="selectUniversity('vit')">
+          <div class="icon">🎓</div>
+          <h3>VIT Communities</h3>
+          <button>Browse</button>
+        </div>
+        <div class="card" onclick="selectUniversity('other')">
+          <div class="icon">🌟</div>
+          <h3>Other Communities</h3>
+          <button>Browse</button>
         </div>
       </div>
     </section>
@@ -271,11 +348,22 @@
   </div>
 </div>
 
-<div id="successModal" class="modal" style="display:none;">
-  <div class="modal-box celebration">
-    <h2>🎉 Congratulations!</h2>
-    <p id="successMessage"></p>
-    <button onclick="goToCommunityChat()">Enter Community</button>
+<div id="profileModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('profileModal')">&times;</span>
+    <h2>My Profile</h2>
+    <p><strong>Name:</strong> <span id="profileName">Loading...</span></p>
+    <p><strong>Email:</strong> <span id="profileEmail">Loading...</span></p>
+    <p><strong>Registration:</strong> <span id="profileReg">Loading...</span></p>
+  </div>
+</div>
+
+<div id="complaintModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('complaintModal')">&times;</span>
+    <h2>Submit Complaint</h2>
+    <textarea id="complaintText" placeholder="Describe your complaint..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
+    <button onclick="submitComplaint()">Submit Complaint</button>
   </div>
 </div>
 
