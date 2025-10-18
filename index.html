@@ -24,6 +24,7 @@
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button type="submit">Login</button>
         <p>Don't have account? <a href="#" onclick="goSignup()">Sign Up</a></p>
+        <p style="text-align: center; margin-top: 10px;"><a href="#" onclick="showForgotPasswordModal()" style="color: #8da4d3; text-decoration: none; font-size: 13px;">Forgot Password?</a></p>
       </form>
 
       <!-- SIGNUP FORM (HIDDEN) -->
@@ -180,6 +181,42 @@
       <div class="hero">
         <h1>Welcome to VibeXpert</h1>
         <p>Connect with students across 500+ universities!</p>
+      </div>
+
+      <!-- ACTIVE USERS BUZZ SECTION -->
+      <div class="buzz-section">
+        <div class="buzz-header">
+          <h2>🔥 What's Buzzing Right Now</h2>
+          <p>See what's trending in your community</p>
+        </div>
+        <div class="buzz-cards">
+          <div class="buzz-card">
+            <div class="buzz-icon">👥</div>
+            <div class="buzz-count" id="activeUsersCount">2,547</div>
+            <div class="buzz-label">Active Users Online</div>
+          </div>
+          <div class="buzz-card">
+            <div class="buzz-icon">💬</div>
+            <div class="buzz-count" id="postsCountBuzz">1,823</div>
+            <div class="buzz-label">Posts This Week</div>
+          </div>
+          <div class="buzz-card">
+            <div class="buzz-icon">🎓</div>
+            <div class="buzz-count">500+</div>
+            <div class="buzz-label">Universities Connected</div>
+          </div>
+          <div class="buzz-card">
+            <div class="buzz-icon">⚡</div>
+            <div class="buzz-count" id="streakCountBuzz">348</div>
+            <div class="buzz-label">Daily Active Streaks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE ACTIVITY SECTION -->
+      <div class="live-activity">
+        <h2>⏱️ Live Activity Feed</h2>
+        <div class="activity-list" id="activityList"></div>
       </div>
 
       <h2 class="title">500+ Active Universities</h2>
@@ -349,6 +386,17 @@
 </div>
 
 <!-- MODALS -->
+<div id="forgotPasswordModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+    <h2>Reset Password</h2>
+    <p>Enter your email or registration number to reset your password</p>
+    <input type="text" id="resetEmail" placeholder="Email or Reg Number" style="margin-bottom:15px;">
+    <button onclick="sendResetEmail()" style="margin-bottom:10px;">Send Reset Link</button>
+    <p style="text-align:center; font-size:12px; color:#a0a0a0; margin-top:15px;">Check your email for password reset instructions</p>
+  </div>
+</div>
+
 <div id="verifyModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('verifyModal')">&times;</span>
