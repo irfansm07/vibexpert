@@ -1,210 +1,242 @@
-// VIBEXPERT - COMPLETE RESPONSIVE JAVASCRIPT
-// One joined college per user | Connect from Home | Communities enforcement
-
-const colleges = {
-  nit: [
-    { name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal' },
-    { name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela' },
-    { name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal' },
-    { name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur' },
-    { name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur' },
-    { name: 'NIT Srinagar', email: 'nit.srinagar@edu.in', location: 'Srinagar' },
-    { name: 'NIT Hamirpur', email: 'nit.hamirpur@edu.in', location: 'Hamirpur' },
-    { name: 'NIT Jalandhar', email: 'nit.jalandhar@edu.in', location: 'Jalandhar' },
-  ],
-  iit: [
-    { name: 'IIT Delhi', email: 'iit.delhi@edu.in', location: 'New Delhi' },
-    { name: 'IIT Bombay', email: 'iit.bombay@edu.in', location: 'Mumbai' },
-    { name: 'IIT Madras', email: 'iit.madras@edu.in', location: 'Chennai' },
-    { name: 'IIT Kharagpur', email: 'iit.kharagpur@edu.in', location: 'Kharagpur' },
-    { name: 'IIT Kanpur', email: 'iit.kanpur@edu.in', location: 'Kanpur' },
-    { name: 'IIT Roorkee', email: 'iit.roorkee@edu.in', location: 'Roorkee' },
-  ],
-  vit: [
-    { name: 'VIT Bhopal', email: 'vitbhopal@vit.ac.in', location: 'Bhopal' },
-    { name: 'VIT Vellore', email: 'vitvellore@vit.ac.in', location: 'Vellore' },
-    { name: 'VIT Chennai', email: 'vitchennai@vit.ac.in', location: 'Chennai' },
-    { name: 'VIT Pune', email: 'vitpune@vit.ac.in', location: 'Pune' },
-  ],
-  other: [
-    { name: 'Delhi University', email: 'du@delhi.edu.in', location: 'New Delhi' },
-    { name: 'Mumbai University', email: 'mu@mumbai.edu.in', location: 'Mumbai' },
-    { name: 'Bangalore University', email: 'bu@bangalore.edu.in', location: 'Bangalore' },
-  ]
-};
+// SIMPLE & CLEAN VIBEXPERT CODE
 
 let currentUser = null;
 let currentType = null;
-let allColleges = [];
 let currentPage = 1;
-let currentJoinedCollege = null;
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 10;
+let currentVerifyCollege = null;
+let allColleges = [];
 
-// UTILITIES
-function el(id) { return document.getElementById(id); }
-
-function userStorageKey() {
-  if (!currentUser || !currentUser.email) return null;
-  return 'joinedCollege:' + currentUser.email.toLowerCase();
-}
-
-function getJoinedCollegeForUser() {
-  const key = userStorageKey();
-  if (!key) return null;
-  return localStorage.getItem(key) || null;
-}
-
-function setJoinedCollegeForUser(collegeName) {
-  const key = userStorageKey();
-  if (key) localStorage.setItem(key, collegeName);
-}
-
-function clearJoinedCollegeForUser() {
-  const key = userStorageKey();
-  if (key) localStorage.removeItem(key);
-}
-
-function showMessage(msgText, type = 'info') {
-  const box = el('message');
-  if (!box) {
-    alert(msgText);
-    return;
-  }
-  box.innerHTML = '';
-  const div = document.createElement('div');
-  div.className = 'msg msg-' + type;
-  div.textContent = msgText;
-  box.appendChild(div);
-  setTimeout(() => { if(div) div.remove(); }, 3500);
-}
-
-function setAvatarInitials() {
-  const elAvatar = el('avatarInitials');
-  if (!elAvatar) return;
-  let initial = 'U';
-  if (currentUser && currentUser.name) initial = currentUser.name[0].toUpperCase();
-  elAvatar.textContent = initial;
-}
-
-function escapeForJs(s) {
-  return ('' + s).replace(/'/g, "\\'").replace(/"/g, '\\"');
-}
+const colleges = {
+  nit: [
+    {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
+    {name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur'},
+    {name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur'},
+    {name: 'NIT Srinagar', email: 'nit.srinagar@edu.in', location: 'Srinagar'},
+    {name: 'NIT Hamirpur', email: 'nit.hamirpur@edu.in', location: 'Hamirpur'},
+    {name: 'NIT Jalandhar', email: 'nit.jalandhar@edu.in', location: 'Jalandhar'},
+    {name: 'NIT Kurukshetra', email: 'nit.kurukshetra@edu.in', location: 'Kurukshetra'},
+    {name: 'NIT Allahabad', email: 'nit.allahabad@edu.in', location: 'Allahabad'},
+    {name: 'NIT Silchar', email: 'nit.silchar@edu.in', location: 'Silchar'},
+    {name: 'NIT Manipur', email: 'nit.manipur@edu.in', location: 'Manipur'},
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: 'iit.delhi@edu.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: 'iit.bombay@edu.in', location: 'Mumbai'},
+    {name: 'IIT Madras', email: 'iit.madras@edu.in', location: 'Chennai'},
+    {name: 'IIT Kharagpur', email: 'iit.kharagpur@edu.in', location: 'Kharagpur'},
+    {name: 'IIT Kanpur', email: 'iit.kanpur@edu.in', location: 'Kanpur'},
+    {name: 'IIT Roorkee', email: 'iit.roorkee@edu.in', location: 'Roorkee'},
+    {name: 'IIT Guwahati', email: 'iit.guwahati@edu.in', location: 'Guwahati'},
+    {name: 'IIT Hyderabad', email: 'iit.hyderabad@edu.in', location: 'Hyderabad'},
+    {name: 'IIT Indore', email: 'iit.indore@edu.in', location: 'Indore'},
+    {name: 'IIT Varanasi', email: 'iit.varanasi@edu.in', location: 'Varanasi'},
+    {name: 'IIT Bhubaneswar', email: 'iit.bhubaneswar@edu.in', location: 'Bhubaneswar'},
+    {name: 'IIT Patna', email: 'iit.patna@edu.in', location: 'Patna'},
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: 'vitbhopal@vit.ac.in', location: 'Bhopal'},
+    {name: 'VIT Vellore', email: 'vitvellore@vit.ac.in', location: 'Vellore'},
+    {name: 'VIT Chennai', email: 'vitchennai@vit.ac.in', location: 'Chennai'},
+    {name: 'VIT Pune', email: 'vitpune@vit.ac.in', location: 'Pune'},
+    {name: 'VIT Amaravati', email: 'vitamaravati@vit.ac.in', location: 'Amaravati'},
+  ],
+  other: [
+    {name: 'Delhi University', email: 'du@delhi.edu.in', location: 'New Delhi'},
+    {name: 'Mumbai University', email: 'mu@mumbai.edu.in', location: 'Mumbai'},
+    {name: 'Bangalore University', email: 'bu@bangalore.edu.in', location: 'Bangalore'},
+    {name: 'Chennai University', email: 'cu@chennai.edu.in', location: 'Chennai'},
+    {name: 'Kolkata University', email: 'ku@kolkata.edu.in', location: 'Kolkata'},
+    {name: 'Hyderabad University', email: 'hu@hyderabad.edu.in', location: 'Hyderabad'},
+    {name: 'Pune University', email: 'pu@pune.edu.in', location: 'Pune'},
+    {name: 'Banaras Hindu University', email: 'bhu@banaras.edu.in', location: 'Varanasi'},
+  ]
+};
 
 // INIT
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  document.body.className = savedTheme + '-theme';
-  
-  setAvatarInitials();
-  
-  el('loginPage').style.display = 'flex';
-  el('mainPage').style.display = 'none';
+document.addEventListener('DOMContentLoaded', function() {
+  initCursor();
+  checkUser();
+  loadTheme();
 });
+
+// CURSOR CHAIN
+function initCursor() {
+  let x = 0, y = 0;
+  const chains = [];
+  
+  for(let i = 0; i < 10; i++) {
+    const el = document.createElement('div');
+    el.className = 'chain';
+    el.style.opacity = 1 - (i * 0.08);
+    document.body.appendChild(el);
+    chains.push({el, x: 0, y: 0});
+  }
+  
+  document.addEventListener('mousemove', (e) => {
+    x = e.clientX;
+    y = e.clientY;
+    
+    let prevX = x, prevY = y;
+    chains.forEach((c) => {
+      const dx = prevX - c.x;
+      const dy = prevY - c.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx);
+      
+      c.x = prevX - Math.cos(angle) * 6;
+      c.y = prevY - Math.sin(angle) * 6;
+      
+      c.el.style.left = c.x + 'px';
+      c.el.style.top = c.y + 'px';
+      
+      prevX = c.x;
+      prevY = c.y;
+    });
+  });
+}
 
 // AUTH
 function login(e) {
-  if (e) e.preventDefault();
-  const emailInput = el('loginEmail');
-  const passInput = el('loginPassword');
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const pass = passInput ? passInput.value : '';
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
   
-  if (!email || !pass) {
-    showMessage('Fill all fields', 'error');
+  if(!email || !pass) {
+    msg('Fill all fields', 'error');
     return;
   }
-
-  const namePart = email.split('@')[0] || 'User';
-  currentUser = { name: namePart, email: email };
-  showMessage('Logged in!', 'success');
-
+  
+  currentUser = {name: email.split('@')[0], email: email};
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  msg('Logged in!', 'success');
+  
   setTimeout(() => {
-    el('loginPage').style.display = 'none';
-    el('mainPage').style.display = 'block';
-    setAvatarInitials();
-  }, 300);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+    document.getElementById('loginForm').reset();
+  }, 800);
 }
 
 function signup(e) {
-  if (e) e.preventDefault();
-  const name = el('signupName') ? el('signupName').value.trim() : '';
-  const email = el('signupEmail') ? el('signupEmail').value.trim().toLowerCase() : '';
-  const reg = el('signupReg') ? el('signupReg').value.trim() : '';
-  const pass = el('signupPass') ? el('signupPass').value : '';
-  const confirm = el('signupConfirm') ? el('signupConfirm').value : '';
-
-  if (!name || !email || !reg || !pass || !confirm) {
-    showMessage('Fill all fields', 'error');
+  e.preventDefault();
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const reg = document.getElementById('signupReg').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  const confirm = document.getElementById('signupConfirm').value;
+  
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  const type = document.querySelector('input[name="type"]:checked')?.value;
+  const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(el => el.value);
+  const hobbies = document.getElementById('signupHobbies').value.trim();
+  
+  if(!name || !email || !reg || !pass || !confirm) {
+    msg('Fill all required fields', 'error');
     return;
   }
-  if (pass !== confirm) {
-    showMessage("Passwords don't match", 'error');
+  
+  if(!gender) {
+    msg('Please select your gender', 'error');
     return;
   }
-
-  currentUser = { name, email, reg };
-  showMessage('Account created! Logged in.', 'success');
-
+  
+  if(!type) {
+    msg('Please select your type', 'error');
+    return;
+  }
+  
+  if(pass !== confirm) {
+    msg('Passwords don\'t match', 'error');
+    return;
+  }
+  
+  currentUser = {
+    name,
+    email,
+    reg,
+    gender,
+    type,
+    interests,
+    hobbies
+  };
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  msg('Account created!', 'success');
+  
   setTimeout(() => {
-    el('loginPage').style.display = 'none';
-    el('mainPage').style.display = 'block';
-    setAvatarInitials();
-  }, 350);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + name;
+    document.getElementById('signupForm').reset();
+    goLogin();
+  }, 800);
 }
 
-function goSignup(e) {
-  if (e) e.preventDefault();
-  if (el('loginForm')) el('loginForm').style.display = 'none';
-  if (el('signupForm')) el('signupForm').style.display = 'block';
+function goSignup() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
 }
 
-function goLogin(e) {
-  if (e) e.preventDefault();
-  if (el('signupForm')) el('signupForm').style.display = 'none';
-  if (el('loginForm')) el('loginForm').style.display = 'block';
+function goLogin() {
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function checkUser() {
+  const saved = localStorage.getItem('user');
+  if(saved) {
+    currentUser = JSON.parse(saved);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+  }
 }
 
 function logout() {
   currentUser = null;
-  currentJoinedCollege = null;
-  el('mainPage').style.display = 'none';
-  el('loginPage').style.display = 'flex';
-  showMessage('Logged out', 'success');
+  localStorage.removeItem('user');
+  document.getElementById('mainPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  msg('Logged out', 'success');
 }
 
-// NAVIGATION
+// PAGES
 function showPage(name, e) {
-  if (e) e.preventDefault();
+  if(e) e.preventDefault();
+  
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const page = el(name);
-  if (page) page.style.display = 'block';
+  document.getElementById(name).style.display = 'block';
   
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  if (e && e.target) e.target.classList.add('active');
-
-  if (name === 'communities') loadCommunities();
+  if(e && e.target) e.target.classList.add('active');
   
-  if (el('menu')) el('menu').style.display = 'none';
+  if(name === 'communities') {
+    loadCommunities();
+  }
+  
   window.scrollTo(0, 0);
 }
 
 function goHome() {
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const home = el('home');
-  if (home) home.style.display = 'block';
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  const first = document.querySelector('.nav-link');
-  if (first) first.classList.add('active');
-  if (el('menu')) el('menu').style.display = 'none';
-  window.scrollTo(0, 0);
+  document.querySelector('.nav-link').classList.add('active');
+  showPage('home');
 }
 
-// UNIVERSITY & COLLEGE
+function goToHome() {
+  showPage('home', { target: document.querySelector('.nav-link') });
+}
+
+// UNIVERSITIES
 function selectUniversity(type) {
   currentType = type;
-  allColleges = (colleges[type] || []).slice();
   currentPage = 1;
-
+  allColleges = colleges[type];
+  
   const titles = {
     nit: 'National Institutes of Technology',
     iit: 'Indian Institutes of Technology',
@@ -212,16 +244,10 @@ function selectUniversity(type) {
     other: 'Other Universities'
   };
   
-  const titleEl = el('collegeTitle');
-  if (titleEl) titleEl.textContent = titles[type] || 'Colleges';
-
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const listPage = el('collegeList');
-  if (listPage) listPage.style.display = 'block';
+  document.getElementById('collegeTitle').textContent = titles[type];
+  document.getElementById('collegeList').style.display = 'block';
   
-  if (el('menu')) el('menu').style.display = 'none';
   showColleges();
-  window.scrollTo(0, 0);
 }
 
 function showColleges(filtered = null) {
@@ -229,319 +255,204 @@ function showColleges(filtered = null) {
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE;
   const page = list.slice(start, end);
-
-  const userJoined = getJoinedCollegeForUser();
-
+  
+  const verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  
   let html = '';
   page.forEach(c => {
-    const isJoinedThis = userJoined === c.name;
-    const joinedSomeOther = userJoined && !isJoinedThis;
-    const disabled = joinedSomeOther ? 'disabled' : '';
-    let btnText = 'Connect';
-    if (isJoinedThis) btnText = '✓ Joined';
-    else if (joinedSomeOther) btnText = 'Joined elsewhere';
-
+    const isVerified = verified.includes(c.name);
     html += `
       <div class="college-item">
         <h3>${c.name}</h3>
         <p>${c.location}</p>
-        <p style="font-size:11px; color:#888;">${c.email}</p>
-        <button ${disabled} onclick="openVerify('${escapeForJs(c.name)}', '${escapeForJs(c.email)}')">${btnText}</button>
+        <p style="font-size:12px; color:#888;">${c.email}</p>
+        <button ${isVerified ? 'class="verified"' : ''} onclick="openVerify('${c.name}', '${c.email}')">${isVerified ? '✓ Joined' : 'Connect'}</button>
       </div>
     `;
   });
-
-  const container = el('collegeContainer');
-  if (container) container.innerHTML = html;
-
-  const total = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE));
+  
+  document.getElementById('collegeContainer').innerHTML = html;
+  
+  const total = Math.ceil(list.length / ITEMS_PER_PAGE);
   let pag = '';
-  for (let i = 1; i <= total; i++) {
-    pag += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  for(let i = 1; i <= total; i++) {
+    pag += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i}, '${filtered ? 'filtered' : 'all'}')">${i}</button>`;
   }
-  const pagination = el('pagination');
-  if (pagination) pagination.innerHTML = pag;
+  document.getElementById('pagination').innerHTML = pag;
 }
 
-function goPage(n) {
+function goPage(n, type) {
   currentPage = n;
-  showColleges();
+  if(type === 'filtered') {
+    const query = document.getElementById('searchCollege').value.toLowerCase();
+    const filtered = allColleges.filter(c => c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query));
+    showColleges(filtered);
+  } else {
+    showColleges();
+  }
   window.scrollTo(0, 0);
 }
 
 function searchColleges() {
-  const qEl = el('searchCollege');
-  if (!qEl) return;
-  const query = qEl.value.trim().toLowerCase();
+  const query = document.getElementById('searchCollege').value.toLowerCase();
   currentPage = 1;
-  const filtered = allColleges.filter(c => 
-    c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query)
-  );
+  const filtered = allColleges.filter(c => c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query));
   showColleges(filtered);
 }
 
 function backToUniversities() {
-  goHome();
+  document.getElementById('collegeList').style.display = 'none';
+  window.scrollTo(0, 0);
 }
 
-// VERIFICATION
+// COLLEGE VERIFICATION
 function openVerify(name, email) {
-  if (!currentUser || !currentUser.email) {
-    showMessage('Please log in to connect to a college.', 'error');
-    return;
-  }
+  currentVerifyCollege = {name, email};
+  document.getElementById('verifyEmail').value = '';
+  document.getElementById('verifyModal').style.display = 'flex';
+}
 
-  const userJoined = getJoinedCollegeForUser();
-  if (userJoined && userJoined !== name) {
-    showMessage(`You have already joined ${userJoined}. You cannot join another college.`, 'error');
-    return;
-  }
-
-  const confirmMsg = `Connect to ${name}? You will be added to that college community. Continue?`;
-  if (!confirm(confirmMsg)) return;
-
-  const collegeDomain = (email && email.includes('@')) ? email.split('@')[1] : null;
-  const userDomain = (currentUser.email && currentUser.email.includes('@')) ? currentUser.email.split('@')[1] : null;
+function verifyCollege() {
+  const email = document.getElementById('verifyEmail').value.trim();
   
-  if (collegeDomain && userDomain && collegeDomain !== userDomain) {
-    showMessage(`Please use your college email (${collegeDomain}) to join ${name}.`, 'error');
+  if(!email) {
+    msg('Enter your email', 'error');
     return;
   }
-
-  setJoinedCollegeForUser(name);
-  showMessage('✓ Joined ' + name, 'success');
-
+  
+  const domain = currentVerifyCollege.email.split('@')[1];
+  const userDomain = email.split('@')[1];
+  
+  if(userDomain !== domain) {
+    msg('Use your college email (' + domain + ')', 'error');
+    return;
+  }
+  
+  let verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  if(!verified.includes(currentVerifyCollege.name)) {
+    verified.push(currentVerifyCollege.name);
+    localStorage.setItem('verified', JSON.stringify(verified));
+  }
+  
+  if(currentUser) {
+    currentUser.joinedCollege = currentVerifyCollege.name;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  }
+  
+  msg('✓ Joined ' + currentVerifyCollege.name, 'success');
+  closeModal('verifyModal');
+  
   setTimeout(() => {
-    showSuccessModal(name);
+    showColleges();
   }, 500);
-}
-
-function showSuccessModal(collegeName) {
-  const msg = el('successMessage');
-  if (msg) msg.textContent = 'You have successfully joined the ' + collegeName + ' community! 🎉';
-  const modal = el('successModal');
-  if (modal) modal.style.display = 'flex';
-  currentJoinedCollege = collegeName;
-}
-
-function goToCommunityChat() {
-  closeModal('successModal');
-  setTimeout(() => {
-    openCommunityChat(currentJoinedCollege);
-  }, 300);
-}
-
-// COMMUNITIES
-function loadCommunities() {
-  const container = el('communitiesContent');
-  if (!container) return;
-
-  const userJoined = getJoinedCollegeForUser();
-  
-  if (!userJoined) {
-    container.innerHTML = `
-      <div class="no-community-msg">
-        <h3>Please first connect to your college community to start vibeing with your mates</h3>
-        <p>You can connect from the Home page — only one college allowed per user.</p>
-        <button onclick="goHome()">🏠 Home</button>
-      </div>
-    `;
-    return;
-  }
-
-  const found = findCollege(userJoined);
-  const loc = found ? found.location : 'Campus';
-  
-  container.innerHTML = `
-    <div class="cards">
-      <div class="card">
-        <div class="icon">💬</div>
-        <h3>${userJoined}</h3>
-        <p>${loc}</p>
-        <button onclick="openCommunityChat('${escapeForJs(userJoined)}')">Join Chat</button>
-      </div>
-    </div>
-  `;
-}
-
-function findCollege(name) {
-  for (const t in colleges) {
-    const found = colleges[t].find(c => c.name === name);
-    if (found) return found;
-  }
-  return null;
-}
-
-// CHAT
-function openCommunityChat(collegeName) {
-  const userJoined = getJoinedCollegeForUser();
-  if (!userJoined) {
-    showMessage('Please connect your university first from Home', 'error');
-    goHome();
-    return;
-  }
-  if (collegeName !== userJoined) {
-    showMessage(`You can only open your own college community (${userJoined})`, 'error');
-    return;
-  }
-
-  currentJoinedCollege = collegeName;
-  const nameEl = el('communityName');
-  if (nameEl) nameEl.textContent = collegeName + ' - Community Chat';
-  
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const chatPage = el('communityChat');
-  if (chatPage) chatPage.style.display = 'block';
-  
-  if (el('chatInput')) el('chatInput').focus();
-  loadChatMessages();
-  window.scrollTo(0, 0);
-}
-
-function backToCommunities() {
-  currentJoinedCollege = null;
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  const commPage = el('communities');
-  if (commPage) commPage.style.display = 'block';
-  loadCommunities();
-  window.scrollTo(0, 0);
-}
-
-function sendMessage() {
-  const input = el('chatInput');
-  const text = input ? input.value.trim() : '';
-  
-  if (!text) {
-    showMessage('Type a message', 'error');
-    return;
-  }
-
-  if (!currentJoinedCollege) {
-    showMessage('No community selected', 'error');
-    return;
-  }
-
-  const message = {
-    author: currentUser.name,
-    text: text,
-    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
-    college: currentJoinedCollege
-  };
-
-  let allMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-  allMessages.push(message);
-  localStorage.setItem('chatMessages', JSON.stringify(allMessages));
-
-  if (input) input.value = '';
-  loadChatMessages();
-}
-
-function handleChatKeyPress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-function loadChatMessages() {
-  if (!currentJoinedCollege) return;
-
-  let allMessages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-  const communityMessages = allMessages.filter(m => m.college === currentJoinedCollege);
-
-  const chatMessages = el('chatMessages');
-  if (!chatMessages) return;
-
-  let html = '';
-  communityMessages.forEach(m => {
-    const isOwn = m.author === currentUser.name;
-    html += `
-      <div class="chat-message ${isOwn ? 'own' : 'other'}">
-        <div class="message-content">
-          ${!isOwn ? '<div class="message-author">@' + m.author + '</div>' : ''}
-          <div>${escapeHtml(m.text)}</div>
-          <div class="message-time">${m.time}</div>
-        </div>
-      </div>
-    `;
-  });
-
-  chatMessages.innerHTML = html;
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // POSTS
 function createPost() {
-  const text = el('postText');
-  const postText = text ? text.value.trim() : '';
-  
-  if (!postText) {
-    showMessage('Write something', 'error');
+  const text = document.getElementById('postText').value.trim();
+  if(!text) {
+    msg('Write something', 'error');
     return;
   }
-
+  
   const post = {
     author: currentUser.name,
-    text: postText,
+    text: text,
     time: new Date().toLocaleTimeString()
   };
-
+  
   let posts = JSON.parse(localStorage.getItem('posts') || '[]');
   posts.unshift(post);
   localStorage.setItem('posts', JSON.stringify(posts));
-
-  if (text) text.value = '';
+  
+  document.getElementById('postText').value = '';
   loadPosts();
-  showMessage('Posted!', 'success');
+  msg('Posted!', 'success');
 }
 
 function loadPosts() {
   let posts = JSON.parse(localStorage.getItem('posts') || '[]');
   let html = '';
-
+  
   posts.forEach(p => {
     html += `
       <div class="post">
         <div class="author">@${p.author}</div>
-        <div class="text">${escapeHtml(p.text)}</div>
+        <div class="text">${p.text}</div>
         <div class="time">${p.time}</div>
       </div>
     `;
   });
-
-  const feed = el('postsFeed');
-  if (feed) feed.innerHTML = html;
+  
+  document.getElementById('postsFeed').innerHTML = html;
 }
 
-// MENU & THEME
-function toggleMenu() {
-  const menu = el('menu');
-  if (!menu) return;
-  menu.style.display = (menu.style.display === 'block' || menu.style.display === 'flex') ? 'none' : 'block';
+// HAMBURGER MENU
+function toggleHamburgerMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const btn = document.querySelector('.hamburger-btn');
+  
+  if(menu.style.display === 'none') {
+    menu.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    menu.style.display = 'none';
+    btn.classList.remove('active');
+  }
 }
 
 document.addEventListener('click', (e) => {
-  const menu = el('menu');
-  if (!menu) return;
-  if (!e.target.closest('.profile-area') && !e.target.closest('#menu')) {
+  const menu = document.getElementById('hamburgerMenu');
+  const btn = document.querySelector('.hamburger-btn');
+  
+  if(menu && btn && !e.target.closest('.hamburger-btn') && !e.target.closest('.hamburger-menu')) {
     menu.style.display = 'none';
+    btn.classList.remove('active');
   }
 });
 
+// MODALS
+function showProfileModal() {
+  if(currentUser) {
+    document.getElementById('profileName').textContent = currentUser.name || 'N/A';
+    document.getElementById('profileEmail').textContent = currentUser.email || 'N/A';
+    document.getElementById('profileReg').textContent = currentUser.reg || 'N/A';
+  }
+  document.getElementById('profileModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.hamburger-btn').classList.remove('active');
+}
+
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.hamburger-btn').classList.remove('active');
+}
+
+function submitComplaint() {
+  const text = document.getElementById('complaintText').value.trim();
+  
+  if(!text) {
+    msg('Write your complaint', 'error');
+    return;
+  }
+  
+  let complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+  complaints.push({
+    user: currentUser.name,
+    text: text,
+    date: new Date().toLocaleDateString()
+  });
+  localStorage.setItem('complaints', JSON.stringify(complaints));
+  
+  msg('Complaint submitted! We will review it soon.', 'success');
+  document.getElementById('complaintText').value = '';
+  closeModal('complaintModal');
+}
+
 function toggleTheme() {
   const body = document.body;
-  if (body.classList.contains('dark-theme')) {
+  if(body.classList.contains('dark-theme')) {
     body.classList.remove('dark-theme');
     body.classList.add('light-theme');
     localStorage.setItem('theme', 'light');
@@ -550,79 +461,132 @@ function toggleTheme() {
     body.classList.add('dark-theme');
     localStorage.setItem('theme', 'dark');
   }
-  const menu = el('menu');
-  if (menu) menu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  msg('Theme updated!', 'success');
 }
 
-// MODALS
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.body.className = savedTheme + '-theme';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.hamburger-btn').classList.remove('active');
+}
+
+function showPhotoModal() {
+  document.getElementById('photoModal').style.display = 'flex';
+}
+
 function closeModal(id) {
-  const modal = el(id);
-  if (modal) modal.style.display = 'none';
+  document.getElementById(id).style.display = 'none';
 }
 
 document.querySelectorAll('.modal').forEach(m => {
   m.addEventListener('click', (e) => {
-    if (e.target === m) {
+    if(e.target === m) {
       m.style.display = 'none';
     }
   });
 });
 
-function showContactModal() {
-  const modal = el('contactModal');
-  if (modal) modal.style.display = 'flex';
-  const menu = el('menu');
-  if (menu) menu.style.display = 'none';
-}
-
-function showChatbot() {
-  showMessage('Chatbot coming soon!', 'success');
-  const menu = el('menu');
-  if (menu) menu.style.display = 'none';
-}
-
-function showPhotoModal() {
-  const modal = el('photoModal');
-  if (modal) modal.style.display = 'flex';
-}
-
-// EXPOSE GLOBALS
-window.login = login;
-window.signup = signup;
-window.goSignup = goSignup;
-window.goLogin = goLogin;
-window.logout = logout;
-window.showPage = showPage;
-window.goHome = goHome;
-window.selectUniversity = selectUniversity;
-window.searchColleges = searchColleges;
-window.goPage = goPage;
-window.backToUniversities = backToUniversities;
-window.openVerify = openVerify;
-window.goToCommunityChat = goToCommunityChat;
-window.openCommunityChat = openCommunityChat;
-window.backToCommunities = backToCommunities;
-window.sendMessage = sendMessage;
-window.handleChatKeyPress = handleChatKeyPress;
-window.createPost = createPost;
-window.toggleMenu = toggleMenu;
-window.toggleTheme = toggleTheme;
-window.closeModal = closeModal;
-window.showContactModal = showContactModal;
-window.showChatbot = showChatbot;
-window.showPhotoModal = showPhotoModal;
-
-// Load posts on page ready
-document.addEventListener('DOMContentLoaded', () => {
-  const observer = new MutationObserver(() => {
-    const postsPage = el('posts');
-    if (postsPage && postsPage.style.display !== 'none') {
-      loadPosts();
-    }
-  });
-
-  const postsSection = el('posts');
-  if (postsSection) {
-    observer.observe(postsSection, {attributes: true});
+// COMMUNITIES
+function loadCommunities() {
+  const joinedCollege = currentUser?.joinedCollege;
+  const verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  
+  const container = document.getElementById('communitiesContainer');
+  const chatSection = document.getElementById('chatSection');
+  
+  if(verified.length === 0 || !joinedCollege) {
+    container.innerHTML = `
+      <div class="community-guidance">
+        <p>🎓 Please join the community in the Home page according to your university and start vibing into your college community!</p>
+        <button onclick="goToHome()" class="home-nav-btn">Go to Home</button>
+      </div>
+    `;
+    chatSection.style.display = 'none';
+  } else {
+    container.innerHTML = `
+      <div class="community-card">
+        <h3>✓ ${joinedCollege}</h3>
+        <p>You are part of this community</p>
+        <button onclick="scrollToChat()">Open Chat</button>
+      </div>
+    `;
+    chatSection.style.display = 'block';
+    loadChatMessages();
   }
-});
+}
+
+function scrollToChat() {
+  document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  
+  if(!message) {
+    msg('Write a message', 'error');
+    return;
+  }
+  
+  const chatData = {
+    sender: currentUser.name,
+    text: message,
+    college: currentUser.joinedCollege,
+    time: new Date().toLocaleTimeString()
+  };
+  
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  chats.push(chatData);
+  localStorage.setItem('chats', JSON.stringify(chats));
+  
+  input.value = '';
+  loadChatMessages();
+}
+
+function handleChatKeypress(e) {
+  if(e.key === 'Enter') {
+    sendChatMessage();
+  }
+}
+
+function loadChatMessages() {
+  const messagesContainer = document.getElementById('chatMessages');
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  
+  chats = chats.filter(c => c.college === currentUser?.joinedCollege);
+  
+  let html = '';
+  chats.forEach(chat => {
+    const isOwn = chat.sender === currentUser.name;
+    html += `
+      <div class="chat-message ${isOwn ? 'own' : 'other'}">
+        ${!isOwn ? `<div class="sender">@${chat.sender}</div>` : ''}
+        <div class="text">${chat.text}</div>
+      </div>
+    `;
+  });
+  
+  messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">No messages yet. Start the conversation!</div>';
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// MESSAGES
+function msg(text, type) {
+  const box = document.getElementById('message');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  box.innerHTML = '';
+  box.appendChild(div);
+  
+  setTimeout(() => {
+    div.remove();
+  }, 3500);
+}
