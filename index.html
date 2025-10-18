@@ -139,6 +139,11 @@
 
       <!-- HAMBURGER DROPDOWN MENU -->
       <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
+        <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
+        <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
+        <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
+        <div class="menu-item" onclick="showPage('subscriptions', event)">⭐ Subscriptions</div>
+        <hr>
         <div class="menu-item" onclick="showProfileModal()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
@@ -229,26 +234,32 @@
     <!-- COMMUNITIES -->
     <section id="communities" class="page" style="display:none;">
       <h2 class="title">Join Communities</h2>
-      <div class="cards">
-        <div class="card" onclick="selectUniversity('nit')">
-          <div class="icon">🏛️</div>
-          <h3>NIT Communities</h3>
-          <button>Browse</button>
+      <div id="communitiesContainer"></div>
+      <div id="chatSection" style="display:none; margin-top:40px;">
+        <h3 style="color:#4f74a3; margin-bottom:20px;">Community Chat</h3>
+        <div class="chat-box">
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-box">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
+            <button class="send-btn" onclick="sendChatMessage()">Send</button>
+          </div>
         </div>
-        <div class="card" onclick="selectUniversity('iit')">
-          <div class="icon">🏰</div>
-          <h3>IIT Communities</h3>
-          <button>Browse</button>
-        </div>
-        <div class="card" onclick="selectUniversity('vit')">
-          <div class="icon">🎓</div>
-          <h3>VIT Communities</h3>
-          <button>Browse</button>
-        </div>
-        <div class="card" onclick="selectUniversity('other')">
-          <div class="icon">🌟</div>
-          <h3>Other Communities</h3>
-          <button>Browse</button>
+      </div>
+    </section>
+
+    <!-- COMMUNITY PLUS -->
+    <section id="communityPlus" class="page" style="display:none;">
+      <div class="coming-soon-container">
+        <div class="coming-soon-box">
+          <h2>🔒 Community Plus</h2>
+          <p>Exclusive Features</p>
+          <div class="coming-soon-details">
+            <p>✨ Advanced filtering to find your people</p>
+            <p>🎯 Interest-based matching</p>
+            <p>📊 Community insights & analytics</p>
+            <p>🚀 Coming Very Soon!</p>
+          </div>
+          <button onclick="goToHome()" class="home-nav-btn">Back to Home</button>
         </div>
       </div>
     </section>
@@ -370,4 +381,3 @@
 <script src="vibemap.js"></script>
 </body>
 </html>
-
