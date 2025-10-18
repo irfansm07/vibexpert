@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE JAVASCRIPT
+// VIBEXPERT - UPDATED WITH FORGOT PASSWORD & BUZZ FEATURES
 
 let currentUser = null;
 let currentType = null;
@@ -10,7 +10,7 @@ let allColleges = [];
 const colleges = {
   nit: [
     {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
-    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourzela'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela'},
     {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
     {name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur'},
     {name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur'},
@@ -55,11 +55,27 @@ const colleges = {
   ]
 };
 
+const activityMessages = [
+  '🎉 Priya joined NIT Bhopal community',
+  '📝 Rahul posted in IIT Delhi group',
+  '❤️ Isha liked a photo from VIT Pune',
+  '💬 Arjun commented on a post',
+  '✨ Sara started a new discussion',
+  '🔥 Post is trending in communities',
+  '🎓 New member joined the platform',
+  '🚀 Discussion gaining momentum',
+  '💡 Someone shared a helpful tip',
+  '🌟 Active member celebrating 1000 posts'
+];
+
 // INIT
 document.addEventListener('DOMContentLoaded', function() {
   initCursor();
   checkUser();
   loadTheme();
+  if(currentUser) {
+    initBuzzSection();
+  }
 });
 
 // CURSOR CHAIN
@@ -97,6 +113,46 @@ function initCursor() {
   });
 }
 
+// BUZZ SECTION - ACTIVE USERS & ACTIVITY
+function initBuzzSection() {
+  updateBuzzNumbers();
+  generateLiveActivity();
+  setInterval(updateBuzzNumbers, 5000);
+  setInterval(generateLiveActivity, 8000);
+}
+
+function updateBuzzNumbers() {
+  const activeUsers = Math.floor(Math.random() * (3000 - 1500)) + 1500;
+  const postsCount = Math.floor(Math.random() * (2500 - 1000)) + 1000;
+  const streakCount = Math.floor(Math.random() * (500 - 200)) + 200;
+  
+  const activeUsersEl = document.getElementById('activeUsersCount');
+  const postsEl = document.getElementById('postsCountBuzz');
+  const streakEl = document.getElementById('streakCountBuzz');
+  
+  if(activeUsersEl) activeUsersEl.textContent = activeUsers.toLocaleString();
+  if(postsEl) postsEl.textContent = postsCount.toLocaleString();
+  if(streakEl) streakEl.textContent = streakCount.toLocaleString();
+}
+
+function generateLiveActivity() {
+  const activityList = document.getElementById('activityList');
+  if(!activityList) return;
+  
+  const newActivity = activityMessages[Math.floor(Math.random() * activityMessages.length)];
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  const activityItem = document.createElement('div');
+  activityItem.className = 'activity-item';
+  activityItem.innerHTML = `${newActivity} <span class="time">${time}</span>`;
+  
+  activityList.insertBefore(activityItem, activityList.firstChild);
+  
+  if(activityList.children.length > 8) {
+    activityList.removeChild(activityList.lastChild);
+  }
+}
+
 // AUTH
 function login(e) {
   e.preventDefault();
@@ -117,7 +173,28 @@ function login(e) {
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
     document.getElementById('loginForm').reset();
+    initBuzzSection();
   }, 800);
+}
+
+// FORGOT PASSWORD
+function showForgotPasswordModal() {
+  document.getElementById('forgotPasswordModal').style.display = 'flex';
+}
+
+function sendResetEmail() {
+  const email = document.getElementById('resetEmail').value.trim();
+  
+  if(!email) {
+    msg('Enter email or registration number', 'error');
+    return;
+  }
+  
+  msg('Password reset link sent to ' + email, 'success');
+  document.getElementById('resetEmail').value = '';
+  setTimeout(() => {
+    closeModal('forgotPasswordModal');
+  }, 1000);
 }
 
 function signup(e) {
@@ -163,6 +240,7 @@ function signup(e) {
     document.getElementById('userName').textContent = 'Hi, ' + name;
     document.getElementById('signupForm').reset();
     goLogin();
+    initBuzzSection();
   }, 800);
 }
 
@@ -212,8 +290,8 @@ function showPage(name, e) {
   
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  document.querySelector('.options-btn')?.classList.remove('active');
+  document.querySelector('.hamburger-btn')?.classList.remove('active');
   
   window.scrollTo(0, 0);
 }
@@ -439,16 +517,16 @@ function showProfileModal() {
   document.getElementById('profileModal').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  document.querySelector('.options-btn')?.classList.remove('active');
+  document.querySelector('.hamburger-btn')?.classList.remove('active');
 }
 
 function showComplaintModal() {
   document.getElementById('complaintModal').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  document.querySelector('.options-btn')?.classList.remove('active');
+  document.querySelector('.hamburger-btn')?.classList.remove('active');
 }
 
 function submitComplaint() {
@@ -485,8 +563,8 @@ function toggleTheme() {
   }
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  document.querySelector('.options-btn')?.classList.remove('active');
+  document.querySelector('.hamburger-btn')?.classList.remove('active');
   msg('Theme updated!', 'success');
 }
 
@@ -499,8 +577,8 @@ function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  document.querySelector('.options-btn')?.classList.remove('active');
+  document.querySelector('.hamburger-btn')?.classList.remove('active');
 }
 
 function showPhotoModal() {
