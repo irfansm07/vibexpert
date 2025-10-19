@@ -18,7 +18,7 @@
       <div id="message"></div>
 
       <!-- LOGIN FORM -->
-      <form id="loginForm" onsubmit="login(event)" style="display:none;">
+      <form id="loginForm" onsubmit="login(event)">
         <h2>Login</h2>
         <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
@@ -28,7 +28,7 @@
       </form>
 
       <!-- FORGOT PASSWORD FORM -->
-      <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)" style="display:none;">
+      <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
         <h2>Reset Password</h2>
         <input type="email" id="resetEmail" placeholder="Enter your email" required>
         <button type="submit">Send Reset Link</button>
@@ -36,7 +36,7 @@
       </form>
 
       <!-- SIGNUP FORM (HIDDEN) -->
-      <form id="signupForm" onsubmit="signup(event)" style="display:none;">
+      <form id="signupForm" onsubmit="signup(event)">
         <h2>Create Account</h2>
         
         <input type="text" id="signupName" placeholder="Full Name" required>
