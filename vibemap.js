@@ -1,637 +1,973 @@
-/* ====== vibemap.js (merged and edited) ====== */
-// 🔄 Reset accounts & sessions once (so we start fresh)
-/*localStorage.removeItem('vibemapUsers');
-localStorage.removeItem('currentVibeMapUser');*/
+// VIBEXPERT - COMPLETE JAVASCRIPT WITH LIVE ACTIVITY BUZZ
 
 let currentUser = null;
-let registeredUsers = JSON.parse(localStorage.getItem('vibemapUsers')) || [];
+let currentType = null;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 10;
+let currentVerifyCollege = null;
+let allColleges = [];
+let liveUsersCount = Math.floor(Math.random() * 500) + 100;
+let activitiesQueue = [];
 
-/* -------------------- Mouse particle + Tilt + Floating shapes -------------------- */
-document.addEventListener("mousemove", function(e) {
-  const particle = document.createElement("div");
-  particle.className = "mouse-particle";
-  particle.style.left = `${e.pageX}px`;
-  particle.style.top = `${e.pageY}px`;
-  document.body.appendChild(particle);
-  setTimeout(() => {
-    particle.remove();
-  }, 800);
+const colleges = {
+  nit: [
+    {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourzela'},
+    {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
+    {name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur'},
+    {name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur'},
+    {name: 'NIT Srinagar', email: 'nit.srinagar@edu.in', location: 'Srinagar'},
+    {name: 'NIT Hamirpur', email: 'nit.hamirpur@edu.in', location: 'Hamirpur'},
+    {name: 'NIT Jalandhar', email: 'nit.jalandhar@edu.in', location: 'Jalandhar'},
+    {name: 'NIT Kurukshetra', email: 'nit.kurukshetra@edu.in', location: 'Kurukshetra'},
+    {name: 'NIT Allahabad', email: 'nit.allahabad@edu.in', location: 'Allahabad'},
+    {name: 'NIT Silchar', email: 'nit.silchar@edu.in', location: 'Silchar'},
+    {name: 'NIT Manipur', email: 'nit.manipur@edu.in', location: 'Manipur'},
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: 'iit.delhi@edu.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: 'iit.bombay@edu.in', location: 'Mumbai'},
+    {name: 'IIT Madras', email: 'iit.madras@edu.in', location: 'Chennai'},
+    {name: 'IIT Kharagpur', email: 'iit.kharagpur@edu.in', location: 'Kharagpur'},
+    {name: 'IIT Kanpur', email: 'iit.kanpur@edu.in', location: 'Kanpur'},
+    {name: 'IIT Roorkee', email: 'iit.roorkee@edu.in', location: 'Roorkee'},
+    {name: 'IIT Guwahati', email: 'iit.guwahati@edu.in', location: 'Guwahati'},
+    {name: 'IIT Hyderabad', email: 'iit.hyderabad@edu.in', location: 'Hyderabad'},
+    {name: 'IIT Indore', email: 'iit.indore@edu.in', location: 'Indore'},
+    {name: 'IIT Varanasi', email: 'iit.varanasi@edu.in', location: 'Varanasi'},
+    {name: 'IIT Bhubaneswar', email: 'iit.bhubaneswar@edu.in', location: 'Bhubaneswar'},
+    {name: 'IIT Patna', email: 'iit.patna@edu.in', location: 'Patna'},
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: 'vitbhopal@vit.ac.in', location: 'Bhopal'},
+    {name: 'VIT Vellore', email: 'vitvellore@vit.ac.in', location: 'Vellore'},
+    {name: 'VIT Chennai', email: 'vitchennai@vit.ac.in', location: 'Chennai'},
+    {name: 'VIT Pune', email: 'vitpune@vit.ac.in', location: 'Pune'},
+    {name: 'VIT Amaravati', email: 'vitamaravati@vit.ac.in', location: 'Amaravati'},
+  ],
+  other: [
+    {name: 'Delhi University', email: 'du@delhi.edu.in', location: 'New Delhi'},
+    {name: 'Mumbai University', email: 'mu@mumbai.edu.in', location: 'Mumbai'},
+    {name: 'Bangalore University', email: 'bu@bangalore.edu.in', location: 'Bangalore'},
+    {name: 'Chennai University', email: 'cu@chennai.edu.in', location: 'Chennai'},
+    {name: 'Kolkata University', email: 'ku@kolkata.edu.in', location: 'Kolkata'},
+    {name: 'Hyderabad University', email: 'hu@hyderabad.edu.in', location: 'Hyderabad'},
+    {name: 'Pune University', email: 'pu@pune.edu.in', location: 'Pune'},
+    {name: 'Banaras Hindu University', email: 'bhu@banaras.edu.in', location: 'Varanasi'},
+  ]
+};
+
+const activityMessages = [
+  '📝 {user} posted something new!',
+  '❤️ {user} liked a post',
+  '💬 {user} joined the chat',
+  '🔥 {user}\'s post is trending!',
+  '🎉 {user} just joined VibeXpert',
+  '⭐ {user} got a new like',
+  '📸 {user} shared a photo',
+  '🚀 {user} is super active today!',
+];
+
+const trendingTopics = [
+  {title: 'Campus Life', posts: Math.floor(Math.random() * 1000) + 500, emoji: '🎓'},
+  {title: 'Friday Vibes', posts: Math.floor(Math.random() * 800) + 300, emoji: '🎉'},
+  {title: 'Study Tips', posts: Math.floor(Math.random() * 600) + 200, emoji: '📚'},
+  {title: 'Coffee Talks', posts: Math.floor(Math.random() * 700) + 250, emoji: '☕'},
+  {title: 'Gaming Zone', posts: Math.floor(Math.random() * 900) + 400, emoji: '🎮'},
+  {title: 'Sports Talk', posts: Math.floor(Math.random() * 800) + 350, emoji: '⚽'},
+];
+
+// INIT
+document.addEventListener('DOMContentLoaded', function() {
+  initCursor();
+  checkUser();
+  loadTheme();
+  initProfilePage();
+  showLoginForm();
+  startLiveActivityUpdates();
+  startUserCountUpdate();
 });
 
-// Tilt / 3D effect on containers
-document.querySelectorAll('.auth-box, .welcome-section').forEach((el) => {
-  el.classList.add('tilt-container');
-  el.addEventListener('mousemove', (e) => {
-    const { width, height, left, top } = el.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
-    const rotateX = ((y / height) - 0.5) * 10;
-    const rotateY = ((x / width) - 0.5) * -10;
-    el.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  });
-  el.addEventListener('mouseleave', () => {
-    el.style.transform = `rotateX(0deg) rotateY(0deg)`;
-  });
-});
-
-// Floating shapes in background
-function createFloatingShapes() {
-  const container = document.querySelector('.auth-container');
-  if (!container) return;
-  const shapes = ['circle', 'square', 'triangle'];
-  for (let i = 0; i < 15; i++) {
-    const shape = document.createElement('div');
-    const type = shapes[Math.floor(Math.random() * shapes.length)];
-    shape.className = `floating-shape ${type}`;
-    shape.style.top = `${Math.random() * 100}%`;
-    shape.style.left = `${Math.random() * 100}%`;
-    const size = 5 + Math.random() * 10;
-    shape.style.width = `${size}px`;
-    shape.style.height = `${size}px`;
-    shape.style.animationDuration = `${8 + Math.random() * 8}s`;
-    container.appendChild(shape);
-  }
-}
-window.addEventListener('DOMContentLoaded', createFloatingShapes);
-
-/* -------------------- VibeXpert core -------------------- */
-
-document.addEventListener('DOMContentLoaded', function () {
-  initAnimatedBackground();
-  setupEventListeners();
-  applySavedTheme(); // <-- ADDED: Apply saved theme on load
-
-  const savedUser = localStorage.getItem('currentVibeMapUser');
-  if (savedUser) {
-    currentUser = JSON.parse(savedUser);
-    showMainPage();
-  } else {
-    showAuthPage();
-  }
-});
-
-/* -------------------- Page show/hide -------------------- */
-function showAuthPage() {
-  const auth = document.getElementById('authPage');
-  const main = document.getElementById('mainPage');
-  if (auth) auth.style.display = 'flex';
-  if (main) main.style.display = 'none';
-  switchAuthTab('login');
-}
-
-function showMainPage() {
-  const auth = document.getElementById('authPage');
-  const main = document.getElementById('mainPage');
-  if (auth) auth.style.display = 'none';
-  if (main) main.style.display = 'block';
-  if (currentUser) {
-    const userGreet = document.querySelector('#userGreeting span');
-    if (userGreet) userGreet.textContent = `Hi, ${currentUser.name}`;
-  }
-  switchPage('home');
-}
-
-/* -------------------- Auth handlers -------------------- */
-function handleLogout(e) {
-  e?.preventDefault();
-  currentUser = null;
-  localStorage.removeItem('currentVibeMapUser');
-  showAuthPage();
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  if (loginForm) loginForm.reset();
-  if (signupForm) signupForm.reset();
-}
-
-function setupEventListeners() {
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
+// CURSOR CHAIN
+function initCursor() {
+  let x = 0, y = 0;
+  const chains = [];
   
-  // ✅ EDITED: Changed ID to 'logoutBtn2' to match your HTML
-  const logoutBtn = document.getElementById('logoutBtn2'); 
+  for(let i = 0; i < 10; i++) {
+    const el = document.createElement('div');
+    el.className = 'chain';
+    el.style.opacity = 1 - (i * 0.08);
+    document.body.appendChild(el);
+    chains.push({el, x: 0, y: 0});
+  }
   
-  const cameraBtn = document.getElementById('cameraBtn');
-
-  if (cameraBtn) {
-    cameraBtn.addEventListener('click', openCameraOrGallery);
-  }
-
-  if (loginForm) loginForm.addEventListener('submit', handleLogin);
-  if (signupForm) signupForm.addEventListener('submit', handleSignup);
-  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-
-  document.querySelectorAll('.auth-tab').forEach(tab => {
-    tab.addEventListener('click', function () {
-      switchAuthTab(this.dataset.tab);
-    });
-  });
-
-  document.querySelectorAll('.nav-item').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
-      this.classList.add('active');
-      switchPage(this.dataset.page);
-    });
-  });
-
-  const logo = document.querySelector('.logo');
-  if (logo) {
-    logo.addEventListener('click', function () {
-      switchPage('home');
-      document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
-      const homeLink = document.querySelector('[data-page="home"]');
-      if (homeLink) homeLink.classList.add('active');
-    });
-  }
-
-  setupSearchFunctionality();
-  setupThemeSwitcher(); // <-- ADDED: Setup for the new theme buttons
-}
-
-/* -------------------- ✅ NEW: Dark/Light Mode Theme Switcher -------------------- */
-function setupThemeSwitcher() {
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const themeOptions = document.querySelector('.theme-options');
-    const setDarkModeBtn = document.getElementById('setDarkModeBtn');
-    const setLightModeBtn = document.getElementById('setLightModeBtn');
-    const body = document.body;
-
-    if (!darkModeToggle || !themeOptions || !setDarkModeBtn || !setLightModeBtn) return;
-
-    // Show/hide the theme options sub-menu
-    darkModeToggle.addEventListener('click', (e) => {
-        // Stop the click from closing the menu immediately
-        e.stopPropagation(); 
-        themeOptions.style.display = themeOptions.style.display === 'block' ? 'none' : 'block';
-    });
-
-    // Set theme to Dark
-    setDarkModeBtn.addEventListener('click', () => {
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-        localStorage.setItem('vibeTheme', 'dark'); // Save preference
-        themeOptions.style.display = 'none';
-    });
+  document.addEventListener('mousemove', (e) => {
+    x = e.clientX;
+    y = e.clientY;
     
-    // Set theme to Light
-    setLightModeBtn.addEventListener('click', () => {
-        body.classList.remove('dark-mode');
-        body.classList.add('light-mode');
-        localStorage.setItem('vibeTheme', 'light'); // Save preference
-        themeOptions.style.display = 'none';
+    let prevX = x, prevY = y;
+    chains.forEach((c) => {
+      const dx = prevX - c.x;
+      const dy = prevY - c.y;
+      const angle = Math.atan2(dy, dx);
+      
+      c.x = prevX - Math.cos(angle) * 6;
+      c.y = prevY - Math.sin(angle) * 6;
+      
+      c.el.style.left = c.x + 'px';
+      c.el.style.top = c.y + 'px';
+      
+      prevX = c.x;
+      prevY = c.y;
     });
-
-    // Hide theme options if clicking anywhere else
-    document.addEventListener('click', () => {
-        if (themeOptions.style.display === 'block') {
-            themeOptions.style.display = 'none';
-        }
-    });
+  });
 }
 
-function applySavedTheme() {
-    const savedTheme = localStorage.getItem('vibeTheme') || 'dark'; // Default to dark
-    const body = document.body;
-    if (savedTheme === 'light') {
-        body.classList.remove('dark-mode');
-        body.classList.add('light-mode');
-    } else {
-        body.classList.remove('light-mode');
-        body.classList.add('dark-mode');
-    }
+// LIVE ACTIVITY SYSTEM
+function startLiveActivityUpdates() {
+  setInterval(() => {
+    const randomActivity = activityMessages[Math.floor(Math.random() * activityMessages.length)];
+    const randomUser = 'User_' + Math.floor(Math.random() * 9000 + 1000);
+    const activity = randomActivity.replace('{user}', randomUser);
+    
+    updateLiveNotification(activity);
+    liveUsersCount = Math.max(80, Math.floor(liveUsersCount + Math.random() * 20 - 8));
+    updateUserCounts();
+    loadTrendingTopics();
+  }, 5000);
 }
 
-
-/* Switch auth tabs */
-function switchAuthTab(tabName) {
-  document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
-  const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-  if (activeTab) activeTab.classList.add('active');
-
-  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-  const section = document.getElementById(`${tabName}-section`);
-  if (section) section.classList.add('active');
-  clearAlerts();
+function updateLiveNotification(text) {
+  const notif = document.getElementById('liveActivityNotif');
+  const notifText = document.getElementById('notifText');
+  notifText.textContent = text;
+  notif.style.animation = 'none';
+  setTimeout(() => {
+    notif.style.animation = 'slideInUp 0.5s ease';
+  }, 10);
 }
 
-/* Login */
-function handleLogin(e) {
+function startUserCountUpdate() {
+  setInterval(() => {
+    liveUsersCount = Math.max(80, Math.floor(liveUsersCount + Math.random() * 15 - 6));
+    updateUserCounts();
+  }, 8000);
+}
+
+function updateUserCounts() {
+  const liveUsersEl = document.getElementById('liveUsersCount');
+  const footerUsersEl = document.getElementById('footerUsers');
+  const heroOnlineEl = document.getElementById('heroOnline');
+  
+  if(liveUsersEl) liveUsersEl.textContent = liveUsersCount + ' Active';
+  if(footerUsersEl) footerUsersEl.textContent = liveUsersCount + ' Users Online';
+  if(heroOnlineEl) heroOnlineEl.textContent = liveUsersCount;
+}
+
+// TRENDING TOPICS
+function loadTrendingTopics() {
+  const container = document.getElementById('trendingContainer');
+  if(!container) return;
+  
+  let html = '';
+  trendingTopics.forEach(topic => {
+    html += `
+      <div class="trending-card">
+        <div class="trending-card-header">
+          <span class="trending-title">${topic.emoji} ${topic.title}</span>
+          <span class="trending-badge">🔥 TRENDING</span>
+        </div>
+        <div class="trending-text">
+          Join thousands discussing ${topic.title.toLowerCase()} on campus!
+        </div>
+        <div class="trending-footer">
+          <div class="trending-engagement">
+            <div class="engagement-item">💬 ${topic.posts}</div>
+            <div class="engagement-item">👥 ${Math.floor(topic.posts / 5)}</div>
+          </div>
+          <span style="color:#888; font-size:11px;">Now trending</span>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+// HOME STATS
+function updateHomeStats() {
+  const postsToday = Math.floor(Math.random() * 500) + 200;
+  const activeChats = Math.floor(Math.random() * 150) + 50;
+  
+  const heroPostsEl = document.getElementById('heroPostsToday');
+  const heroChatsEl = document.getElementById('heroChats');
+  
+  if(heroPostsEl) heroPostsEl.textContent = postsToday;
+  if(heroChatsEl) heroChatsEl.textContent = activeChats;
+}
+
+// CHAT ONLINE COUNT
+function updateChatOnlineCount() {
+  const chatOnline = Math.floor(Math.random() * 80) + 20;
+  const chatOnlineEl = document.getElementById('chatOnlineCount');
+  if(chatOnlineEl) chatOnlineEl.textContent = chatOnline;
+}
+
+// SHOW LOGIN FORM ON INIT
+function showLoginForm() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+}
+
+// LOGIN
+function login(e) {
   e.preventDefault();
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  if (!username || !password) {
-    showAlert('Please fill in all fields', 'error');
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  
+  if(!email || !pass) {
+    msg('Fill all fields', 'error');
     return;
   }
-
-  const user = registeredUsers.find(u =>
-    (u.email && u.email.toLowerCase() === username.toLowerCase()) ||
-    (u.regNumber && u.regNumber.toLowerCase() === username.toLowerCase())
-  );
-
-  if (user && user.password === password) {
-    currentUser = user;
-    localStorage.setItem('currentVibeMapUser', JSON.stringify(user));
-    showAlert('Login successful!', 'success');
-    setTimeout(showMainPage, 600);
-  } else {
-    showAlert('Invalid credentials', 'error');
-  }
+  
+  currentUser = {name: email.split('@')[0], email: email};
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  msg('✅ Logged in!', 'success');
+  
+  setTimeout(() => {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+    document.getElementById('loginForm').reset();
+    updateHomeStats();
+    loadTrendingTopics();
+  }, 800);
 }
 
-/* Signup */
-function handleSignup(e) {
+// FORGOT PASSWORD
+function goForgotPassword(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
+function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  
+  if(!email) {
+    msg('Please enter your email', 'error');
+    return;
+  }
+  
+  const resetToken = Math.random().toString(36).substring(2, 15);
+  const resetData = {email, token: resetToken, timestamp: new Date().getTime()};
+  localStorage.setItem('passwordReset_' + email, JSON.stringify(resetData));
+  
+  msg('✉️ Reset link sent! (Token: ' + resetToken + ')', 'success');
+  document.getElementById('resetEmail').value = '';
+  
+  setTimeout(() => goLogin(e), 2000);
+}
+
+function goSignup(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+}
+
+function goLogin(e) {
+  if(e) e.preventDefault();
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function signup(e) {
   e.preventDefault();
   const name = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
-  const regNumber = document.getElementById('signupRegNumber').value.trim();
-  const password = document.getElementById('signupPassword').value;
-  const confirmPassword = document.getElementById('signupConfirmPassword').value;
-  const gender = document.querySelector('input[name="gender"]:checked')?.value || '';
-  const userType = document.querySelector('input[name="usertype"]:checked')?.value || '';
-  const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(i => i.value);
-  const hobbies = document.getElementById('signupHobbies')?.value.trim() || '';
-
-  if (!name || !email || !regNumber || !password || !confirmPassword || !gender || !userType) {
-    showAlert('Please fill in all required fields', 'error');
-    return;
-  }
-  if (!validateEmail(email)) {
-    showAlert('Please enter a valid email address', 'error');
-    return;
-  }
-  if (password.length < 6) {
-    showAlert('Password must be at least 6 characters', 'error');
-    return;
-  }
-  if (password !== confirmPassword) {
-    showAlert('Passwords do not match', 'error');
-    return;
-  }
-  if (registeredUsers.some(u => (u.email && u.email.toLowerCase() === email.toLowerCase()) || (u.regNumber && u.regNumber.toLowerCase() === regNumber.toLowerCase()))) {
-    showAlert('User already exists', 'error');
-    return;
-  }
-
-  const newUser = { name, email, regNumber, password, gender, userType, interests, hobbies, createdAt: new Date().toISOString() };
-  registeredUsers.push(newUser);
-  localStorage.setItem('vibemapUsers', JSON.stringify(registeredUsers));
-  currentUser = newUser;
-  localStorage.setItem('currentVibeMapUser', JSON.stringify(newUser));
-  showAlert('Account created successfully!', 'success');
+  const reg = document.getElementById('signupReg').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  const confirm = document.getElementById('signupConfirm').value;
   
-  showSignupPopup(newUser.name);
-  setTimeout(showMainPage, 1500);
-}
-
-/* Navigation between main pages */
-function switchPage(pageId) {
-  document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
-  const target = document.getElementById(`${pageId}-content`);
-  if (target) target.classList.add('active');
-}
-
-/* Alerts */
-function showAlert(msg, type = 'success') {
-  const c = document.getElementById('alertContainer');
-  if (!c) return;
-  c.innerHTML = `<div class="alert ${type}">${msg}</div>`;
-  setTimeout(() => { if (c) c.innerHTML = ''; }, 3000);
-}
-function clearAlerts() {
-  const c = document.getElementById('alertContainer');
-  if (c) c.innerHTML = '';
-}
-
-/* Utils */
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
-/* -------------------- Search (demo users) -------------------- */
-function setupSearchFunctionality() {
-  const users = [
-    { name: 'Arjun K.', interest: 'Food Blogger' },
-    { name: 'Priya S.', interest: 'Art Enthusiast' },
-    { name: 'Rohit M.', interest: 'Tech Geek' },
-    { name: 'Sneha R.', interest: 'Music Lover' },
-    { name: 'Dev P.', interest: 'Sports Fan' },
-    { name: 'Ananya T.', interest: 'Book Worm' },
-    { name: 'Smi', interest: 'Web Developer' }
-  ];
-
-  const searchBox = document.getElementById('searchBox');
-  const searchResults = document.getElementById('searchResults');
-  if (!searchBox || !searchResults) return;
-
-  searchBox.addEventListener('input', function(e) {
-    const query = e.target.value.toLowerCase();
-    searchResults.innerHTML = '';
-    if (query.length > 1) {
-      const filtered = users.filter(u => u.name.toLowerCase().includes(query) || u.interest.toLowerCase().includes(query));
-      if (filtered.length) {
-        filtered.forEach(u => {
-          const div = document.createElement('div');
-          div.className = 'search-result-item';
-          div.textContent = `${u.name} - ${u.interest}`;
-          div.addEventListener('click', () => {
-            searchBox.value = u.name;
-            searchResults.style.display = 'none';
-          });
-          searchResults.appendChild(div);
-        });
-        searchResults.style.display = 'block';
-      } else {
-        const no = document.createElement('div');
-        no.className = 'search-result-item';
-        no.textContent = 'No users found';
-        no.style.color = '#666';
-        searchResults.appendChild(no);
-        searchResults.style.display = 'block';
-      }
-    } else {
-      searchResults.style.display = 'none';
-    }
-  });
-
-  document.addEventListener('click', function(event) {
-    if (!searchBox.contains(event.target) && !searchResults.contains(event.target)) {
-      searchResults.style.display = 'none';
-    }
-  });
-}
-
-/* -------------------- Animated background -------------------- */
-function initAnimatedBackground() {
-  const bg = document.getElementById('animatedBg');
-  if (!bg) return;
-  bg.innerHTML = ''; // Clear previous elements to avoid duplication
-
-  const dotColors = ['rgba(79,116,163,0.4)', 'rgba(141,164,211,0.35)', 'rgba(90,127,184,0.35)'];
-  for (let i = 0; i < 30; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot';
-    d.style.left = Math.random() * 100 + '%';
-    d.style.top = Math.random() * 100 + '%';
-    d.style.animationDelay = Math.random() * 8 + 's';
-    d.style.background = dotColors[Math.floor(Math.random() * dotColors.length)];
-    bg.appendChild(d);
+  if(!name || !email || !reg || !pass || !confirm) {
+    msg('Fill all required fields', 'error');
+    return;
   }
-
-  for (let i = 0; i < 15; i++) {
-    const l = document.createElement('div');
-    l.className = 'line';
-    l.style.left = Math.random() * 100 + '%';
-    l.style.top = Math.random() * 100 + '%';
-    l.style.animationDelay = Math.random() * 10 + 's';
-    l.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
-    l.style.background = 'linear-gradient(90deg, transparent, rgba(79,116,163,0.18), transparent)';
-    bg.appendChild(l);
+  
+  if(pass !== confirm) {
+    msg('Passwords don\'t match', 'error');
+    return;
   }
-}
-
-/* -------------------- Extras: interactions & scroll animations -------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.canteen-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const name = card.querySelector('h3')?.textContent || 'Canteen';
-      showAlert(`${name} menu coming soon!`, 'success');
-    });
-  });
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'none';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-
-  const toObserve = document.querySelectorAll('.fade-in, .college-photo, .canteen-card, .post');
-  toObserve.forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    observer.observe(el);
-  });
-});
-
-/* -------------------- Signup Popup -------------------- */
-function showSignupPopup(username) {
-  const popup = document.getElementById('signupPopup');
-  const title = document.getElementById('popupTitle');
-  const msg = document.getElementById('popupMessage');
-  if (!popup) return;
-
-  title.textContent = "🎉Sign In Successful🎉";
-  msg.textContent = `Thank you ${username}, for signing up to VibeXpert. You Can Now Connect & Vibe.`;
-  popup.style.display = 'flex';
-
-  const duration = 2000;
-  const end = Date.now() + duration;
-
-  (function frame() {
-    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
-
+  
+  currentUser = { name, email, reg };
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  msg('🎉 Account created!', 'success');
+  
   setTimeout(() => {
-    popup.style.display = 'none';
-  }, 6000);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + name;
+    document.getElementById('signupForm').reset();
+    updateHomeStats();
+    loadTrendingTopics();
+  }, 800);
 }
 
-/* -------------------- Forgot Password -------------------- */
-function handleForgotPassword(e) {
-  e.preventDefault();
-  const email = document.getElementById("forgotEmail").value.trim();
-  if (!email) {
-    showAlert("Please enter your email", "error");
+function checkUser() {
+  const saved = localStorage.getItem('user');
+  if(saved) {
+    currentUser = JSON.parse(saved);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+    updateHomeStats();
+    loadTrendingTopics();
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('user');
+  document.getElementById('mainPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  msg('👋 Logged out', 'success');
+  showLoginForm();
+}
+
+// PAGES
+function showPage(name, e) {
+  if(e) e.preventDefault();
+  
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  document.getElementById(name).style.display = 'block';
+  
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if(e && e.target) e.target.classList.add('active');
+  
+  if(name === 'communities') {
+    loadCommunities();
+    updateChatOnlineCount();
+  }
+  if(name === 'home') {
+    updateHomeStats();
+    loadTrendingTopics();
+  }
+  
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelector('.nav-link').classList.add('active');
+  showPage('home');
+}
+
+function goToHome() {
+  showPage('home', { target: document.querySelector('.nav-link') });
+}
+
+// UNIVERSITIES
+function selectUniversity(type) {
+  currentType = type;
+  currentPage = 1;
+  allColleges = colleges[type];
+  
+  const titles = {
+    nit: 'National Institutes of Technology',
+    iit: 'Indian Institutes of Technology',
+    vit: 'VIT Colleges',
+    other: 'Other Universities'
+  };
+  
+  document.getElementById('collegeTitle').textContent = titles[type];
+  document.getElementById('collegeList').style.display = 'block';
+  
+  showColleges();
+}
+
+function showColleges(filtered = null) {
+  const list = filtered || allColleges;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const page = list.slice(start, end);
+  
+  const verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  
+  let html = '';
+  page.forEach(c => {
+    const isVerified = verified.includes(c.name);
+    html += `
+      <div class="college-item">
+        <h3>${c.name}</h3>
+        <p>${c.location}</p>
+        <p style="font-size:12px; color:#888;">${c.email}</p>
+        <button ${isVerified ? 'class="verified"' : ''} onclick="openVerify('${c.name}', '${c.email}')">${isVerified ? '✓ Joined' : 'Connect'}</button>
+      </div>
+    `;
+  });
+  
+  document.getElementById('collegeContainer').innerHTML = html;
+  
+  const total = Math.ceil(list.length / ITEMS_PER_PAGE);
+  let pag = '';
+  for(let i = 1; i <= total; i++) {
+    pag += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i}, '${filtered ? 'filtered' : 'all'}')">${i}</button>`;
+  }
+  document.getElementById('pagination').innerHTML = pag;
+}
+
+function goPage(n, type) {
+  currentPage = n;
+  if(type === 'filtered') {
+    const query = document.getElementById('searchCollege').value.toLowerCase();
+    const filtered = allColleges.filter(c => c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query));
+    showColleges(filtered);
+  } else {
+    showColleges();
+  }
+  window.scrollTo(0, 0);
+}
+
+function searchColleges() {
+  const query = document.getElementById('searchCollege').value.toLowerCase();
+  currentPage = 1;
+  const filtered = allColleges.filter(c => c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query));
+  showColleges(filtered);
+}
+
+function backToUniversities() {
+  document.getElementById('collegeList').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+// COLLEGE VERIFICATION
+function openVerify(name, email) {
+  currentVerifyCollege = {name, email};
+  document.getElementById('verifyEmail').value = '';
+  document.getElementById('verifyModal').style.display = 'flex';
+}
+
+function verifyCollege() {
+  const email = document.getElementById('verifyEmail').value.trim();
+  
+  if(!email) {
+    msg('Enter your email', 'error');
     return;
   }
   
-  // This is a demo. In a real app, you would fetch from a server.
-  const userExists = registeredUsers.some(u => u.email === email);
-  if (userExists) {
-      showAlert("Reset code sent to your email! (Demo Code: 123456)", "success");
-      window.sessionStorage.setItem("resetEmail", email);
-      window.sessionStorage.setItem("resetCode", "123456"); // Demo code
-      document.getElementById("resetCodeContainer").style.display = "block";
-  } else {
-      showAlert("Email not found in our records.", "error");
-  }
-}
-
-function handleResetPassword() {
-  const code = document.getElementById("resetCodeInput").value.trim();
-  const newPassword = document.getElementById("newPassword").value.trim();
-  const savedCode = window.sessionStorage.getItem("resetCode");
-  const email = window.sessionStorage.getItem("resetEmail");
-
-  if (code !== savedCode) {
-    showAlert("Invalid reset code", "error");
+  const domain = currentVerifyCollege.email.split('@')[1];
+  const userDomain = email.split('@')[1];
+  
+  if(userDomain !== domain) {
+    msg('Use your college email (' + domain + ')', 'error');
     return;
   }
+  
+  let verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  if(!verified.includes(currentVerifyCollege.name)) {
+    verified.push(currentVerifyCollege.name);
+    localStorage.setItem('verified', JSON.stringify(verified));
+  }
+  
+  if(currentUser) {
+    currentUser.joinedCollege = currentVerifyCollege.name;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  }
+  
+  msg('🎓 Joined ' + currentVerifyCollege.name, 'success');
+  closeModal('verifyModal');
+  
+  setTimeout(() => {
+    showColleges();
+  }, 500);
+}
 
-  const userIndex = registeredUsers.findIndex(u => u.email === email);
-  if (userIndex >= 0) {
-    registeredUsers[userIndex].password = newPassword;
-    localStorage.setItem("vibemapUsers", JSON.stringify(registeredUsers));
-    showAlert("Password reset successful! Please login.", "success");
-    switchAuthTab("login");
+// POSTS
+function createPost() {
+  const text = document.getElementById('postText').value.trim();
+  if(!text) {
+    msg('Write something', 'error');
+    return;
+  }
+  
+  const post = {
+    author: currentUser.name,
+    text: text,
+    time: new Date().toLocaleTimeString()
+  };
+  
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  posts.unshift(post);
+  localStorage.setItem('posts', JSON.stringify(posts));
+  
+  document.getElementById('postText').value = '';
+  loadPosts();
+  msg('🚀 Posted!', 'success');
+  updateHomeStats();
+}
+
+function loadPosts() {
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  let html = '';
+  
+  posts.forEach(p => {
+    html += `
+      <div class="post">
+        <div class="author">@${p.author}</div>
+        <div class="text">${p.text}</div>
+        <div class="time">${p.time}</div>
+      </div>
+    `;
+  });
+  
+  document.getElementById('postsFeed').innerHTML = html;
+}
+
+// MENUS
+function toggleOptionsMenu() {
+  const menu = document.getElementById('optionsMenu');
+  const btn = document.querySelector('.options-btn');
+  
+  if(menu.style.display === 'none') {
+    menu.style.display = 'block';
+    btn.classList.add('active');
   } else {
-    showAlert("User not found", "error");
+    menu.style.display = 'none';
+    btn.classList.remove('active');
   }
 }
-/* -------------------- Camera & Post Upload -------------------- */
-function openCameraOrGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const previewURL = URL.createObjectURL(file);
-    showPostPreview(previewURL, 'VIT Bhopal University'); // Default location
-  };
-  input.click();
+
+function toggleHamburgerMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const btn = document.querySelector('.hamburger-btn');
+  
+  if(menu.style.display === 'none') {
+    menu.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    menu.style.display = 'none';
+    btn.classList.remove('active');
+  }
 }
 
-function showPostPreview(imageURL, suggestedLocation) {
-  const modal = document.createElement('div');
-  modal.className = 'post-preview-modal';
-  modal.innerHTML = `
-    <div class="post-preview-content">
-      <img src="${imageURL}" style="max-width:100%; border-radius:10px;">
-      <input type="text" id="locationInput" placeholder="Enter location" value="${suggestedLocation}">
-      <div class="filters">
-        <button onclick="applyFilter('none')">Normal</button>
-        <button onclick="applyFilter('grayscale(100%)')">B/W</button>
-        <button onclick="applyFilter('sepia(80%)')">Sepia</button>
-        <button onclick="applyFilter('contrast(150%)')">Contrast+</button>
-      </div>
-      <button id="postBtn">Post</button>
-      <button id="cancelBtn">Cancel</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  document.getElementById('cancelBtn').addEventListener('click', () => modal.remove());
-  document.getElementById('postBtn').addEventListener('click', () => {
-    const loc = document.getElementById('locationInput').value;
-    alert('Photo posted with location: ' + loc);
-    modal.remove();
-  });
-}
-
-function applyFilter(filter) {
-  const img = document.querySelector('.post-preview-content img');
-  if (img) img.style.filter = filter;
-}
-
-/* Attach forgot/reset handlers */
-document.addEventListener("DOMContentLoaded", () => {
-  const forgotForm = document.getElementById("forgotForm");
-  if (forgotForm) forgotForm.addEventListener("submit", handleForgotPassword);
-
-  const resetBtn = document.getElementById("resetPasswordBtn");
-  if (resetBtn) resetBtn.addEventListener("click", handleResetPassword);
+document.addEventListener('click', (e) => {
+  const optionsMenu = document.getElementById('optionsMenu');
+  const optionsBtn = document.querySelector('.options-btn');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const hamburgerBtn = document.querySelector('.hamburger-btn');
+  
+  if(optionsMenu && optionsBtn && !e.target.closest('.options-btn') && !e.target.closest('.options-menu')) {
+    optionsMenu.style.display = 'none';
+    optionsBtn.classList.remove('active');
+  }
+  
+  if(hamburgerMenu && hamburgerBtn && !e.target.closest('.hamburger-btn') && !e.target.closest('.hamburger-menu')) {
+    hamburgerMenu.style.display = 'none';
+    hamburgerBtn.classList.remove('active');
+  }
 });
 
-/* Post button logic (if you add a manual post section later) */
-document.addEventListener("DOMContentLoaded", () => {
-  const addPostBtn = document.getElementById("addPostBtn");
-  if (!addPostBtn) return; // Exit if the button isn't on the page
+// MODALS
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+}
 
-  const postText = document.getElementById("postText");
-  const postImage = document.getElementById("postImage");
-  const userPosts = document.getElementById("userPosts");
+function submitComplaint() {
+  const text = document.getElementById('complaintText').value.trim();
+  
+  if(!text) {
+    msg('Write your complaint', 'error');
+    return;
+  }
+  
+  let complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+  complaints.push({user: currentUser.name, text, date: new Date().toLocaleDateString()});
+  localStorage.setItem('complaints', JSON.stringify(complaints));
+  
+  msg('✅ Complaint submitted!', 'success');
+  document.getElementById('complaintText').value = '';
+  closeModal('complaintModal');
+}
 
-  addPostBtn.addEventListener("click", () => {
-    const text = postText.value.trim();
-    const file = postImage.files[0];
-    if (!text && !file) {
-      alert("Please enter text or select an image to post!");
-      return;
+function toggleTheme() {
+  const body = document.body;
+  if(body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+    localStorage.setItem('theme', 'light');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+  }
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  msg('🎨 Theme updated!', 'success');
+}
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.body.className = savedTheme + '-theme';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+}
+
+function showPhotoModal() {
+  document.getElementById('photoModal').style.display = 'flex';
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', (e) => {
+    if(e.target === m) {
+      m.style.display = 'none';
     }
+  });
+});
 
-    const post = document.createElement("div");
-    post.classList.add("post");
-    let contentHTML = `<p>${text}</p>`;
-    if (file) {
-      const imgURL = URL.createObjectURL(file);
-      contentHTML += `<img src="${imgURL}" alt="Post Image" style="width:100%;border-radius:10px;margin-top:10px;">`;
-    }
-    post.innerHTML = `
-      <div class="post-header">
-        <div class="post-author">@you</div>
-        <div class="post-time">just now</div>
+// COMMUNITIES
+function loadCommunities() {
+  const joinedCollege = currentUser?.joinedCollege;
+  const verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  
+  const container = document.getElementById('communitiesContainer');
+  const chatSection = document.getElementById('chatSection');
+  
+  if(verified.length === 0 || !joinedCollege) {
+    container.innerHTML = `
+      <div class="community-guidance">
+        <p>🎓 Please join your college community to start chatting and connecting!</p>
+        <button onclick="goToHome()" class="home-nav-btn">Go to Home</button>
       </div>
-      ${contentHTML}
     `;
-    userPosts.prepend(post);
-    postText.value = "";
-    postImage.value = "";
+    chatSection.style.display = 'none';
+  } else {
+    container.innerHTML = `
+      <div class="community-card">
+        <h3>✓ ${joinedCollege}</h3>
+        <p>You are part of this community</p>
+        <button onclick="scrollToChat()">Open Chat</button>
+      </div>
+    `;
+    chatSection.style.display = 'block';
+    loadChatMessages();
+  }
+}
+
+function scrollToChat() {
+  document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  
+  if(!message) {
+    msg('Write a message', 'error');
+    return;
+  }
+  
+  const chatData = {
+    sender: currentUser.name,
+    text: message,
+    college: currentUser.joinedCollege,
+    time: new Date().toLocaleTimeString()
+  };
+  
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  chats.push(chatData);
+  localStorage.setItem('chats', JSON.stringify(chats));
+  
+  input.value = '';
+  loadChatMessages();
+  msg('💬 Message sent!', 'success');
+}
+
+function handleChatKeypress(e) {
+  if(e.key === 'Enter') {
+    sendChatMessage();
+  }
+}
+
+function loadChatMessages() {
+  const messagesContainer = document.getElementById('chatMessages');
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  
+  chats = chats.filter(c => c.college === currentUser?.joinedCollege);
+  
+  let html = '';
+  chats.forEach(chat => {
+    const isOwn = chat.sender === currentUser.name;
+    html += `
+      <div class="chat-message ${isOwn ? 'own' : 'other'}">
+        ${!isOwn ? `<div class="sender">@${chat.sender}</div>` : ''}
+        <div class="text">${chat.text}</div>
+      </div>
+    `;
   });
-});
+  
+  messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">Start the conversation!</div>';
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
 
-/* Sidebar menu toggle */
-document.addEventListener('DOMContentLoaded', () => {
-    const menuBtn = document.querySelector('.menu-btn');
-    const sidebar = document.querySelector('.sidebar');
-    const closeBtn = document.querySelector('.close-sidebar');
+// PROFILE PAGE
+function showProfilePage() {
+  loadProfileData();
+  document.getElementById('profilePageModal').style.display = 'flex';
+  document.getElementById('optionsMenu').style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.querySelector('.options-btn').classList.remove('active');
+  document.querySelector('.hamburger-btn').classList.remove('active');
+  window.scrollTo(0, 0);
+}
 
-    if (menuBtn && sidebar && closeBtn) {
-        menuBtn.addEventListener('click', () => {
-            sidebar.classList.add('active');
-        });
+function loadProfileData() {
+  loadProfileBasicInfo();
+  loadProfileStats();
+  loadUserPosts();
+  loadProfileLikes();
+}
 
-        closeBtn.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-        });
-    }
-});
-// Create a glowing circle that follows the mouse with a pop effect
-document.addEventListener('DOMContentLoaded', () => {
-  const authBg = document.getElementById('animatedBg'); // Your background container
+function loadProfileBasicInfo() {
+  if(!currentUser) return;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  
+  document.getElementById('profileDisplayName').textContent = currentUser.name || 'User';
+  document.getElementById('nicknameValue').textContent = profileData.nickname || currentUser.name;
+  document.getElementById('profileDescriptionText').textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  
+  if(profileData.avatar) {
+    document.getElementById('profilePhoto').style.backgroundImage = `url(${profileData.avatar})`;
+    document.getElementById('profilePhoto').textContent = '';
+  } else {
+    document.getElementById('profilePhoto').style.backgroundImage = 'none';
+    document.getElementById('profilePhoto').textContent = '👤';
+  }
+  
+  document.getElementById('editNickname').value = profileData.nickname || '';
+  document.getElementById('editDescription').value = profileData.description || '';
+  updateCharCounts();
+}
 
-  if (!authBg) return;
+function loadProfileStats() {
+  if(!currentUser) return;
+  
+  let userPosts = getUserPosts();
+  document.getElementById('profilePostsCount').textContent = userPosts.length;
+  
+  let profileLikes = getProfileLikes();
+  document.getElementById('profileLikesCount').textContent = profileLikes.length;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  let activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
+  document.getElementById('usedHoursCount').textContent = activeHours + 'h';
+}
 
-  // Create glow element
-  const glow = document.createElement('div');
-  glow.style.position = 'fixed';
-  glow.style.pointerEvents = 'none';
-  glow.style.width = '150px';
-  glow.style.height = '150px';
-  glow.style.borderRadius = '50%';
-  glow.style.background = 'radial-gradient(circle, rgba(79,116,163,0.5) 0%, transparent 70%)';
-  glow.style.mixBlendMode = 'screen';
-  glow.style.transition = 'transform 0.15s ease, opacity 0.3s ease';
-  glow.style.transform = 'translate(-50%, -50%) scale(1)';
-  glow.style.opacity = '0';
-  glow.style.zIndex = '9999';
+function getUserPosts() {
+  let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+  return allPosts.filter(p => p.author === currentUser.name);
+}
 
-  document.body.appendChild(glow);
+function getProfileLikes() {
+  let likes = JSON.parse(localStorage.getItem('profileLikes_' + currentUser.email) || '[]');
+  return likes;
+}
 
-  document.addEventListener('mousemove', e => {
-    glow.style.left = `${e.clientX}px`;
-    glow.style.top = `${e.clientY}px`;
-    glow.style.opacity = '5';
-    // Animate pop according to speed (optional)
-    glow.style.transform = 'translate(-50%, -50%) scale(1.2)';
-    clearTimeout(glow._timeout);
-    glow._timeout = setTimeout(() => {
-      glow.style.transform = 'translate(-50%, -50%) scale(1)';
-    }, 150);
-  });
+function loadUserPosts() {
+  let userPosts = getUserPosts();
+  let container = document.getElementById('userPostsContainer');
+  let noPostsMsg = document.getElementById('noPostsMessage');
+  
+  if(userPosts.length === 0) {
+    container.innerHTML = '';
+    noPostsMsg.style.display = 'block';
+  } else {
+    noPostsMsg.style.display = 'none';
+    container.innerHTML = '';
+    userPosts.reverse().forEach((post, index) => {
+      let postHtml = `
+        <div class="user-post-card">
+          <div class="post-header">
+            <span class="post-time">${post.time}</span>
+            <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
+          </div>
+          <div class="post-content">${escapeHtml(post.text)}</div>
+          <div class="post-stats"><span>Posted</span></div>
+        </div>
+      `;
+      container.innerHTML += postHtml;
+    });
+  }
+}
 
-  document.addEventListener('mouseleave', () => {
-    glow.style.opacity = '4';
-  });
-});
+function deleteUserPost(index) {
+  if(confirm('Delete this post?')) {
+    let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+    let userPosts = allPosts.filter(p => p.author === currentUser.name);
+    userPosts.reverse();
+    userPosts.splice(index, 1);
+    userPosts.reverse();
+    let otherPosts = allPosts.filter(p => p.author !== currentUser.name);
+    let finalPosts = otherPosts.concat(userPosts);
+    localStorage.setItem('posts', JSON.stringify(finalPosts));
+    loadUserPosts();
+    msg('🗑️ Post deleted!', 'success');
+  }
+}
+
+function loadProfileLikes() {
+  let likes = getProfileLikes();
+  let container = document.getElementById('profileLikesContainer');
+  let noLikesMsg = document.getElementById('noLikesMessage');
+  
+  if(likes.length === 0) {
+    container.innerHTML = '';
+    noLikesMsg.style.display = 'block';
+  } else {
+    noLikesMsg.style.display = 'none';
+    container.innerHTML = '';
+    likes.forEach(like => {
+      let likeHtml = `
+        <div class="like-card">
+          <div class="like-avatar">👤</div>
+          <div class="like-name">${escapeHtml(like.userName)}</div>
+          <div class="like-time">${like.time || 'Recently'}</div>
+        </div>
+      `;
+      container.innerHTML += likeHtml;
+    });
+  }
+}
+
+function openEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'block';
+}
+
+function cancelEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'none';
+  loadProfileBasicInfo();
+}
+
+function saveProfile() {
+  let nickname = document.getElementById('editNickname').value.trim();
+  let description = document.getElementById('editDescription').value.trim();
+  
+  if(!nickname || !description) {
+    msg('All fields required', 'error');
+    return;
+  }
+  if(nickname.length > 25 || description.length > 150) {
+    msg('Text too long', 'error');
+    return;
+  }
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  profileData.nickname = nickname;
+  profileData.description = description;
+  profileData.activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
+  localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+  
+  msg('✅ Profile updated!', 'success');
+  document.getElementById('editProfileSection').style.display = 'none';
+  loadProfileBasicInfo();
+  loadProfileStats();
+}
+
+function updateCharCounts() {
+  let ni = document.getElementById('editNickname');
+  let di = document.getElementById('editDescription');
+  if(ni) ni.addEventListener('input', () => { document.getElementById('nicknameCharCount').textContent = ni.value.length + '/25'; });
+  if(di) di.addEventListener('input', () => { document.getElementById('descCharCount').textContent = di.value.length + '/150'; });
+}
+
+function switchProfileTab(tabName) {
+  document.querySelectorAll('.profile-tab-content').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  
+  if(tabName === 'posts') {
+    document.getElementById('postsTab').classList.add('active');
+    document.getElementById('postsTab').style.display = 'block';
+  } else {
+    document.getElementById('likesTab').classList.add('active');
+    document.getElementById('likesTab').style.display = 'block';
+  }
+  event.target.classList.add('active');
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')) {
+    msg('Select an image file', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+    profileData.avatar = base64;
+    localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+    
+    document.getElementById('profilePhoto').style.backgroundImage = `url(${base64})`;
+    document.getElementById('profilePhoto').textContent = '';
+    msg('📸 Avatar updated!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function escapeHtml(text) {
+  let map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function updateActiveStatus() {
+  let now = new Date().getHours();
+  document.getElementById('activeText').textContent = (now >= 9 && now <= 23) ? 'Active Now' : 'Away';
+}
+
+function initProfilePage() {
+  updateActiveStatus();
+  let postsTab = document.getElementById('postsTab');
+  if(postsTab) {
+    postsTab.classList.add('active');
+    postsTab.style.display = 'block';
+  }
+}
+
+function msg(text, type) {
+  const box = document.getElementById('message');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  box.innerHTML = '';
+  box.appendChild(div);
+  setTimeout(() => div.remove(), 3500);
+}
