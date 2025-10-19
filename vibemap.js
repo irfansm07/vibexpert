@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE JAVASCRIPT WITH PROFILE PAGE
+// VIBEXPERT - COMPLETE JAVASCRIPT WITH FORGOT PASSWORD & AVATAR
 
 let currentUser = null;
 let currentType = null;
@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
   checkUser();
   loadTheme();
   initProfilePage();
+  showLoginForm();
 });
 
 // CURSOR CHAIN
@@ -98,7 +99,14 @@ function initCursor() {
   });
 }
 
-// AUTH
+// SHOW LOGIN FORM ON INIT
+function showLoginForm() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+}
+
+// LOGIN FUNCTIONS
 function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -119,6 +127,54 @@ function login(e) {
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
     document.getElementById('loginForm').reset();
   }, 800);
+}
+
+// FORGOT PASSWORD FUNCTIONS
+function goForgotPassword(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
+function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  
+  if(!email) {
+    msg('Please enter your email', 'error');
+    return;
+  }
+  
+  const resetToken = Math.random().toString(36).substring(2, 15);
+  const resetData = {
+    email: email,
+    token: resetToken,
+    timestamp: new Date().getTime()
+  };
+  
+  localStorage.setItem('passwordReset_' + email, JSON.stringify(resetData));
+  
+  msg('✓ Reset link sent to ' + email + '! (Demo: Token: ' + resetToken + ')', 'success');
+  document.getElementById('resetEmail').value = '';
+  
+  setTimeout(() => {
+    goLogin(e);
+  }, 2000);
+}
+
+function goSignup(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+}
+
+function goLogin(e) {
+  if(e) e.preventDefault();
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
 }
 
 function signup(e) {
@@ -167,16 +223,6 @@ function signup(e) {
   }, 800);
 }
 
-function goSignup() {
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'block';
-}
-
-function goLogin() {
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-}
-
 function checkUser() {
   const saved = localStorage.getItem('user');
   if(saved) {
@@ -195,6 +241,7 @@ function logout() {
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
   msg('Logged out', 'success');
+  showLoginForm();
 }
 
 // PAGES
@@ -385,7 +432,7 @@ function loadPosts() {
   document.getElementById('postsFeed').innerHTML = html;
 }
 
-// OPTIONS MENU (DESKTOP/TABLET)
+// MENUS
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
   const btn = document.querySelector('.options-btn');
@@ -399,7 +446,6 @@ function toggleOptionsMenu() {
   }
 }
 
-// HAMBURGER MENU (MOBILE)
 function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
   const btn = document.querySelector('.hamburger-btn');
@@ -591,8 +637,7 @@ function loadChatMessages() {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// ===== PROFILE PAGE FUNCTIONS =====
-
+// PROFILE PAGE FUNCTIONS
 function showProfilePage() {
   loadProfileData();
   document.getElementById('profilePageModal').style.display = 'flex';
@@ -618,6 +663,14 @@ function loadProfileBasicInfo() {
   document.getElementById('profileDisplayName').textContent = currentUser.name || 'User';
   document.getElementById('nicknameValue').textContent = profileData.nickname || currentUser.name;
   document.getElementById('profileDescriptionText').textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  
+  if(profileData.avatar) {
+    document.getElementById('profilePhoto').style.backgroundImage = `url(${profileData.avatar})`;
+    document.getElementById('profilePhoto').textContent = '';
+  } else {
+    document.getElementById('profilePhoto').style.backgroundImage = 'none';
+    document.getElementById('profilePhoto').textContent = '👤';
+  }
   
   document.getElementById('editNickname').value = profileData.nickname || '';
   document.getElementById('editDescription').value = profileData.description || '';
@@ -756,11 +809,10 @@ function saveProfile() {
     return;
   }
   
-  let profileData = {
-    nickname: nickname,
-    description: description,
-    activeHours: JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}').activeHours || Math.floor(Math.random() * 24) + 1
-  };
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  profileData.nickname = nickname;
+  profileData.description = description;
+  profileData.activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
   
   localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
   
@@ -814,34 +866,29 @@ function switchProfileTab(tabName) {
   event.target.classList.add('active');
 }
 
-function likeUserProfile(userName, userEmail) {
-  if(!currentUser) {
-    msg('Please login first', 'error');
+// AVATAR UPLOAD FUNCTION
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  
+  if(!file.type.startsWith('image/')) {
+    msg('Please select an image file', 'error');
     return;
   }
   
-  if(currentUser.name === userName) {
-    msg('You cannot like your own profile', 'error');
-    return;
-  }
-  
-  let like = {
-    userName: currentUser.name,
-    time: new Date().toLocaleDateString()
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+    profileData.avatar = base64;
+    localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+    
+    document.getElementById('profilePhoto').style.backgroundImage = `url(${base64})`;
+    document.getElementById('profilePhoto').textContent = '';
+    
+    msg('Avatar updated!', 'success');
   };
-  
-  let likes = JSON.parse(localStorage.getItem('profileLikes_' + userEmail) || '[]');
-  
-  let alreadyLiked = likes.some(l => l.userName === currentUser.name);
-  
-  if(alreadyLiked) {
-    msg('You already liked this profile', 'error');
-    return;
-  }
-  
-  likes.push(like);
-  localStorage.setItem('profileLikes_' + userEmail, JSON.stringify(likes));
-  msg('Profile liked!', 'success');
+  reader.readAsDataURL(file);
 }
 
 function escapeHtml(text) {
@@ -893,7 +940,7 @@ function initProfilePage() {
   }
 }
 
-// MESSAGES
+// MESSAGE FUNCTION
 function msg(text, type) {
   const box = document.getElementById('message');
   const div = document.createElement('div');
