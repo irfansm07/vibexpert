@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE JAVASCRIPT WITH FORGOT PASSWORD & AVATAR
+// VIBEXPERT - COMPLETE JAVASCRIPT WITH LIVE ACTIVITY BUZZ
 
 let currentUser = null;
 let currentType = null;
@@ -6,6 +6,8 @@ let currentPage = 1;
 const ITEMS_PER_PAGE = 10;
 let currentVerifyCollege = null;
 let allColleges = [];
+let liveUsersCount = Math.floor(Math.random() * 500) + 100;
+let activitiesQueue = [];
 
 const colleges = {
   nit: [
@@ -55,6 +57,26 @@ const colleges = {
   ]
 };
 
+const activityMessages = [
+  '📝 {user} posted something new!',
+  '❤️ {user} liked a post',
+  '💬 {user} joined the chat',
+  '🔥 {user}\'s post is trending!',
+  '🎉 {user} just joined VibeXpert',
+  '⭐ {user} got a new like',
+  '📸 {user} shared a photo',
+  '🚀 {user} is super active today!',
+];
+
+const trendingTopics = [
+  {title: 'Campus Life', posts: Math.floor(Math.random() * 1000) + 500, emoji: '🎓'},
+  {title: 'Friday Vibes', posts: Math.floor(Math.random() * 800) + 300, emoji: '🎉'},
+  {title: 'Study Tips', posts: Math.floor(Math.random() * 600) + 200, emoji: '📚'},
+  {title: 'Coffee Talks', posts: Math.floor(Math.random() * 700) + 250, emoji: '☕'},
+  {title: 'Gaming Zone', posts: Math.floor(Math.random() * 900) + 400, emoji: '🎮'},
+  {title: 'Sports Talk', posts: Math.floor(Math.random() * 800) + 350, emoji: '⚽'},
+];
+
 // INIT
 document.addEventListener('DOMContentLoaded', function() {
   initCursor();
@@ -62,6 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
   loadTheme();
   initProfilePage();
   showLoginForm();
+  startLiveActivityUpdates();
+  startUserCountUpdate();
 });
 
 // CURSOR CHAIN
@@ -99,6 +123,95 @@ function initCursor() {
   });
 }
 
+// LIVE ACTIVITY SYSTEM
+function startLiveActivityUpdates() {
+  setInterval(() => {
+    const randomActivity = activityMessages[Math.floor(Math.random() * activityMessages.length)];
+    const randomUser = 'User_' + Math.floor(Math.random() * 9000 + 1000);
+    const activity = randomActivity.replace('{user}', randomUser);
+    
+    updateLiveNotification(activity);
+    liveUsersCount = Math.max(80, Math.floor(liveUsersCount + Math.random() * 20 - 8));
+    updateUserCounts();
+    loadTrendingTopics();
+  }, 5000);
+}
+
+function updateLiveNotification(text) {
+  const notif = document.getElementById('liveActivityNotif');
+  const notifText = document.getElementById('notifText');
+  notifText.textContent = text;
+  notif.style.animation = 'none';
+  setTimeout(() => {
+    notif.style.animation = 'slideInUp 0.5s ease';
+  }, 10);
+}
+
+function startUserCountUpdate() {
+  setInterval(() => {
+    liveUsersCount = Math.max(80, Math.floor(liveUsersCount + Math.random() * 15 - 6));
+    updateUserCounts();
+  }, 8000);
+}
+
+function updateUserCounts() {
+  const liveUsersEl = document.getElementById('liveUsersCount');
+  const footerUsersEl = document.getElementById('footerUsers');
+  const heroOnlineEl = document.getElementById('heroOnline');
+  
+  if(liveUsersEl) liveUsersEl.textContent = liveUsersCount + ' Active';
+  if(footerUsersEl) footerUsersEl.textContent = liveUsersCount + ' Users Online';
+  if(heroOnlineEl) heroOnlineEl.textContent = liveUsersCount;
+}
+
+// TRENDING TOPICS
+function loadTrendingTopics() {
+  const container = document.getElementById('trendingContainer');
+  if(!container) return;
+  
+  let html = '';
+  trendingTopics.forEach(topic => {
+    html += `
+      <div class="trending-card">
+        <div class="trending-card-header">
+          <span class="trending-title">${topic.emoji} ${topic.title}</span>
+          <span class="trending-badge">🔥 TRENDING</span>
+        </div>
+        <div class="trending-text">
+          Join thousands discussing ${topic.title.toLowerCase()} on campus!
+        </div>
+        <div class="trending-footer">
+          <div class="trending-engagement">
+            <div class="engagement-item">💬 ${topic.posts}</div>
+            <div class="engagement-item">👥 ${Math.floor(topic.posts / 5)}</div>
+          </div>
+          <span style="color:#888; font-size:11px;">Now trending</span>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+// HOME STATS
+function updateHomeStats() {
+  const postsToday = Math.floor(Math.random() * 500) + 200;
+  const activeChats = Math.floor(Math.random() * 150) + 50;
+  
+  const heroPostsEl = document.getElementById('heroPostsToday');
+  const heroChatsEl = document.getElementById('heroChats');
+  
+  if(heroPostsEl) heroPostsEl.textContent = postsToday;
+  if(heroChatsEl) heroChatsEl.textContent = activeChats;
+}
+
+// CHAT ONLINE COUNT
+function updateChatOnlineCount() {
+  const chatOnline = Math.floor(Math.random() * 80) + 20;
+  const chatOnlineEl = document.getElementById('chatOnlineCount');
+  if(chatOnlineEl) chatOnlineEl.textContent = chatOnline;
+}
+
 // SHOW LOGIN FORM ON INIT
 function showLoginForm() {
   document.getElementById('loginForm').style.display = 'block';
@@ -106,7 +219,7 @@ function showLoginForm() {
   document.getElementById('signupForm').style.display = 'none';
 }
 
-// LOGIN FUNCTIONS
+// LOGIN
 function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -119,17 +232,19 @@ function login(e) {
   
   currentUser = {name: email.split('@')[0], email: email};
   localStorage.setItem('user', JSON.stringify(currentUser));
-  msg('Logged in!', 'success');
+  msg('✅ Logged in!', 'success');
   
   setTimeout(() => {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
     document.getElementById('loginForm').reset();
+    updateHomeStats();
+    loadTrendingTopics();
   }, 800);
 }
 
-// FORGOT PASSWORD FUNCTIONS
+// FORGOT PASSWORD
 function goForgotPassword(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -147,20 +262,13 @@ function handleForgotPassword(e) {
   }
   
   const resetToken = Math.random().toString(36).substring(2, 15);
-  const resetData = {
-    email: email,
-    token: resetToken,
-    timestamp: new Date().getTime()
-  };
-  
+  const resetData = {email, token: resetToken, timestamp: new Date().getTime()};
   localStorage.setItem('passwordReset_' + email, JSON.stringify(resetData));
   
-  msg('✓ Reset link sent to ' + email + '! (Demo: Token: ' + resetToken + ')', 'success');
+  msg('✉️ Reset link sent! (Token: ' + resetToken + ')', 'success');
   document.getElementById('resetEmail').value = '';
   
-  setTimeout(() => {
-    goLogin(e);
-  }, 2000);
+  setTimeout(() => goLogin(e), 2000);
 }
 
 function goSignup(e) {
@@ -185,23 +293,8 @@ function signup(e) {
   const pass = document.getElementById('signupPass').value;
   const confirm = document.getElementById('signupConfirm').value;
   
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
-  const type = document.querySelector('input[name="type"]:checked')?.value;
-  const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked')).map(el => el.value);
-  const hobbies = document.getElementById('signupHobbies').value.trim();
-  
   if(!name || !email || !reg || !pass || !confirm) {
     msg('Fill all required fields', 'error');
-    return;
-  }
-  
-  if(!gender) {
-    msg('Please select your gender', 'error');
-    return;
-  }
-  
-  if(!type) {
-    msg('Please select your type', 'error');
     return;
   }
   
@@ -210,16 +303,17 @@ function signup(e) {
     return;
   }
   
-  currentUser = { name, email, reg, gender, type, interests, hobbies };
+  currentUser = { name, email, reg };
   localStorage.setItem('user', JSON.stringify(currentUser));
-  msg('Account created!', 'success');
+  msg('🎉 Account created!', 'success');
   
   setTimeout(() => {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + name;
     document.getElementById('signupForm').reset();
-    goLogin();
+    updateHomeStats();
+    loadTrendingTopics();
   }, 800);
 }
 
@@ -230,6 +324,8 @@ function checkUser() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+    updateHomeStats();
+    loadTrendingTopics();
   }
 }
 
@@ -240,7 +336,7 @@ function logout() {
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('optionsMenu').style.display = 'none';
   document.getElementById('hamburgerMenu').style.display = 'none';
-  msg('Logged out', 'success');
+  msg('👋 Logged out', 'success');
   showLoginForm();
 }
 
@@ -256,6 +352,11 @@ function showPage(name, e) {
   
   if(name === 'communities') {
     loadCommunities();
+    updateChatOnlineCount();
+  }
+  if(name === 'home') {
+    updateHomeStats();
+    loadTrendingTopics();
   }
   
   document.getElementById('optionsMenu').style.display = 'none';
@@ -384,7 +485,7 @@ function verifyCollege() {
     localStorage.setItem('user', JSON.stringify(currentUser));
   }
   
-  msg('✓ Joined ' + currentVerifyCollege.name, 'success');
+  msg('🎓 Joined ' + currentVerifyCollege.name, 'success');
   closeModal('verifyModal');
   
   setTimeout(() => {
@@ -412,7 +513,8 @@ function createPost() {
   
   document.getElementById('postText').value = '';
   loadPosts();
-  msg('Posted!', 'success');
+  msg('🚀 Posted!', 'success');
+  updateHomeStats();
 }
 
 function loadPosts() {
@@ -494,14 +596,10 @@ function submitComplaint() {
   }
   
   let complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
-  complaints.push({
-    user: currentUser.name,
-    text: text,
-    date: new Date().toLocaleDateString()
-  });
+  complaints.push({user: currentUser.name, text, date: new Date().toLocaleDateString()});
   localStorage.setItem('complaints', JSON.stringify(complaints));
   
-  msg('Complaint submitted! We will review it soon.', 'success');
+  msg('✅ Complaint submitted!', 'success');
   document.getElementById('complaintText').value = '';
   closeModal('complaintModal');
 }
@@ -521,7 +619,7 @@ function toggleTheme() {
   document.getElementById('hamburgerMenu').style.display = 'none';
   document.querySelector('.options-btn').classList.remove('active');
   document.querySelector('.hamburger-btn').classList.remove('active');
-  msg('Theme updated!', 'success');
+  msg('🎨 Theme updated!', 'success');
 }
 
 function loadTheme() {
@@ -564,7 +662,7 @@ function loadCommunities() {
   if(verified.length === 0 || !joinedCollege) {
     container.innerHTML = `
       <div class="community-guidance">
-        <p>🎓 Please join the community in the Home page according to your university and start vibing into your college community!</p>
+        <p>🎓 Please join your college community to start chatting and connecting!</p>
         <button onclick="goToHome()" class="home-nav-btn">Go to Home</button>
       </div>
     `;
@@ -608,6 +706,7 @@ function sendChatMessage() {
   
   input.value = '';
   loadChatMessages();
+  msg('💬 Message sent!', 'success');
 }
 
 function handleChatKeypress(e) {
@@ -633,11 +732,11 @@ function loadChatMessages() {
     `;
   });
   
-  messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">No messages yet. Start the conversation!</div>';
+  messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">Start the conversation!</div>';
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// PROFILE PAGE FUNCTIONS
+// PROFILE PAGE
 function showProfilePage() {
   loadProfileData();
   document.getElementById('profilePageModal').style.display = 'flex';
@@ -674,7 +773,6 @@ function loadProfileBasicInfo() {
   
   document.getElementById('editNickname').value = profileData.nickname || '';
   document.getElementById('editDescription').value = profileData.description || '';
-  
   updateCharCounts();
 }
 
@@ -713,7 +811,6 @@ function loadUserPosts() {
   } else {
     noPostsMsg.style.display = 'none';
     container.innerHTML = '';
-    
     userPosts.reverse().forEach((post, index) => {
       let postHtml = `
         <div class="user-post-card">
@@ -722,9 +819,7 @@ function loadUserPosts() {
             <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
           </div>
           <div class="post-content">${escapeHtml(post.text)}</div>
-          <div class="post-stats">
-            <span>Posted</span>
-          </div>
+          <div class="post-stats"><span>Posted</span></div>
         </div>
       `;
       container.innerHTML += postHtml;
@@ -733,20 +828,17 @@ function loadUserPosts() {
 }
 
 function deleteUserPost(index) {
-  if(confirm('Are you sure you want to delete this post?')) {
+  if(confirm('Delete this post?')) {
     let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
     let userPosts = allPosts.filter(p => p.author === currentUser.name);
-    
     userPosts.reverse();
     userPosts.splice(index, 1);
     userPosts.reverse();
-    
     let otherPosts = allPosts.filter(p => p.author !== currentUser.name);
     let finalPosts = otherPosts.concat(userPosts);
-    
     localStorage.setItem('posts', JSON.stringify(finalPosts));
     loadUserPosts();
-    msg('Post deleted!', 'success');
+    msg('🗑️ Post deleted!', 'success');
   }
 }
 
@@ -761,7 +853,6 @@ function loadProfileLikes() {
   } else {
     noLikesMsg.style.display = 'none';
     container.innerHTML = '';
-    
     likes.forEach(like => {
       let likeHtml = `
         <div class="like-card">
@@ -777,7 +868,6 @@ function loadProfileLikes() {
 
 function openEditProfile() {
   document.getElementById('editProfileSection').style.display = 'block';
-  window.scrollTo(0, 0);
 }
 
 function cancelEditProfile() {
@@ -789,23 +879,12 @@ function saveProfile() {
   let nickname = document.getElementById('editNickname').value.trim();
   let description = document.getElementById('editDescription').value.trim();
   
-  if(!nickname) {
-    msg('Nickname cannot be empty', 'error');
+  if(!nickname || !description) {
+    msg('All fields required', 'error');
     return;
   }
-  
-  if(!description) {
-    msg('Description cannot be empty', 'error');
-    return;
-  }
-  
-  if(nickname.length > 25) {
-    msg('Nickname must be less than 25 characters', 'error');
-    return;
-  }
-  
-  if(description.length > 150) {
-    msg('Description must be less than 150 characters', 'error');
+  if(nickname.length > 25 || description.length > 150) {
+    msg('Text too long', 'error');
     return;
   }
   
@@ -813,66 +892,40 @@ function saveProfile() {
   profileData.nickname = nickname;
   profileData.description = description;
   profileData.activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
-  
   localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
   
-  msg('Profile updated successfully!', 'success');
+  msg('✅ Profile updated!', 'success');
   document.getElementById('editProfileSection').style.display = 'none';
   loadProfileBasicInfo();
   loadProfileStats();
 }
 
 function updateCharCounts() {
-  let nicknameInput = document.getElementById('editNickname');
-  let descriptionInput = document.getElementById('editDescription');
-  
-  if(nicknameInput) {
-    nicknameInput.addEventListener('input', function() {
-      document.getElementById('nicknameCharCount').textContent = this.value.length + '/25';
-    });
-  }
-  
-  if(descriptionInput) {
-    descriptionInput.addEventListener('input', function() {
-      document.getElementById('descCharCount').textContent = this.value.length + '/150';
-    });
-  }
+  let ni = document.getElementById('editNickname');
+  let di = document.getElementById('editDescription');
+  if(ni) ni.addEventListener('input', () => { document.getElementById('nicknameCharCount').textContent = ni.value.length + '/25'; });
+  if(di) di.addEventListener('input', () => { document.getElementById('descCharCount').textContent = di.value.length + '/150'; });
 }
 
 function switchProfileTab(tabName) {
-  document.querySelectorAll('.profile-tab-content').forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.display = 'none';
-  });
-  
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
+  document.querySelectorAll('.profile-tab-content').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   
   if(tabName === 'posts') {
-    let postsTab = document.getElementById('postsTab');
-    if(postsTab) {
-      postsTab.classList.add('active');
-      postsTab.style.display = 'block';
-    }
-  } else if(tabName === 'likes') {
-    let likesTab = document.getElementById('likesTab');
-    if(likesTab) {
-      likesTab.classList.add('active');
-      likesTab.style.display = 'block';
-    }
+    document.getElementById('postsTab').classList.add('active');
+    document.getElementById('postsTab').style.display = 'block';
+  } else {
+    document.getElementById('likesTab').classList.add('active');
+    document.getElementById('likesTab').style.display = 'block';
   }
-  
   event.target.classList.add('active');
 }
 
-// AVATAR UPLOAD FUNCTION
 function handleAvatarUpload(event) {
   const file = event.target.files[0];
   if(!file) return;
-  
   if(!file.type.startsWith('image/')) {
-    msg('Please select an image file', 'error');
+    msg('Select an image file', 'error');
     return;
   }
   
@@ -885,54 +938,23 @@ function handleAvatarUpload(event) {
     
     document.getElementById('profilePhoto').style.backgroundImage = `url(${base64})`;
     document.getElementById('profilePhoto').textContent = '';
-    
-    msg('Avatar updated!', 'success');
+    msg('📸 Avatar updated!', 'success');
   };
   reader.readAsDataURL(file);
 }
 
 function escapeHtml(text) {
-  let map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
+  let map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
   return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 function updateActiveStatus() {
-  let activeText = document.getElementById('activeText');
   let now = new Date().getHours();
-  
-  if(now >= 9 && now <= 23) {
-    activeText.textContent = 'Active Now';
-  } else {
-    activeText.textContent = 'Away';
-  }
+  document.getElementById('activeText').textContent = (now >= 9 && now <= 23) ? 'Active Now' : 'Away';
 }
 
 function initProfilePage() {
   updateActiveStatus();
-  
-  let nicknameInput = document.getElementById('editNickname');
-  let descriptionInput = document.getElementById('editDescription');
-  
-  if(nicknameInput) {
-    nicknameInput.addEventListener('input', function() {
-      let countElem = document.getElementById('nicknameCharCount');
-      if(countElem) countElem.textContent = this.value.length + '/25';
-    });
-  }
-  
-  if(descriptionInput) {
-    descriptionInput.addEventListener('input', function() {
-      let countElem = document.getElementById('descCharCount');
-      if(countElem) countElem.textContent = this.value.length + '/150';
-    });
-  }
-  
   let postsTab = document.getElementById('postsTab');
   if(postsTab) {
     postsTab.classList.add('active');
@@ -940,7 +962,6 @@ function initProfilePage() {
   }
 }
 
-// MESSAGE FUNCTION
 function msg(text, type) {
   const box = document.getElementById('message');
   const div = document.createElement('div');
@@ -948,8 +969,5 @@ function msg(text, type) {
   div.textContent = text;
   box.innerHTML = '';
   box.appendChild(div);
-  
-  setTimeout(() => {
-    div.remove();
-  }, 3500);
+  setTimeout(() => div.remove(), 3500);
 }
