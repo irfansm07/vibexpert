@@ -2507,7 +2507,7 @@ body.light-theme footer {
 
 /* 🌌 LOGIN PAGE BACKGROUND */
 #loginPage {
-  background-image: url("image/background of loginpage.jpg"); /* use your filename */
+  background-image: url("background of loginpage.jpg"); /* use your filename */
   background-size: cover;          /* makes it fit all screens */
   background-position: center;     /* keeps it centered */
   background-repeat: no-repeat;    /* prevents tiling */
@@ -2522,7 +2522,7 @@ body.light-theme footer {
 
 /* 🪩 MAIN PAGE BACKGROUND */
 #mainPage {
-  background-image: url("image/background of loginpage.jpg");
+  background-image: url("background of loginpage.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -2552,6 +2552,7 @@ footer {
   position: relative;
   z-index: 1;
 }
+
 
 
 
