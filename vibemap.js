@@ -9,6 +9,9 @@ let allColleges = [];
 let liveUsersCount = Math.floor(Math.random() * 500) + 100;
 let activitiesQueue = [];
 
+// 🔗 Backend API Base URL
+const API_BASE_URL = "https://vibexpert-backend-main.onrender.com";
+
 const colleges = {
   nit: [
     {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
@@ -218,31 +221,45 @@ function showLoginForm() {
   document.getElementById('forgotPasswordForm').style.display = 'none';
   document.getElementById('signupForm').style.display = 'none';
 }
-
-// LOGIN
-function login(e) {
+//edited
+// LOGIN 
+async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPassword').value;
-  
-  if(!email || !pass) {
+
+  if (!email || !pass) {
     msg('Fill all fields', 'error');
     return;
   }
-  
-  currentUser = {name: email.split('@')[0], email: email};
-  localStorage.setItem('user', JSON.stringify(currentUser));
-  msg('✅ Logged in!', 'success');
-  
-  setTimeout(() => {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainPage').style.display = 'block';
-    document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
-    document.getElementById('loginForm').reset();
-    updateHomeStats();
-    loadTrendingTopics();
-  }, 800);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+
+    msg('✅ Logged in!', 'success');
+    currentUser = data.user;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+
+    setTimeout(() => {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainPage').style.display = 'block';
+      document.getElementById('userName').textContent = 'Hi, ' + currentUser.name;
+      document.getElementById('loginForm').reset();
+      updateHomeStats();
+      loadTrendingTopics();
+    }, 800);
+  } catch (err) {
+    msg(err.message, 'error');
+  }
 }
+
 
 // FORGOT PASSWORD
 function goForgotPassword(e) {
@@ -284,38 +301,52 @@ function goLogin(e) {
   document.getElementById('forgotPasswordForm').style.display = 'none';
   document.getElementById('loginForm').style.display = 'block';
 }
-
-function signup(e) {
+//edited 
+async function signup(e) {
   e.preventDefault();
   const name = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
   const reg = document.getElementById('signupReg').value.trim();
   const pass = document.getElementById('signupPass').value;
   const confirm = document.getElementById('signupConfirm').value;
-  
-  if(!name || !email || !reg || !pass || !confirm) {
+
+  if (!name || !email || !reg || !pass || !confirm) {
     msg('Fill all required fields', 'error');
     return;
   }
-  
-  if(pass !== confirm) {
-    msg('Passwords don\'t match', 'error');
+
+  if (pass !== confirm) {
+    msg("Passwords don't match", 'error');
     return;
   }
-  
-  currentUser = { name, email, reg };
-  localStorage.setItem('user', JSON.stringify(currentUser));
-  msg('🎉 Account created!', 'success');
-  
-  setTimeout(() => {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainPage').style.display = 'block';
-    document.getElementById('userName').textContent = 'Hi, ' + name;
-    document.getElementById('signupForm').reset();
-    updateHomeStats();
-    loadTrendingTopics();
-  }, 800);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/users/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, reg, password: pass })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Signup failed');
+
+    msg('🎉 Account created successfully!', 'success');
+    currentUser = data.user;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+
+    setTimeout(() => {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainPage').style.display = 'block';
+      document.getElementById('userName').textContent = 'Hi, ' + name;
+      document.getElementById('signupForm').reset();
+      updateHomeStats();
+      loadTrendingTopics();
+    }, 800);
+  } catch (err) {
+    msg(err.message, 'error');
+  }
 }
+
 
 function checkUser() {
   const saved = localStorage.getItem('user');
@@ -492,47 +523,60 @@ function verifyCollege() {
     showColleges();
   }, 500);
 }
-
+//edited
 // POSTS
-function createPost() {
+async function createPost() {
   const text = document.getElementById('postText').value.trim();
-  if(!text) {
+  if (!text) {
     msg('Write something', 'error');
     return;
   }
-  
-  const post = {
-    author: currentUser.name,
-    text: text,
-    time: new Date().toLocaleTimeString()
-  };
-  
-  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
-  posts.unshift(post);
-  localStorage.setItem('posts', JSON.stringify(posts));
-  
-  document.getElementById('postText').value = '';
-  loadPosts();
-  msg('🚀 Posted!', 'success');
-  updateHomeStats();
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        author: currentUser.name,
+        text,
+        time: new Date().toISOString()
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Failed to create post');
+
+    document.getElementById('postText').value = '';
+    msg('🚀 Posted!', 'success');
+    loadPosts(); // fetch from backend next
+  } catch (err) {
+    msg(err.message, 'error');
+  }
 }
 
-function loadPosts() {
-  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
-  let html = '';
-  
-  posts.forEach(p => {
-    html += `
-      <div class="post">
-        <div class="author">@${p.author}</div>
-        <div class="text">${p.text}</div>
-        <div class="time">${p.time}</div>
-      </div>
-    `;
-  });
-  
-  document.getElementById('postsFeed').innerHTML = html;
+
+async function loadPosts() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/posts`);
+    const posts = await res.json();
+    let html = '';
+
+    posts.reverse().forEach(p => {
+      html += `
+        <div class="post">
+          <div class="author">@${p.author}</div>
+          <div class="text">${p.text}</div>
+          <div class="time">${new Date(p.time).toLocaleString()}</div>
+        </div>
+      `;
+    });
+
+    document.getElementById('postsFeed').innerHTML = html;
+  } catch (err) {
+    msg('Failed to load posts', 'error');
+  }
 }
+
 
 // MENUS
 function toggleOptionsMenu() {
