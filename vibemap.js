@@ -1087,3 +1087,4 @@ function msg(text, type) {
   box.appendChild(div);
   setTimeout(() => div.remove(), 3500);
 }
+
