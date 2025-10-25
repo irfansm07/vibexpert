@@ -1,6 +1,6 @@
 // VIBEXPERT - COMPLETE JAVASCRIPT WITH BACKEND INTEGRATION
 
-const API_URL = 'https://vibexpert-backend-main.onrender.com/'; // REPLACE WITH YOUR ACTUAL RENDER URL
+const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
 let currentUser = null;
 let currentType = null;
@@ -1087,4 +1087,5 @@ function msg(text, type) {
   box.appendChild(div);
   setTimeout(() => div.remove(), 3500);
 }
+
 
