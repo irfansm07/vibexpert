@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE JAVASCRIPT WITH BACKEND INTEGRATION
+// VIBEXPERT - COMPLETE FIXED FRONTEND WITH FULL BACKEND INTEGRATION
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -9,12 +9,11 @@ const ITEMS_PER_PAGE = 10;
 let currentVerifyCollege = null;
 let allColleges = [];
 let liveUsersCount = Math.floor(Math.random() * 500) + 100;
-let activitiesQueue = [];
 
 const colleges = {
   nit: [
     {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
-    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourzela'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela'},
     {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
     {name: 'NIT Jamshedpur', email: 'nit.jam@edu.in', location: 'Jamshedpur'},
     {name: 'NIT Durgapur', email: 'nit.durgapur@edu.in', location: 'Durgapur'},
@@ -23,8 +22,6 @@ const colleges = {
     {name: 'NIT Jalandhar', email: 'nit.jalandhar@edu.in', location: 'Jalandhar'},
     {name: 'NIT Kurukshetra', email: 'nit.kurukshetra@edu.in', location: 'Kurukshetra'},
     {name: 'NIT Allahabad', email: 'nit.allahabad@edu.in', location: 'Allahabad'},
-    {name: 'NIT Silchar', email: 'nit.silchar@edu.in', location: 'Silchar'},
-    {name: 'NIT Manipur', email: 'nit.manipur@edu.in', location: 'Manipur'},
   ],
   iit: [
     {name: 'IIT Delhi', email: 'iit.delhi@edu.in', location: 'New Delhi'},
@@ -35,27 +32,18 @@ const colleges = {
     {name: 'IIT Roorkee', email: 'iit.roorkee@edu.in', location: 'Roorkee'},
     {name: 'IIT Guwahati', email: 'iit.guwahati@edu.in', location: 'Guwahati'},
     {name: 'IIT Hyderabad', email: 'iit.hyderabad@edu.in', location: 'Hyderabad'},
-    {name: 'IIT Indore', email: 'iit.indore@edu.in', location: 'Indore'},
-    {name: 'IIT Varanasi', email: 'iit.varanasi@edu.in', location: 'Varanasi'},
-    {name: 'IIT Bhubaneswar', email: 'iit.bhubaneswar@edu.in', location: 'Bhubaneswar'},
-    {name: 'IIT Patna', email: 'iit.patna@edu.in', location: 'Patna'},
   ],
   vit: [
     {name: 'VIT Bhopal', email: 'vitbhopal@vit.ac.in', location: 'Bhopal'},
     {name: 'VIT Vellore', email: 'vitvellore@vit.ac.in', location: 'Vellore'},
     {name: 'VIT Chennai', email: 'vitchennai@vit.ac.in', location: 'Chennai'},
-    {name: 'VIT Pune', email: 'vitpune@vit.ac.in', location: 'Pune'},
     {name: 'VIT Amaravati', email: 'vitamaravati@vit.ac.in', location: 'Amaravati'},
   ],
   other: [
     {name: 'Delhi University', email: 'du@delhi.edu.in', location: 'New Delhi'},
     {name: 'Mumbai University', email: 'mu@mumbai.edu.in', location: 'Mumbai'},
     {name: 'Bangalore University', email: 'bu@bangalore.edu.in', location: 'Bangalore'},
-    {name: 'Chennai University', email: 'cu@chennai.edu.in', location: 'Chennai'},
-    {name: 'Kolkata University', email: 'ku@kolkata.edu.in', location: 'Kolkata'},
-    {name: 'Hyderabad University', email: 'hu@hyderabad.edu.in', location: 'Hyderabad'},
     {name: 'Pune University', email: 'pu@pune.edu.in', location: 'Pune'},
-    {name: 'Banaras Hindu University', email: 'bhu@banaras.edu.in', location: 'Varanasi'},
   ]
 };
 
@@ -65,9 +53,6 @@ const activityMessages = [
   '💬 {user} joined the chat',
   '🔥 {user}\'s post is trending!',
   '🎉 {user} just joined VibeXpert',
-  '⭐ {user} got a new like',
-  '📸 {user} shared a photo',
-  '🚀 {user} is super active today!',
 ];
 
 const trendingTopics = [
@@ -75,8 +60,6 @@ const trendingTopics = [
   {title: 'Friday Vibes', posts: Math.floor(Math.random() * 800) + 300, emoji: '🎉'},
   {title: 'Study Tips', posts: Math.floor(Math.random() * 600) + 200, emoji: '📚'},
   {title: 'Coffee Talks', posts: Math.floor(Math.random() * 700) + 250, emoji: '☕'},
-  {title: 'Gaming Zone', posts: Math.floor(Math.random() * 900) + 400, emoji: '🎮'},
-  {title: 'Sports Talk', posts: Math.floor(Math.random() * 800) + 350, emoji: '⚽'},
 ];
 
 // HELPER: Get Auth Token
@@ -84,7 +67,7 @@ function getToken() {
   return localStorage.getItem('authToken');
 }
 
-// HELPER: Make API Call
+// HELPER: Make API Call with better error handling
 async function apiCall(endpoint, method = 'GET', body = null) {
   const options = {
     method,
@@ -103,16 +86,30 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   }
   
   try {
+    console.log(`🔄 ${method} ${endpoint}`);
     const response = await fetch(`${API_URL}${endpoint}`, options);
+    
+    // Handle non-JSON responses
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Server returned non-JSON response. Please try again.');
+    }
+    
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error || 'Request failed');
+      throw new Error(data.error || `Error: ${response.status}`);
     }
     
+    console.log('✅ Success:', endpoint);
     return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('❌ API Error:', error);
+    
+    // Better error messages
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Cannot connect to server. Please check your internet connection.');
+    }
     throw error;
   }
 }
@@ -126,6 +123,11 @@ document.addEventListener('DOMContentLoaded', function() {
   showLoginForm();
   startLiveActivityUpdates();
   startUserCountUpdate();
+  
+  // Load posts if on posts page
+  if(document.getElementById('posts')) {
+    loadPosts();
+  }
 });
 
 // CURSOR CHAIN
@@ -180,11 +182,13 @@ function startLiveActivityUpdates() {
 function updateLiveNotification(text) {
   const notif = document.getElementById('liveActivityNotif');
   const notifText = document.getElementById('notifText');
-  notifText.textContent = text;
-  notif.style.animation = 'none';
-  setTimeout(() => {
-    notif.style.animation = 'slideInUp 0.5s ease';
-  }, 10);
+  if(notifText) {
+    notifText.textContent = text;
+    notif.style.animation = 'none';
+    setTimeout(() => {
+      notif.style.animation = 'slideInUp 0.5s ease';
+    }, 10);
+  }
 }
 
 function startUserCountUpdate() {
@@ -259,7 +263,7 @@ function showLoginForm() {
   document.getElementById('signupForm').style.display = 'none';
 }
 
-// LOGIN - NOW WITH BACKEND
+// LOGIN - WITH BACKEND
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -275,12 +279,11 @@ async function login(e) {
     
     const data = await apiCall('/api/login', 'POST', { email, password });
     
-    // Save token and user data
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     currentUser = data.user;
     
-    msg('✅ Logged in!', 'success');
+    msg('✅ Login successful!', 'success');
     
     setTimeout(() => {
       document.getElementById('loginPage').style.display = 'none';
@@ -295,7 +298,7 @@ async function login(e) {
   }
 }
 
-// FORGOT PASSWORD - NOW WITH BACKEND
+// FORGOT PASSWORD
 function goForgotPassword(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -317,17 +320,15 @@ async function handleForgotPassword(e) {
     
     const data = await apiCall('/api/forgot-password', 'POST', { email });
     
-    msg('✅ ' + data.message, 'success');
+    msg('✅ Check your email for reset code', 'success');
     document.getElementById('resetEmail').value = '';
     
-    // Show code input and new password fields
     showResetCodeForm(email);
   } catch (error) {
-    msg('❌ Failed: ' + error.message, 'error');
+    msg('❌ ' + error.message, 'error');
   }
 }
 
-// NEW: Show reset code verification form
 function showResetCodeForm(email) {
   const form = document.getElementById('forgotPasswordForm');
   form.innerHTML = `
@@ -341,7 +342,6 @@ function showResetCodeForm(email) {
   `;
 }
 
-// NEW: Verify reset code and update password
 async function verifyResetCode(email) {
   const code = document.getElementById('resetCode').value.trim();
   const newPassword = document.getElementById('newPassword').value;
@@ -358,19 +358,19 @@ async function verifyResetCode(email) {
   }
   
   try {
-    msg('Verifying code...', 'success');
+    msg('Resetting password...', 'success');
     
-    const data = await apiCall('/api/verify-reset-code', 'POST', {
+    await apiCall('/api/verify-reset-code', 'POST', {
       email,
       code,
       newPassword
     });
     
-    msg('✅ ' + data.message, 'success');
+    msg('✅ Password reset successful!', 'success');
     
     setTimeout(() => goLogin(null), 1500);
   } catch (error) {
-    msg('❌ Failed: ' + error.message, 'error');
+    msg('❌ ' + error.message, 'error');
   }
 }
 
@@ -387,7 +387,6 @@ function goLogin(e) {
   document.getElementById('forgotPasswordForm').style.display = 'none';
   document.getElementById('loginForm').style.display = 'block';
   
-  // Reset forgot password form to original state
   const forgotForm = document.getElementById('forgotPasswordForm');
   forgotForm.innerHTML = `
     <h2>Reset Password</h2>
@@ -397,7 +396,7 @@ function goLogin(e) {
   `;
 }
 
-// SIGNUP - NOW WITH BACKEND
+// SIGNUP - WITH BACKEND
 async function signup(e) {
   e.preventDefault();
   const username = document.getElementById('signupName').value.trim();
@@ -415,22 +414,30 @@ async function signup(e) {
     return;
   }
   
+  if(password.length < 6) {
+    msg('Password must be at least 6 characters', 'error');
+    return;
+  }
+  
   try {
     msg('Creating account...', 'success');
     
-    const data = await apiCall('/api/register', 'POST', {
+    await apiCall('/api/register', 'POST', {
       username,
       email,
       password
     });
     
-    msg('🎉 ' + data.message, 'success');
+    msg('🎉 Account created! Redirecting to login...', 'success');
+    
+    document.getElementById('signupForm').reset();
     
     setTimeout(() => {
       goLogin(null);
+      msg('✅ You can now log in', 'success');
     }, 2000);
   } catch (error) {
-    msg('❌ Registration failed: ' + error.message, 'error');
+    msg('❌ ' + error.message, 'error');
   }
 }
 
@@ -454,8 +461,10 @@ function logout() {
   localStorage.removeItem('user');
   document.getElementById('mainPage').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
   msg('👋 Logged out', 'success');
   showLoginForm();
 }
@@ -465,7 +474,8 @@ function showPage(name, e) {
   if(e) e.preventDefault();
   
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-  document.getElementById(name).style.display = 'block';
+  const targetPage = document.getElementById(name);
+  if(targetPage) targetPage.style.display = 'block';
   
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if(e && e.target) e.target.classList.add('active');
@@ -478,18 +488,27 @@ function showPage(name, e) {
     updateHomeStats();
     loadTrendingTopics();
   }
+  if(name === 'posts') {
+    loadPosts();
+  }
   
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsBtn = document.querySelector('.options-btn');
+  const hamburgerBtn = document.querySelector('.hamburger-btn');
+  
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if(optionsBtn) optionsBtn.classList.remove('active');
+  if(hamburgerBtn) hamburgerBtn.classList.remove('active');
   
   window.scrollTo(0, 0);
 }
 
 function goHome() {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  document.querySelector('.nav-link').classList.add('active');
+  const firstLink = document.querySelector('.nav-link');
+  if(firstLink) firstLink.classList.add('active');
   showPage('home');
 }
 
@@ -497,9 +516,7 @@ function goToHome() {
   showPage('home', { target: document.querySelector('.nav-link') });
 }
 
-// REST OF THE CODE REMAINS THE SAME (universities, colleges, posts, etc.)
-// ... (keeping all the other functions from the original file)
-
+// UNIVERSITIES
 function selectUniversity(type) {
   currentType = type;
   currentPage = 1;
@@ -531,10 +548,10 @@ function showColleges(filtered = null) {
     const isVerified = verified.includes(c.name);
     html += `
       <div class="college-item">
-        <h3>${c.name}</h3>
-        <p>${c.location}</p>
-        <p style="font-size:12px; color:#888;">${c.email}</p>
-        <button ${isVerified ? 'class="verified"' : ''} onclick="openVerify('${c.name}', '${c.email}')">${isVerified ? '✓ Joined' : 'Connect'}</button>
+        <h3>${escapeHtml(c.name)}</h3>
+        <p>${escapeHtml(c.location)}</p>
+        <p style="font-size:12px; color:#888;">${escapeHtml(c.email)}</p>
+        <button ${isVerified ? 'class="verified"' : ''} onclick="openVerify('${escapeHtml(c.name).replace(/'/g, "\\'")}', '${escapeHtml(c.email)}')">${isVerified ? '✓ Joined' : 'Connect'}</button>
       </div>
     `;
   });
@@ -614,10 +631,16 @@ function verifyCollege() {
   }, 500);
 }
 
+// POSTS
 function createPost() {
   const text = document.getElementById('postText').value.trim();
   if(!text) {
     msg('Write something', 'error');
+    return;
+  }
+  
+  if(!currentUser) {
+    msg('Please login first', 'error');
     return;
   }
   
@@ -638,27 +661,37 @@ function createPost() {
 }
 
 function loadPosts() {
+  const feedEl = document.getElementById('postsFeed');
+  if(!feedEl) return;
+  
   let posts = JSON.parse(localStorage.getItem('posts') || '[]');
   let html = '';
   
-  posts.forEach(p => {
-    html += `
-      <div class="post">
-        <div class="author">@${p.author}</div>
-        <div class="text">${p.text}</div>
-        <div class="time">${p.time}</div>
-      </div>
-    `;
-  });
+  if(posts.length === 0) {
+    html = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post!</div>';
+  } else {
+    posts.forEach(p => {
+      html += `
+        <div class="post">
+          <div class="author">@${escapeHtml(p.author)}</div>
+          <div class="text">${escapeHtml(p.text)}</div>
+          <div class="time">${escapeHtml(p.time)}</div>
+        </div>
+      `;
+    });
+  }
   
-  document.getElementById('postsFeed').innerHTML = html;
+  feedEl.innerHTML = html;
 }
 
+// MENUS
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
   const btn = document.querySelector('.options-btn');
   
-  if(menu.style.display === 'none') {
+  if(!menu || !btn) return;
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
     btn.classList.add('active');
   } else {
@@ -671,7 +704,9 @@ function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
   const btn = document.querySelector('.hamburger-btn');
   
-  if(menu.style.display === 'none') {
+  if(!menu || !btn) return;
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
     btn.classList.add('active');
   } else {
@@ -697,12 +732,13 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// MODALS
 function showComplaintModal() {
   document.getElementById('complaintModal').style.display = 'flex';
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
 }
 
 function submitComplaint() {
@@ -733,10 +769,10 @@ function toggleTheme() {
     body.classList.add('dark-theme');
     localStorage.setItem('theme', 'dark');
   }
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
   msg('🎨 Theme updated!', 'success');
 }
 
@@ -747,10 +783,10 @@ function loadTheme() {
 
 function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
 }
 
 function showPhotoModal() {
@@ -758,7 +794,8 @@ function showPhotoModal() {
 }
 
 function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const modal = document.getElementById(id);
+  if(modal) modal.style.display = 'none';
 }
 
 document.querySelectorAll('.modal').forEach(m => {
@@ -769,12 +806,15 @@ document.querySelectorAll('.modal').forEach(m => {
   });
 });
 
+// COMMUNITIES
 function loadCommunities() {
   const joinedCollege = currentUser?.joinedCollege;
   const verified = JSON.parse(localStorage.getItem('verified') || '[]');
   
   const container = document.getElementById('communitiesContainer');
   const chatSection = document.getElementById('chatSection');
+  
+  if(!container || !chatSection) return;
   
   if(verified.length === 0 || !joinedCollege) {
     container.innerHTML = `
@@ -787,7 +827,7 @@ function loadCommunities() {
   } else {
     container.innerHTML = `
       <div class="community-card">
-        <h3>✓ ${joinedCollege}</h3>
+        <h3>✓ ${escapeHtml(joinedCollege)}</h3>
         <p>You are part of this community</p>
         <button onclick="scrollToChat()">Open Chat</button>
       </div>
@@ -798,15 +838,25 @@ function loadCommunities() {
 }
 
 function scrollToChat() {
-  document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
+  const chatSection = document.getElementById('chatSection');
+  if(chatSection) {
+    chatSection.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 function sendChatMessage() {
   const input = document.getElementById('chatInput');
+  if(!input) return;
+  
   const message = input.value.trim();
   
   if(!message) {
     msg('Write a message', 'error');
+    return;
+  }
+  
+  if(!currentUser) {
+    msg('Please login first', 'error');
     return;
   }
   
@@ -834,32 +884,44 @@ function handleChatKeypress(e) {
 
 function loadChatMessages() {
   const messagesContainer = document.getElementById('chatMessages');
+  if(!messagesContainer) return;
+  
   let chats = JSON.parse(localStorage.getItem('chats') || '[]');
   
   chats = chats.filter(c => c.college === currentUser?.joinedCollege);
   
   let html = '';
-  chats.forEach(chat => {
-    const isOwn = chat.sender === currentUser.username;
-    html += `
-      <div class="chat-message ${isOwn ? 'own' : 'other'}">
-        ${!isOwn ? `<div class="sender">@${chat.sender}</div>` : ''}
-        <div class="text">${chat.text}</div>
-      </div>
-    `;
-  });
+  if(chats.length === 0) {
+    html = '<div style="color:#888; text-align:center; padding:20px;">Start the conversation!</div>';
+  } else {
+    chats.forEach(chat => {
+      const isOwn = chat.sender === currentUser.username;
+      html += `
+        <div class="chat-message ${isOwn ? 'own' : 'other'}">
+          ${!isOwn ? `<div class="sender">@${escapeHtml(chat.sender)}</div>` : ''}
+          <div class="text">${escapeHtml(chat.text)}</div>
+        </div>
+      `;
+    });
+  }
   
-  messagesContainer.innerHTML = html || '<div style="color:#888; text-align:center; padding:20px;">Start the conversation!</div>';
+  messagesContainer.innerHTML = html;
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// PROFILE PAGE
 function showProfilePage() {
+  if(!currentUser) {
+    msg('Please login first', 'error');
+    return;
+  }
+  
   loadProfileData();
   document.getElementById('profilePageModal').style.display = 'flex';
-  document.getElementById('optionsMenu').style.display = 'none';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.querySelector('.options-btn').classList.remove('active');
-  document.querySelector('.hamburger-btn').classList.remove('active');
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
   window.scrollTo(0, 0);
 }
 
@@ -875,20 +937,30 @@ function loadProfileBasicInfo() {
   
   let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
   
-  document.getElementById('profileDisplayName').textContent = currentUser.username || 'User';
-  document.getElementById('nicknameValue').textContent = profileData.nickname || currentUser.username;
-  document.getElementById('profileDescriptionText').textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  const displayNameEl = document.getElementById('profileDisplayName');
+  const nicknameEl = document.getElementById('nicknameValue');
+  const descEl = document.getElementById('profileDescriptionText');
+  const photoEl = document.getElementById('profilePhoto');
   
-  if(profileData.avatar) {
-    document.getElementById('profilePhoto').style.backgroundImage = `url(${profileData.avatar})`;
-    document.getElementById('profilePhoto').textContent = '';
-  } else {
-    document.getElementById('profilePhoto').style.backgroundImage = 'none';
-    document.getElementById('profilePhoto').textContent = '👤';
+  if(displayNameEl) displayNameEl.textContent = currentUser.username || 'User';
+  if(nicknameEl) nicknameEl.textContent = profileData.nickname || currentUser.username;
+  if(descEl) descEl.textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  
+  if(photoEl) {
+    if(profileData.avatar) {
+      photoEl.style.backgroundImage = `url(${profileData.avatar})`;
+      photoEl.textContent = '';
+    } else {
+      photoEl.style.backgroundImage = 'none';
+      photoEl.textContent = '👤';
+    }
   }
   
-  document.getElementById('editNickname').value = profileData.nickname || '';
-  document.getElementById('editDescription').value = profileData.description || '';
+  const editNicknameEl = document.getElementById('editNickname');
+  const editDescEl = document.getElementById('editDescription');
+  if(editNicknameEl) editNicknameEl.value = profileData.nickname || '';
+  if(editDescEl) editDescEl.value = profileData.description || '';
+  
   updateCharCounts();
 }
 
@@ -896,22 +968,27 @@ function loadProfileStats() {
   if(!currentUser) return;
   
   let userPosts = getUserPosts();
-  document.getElementById('profilePostsCount').textContent = userPosts.length;
+  const postsCountEl = document.getElementById('profilePostsCount');
+  if(postsCountEl) postsCountEl.textContent = userPosts.length;
   
   let profileLikes = getProfileLikes();
-  document.getElementById('profileLikesCount').textContent = profileLikes.length;
+  const likesCountEl = document.getElementById('profileLikesCount');
+  if(likesCountEl) likesCountEl.textContent = profileLikes.length;
   
   let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
   let activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
-  document.getElementById('usedHoursCount').textContent = activeHours + 'h';
+  const hoursEl = document.getElementById('usedHoursCount');
+  if(hoursEl) hoursEl.textContent = activeHours + 'h';
 }
 
 function getUserPosts() {
+  if(!currentUser) return [];
   let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
   return allPosts.filter(p => p.author === currentUser.username);
 }
 
 function getProfileLikes() {
+  if(!currentUser) return [];
   let likes = JSON.parse(localStorage.getItem('profileLikes_' + currentUser.email) || '[]');
   return likes;
 }
@@ -920,6 +997,8 @@ function loadUserPosts() {
   let userPosts = getUserPosts();
   let container = document.getElementById('userPostsContainer');
   let noPostsMsg = document.getElementById('noPostsMessage');
+  
+  if(!container || !noPostsMsg) return;
   
   if(userPosts.length === 0) {
     container.innerHTML = '';
@@ -931,7 +1010,7 @@ function loadUserPosts() {
       let postHtml = `
         <div class="user-post-card">
           <div class="post-header">
-            <span class="post-time">${post.time}</span>
+            <span class="post-time">${escapeHtml(post.time)}</span>
             <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
           </div>
           <div class="post-content">${escapeHtml(post.text)}</div>
@@ -954,6 +1033,7 @@ function deleteUserPost(index) {
     let finalPosts = otherPosts.concat(userPosts);
     localStorage.setItem('posts', JSON.stringify(finalPosts));
     loadUserPosts();
+    loadProfileStats();
     msg('🗑️ Post deleted!', 'success');
   }
 }
@@ -962,6 +1042,8 @@ function loadProfileLikes() {
   let likes = getProfileLikes();
   let container = document.getElementById('profileLikesContainer');
   let noLikesMsg = document.getElementById('noLikesMessage');
+  
+  if(!container || !noLikesMsg) return;
   
   if(likes.length === 0) {
     container.innerHTML = '';
@@ -974,7 +1056,7 @@ function loadProfileLikes() {
         <div class="like-card">
           <div class="like-avatar">👤</div>
           <div class="like-name">${escapeHtml(like.userName)}</div>
-          <div class="like-time">${like.time || 'Recently'}</div>
+          <div class="like-time">${escapeHtml(like.time || 'Recently')}</div>
         </div>
       `;
       container.innerHTML += likeHtml;
@@ -983,17 +1065,24 @@ function loadProfileLikes() {
 }
 
 function openEditProfile() {
-  document.getElementById('editProfileSection').style.display = 'block';
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'block';
 }
 
 function cancelEditProfile() {
-  document.getElementById('editProfileSection').style.display = 'none';
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'none';
   loadProfileBasicInfo();
 }
 
 function saveProfile() {
-  let nickname = document.getElementById('editNickname').value.trim();
-  let description = document.getElementById('editDescription').value.trim();
+  const nicknameEl = document.getElementById('editNickname');
+  const descEl = document.getElementById('editDescription');
+  
+  if(!nicknameEl || !descEl) return;
+  
+  let nickname = nicknameEl.value.trim();
+  let description = descEl.value.trim();
   
   if(!nickname || !description) {
     msg('All fields required', 'error');
@@ -1011,7 +1100,8 @@ function saveProfile() {
   localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
   
   msg('✅ Profile updated!', 'success');
-  document.getElementById('editProfileSection').style.display = 'none';
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'none';
   loadProfileBasicInfo();
   loadProfileStats();
 }
@@ -1019,22 +1109,48 @@ function saveProfile() {
 function updateCharCounts() {
   let ni = document.getElementById('editNickname');
   let di = document.getElementById('editDescription');
-  if(ni) ni.addEventListener('input', () => { document.getElementById('nicknameCharCount').textContent = ni.value.length + '/25'; });
-  if(di) di.addEventListener('input', () => { document.getElementById('descCharCount').textContent = di.value.length + '/150'; });
+  let niCount = document.getElementById('nicknameCharCount');
+  let diCount = document.getElementById('descCharCount');
+  
+  if(ni && niCount) {
+    ni.addEventListener('input', () => { 
+      niCount.textContent = ni.value.length + '/25'; 
+    });
+    niCount.textContent = ni.value.length + '/25';
+  }
+  
+  if(di && diCount) {
+    di.addEventListener('input', () => { 
+      diCount.textContent = di.value.length + '/150'; 
+    });
+    diCount.textContent = di.value.length + '/150';
+  }
 }
 
 function switchProfileTab(tabName) {
-  document.querySelectorAll('.profile-tab-content').forEach(t => { t.classList.remove('active'); t.style.display = 'none'; });
+  document.querySelectorAll('.profile-tab-content').forEach(t => { 
+    t.classList.remove('active'); 
+    t.style.display = 'none'; 
+  });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   
   if(tabName === 'posts') {
-    document.getElementById('postsTab').classList.add('active');
-    document.getElementById('postsTab').style.display = 'block';
+    const postsTab = document.getElementById('postsTab');
+    if(postsTab) {
+      postsTab.classList.add('active');
+      postsTab.style.display = 'block';
+    }
   } else {
-    document.getElementById('likesTab').classList.add('active');
-    document.getElementById('likesTab').style.display = 'block';
+    const likesTab = document.getElementById('likesTab');
+    if(likesTab) {
+      likesTab.classList.add('active');
+      likesTab.style.display = 'block';
+    }
   }
-  event.target.classList.add('active');
+  
+  if(event && event.target) {
+    event.target.classList.add('active');
+  }
 }
 
 function handleAvatarUpload(event) {
@@ -1052,21 +1168,28 @@ function handleAvatarUpload(event) {
     profileData.avatar = base64;
     localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
     
-    document.getElementById('profilePhoto').style.backgroundImage = `url(${base64})`;
-    document.getElementById('profilePhoto').textContent = '';
+    const photoEl = document.getElementById('profilePhoto');
+    if(photoEl) {
+      photoEl.style.backgroundImage = `url(${base64})`;
+      photoEl.textContent = '';
+    }
     msg('📸 Avatar updated!', 'success');
   };
   reader.readAsDataURL(file);
 }
 
 function escapeHtml(text) {
+  if(!text) return '';
   let map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
-  return text.replace(/[&<>"']/g, m => map[m]);
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 function updateActiveStatus() {
   let now = new Date().getHours();
-  document.getElementById('activeText').textContent = (now >= 9 && now <= 23) ? 'Active Now' : 'Away';
+  const activeEl = document.getElementById('activeText');
+  if(activeEl) {
+    activeEl.textContent = (now >= 9 && now <= 23) ? 'Active Now' : 'Away';
+  }
 }
 
 function initProfilePage() {
@@ -1080,14 +1203,14 @@ function initProfilePage() {
 
 function msg(text, type) {
   const box = document.getElementById('message');
+  if(!box) return;
+  
   const div = document.createElement('div');
   div.className = 'msg msg-' + type;
   div.textContent = text;
   box.innerHTML = '';
   box.appendChild(div);
-  setTimeout(() => div.remove(), 3500);
+  setTimeout(() => {
+    if(div.parentNode) div.remove();
+  }, 4000);
 }
-
-
-
-
