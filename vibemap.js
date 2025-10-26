@@ -11,11 +11,35 @@ let allColleges = [];
 
 const colleges = {
   nit: [
-    {name: 'NIT Bhopal', email: '@manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Tiruchirappalli', email: '@nitt.edu', location: 'Tiruchirappalli'},
     {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
-    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
+    {name: 'NIT Karnataka (Surathkal)', email: '@nitk.edu.in', location: 'Karnataka (Surathkal)'},
+    {name: 'NIT Calicut', email: '@nitc.ac.in', location: 'Calicut'},
+    {name: 'NIT Warangal', email: '@student.nitw.ac.in', location: 'Warangal'},
+    {name: 'NIT Jaipur', email: '@mnit.ac.in', location: 'Jaipur'},
+    {name: 'NIT Nagpur', email: '@students.vnit.ac.in', location: 'Nagpur'},
+    {name: 'NIT Durgapur', email: '@nitdgp.ac.in', location: 'Durgapur'},
+    {name: 'NIT Silchar', email: '@nits.ac.in', location: 'Silchar'},
+    {name: 'NIT Patna', email: '@nitp.ac.in', location: 'Patna'},
+    {name: 'NIT Jalandhar', email: '	@nitj.ac.in', location: 'Jalandhar'},
+    {name: 'NIT Delhi', email: '@nitdelhi.ac.in', location: 'Delhi'},
+    {name: 'NIT Surat', email: '@svnit.ac.in', location: 'Surat'},
+    {name: 'NIT Srinagar', email: '	@nitsri.ac.in', location: 'Srinagar'},
+    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Jamshedpur', email: '	@nitjsr.ac.in', location: 'Jamshedpur'},
+    {name: 'NIT Meghalaya', email: '@nitm.ac.in', location: 'Meghalaya'},
+    {name: 'NIT Raipur', email: '@nitrr.ac.in', location: 'Raipur'},
+    {name: 'NIT Hamirpur', email: '@nith.ac.in', location: 'Hamirpur'},
+    {name: 'NIT Puducherrya', email: '	@nitpy.ac.in', location: 'Puducherry'},
+    {name: 'NIT Arunachal Pradesh', email: '@nitarunachal.ac.in', location: 'Arunachal Pradesh'},
+    {name: 'NIT Nagaland', email: '@nitnagaland.ac.in', location: 'Nagaland'},
+    {name: 'NIT Goa', email: '@	nitgoa.ac.in', location: 'Goa'},
+    {name: 'NIT Manipur', email: '@nitmanipur.ac.in', location: 'Manipur'},
+    {name: 'NIT Mizoram', email: '@	nitmz.ac.in', location: 'Mizoram'},
+    {name: 'NIT Sikkima', email: '@nitsikkim.ac.in', location: 'Sikkim'},
+    {name: 'NIT Uttarakhand', email: '@	nituk.ac.in', location: 'Uttarakhand'},
+    {name: 'NIT Andhra Pradesh', email: '@nitandhra.ac.in', location: 'Andhra Pradesh'},
+    {name: 'NIT Agartala', email: '@nita.ac.in', location: ' Agartala'},
   ],
   iit: [
     {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
@@ -876,3 +900,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ VibeXpert fully loaded and functional!');
+
