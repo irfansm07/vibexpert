@@ -4,7 +4,7 @@ const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
 let currentUser = null;
 let currentType = null;
-let currentPage = 1;
+let currentPage = 3;
 const ITEMS_PER_PAGE = 10;
 let currentVerifyCollege = null;
 let allColleges = [];
@@ -900,4 +900,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('✅ VibeXpert fully loaded and functional!');
+
 
