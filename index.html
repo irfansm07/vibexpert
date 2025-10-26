@@ -278,16 +278,58 @@
       </div>
     </section>
 
-    <!-- POSTS -->
+    <!-- POSTS - UPDATED WITH PHOTO UPLOAD -->
     <section id="posts" class="page" style="display:none;">
-      <h2 class="title">Posts</h2>
-      <div class="post-box">
-        <textarea id="postText" placeholder="What's on your mind?"></textarea>
-        <div class="post-buttons">
-          <button onclick="showPhotoModal()" class="photo-btn">📷 Photo</button>
-          <button onclick="createPost()" class="post-btn">Post</button>
+      <h2 class="title">Community Posts</h2>
+      
+      <!-- NEW: Photo Upload Post Creator -->
+      <div style="background:#1a1a1a; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+        <textarea 
+          id="postText" 
+          placeholder="What's on your mind? Share with your college community..." 
+          style="width:100%; min-height:100px; padding:15px; background:#2a2a2a; border:2px solid #333; border-radius:8px; color:#fff; font-size:16px; resize:vertical; font-family:inherit;"
+        ></textarea>
+        
+        <!-- Photo Preview Container -->
+        <div id="photoPreviewContainer" style="display:none; margin-top:10px;"></div>
+        
+        <!-- Action Buttons -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; gap:10px;">
+            <!-- Gallery Button -->
+            <button 
+              onclick="openPhotoGallery()" 
+              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
+              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
+              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
+            >
+              🖼️ Photos
+            </button>
+            
+            <!-- Camera Button -->
+            <button 
+              onclick="openCamera()" 
+              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
+              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
+              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
+            >
+              📷 Camera
+            </button>
+          </div>
+          
+          <!-- Post Button -->
+          <button 
+            onclick="createPost()" 
+            style="padding:12px 30px; background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; font-weight:600; transition:all 0.2s; box-shadow:0 2px 8px rgba(99,102,241,0.3);"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(99,102,241,0.4)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(99,102,241,0.3)';"
+          >
+            🚀 Post
+          </button>
         </div>
       </div>
+      
+      <!-- Posts Feed -->
       <div id="postsFeed"></div>
     </section>
 
