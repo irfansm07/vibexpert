@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE FIXED FRONTEND WITH FULL BACKEND INTEGRATION + PHOTO UPLOAD
+// VIBEXPERT - COMPLETE FIXED FRONTEND WITH FULL BACKEND INTEGRATION
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -9,10 +9,6 @@ const ITEMS_PER_PAGE = 10;
 let currentVerifyCollege = null;
 let allColleges = [];
 let liveUsersCount = Math.floor(Math.random() * 500) + 100;
-
-// NEW: Photo upload state
-let selectedFiles = [];
-let previewUrls = [];
 
 const colleges = {
   nit: [
@@ -114,38 +110,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     if (error.message.includes('Failed to fetch')) {
       throw new Error('Cannot connect to server. Please check your internet connection.');
     }
-    throw error;
-  }
-}
-
-// NEW: API Call for File Upload
-async function apiUpload(endpoint, formData) {
-  const options = {
-    method: 'POST',
-    headers: {}
-  };
-  
-  const token = getToken();
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  options.body = formData;
-  
-  try {
-    console.log(`📤 Uploading to ${endpoint}`);
-    const response = await fetch(`${API_URL}${endpoint}`, options);
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || `Upload failed: ${response.status}`);
-    }
-    
-    console.log('✅ Upload Success');
-    return data;
-  } catch (error) {
-    console.error('❌ Upload Error:', error);
     throw error;
   }
 }
@@ -396,7 +360,7 @@ async function verifyResetCode(email) {
   try {
     msg('Resetting password...', 'success');
     
-    await apiCall('/api/reset-password', 'POST', {
+    await apiCall('/api/verify-reset-code', 'POST', {
       email,
       code,
       newPassword
@@ -667,234 +631,586 @@ function verifyCollege() {
   }, 500);
 }
 
-// ========================================
-// NEW: PHOTO UPLOAD FUNCTIONS
-// ========================================
-
-// Open file picker for photos
-function openPhotoGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = true;
-  input.onchange = handleFileSelection;
-  input.click();
-}
-
-// Open camera
-function openCamera() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.capture = 'environment';
-  input.onchange = handleFileSelection;
-  input.click();
-}
-
-// Handle file selection
-function handleFileSelection(e) {
-  const files = Array.from(e.target.files);
-  
-  if (files.length + selectedFiles.length > 5) {
-    msg('⚠️ Maximum 5 files allowed', 'error');
-    return;
-  }
-  
-  files.forEach(file => {
-    // Validate file type
-    if (!file.type.match(/image.*/) && !file.type.match(/video.*/)) {
-      msg('⚠️ Only images and videos allowed', 'error');
-      return;
-    }
-    
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      msg('⚠️ File too large (max 10MB)', 'error');
-      return;
-    }
-    
-    selectedFiles.push(file);
-    
-    // Create preview
-    const previewUrl = URL.createObjectURL(file);
-    previewUrls.push({
-      url: previewUrl,
-      type: file.type.startsWith('image') ? 'image' : 'video'
-    });
-  });
-  
-  displayPhotoPreviews();
-  msg('✅ ' + files.length + ' file(s) selected', 'success');
-}
-
-// Display photo previews
-function displayPhotoPreviews() {
-  const container = document.getElementById('photoPreviewContainer');
-  if (!container) return;
-  
-  if (previewUrls.length === 0) {
-    container.style.display = 'none';
-    return;
-  }
-  
-  container.style.display = 'block';
-  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin:10px 0;">';
-  
-  previewUrls.forEach((preview, index) => {
-    html += `
-      <div style="position:relative; border-radius:8px; overflow:hidden; aspect-ratio:1;">
-        ${preview.type === 'image' 
-          ? `<img src="${preview.url}" style="width:100%; height:100%; object-fit:cover;">` 
-          : `<video src="${preview.url}" style="width:100%; height:100%; object-fit:cover;"></video>`
-        }
-        <button onclick="removeSelectedFile(${index})" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:16px;">✕</button>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  html += `<div style="text-align:right; color:#888; font-size:12px;">${selectedFiles.length}/5 files selected</div>`;
-  container.innerHTML = html;
-}
-
-// Remove selected file
-function removeSelectedFile(index) {
-  URL.revokeObjectURL(previewUrls[index].url);
-  selectedFiles.splice(index, 1);
-  previewUrls.splice(index, 1);
-  displayPhotoPreviews();
-  msg('🗑️ File removed', 'success');
-}
-
-// Clear all selected files
-function clearSelectedFiles() {
-  previewUrls.forEach(preview => URL.revokeObjectURL(preview.url));
-  selectedFiles = [];
-  previewUrls = [];
-  displayPhotoPreviews();
-}
-
-// ========================================
-// POSTS - UPDATED WITH PHOTO UPLOAD
-// ========================================
-
-async function createPost() {
+// POSTS
+function createPost() {
   const text = document.getElementById('postText').value.trim();
-  
-  if(!text && selectedFiles.length === 0) {
-    msg('⚠️ Add text or photos', 'error');
+  if(!text) {
+    msg('Write something', 'error');
     return;
   }
   
   if(!currentUser) {
-    msg('❌ Please login first', 'error');
+    msg('Please login first', 'error');
     return;
   }
   
-  try {
-    msg('📤 Creating post...', 'success');
-    
-    const formData = new FormData();
-    formData.append('content', text);
-    
-    // Add college if user has joined one
-    if(currentUser.college) {
-      formData.append('college', currentUser.college);
-    }
-    
-    // Add selected files
-    selectedFiles.forEach(file => {
-      formData.append('media', file);
-    });
-    
-    const data = await apiUpload('/api/posts', formData);
-    
-    if(data.success) {
-      msg('🎉 Post created successfully!', 'success');
-      
-      // Clear form
-      document.getElementById('postText').value = '';
-      clearSelectedFiles();
-      
-      // Reload posts
-      loadPosts();
-      updateHomeStats();
-    }
-  } catch (error) {
-    msg('❌ Failed to create post: ' + error.message, 'error');
-  }
+  const post = {
+    author: currentUser.username,
+    text: text,
+    time: new Date().toLocaleTimeString()
+  };
+  
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  posts.unshift(post);
+  localStorage.setItem('posts', JSON.stringify(posts));
+  
+  document.getElementById('postText').value = '';
+  loadPosts();
+  msg('🚀 Posted!', 'success');
+  updateHomeStats();
 }
 
-async function loadPosts() {
+function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
   if(!feedEl) return;
   
-  try {
-    const data = await apiCall('/api/posts?limit=20', 'GET');
-    
-    if(!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post!</div>';
-      return;
-    }
-    
-    let html = '';
-    data.posts.forEach(post => {
-      const author = post.users?.username || 'Unknown';
-      const content = post.content || '';
-      const media = post.media || [];
-      const time = new Date(post.created_at).toLocaleString();
-      const likes = post.likes_count || 0;
-      const comments = post.comments_count || 0;
-      
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  let html = '';
+  
+  if(posts.length === 0) {
+    html = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post!</div>';
+  } else {
+    posts.forEach(p => {
       html += `
         <div class="post">
-          <div class="author">@${escapeHtml(author)}</div>
-          ${content ? `<div class="text">${escapeHtml(content)}</div>` : ''}
-          
-          ${media.length > 0 ? `
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0;">
-              ${media.map(m => {
-                if(m.type === 'image') {
-                  return `<img src="${m.url}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="openImageModal('${m.url}')">`;
-                } else {
-                  return `<video src="${m.url}" controls style="width:100%; border-radius:8px;"></video>`;
-                }
-              }).join('')}
-            </div>
-          ` : ''}
-          
-          <div class="time">${escapeHtml(time)}</div>
-          <div style="display:flex; gap:15px; margin-top:10px; color:#888; font-size:13px;">
-            <span>❤️ ${likes} likes</span>
-            <span>💬 ${comments} comments</span>
-          </div>
+          <div class="author">@${escapeHtml(p.author)}</div>
+          <div class="text">${escapeHtml(p.text)}</div>
+          <div class="time">${escapeHtml(p.time)}</div>
         </div>
       `;
     });
-    
-    feedEl.innerHTML = html;
-  } catch (error) {
-    console.error('Load posts error:', error);
-    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts. Please try again.</div>';
+  }
+  
+  feedEl.innerHTML = html;
+}
+
+// MENUS
+function toggleOptionsMenu() {
+  const menu = document.getElementById('optionsMenu');
+  const btn = document.querySelector('.options-btn');
+  
+  if(!menu || !btn) return;
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    menu.style.display = 'none';
+    btn.classList.remove('active');
   }
 }
 
-// Open image in modal
-function openImageModal(url) {
-  const modal = document.getElementById('imageViewModal');
-  if(!modal) {
-    // Create modal if doesn't exist
-    const modalHtml = `
-      <div id="imageViewModal" class="modal" style="display:flex;">
-        <div class="modal-content" style="max-width:90%; max-height:90%; background:transparent;">
-          <span class="close" onclick="closeModal('imageViewModal')" style="color:white; font-size:40px;">&times;</span>
-          <img id="modalImage" src="" style="width:100%; height:auto; border-radius:8px;">
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+function toggleHamburgerMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const btn = document.querySelector('.hamburger-btn');
+  
+  if(!menu || !btn) return;
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    menu.style.display = 'none';
+    btn.classList.remove('active');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const optionsMenu = document.getElementById('optionsMenu');
+  const optionsBtn = document.querySelector('.options-btn');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const hamburgerBtn = document.querySelector('.hamburger-btn');
+  
+  if(optionsMenu && optionsBtn && !e.target.closest('.options-btn') && !e.target.closest('.options-menu')) {
+    optionsMenu.style.display = 'none';
+    optionsBtn.classList.remove('active');
   }
   
-  document.getElementById('modalImage').src = url;
-  document.getElementById('imageViewModal').style.display = 'flex';
+  if(hamburgerMenu && hamburgerBtn && !e.target.closest('.hamburger-btn') && !e.target.closest('.hamburger-menu')) {
+    hamburgerMenu.style.display = 'none';
+    hamburgerBtn.classList.remove('active');
+  }
+});
+
+// MODALS
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
+}
+
+function submitComplaint() {
+  const text = document.getElementById('complaintText').value.trim();
+  
+  if(!text) {
+    msg('Write your complaint', 'error');
+    return;
+  }
+  
+  let complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+  complaints.push({user: currentUser.username, text, date: new Date().toLocaleDateString()});
+  localStorage.setItem('complaints', JSON.stringify(complaints));
+  
+  msg('✅ Complaint submitted!', 'success');
+  document.getElementById('complaintText').value = '';
+  closeModal('complaintModal');
+}
+
+function toggleTheme() {
+  const body = document.body;
+  if(body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+    localStorage.setItem('theme', 'light');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+  }
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
+  msg('🎨 Theme updated!', 'success');
+}
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.body.className = savedTheme + '-theme';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
+}
+
+function showPhotoModal() {
+  document.getElementById('photoModal').style.display = 'flex';
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if(modal) modal.style.display = 'none';
+}
+
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', (e) => {
+    if(e.target === m) {
+      m.style.display = 'none';
+    }
+  });
+});
+
+// COMMUNITIES
+function loadCommunities() {
+  const joinedCollege = currentUser?.joinedCollege;
+  const verified = JSON.parse(localStorage.getItem('verified') || '[]');
+  
+  const container = document.getElementById('communitiesContainer');
+  const chatSection = document.getElementById('chatSection');
+  
+  if(!container || !chatSection) return;
+  
+  if(verified.length === 0 || !joinedCollege) {
+    container.innerHTML = `
+      <div class="community-guidance">
+        <p>🎓 Please join your college community to start chatting and connecting!</p>
+        <button onclick="goToHome()" class="home-nav-btn">Go to Home</button>
+      </div>
+    `;
+    chatSection.style.display = 'none';
+  } else {
+    container.innerHTML = `
+      <div class="community-card">
+        <h3>✓ ${escapeHtml(joinedCollege)}</h3>
+        <p>You are part of this community</p>
+        <button onclick="scrollToChat()">Open Chat</button>
+      </div>
+    `;
+    chatSection.style.display = 'block';
+    loadChatMessages();
+  }
+}
+
+function scrollToChat() {
+  const chatSection = document.getElementById('chatSection');
+  if(chatSection) {
+    chatSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  
+  const message = input.value.trim();
+  
+  if(!message) {
+    msg('Write a message', 'error');
+    return;
+  }
+  
+  if(!currentUser) {
+    msg('Please login first', 'error');
+    return;
+  }
+  
+  const chatData = {
+    sender: currentUser.username,
+    text: message,
+    college: currentUser.joinedCollege,
+    time: new Date().toLocaleTimeString()
+  };
+  
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  chats.push(chatData);
+  localStorage.setItem('chats', JSON.stringify(chats));
+  
+  input.value = '';
+  loadChatMessages();
+  msg('💬 Message sent!', 'success');
+}
+
+function handleChatKeypress(e) {
+  if(e.key === 'Enter') {
+    sendChatMessage();
+  }
+}
+
+function loadChatMessages() {
+  const messagesContainer = document.getElementById('chatMessages');
+  if(!messagesContainer) return;
+  
+  let chats = JSON.parse(localStorage.getItem('chats') || '[]');
+  
+  chats = chats.filter(c => c.college === currentUser?.joinedCollege);
+  
+  let html = '';
+  if(chats.length === 0) {
+    html = '<div style="color:#888; text-align:center; padding:20px;">Start the conversation!</div>';
+  } else {
+    chats.forEach(chat => {
+      const isOwn = chat.sender === currentUser.username;
+      html += `
+        <div class="chat-message ${isOwn ? 'own' : 'other'}">
+          ${!isOwn ? `<div class="sender">@${escapeHtml(chat.sender)}</div>` : ''}
+          <div class="text">${escapeHtml(chat.text)}</div>
+        </div>
+      `;
+    });
+  }
+  
+  messagesContainer.innerHTML = html;
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// PROFILE PAGE
+function showProfilePage() {
+  if(!currentUser) {
+    msg('Please login first', 'error');
+    return;
+  }
+  
+  loadProfileData();
+  document.getElementById('profilePageModal').style.display = 'flex';
+  const optionsMenu = document.getElementById('optionsMenu');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if(optionsMenu) optionsMenu.style.display = 'none';
+  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+function loadProfileData() {
+  loadProfileBasicInfo();
+  loadProfileStats();
+  loadUserPosts();
+  loadProfileLikes();
+}
+
+function loadProfileBasicInfo() {
+  if(!currentUser) return;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  
+  const displayNameEl = document.getElementById('profileDisplayName');
+  const nicknameEl = document.getElementById('nicknameValue');
+  const descEl = document.getElementById('profileDescriptionText');
+  const photoEl = document.getElementById('profilePhoto');
+  
+  if(displayNameEl) displayNameEl.textContent = currentUser.username || 'User';
+  if(nicknameEl) nicknameEl.textContent = profileData.nickname || currentUser.username;
+  if(descEl) descEl.textContent = profileData.description || 'No description added yet. Click edit to add one!';
+  
+  if(photoEl) {
+    if(profileData.avatar) {
+      photoEl.style.backgroundImage = `url(${profileData.avatar})`;
+      photoEl.textContent = '';
+    } else {
+      photoEl.style.backgroundImage = 'none';
+      photoEl.textContent = '👤';
+    }
+  }
+  
+  const editNicknameEl = document.getElementById('editNickname');
+  const editDescEl = document.getElementById('editDescription');
+  if(editNicknameEl) editNicknameEl.value = profileData.nickname || '';
+  if(editDescEl) editDescEl.value = profileData.description || '';
+  
+  updateCharCounts();
+}
+
+function loadProfileStats() {
+  if(!currentUser) return;
+  
+  let userPosts = getUserPosts();
+  const postsCountEl = document.getElementById('profilePostsCount');
+  if(postsCountEl) postsCountEl.textContent = userPosts.length;
+  
+  let profileLikes = getProfileLikes();
+  const likesCountEl = document.getElementById('profileLikesCount');
+  if(likesCountEl) likesCountEl.textContent = profileLikes.length;
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  let activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
+  const hoursEl = document.getElementById('usedHoursCount');
+  if(hoursEl) hoursEl.textContent = activeHours + 'h';
+}
+
+function getUserPosts() {
+  if(!currentUser) return [];
+  let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+  return allPosts.filter(p => p.author === currentUser.username);
+}
+
+function getProfileLikes() {
+  if(!currentUser) return [];
+  let likes = JSON.parse(localStorage.getItem('profileLikes_' + currentUser.email) || '[]');
+  return likes;
+}
+
+function loadUserPosts() {
+  let userPosts = getUserPosts();
+  let container = document.getElementById('userPostsContainer');
+  let noPostsMsg = document.getElementById('noPostsMessage');
+  
+  if(!container || !noPostsMsg) return;
+  
+  if(userPosts.length === 0) {
+    container.innerHTML = '';
+    noPostsMsg.style.display = 'block';
+  } else {
+    noPostsMsg.style.display = 'none';
+    container.innerHTML = '';
+    userPosts.reverse().forEach((post, index) => {
+      let postHtml = `
+        <div class="user-post-card">
+          <div class="post-header">
+            <span class="post-time">${escapeHtml(post.time)}</span>
+            <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
+          </div>
+          <div class="post-content">${escapeHtml(post.text)}</div>
+          <div class="post-stats"><span>Posted</span></div>
+        </div>
+      `;
+      container.innerHTML += postHtml;
+    });
+  }
+}
+
+function deleteUserPost(index) {
+  if(confirm('Delete this post?')) {
+    let allPosts = JSON.parse(localStorage.getItem('posts') || '[]');
+    let userPosts = allPosts.filter(p => p.author === currentUser.username);
+    userPosts.reverse();
+    userPosts.splice(index, 1);
+    userPosts.reverse();
+    let otherPosts = allPosts.filter(p => p.author !== currentUser.username);
+    let finalPosts = otherPosts.concat(userPosts);
+    localStorage.setItem('posts', JSON.stringify(finalPosts));
+    loadUserPosts();
+    loadProfileStats();
+    msg('🗑️ Post deleted!', 'success');
+  }
+}
+
+function loadProfileLikes() {
+  let likes = getProfileLikes();
+  let container = document.getElementById('profileLikesContainer');
+  let noLikesMsg = document.getElementById('noLikesMessage');
+  
+  if(!container || !noLikesMsg) return;
+  
+  if(likes.length === 0) {
+    container.innerHTML = '';
+    noLikesMsg.style.display = 'block';
+  } else {
+    noLikesMsg.style.display = 'none';
+    container.innerHTML = '';
+    likes.forEach(like => {
+      let likeHtml = `
+        <div class="like-card">
+          <div class="like-avatar">👤</div>
+          <div class="like-name">${escapeHtml(like.userName)}</div>
+          <div class="like-time">${escapeHtml(like.time || 'Recently')}</div>
+        </div>
+      `;
+      container.innerHTML += likeHtml;
+    });
+  }
+}
+
+function openEditProfile() {
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'block';
+}
+
+function cancelEditProfile() {
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'none';
+  loadProfileBasicInfo();
+}
+
+function saveProfile() {
+  const nicknameEl = document.getElementById('editNickname');
+  const descEl = document.getElementById('editDescription');
+  
+  if(!nicknameEl || !descEl) return;
+  
+  let nickname = nicknameEl.value.trim();
+  let description = descEl.value.trim();
+  
+  if(!nickname || !description) {
+    msg('All fields required', 'error');
+    return;
+  }
+  if(nickname.length > 25 || description.length > 150) {
+    msg('Text too long', 'error');
+    return;
+  }
+  
+  let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+  profileData.nickname = nickname;
+  profileData.description = description;
+  profileData.activeHours = profileData.activeHours || Math.floor(Math.random() * 24) + 1;
+  localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+  
+  msg('✅ Profile updated!', 'success');
+  const editSection = document.getElementById('editProfileSection');
+  if(editSection) editSection.style.display = 'none';
+  loadProfileBasicInfo();
+  loadProfileStats();
+}
+
+function updateCharCounts() {
+  let ni = document.getElementById('editNickname');
+  let di = document.getElementById('editDescription');
+  let niCount = document.getElementById('nicknameCharCount');
+  let diCount = document.getElementById('descCharCount');
+  
+  if(ni && niCount) {
+    ni.addEventListener('input', () => { 
+      niCount.textContent = ni.value.length + '/25'; 
+    });
+    niCount.textContent = ni.value.length + '/25';
+  }
+  
+  if(di && diCount) {
+    di.addEventListener('input', () => { 
+      diCount.textContent = di.value.length + '/150'; 
+    });
+    diCount.textContent = di.value.length + '/150';
+  }
+}
+
+function switchProfileTab(tabName) {
+  document.querySelectorAll('.profile-tab-content').forEach(t => { 
+    t.classList.remove('active'); 
+    t.style.display = 'none'; 
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  
+  if(tabName === 'posts') {
+    const postsTab = document.getElementById('postsTab');
+    if(postsTab) {
+      postsTab.classList.add('active');
+      postsTab.style.display = 'block';
+    }
+  } else {
+    const likesTab = document.getElementById('likesTab');
+    if(likesTab) {
+      likesTab.classList.add('active');
+      likesTab.style.display = 'block';
+    }
+  }
+  
+  if(event && event.target) {
+    event.target.classList.add('active');
+  }
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')) {
+    msg('Select an image file', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    let profileData = JSON.parse(localStorage.getItem('profileData_' + currentUser.email) || '{}');
+    profileData.avatar = base64;
+    localStorage.setItem('profileData_' + currentUser.email, JSON.stringify(profileData));
+    
+    const photoEl = document.getElementById('profilePhoto');
+    if(photoEl) {
+      photoEl.style.backgroundImage = `url(${base64})`;
+      photoEl.textContent = '';
+    }
+    msg('📸 Avatar updated!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function escapeHtml(text) {
+  if(!text) return '';
+  let map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function updateActiveStatus() {
+  let now = new Date().getHours();
+  const activeEl = document.getElementById('activeText');
+  if(activeEl) {
+    activeEl.textContent = (now >= 9 && now <= 23) ? 'Active Now' : 'Away';
+  }
+}
+
+function initProfilePage() {
+  updateActiveStatus();
+  let postsTab = document.getElementById('postsTab');
+  if(postsTab) {
+    postsTab.classList.add('active');
+    postsTab.style.display = 'block';
+  }
+}
+
+function msg(text, type) {
+  const box = document.getElementById('message');
+  if(!box) return;
+  
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  box.innerHTML = '';
+  box.appendChild(div);
+  setTimeout(() => {
+    if(div.parentNode) div.remove();
+  }, 4000);
 }
