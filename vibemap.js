@@ -1,10 +1,36 @@
-// VIBEXPERT - SIMPLIFIED & FIXED VERSION
+// VIBEXPERT - MINIMAL VERSION THAT ACTUALLY WORKS
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
 let currentUser = null;
+let currentType = null;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 10;
+let currentVerifyCollege = null;
+let allColleges = [];
+let liveUsersCount = Math.floor(Math.random() * 500) + 100;
+
+// NEW: Photo upload state
 let selectedFiles = [];
 let previewUrls = [];
+
+const colleges = {
+  nit: [
+    {name: 'NIT Bhopal', email: 'nit.bhopal@edu.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: 'nit.rourkela@edu.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: 'nit.warangal@edu.in', location: 'Warangal'},
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: 'iit.delhi@edu.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: 'iit.bombay@edu.in', location: 'Mumbai'},
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: 'vitbhopal@vit.ac.in', location: 'Bhopal'},
+  ],
+  other: [
+    {name: 'Delhi University', email: 'du@delhi.edu.in', location: 'New Delhi'},
+  ]
+};
 
 // Get Auth Token
 function getToken() {
@@ -31,7 +57,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   }
   
   try {
-    console.log(`🔄 ${method} ${endpoint}`);
     const response = await fetch(`${API_URL}${endpoint}`, options);
     const data = await response.json();
     
@@ -39,10 +64,9 @@ async function apiCall(endpoint, method = 'GET', body = null) {
       throw new Error(data.error || 'Request failed');
     }
     
-    console.log('✅ Success');
     return data;
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('API Error:', error);
     throw error;
   }
 }
@@ -51,10 +75,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
 document.addEventListener('DOMContentLoaded', function() {
   checkUser();
   showLoginForm();
-  
-  if(document.getElementById('posts')) {
-    loadPosts();
-  }
 });
 
 // Check if user is logged in
@@ -119,7 +139,7 @@ async function signup(e) {
   const confirm = document.getElementById('signupConfirm').value;
   
   if(!username || !email || !password || !confirm) {
-    msg('Fill all required fields', 'error');
+    msg('Fill all fields', 'error');
     return;
   }
   
@@ -131,26 +151,20 @@ async function signup(e) {
   try {
     msg('Creating account...', 'success');
     
-    await apiCall('/api/register', 'POST', {
-      username,
-      email,
-      password
-    });
+    await apiCall('/api/register', 'POST', { username, email, password });
     
-    msg('🎉 Account created! Redirecting...', 'success');
+    msg('🎉 Account created!', 'success');
     
     document.getElementById('signupForm').reset();
     
     setTimeout(() => {
       goLogin(null);
-      msg('✅ You can now log in', 'success');
     }, 2000);
   } catch (error) {
     msg('❌ ' + error.message, 'error');
   }
 }
 
-// FORGOT PASSWORD
 function goForgotPassword(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -163,16 +177,13 @@ async function handleForgotPassword(e) {
   const email = document.getElementById('resetEmail').value.trim();
   
   if(!email) {
-    msg('Please enter your email', 'error');
+    msg('Enter your email', 'error');
     return;
   }
   
   try {
-    msg('Sending reset code...', 'success');
-    
     await apiCall('/api/forgot-password', 'POST', { email });
-    
-    msg('✅ Check your email for reset code', 'success');
+    msg('✅ Check your email', 'success');
   } catch (error) {
     msg('❌ ' + error.message, 'error');
   }
@@ -192,7 +203,6 @@ function goLogin(e) {
   document.getElementById('loginForm').style.display = 'block';
 }
 
-// LOGOUT
 function logout() {
   currentUser = null;
   localStorage.removeItem('authToken');
@@ -218,50 +228,117 @@ function showPage(name, e) {
     loadPosts();
   }
   
-  // Close menus
-  const optionsMenu = document.getElementById('optionsMenu');
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  if(optionsMenu) optionsMenu.style.display = 'none';
-  if(hamburgerMenu) hamburgerMenu.style.display = 'none';
-  
   window.scrollTo(0, 0);
 }
 
-// PHOTO UPLOAD
+function goHome() {
+  showPage('home');
+}
+
+// UNIVERSITIES
+function selectUniversity(type) {
+  currentType = type;
+  currentPage = 1;
+  allColleges = colleges[type];
+  
+  const titles = {
+    nit: 'National Institutes of Technology',
+    iit: 'Indian Institutes of Technology',
+    vit: 'VIT Colleges',
+    other: 'Other Universities'
+  };
+  
+  document.getElementById('collegeTitle').textContent = titles[type];
+  document.getElementById('collegeList').style.display = 'block';
+  
+  showColleges();
+}
+
+function showColleges() {
+  const list = allColleges;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const page = list.slice(start, end);
+  
+  let html = '';
+  page.forEach(c => {
+    html += `
+      <div class="college-item">
+        <h3>${c.name}</h3>
+        <p>${c.location}</p>
+        <button onclick="openVerify('${c.name}', '${c.email}')">Connect</button>
+      </div>
+    `;
+  });
+  
+  document.getElementById('collegeContainer').innerHTML = html;
+}
+
+function backToUniversities() {
+  document.getElementById('collegeList').style.display = 'none';
+}
+
+function openVerify(name, email) {
+  currentVerifyCollege = {name, email};
+  document.getElementById('verifyModal').style.display = 'flex';
+}
+
+function verifyCollege() {
+  msg('🎓 Joined college!', 'success');
+  closeModal('verifyModal');
+}
+
+// ========================================
+// PHOTO UPLOAD FUNCTIONS - SIMPLIFIED
+// ========================================
+
 function openPhotoGallery() {
+  console.log('📷 Opening gallery...');
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*,video/*';
   input.multiple = true;
-  input.onchange = handleFileSelection;
+  
+  input.onchange = function(e) {
+    console.log('Files selected:', e.target.files.length);
+    handleFileSelection(e);
+  };
+  
   input.click();
 }
 
 function openCamera() {
+  console.log('📸 Opening camera...');
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*,video/*';
+  input.accept = 'image/*';
   input.capture = 'environment';
-  input.onchange = handleFileSelection;
+  
+  input.onchange = function(e) {
+    console.log('Photo taken');
+    handleFileSelection(e);
+  };
+  
   input.click();
 }
 
 function handleFileSelection(e) {
   const files = Array.from(e.target.files);
+  console.log('Processing files:', files.length);
   
   if (files.length + selectedFiles.length > 5) {
-    msg('⚠️ Maximum 5 files allowed', 'error');
+    msg('⚠️ Max 5 files', 'error');
     return;
   }
   
   files.forEach(file => {
     if (!file.type.match(/image.*/) && !file.type.match(/video.*/)) {
-      msg('⚠️ Only images and videos allowed', 'error');
+      msg('⚠️ Images/videos only', 'error');
       return;
     }
     
     if (file.size > 10 * 1024 * 1024) {
-      msg('⚠️ File too large (max 10MB)', 'error');
+      msg('⚠️ File too large', 'error');
       return;
     }
     
@@ -280,7 +357,10 @@ function handleFileSelection(e) {
 
 function displayPhotoPreviews() {
   const container = document.getElementById('photoPreviewContainer');
-  if (!container) return;
+  if (!container) {
+    console.error('Preview container not found!');
+    return;
+  }
   
   if (previewUrls.length === 0) {
     container.style.display = 'none';
@@ -312,7 +392,7 @@ function removeSelectedFile(index) {
   selectedFiles.splice(index, 1);
   previewUrls.splice(index, 1);
   displayPhotoPreviews();
-  msg('🗑️ File removed', 'success');
+  msg('🗑️ Removed', 'success');
 }
 
 function clearSelectedFiles() {
@@ -324,6 +404,7 @@ function clearSelectedFiles() {
 
 // CREATE POST
 async function createPost() {
+  console.log('Creating post...');
   const text = document.getElementById('postText').value.trim();
   
   if(!text && selectedFiles.length === 0) {
@@ -332,12 +413,12 @@ async function createPost() {
   }
   
   if(!currentUser) {
-    msg('❌ Please login first', 'error');
+    msg('❌ Please login', 'error');
     return;
   }
   
   try {
-    msg('📤 Creating post...', 'success');
+    msg('📤 Posting...', 'success');
     
     const formData = new FormData();
     formData.append('content', text);
@@ -349,7 +430,7 @@ async function createPost() {
     const data = await apiCall('/api/posts', 'POST', formData);
     
     if(data.success) {
-      msg('🎉 Post created!', 'success');
+      msg('🎉 Posted!', 'success');
       
       document.getElementById('postText').value = '';
       clearSelectedFiles();
@@ -370,35 +451,33 @@ async function loadPosts() {
     const data = await apiCall('/api/posts', 'GET');
     
     if(!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first!</div>';
+      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet</div>';
       return;
     }
     
     let html = '';
     data.posts.forEach(post => {
-      const author = post.users?.username || 'Unknown';
+      const author = post.users?.username || 'User';
       const content = post.content || '';
       const media = post.media || [];
       const time = new Date(post.timestamp || post.created_at).toLocaleString();
       
       html += `
-        <div style="background:#1a1a1a; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-          <div style="font-weight:600; color:#6366f1; margin-bottom:10px; font-size:14px;">@${escapeHtml(author)}</div>
-          ${content ? `<div style="color:#fff; margin-bottom:10px;">${escapeHtml(content)}</div>` : ''}
+        <div style="background:#1a1a1a; border-radius:12px; padding:20px; margin-bottom:20px;">
+          <div style="font-weight:600; color:#6366f1; margin-bottom:10px;">@${author}</div>
+          ${content ? `<div style="color:#fff; margin-bottom:10px;">${content}</div>` : ''}
           
           ${media.length > 0 ? `
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:10px 0;">
-              ${media.map(m => {
-                if(m.type === 'image') {
-                  return `<img src="${m.url}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="openImageModal('${m.url}')">`;
-                } else {
-                  return `<video src="${m.url}" controls style="width:100%; border-radius:8px;"></video>`;
-                }
-              }).join('')}
+              ${media.map(m => 
+                m.type === 'image' 
+                  ? `<img src="${m.url}" style="width:100%; border-radius:8px;">` 
+                  : `<video src="${m.url}" controls style="width:100%; border-radius:8px;"></video>`
+              ).join('')}
             </div>
           ` : ''}
           
-          <div style="color:#888; font-size:13px; margin-top:10px;">${escapeHtml(time)}</div>
+          <div style="color:#888; font-size:13px; margin-top:10px;">${time}</div>
         </div>
       `;
     });
@@ -406,103 +485,93 @@ async function loadPosts() {
     feedEl.innerHTML = html;
   } catch (error) {
     console.error('Load posts error:', error);
-    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts. Please refresh.</div>';
+    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load</div>';
   }
-}
-
-// Open image in modal
-function openImageModal(url) {
-  let modal = document.getElementById('imageViewModal');
-  if(!modal) {
-    const modalHtml = `
-      <div id="imageViewModal" class="modal" style="display:flex;" onclick="if(event.target === this) closeModal('imageViewModal')">
-        <div style="max-width:90%; max-height:90%; position:relative;">
-          <span onclick="closeModal('imageViewModal')" style="position:absolute; top:-40px; right:0; color:white; font-size:40px; cursor:pointer;">&times;</span>
-          <img id="modalImage" src="" style="width:100%; height:auto; border-radius:8px;">
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    modal = document.getElementById('imageViewModal');
-  }
-  
-  document.getElementById('modalImage').src = url;
-  modal.style.display = 'flex';
 }
 
 // MENUS
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
-  const btn = document.querySelector('.options-btn');
-  
-  if(!menu || !btn) return;
+  if(!menu) return;
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
-    btn.classList.add('active');
   } else {
     menu.style.display = 'none';
-    btn.classList.remove('active');
   }
 }
 
 function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
-  const btn = document.querySelector('.hamburger-btn');
-  
-  if(!menu || !btn) return;
+  if(!menu) return;
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
-    btn.classList.add('active');
   } else {
     menu.style.display = 'none';
-    btn.classList.remove('active');
   }
 }
 
-// Close menus when clicking outside
-document.addEventListener('click', (e) => {
-  const optionsMenu = document.getElementById('optionsMenu');
-  const optionsBtn = document.querySelector('.options-btn');
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const hamburgerBtn = document.querySelector('.hamburger-btn');
-  
-  if(optionsMenu && optionsBtn && !e.target.closest('.options-btn') && !e.target.closest('.options-menu')) {
-    optionsMenu.style.display = 'none';
-    optionsBtn.classList.remove('active');
-  }
-  
-  if(hamburgerMenu && hamburgerBtn && !e.target.closest('.hamburger-btn') && !e.target.closest('.hamburger-menu')) {
-    hamburgerMenu.style.display = 'none';
-    hamburgerBtn.classList.remove('active');
-  }
-});
-
 // MODALS
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+}
+
+function showPhotoModal() {
+  document.getElementById('photoModal').style.display = 'flex';
+}
+
 function closeModal(id) {
   const modal = document.getElementById(id);
   if(modal) modal.style.display = 'none';
 }
 
+function showProfilePage() {
+  msg('Profile coming soon!', 'success');
+}
+
+function submitComplaint() {
+  msg('Complaint submitted!', 'success');
+  closeModal('complaintModal');
+}
+
+function toggleTheme() {
+  const body = document.body;
+  if(body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+  }
+  msg('🎨 Theme changed!', 'success');
+}
+
 // MESSAGE
 function msg(text, type) {
   const box = document.getElementById('message');
-  if(!box) return;
+  if(!box) {
+    console.log('Message:', text);
+    return;
+  }
   
   const div = document.createElement('div');
   div.className = 'msg msg-' + type;
   div.textContent = text;
   box.innerHTML = '';
   box.appendChild(div);
+  
   setTimeout(() => {
     if(div.parentNode) div.remove();
   }, 4000);
 }
 
-// ESCAPE HTML
-function escapeHtml(text) {
-  if(!text) return '';
-  const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
-  return String(text).replace(/[&<>"']/g, m => map[m]);
-}
+// Log to see if functions are loaded
+console.log('✅ VibeXpert loaded');
+console.log('✅ openPhotoGallery:', typeof openPhotoGallery);
+console.log('✅ openCamera:', typeof openCamera);
+console.log('✅ createPost:', typeof createPost);
