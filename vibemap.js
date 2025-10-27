@@ -1,45 +1,26 @@
-// VIBEXPERT - COMPLETE WORKING VERSION
+// VIBEXPERT - ENHANCED VERSION WITH ALL FEATURES
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
 let currentUser = null;
 let currentType = null;
 let currentPage = 1;
-const ITEMS_PER_PAGE = 100;
+const ITEMS_PER_PAGE = 10;
 let currentVerifyCollege = null;
 let allColleges = [];
+let socket = null;
+let selectedFiles = [];
+let previewUrls = [];
+let editingMessageId = null;
+let editTimeout = null;
 
 const colleges = {
   nit: [
-    {name: 'NIT Tiruchirappalli', email: '@nitt.edu', location: 'Tiruchirappalli'},
-    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-    {name: 'NIT Karnataka (Surathkal)', email: '@nitk.edu.in', location: 'Karnataka (Surathkal)'},
-    {name: 'NIT Calicut', email: '@nitc.ac.in', location: 'Calicut'},
-    {name: 'NIT Warangal', email: '@student.nitw.ac.in', location: 'Warangal'},
-    {name: 'NIT Jaipur', email: '@mnit.ac.in', location: 'Jaipur'},
-    {name: 'NIT Nagpur', email: '@students.vnit.ac.in', location: 'Nagpur'},
-    {name: 'NIT Durgapur', email: '@nitdgp.ac.in', location: 'Durgapur'},
-    {name: 'NIT Silchar', email: '@nits.ac.in', location: 'Silchar'},
-    {name: 'NIT Patna', email: '@nitp.ac.in', location: 'Patna'},
-    {name: 'NIT Jalandhar', email: '	@nitj.ac.in', location: 'Jalandhar'},
-    {name: 'NIT Delhi', email: '@nitdelhi.ac.in', location: 'Delhi'},
-    {name: 'NIT Surat', email: '@svnit.ac.in', location: 'Surat'},
-    {name: 'NIT Srinagar', email: '	@nitsri.ac.in', location: 'Srinagar'},
     {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
-    {name: 'NIT Jamshedpur', email: '	@nitjsr.ac.in', location: 'Jamshedpur'},
-    {name: 'NIT Meghalaya', email: '@nitm.ac.in', location: 'Meghalaya'},
-    {name: 'NIT Raipur', email: '@nitrr.ac.in', location: 'Raipur'},
-    {name: 'NIT Hamirpur', email: '@nith.ac.in', location: 'Hamirpur'},
-    {name: 'NIT Puducherrya', email: '	@nitpy.ac.in', location: 'Puducherry'},
-    {name: 'NIT Arunachal Pradesh', email: '@nitarunachal.ac.in', location: 'Arunachal Pradesh'},
-    {name: 'NIT Nagaland', email: '@nitnagaland.ac.in', location: 'Nagaland'},
-    {name: 'NIT Goa', email: '@	nitgoa.ac.in', location: 'Goa'},
-    {name: 'NIT Manipur', email: '@nitmanipur.ac.in', location: 'Manipur'},
-    {name: 'NIT Mizoram', email: '@	nitmz.ac.in', location: 'Mizoram'},
-    {name: 'NIT Sikkima', email: '@nitsikkim.ac.in', location: 'Sikkim'},
-    {name: 'NIT Uttarakhand', email: '@	nituk.ac.in', location: 'Uttarakhand'},
-    {name: 'NIT Andhra Pradesh', email: '@nitandhra.ac.in', location: 'Andhra Pradesh'},
-    {name: 'NIT Agartala', email: '@nita.ac.in', location: ' Agartala'},
+    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
+    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
+    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
   ],
   iit: [
     {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
@@ -60,12 +41,10 @@ const colleges = {
   ]
 };
 
-// Get Auth Token
 function getToken() {
   return localStorage.getItem('authToken');
 }
 
-// API Call Helper
 async function apiCall(endpoint, method = 'GET', body = null) {
   const options = {
     method,
@@ -105,9 +84,13 @@ document.addEventListener('DOMContentLoaded', function() {
   showLoginForm();
   updateLiveStats();
   setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  
+  // Initialize post destination
+  selectedPostDestination = 'profile';
 });
 
-// Check if user is logged in
 function checkUser() {
   const token = getToken();
   const saved = localStorage.getItem('user');
@@ -120,18 +103,47 @@ function checkUser() {
     
     if (currentUser.college) {
       updateLiveNotif(`Connected to ${currentUser.college}`);
+      initializeSocket();
     }
   }
 }
 
-// Show Login Form
+function initializeSocket() {
+  if (socket) return;
+  
+  socket = io(API_URL);
+  
+  socket.on('connect', () => {
+    console.log('Socket connected');
+    if (currentUser?.college) {
+      socket.emit('join_college', currentUser.college);
+    }
+    socket.emit('user_online', currentUser.id);
+  });
+  
+  socket.on('new_message', (message) => {
+    appendMessageToChat(message);
+  });
+  
+  socket.on('message_updated', (message) => {
+    updateMessageInChat(message);
+  });
+  
+  socket.on('message_deleted', ({ id }) => {
+    removeMessageFromChat(id);
+  });
+  
+  socket.on('online_count', (count) => {
+    updateOnlineCount(count);
+  });
+}
+
 function showLoginForm() {
   document.getElementById('loginForm').style.display = 'block';
   document.getElementById('forgotPasswordForm').style.display = 'none';
   document.getElementById('signupForm').style.display = 'none';
 }
 
-// LOGIN
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
@@ -159,21 +171,24 @@ async function login(e) {
       document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
       document.getElementById('loginForm').reset();
       loadPosts();
+      if (currentUser.college) {
+        initializeSocket();
+      }
     }, 800);
   } catch (error) {
     msg('❌ Login failed: ' + error.message, 'error');
   }
 }
 
-// SIGNUP
 async function signup(e) {
   e.preventDefault();
   const username = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
+  const registrationNumber = document.getElementById('signupReg').value.trim();
   const password = document.getElementById('signupPass').value;
   const confirm = document.getElementById('signupConfirm').value;
   
-  if(!username || !email || !password || !confirm) {
+  if(!username || !email || !registrationNumber || !password || !confirm) {
     msg('Fill all fields', 'error');
     return;
   }
@@ -186,7 +201,7 @@ async function signup(e) {
   try {
     msg('Creating account...', 'success');
     
-    await apiCall('/api/register', 'POST', { username, email, password });
+    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
     
     msg('🎉 Account created! Check your email', 'success');
     
@@ -239,6 +254,10 @@ function goLogin(e) {
 }
 
 function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
   currentUser = null;
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
@@ -248,7 +267,6 @@ function logout() {
   showLoginForm();
 }
 
-// PAGES
 function showPage(name, e) {
   if(e) e.preventDefault();
   
@@ -263,9 +281,10 @@ function showPage(name, e) {
     loadPosts();
   } else if(name === 'communities') {
     loadCommunities();
+  } else if(name === 'badges') {
+    loadBadgesPage();
   }
   
-  // Close mobile menus
   document.getElementById('hamburgerMenu').style.display = 'none';
   
   window.scrollTo(0, 0);
@@ -277,7 +296,6 @@ function goHome() {
   document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
 }
 
-// UNIVERSITIES
 function selectUniversity(type) {
   currentType = type;
   currentPage = 1;
@@ -336,7 +354,6 @@ function backToUniversities() {
   document.getElementById('home').style.display = 'block';
 }
 
-// COLLEGE VERIFICATION
 function openVerify(name, emailDomain) {
   if (currentUser && currentUser.college) {
     msg('⚠️ You are already connected to ' + currentUser.college, 'error');
@@ -407,12 +424,14 @@ async function verifyCollegeCode() {
     
     msg('🎉 ' + data.message, 'success');
     
-    // Update current user
     currentUser.college = data.college;
     currentUser.communityJoined = true;
+    currentUser.badges = data.badges;
     localStorage.setItem('user', JSON.stringify(currentUser));
     
     closeModal('verifyModal');
+    
+    initializeSocket();
     
     setTimeout(() => {
       showPage('communities');
@@ -423,9 +442,8 @@ async function verifyCollegeCode() {
   }
 }
 
-// POSTS
-let selectedFiles = [];
-let previewUrls = [];
+// POSTS WITH DESTINATION SELECTION
+let selectedPostDestination = 'profile';
 
 async function createPost() {
   const text = document.getElementById('postText').value.trim();
@@ -445,6 +463,7 @@ async function createPost() {
     
     const formData = new FormData();
     formData.append('content', text);
+    formData.append('postTo', selectedPostDestination);
     
     selectedFiles.forEach(file => {
       formData.append('media', file);
@@ -454,6 +473,12 @@ async function createPost() {
     
     if(data.success) {
       msg('🎉 Posted!', 'success');
+      
+      if (data.badges && data.badges.length > currentUser.badges?.length) {
+        currentUser.badges = data.badges;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        msg('🏆 New badge unlocked!', 'success');
+      }
       
       document.getElementById('postText').value = '';
       clearSelectedFiles();
@@ -472,8 +497,7 @@ async function loadPosts() {
   try {
     feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>';
     
-    const params = currentUser?.college ? `?college=${encodeURIComponent(currentUser.college)}` : '';
-    const data = await apiCall('/api/posts' + params, 'GET');
+    const data = await apiCall('/api/posts?type=my', 'GET');
     
     if(!data.posts || data.posts.length === 0) {
       feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post! 📝</div>';
@@ -488,11 +512,15 @@ async function loadPosts() {
       const media = post.media || [];
       const time = new Date(post.created_at || post.timestamp).toLocaleString();
       const isOwn = currentUser && authorId === currentUser.id;
+      const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
       
       html += `
         <div class="post">
           <div class="post-header">
-            <div class="author">@${author}</div>
+            <div>
+              <div class="author">@${author}</div>
+              <div style="font-size:12px; color:#888; margin-top:2px;">${postedTo}</div>
+            </div>
             ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
           </div>
           ${content ? `<div class="text">${content}</div>` : ''}
@@ -531,22 +559,34 @@ async function deletePost(postId) {
   }
 }
 
-// PHOTO UPLOAD
-function showPhotoModal() {
-  const modalHtml = `
+function showPostDestinationModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
     <div class="modal-box">
-      <span class="close" onclick="closeModal('photoModal')">&times;</span>
-      <h2>Add Photos/Videos</h2>
-      <button onclick="openPhotoGallery()" style="margin-bottom:10px;">📁 Choose from Gallery</button>
-      <button onclick="openCamera()">📸 Take Photo</button>
-      <div id="photoPreviewContainer" style="margin-top:15px;"></div>
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>Where do you want to post?</h2>
+      <button onclick="selectPostDestination('profile')" style="margin-bottom:10px;">
+        👤 My Profile<br>
+        <small style="color:#888;">Only you can see</small>
+      </button>
+      <button onclick="selectPostDestination('community')">
+        🌐 Community Feed<br>
+        <small style="color:#888;">All ${currentUser.college || 'college'} members can see</small>
+      </button>
     </div>
   `;
-  document.getElementById('photoModal').innerHTML = modalHtml;
-  document.getElementById('photoModal').style.display = 'flex';
-  displayPhotoPreviews();
+  document.body.appendChild(modal);
 }
 
+function selectPostDestination(destination) {
+  selectedPostDestination = destination;
+  document.querySelector('.modal')?.remove();
+  msg(`Post will be shared to ${destination === 'profile' ? 'your profile' : 'community feed'}`, 'success');
+}
+
+// PHOTO UPLOAD WITH EDITOR
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -597,7 +637,8 @@ function handleFileSelection(e) {
     const previewUrl = URL.createObjectURL(file);
     previewUrls.push({
       url: previewUrl,
-      type: file.type.startsWith('image') ? 'image' : 'video'
+      type: file.type.startsWith('image') ? 'image' : 'video',
+      file: file
     });
   });
   
@@ -607,10 +648,14 @@ function handleFileSelection(e) {
 
 function displayPhotoPreviews() {
   const container = document.getElementById('photoPreviewContainer');
-  if (!container) return;
+  if (!container) {
+    console.warn('Photo preview container not found');
+    return;
+  }
   
   if (previewUrls.length === 0) {
     container.style.display = 'none';
+    container.innerHTML = '';
     return;
   }
   
@@ -619,20 +664,135 @@ function displayPhotoPreviews() {
   
   previewUrls.forEach((preview, index) => {
     html += `
-      <div style="position:relative; border-radius:8px; overflow:hidden; aspect-ratio:1;">
+      <div style="position:relative; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#2a2a2a;">
         ${preview.type === 'image' 
           ? `<img src="${preview.url}" style="width:100%; height:100%; object-fit:cover;">` 
           : `<video src="${preview.url}" style="width:100%; height:100%; object-fit:cover;"></video>`
         }
+        ${preview.type === 'image' ? `<button onclick="editPhoto(${index})" style="position:absolute; bottom:5px; left:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">✏️ Edit</button>` : ''}
         <button onclick="removeSelectedFile(${index})" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:16px; line-height:1;">✕</button>
       </div>
     `;
   });
   
   html += '</div>';
-  html += `<div style="text-align:right; color:#888; font-size:12px;">${selectedFiles.length}/5 files</div>`;
-  html += `<button onclick="closeModal('photoModal')" style="margin-top:10px; width:100%;">Done</button>`;
+  html += `<div style="text-align:right; color:#888; font-size:12px; margin-top:5px;">${selectedFiles.length}/5 files selected</div>`;
   container.innerHTML = html;
+}
+
+function editPhoto(index) {
+  const preview = previewUrls[index];
+  if (preview.type !== 'image') {
+    msg('⚠️ Can only edit images', 'error');
+    return;
+  }
+  
+  showPhotoEditor(preview, index);
+}
+
+function showPhotoEditor(preview, index) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:800px;">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>Edit Photo</h2>
+      <div style="position:relative; margin:20px 0;">
+        <img id="editImage" src="${preview.url}" style="max-width:100%; border-radius:8px;">
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
+        <button onclick="applyFilter('grayscale')">⚫ Grayscale</button>
+        <button onclick="applyFilter('sepia')">🟤 Sepia</button>
+        <button onclick="applyFilter('brightness')">☀️ Brighten</button>
+        <button onclick="applyFilter('contrast')">🔆 Contrast</button>
+        <button onclick="applyFilter('blur')">🌫️ Blur</button>
+        <button onclick="resetFilters()">↩️ Reset</button>
+      </div>
+      <button onclick="saveEditedPhoto(${index})" style="width:100%;">💾 Save Changes</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+let currentFilters = {};
+
+function applyFilter(filter) {
+  const img = document.getElementById('editImage');
+  if (!img) return;
+  
+  switch(filter) {
+    case 'grayscale':
+      currentFilters.grayscale = 100;
+      break;
+    case 'sepia':
+      currentFilters.sepia = 80;
+      break;
+    case 'brightness':
+      currentFilters.brightness = (currentFilters.brightness || 100) + 20;
+      break;
+    case 'contrast':
+      currentFilters.contrast = (currentFilters.contrast || 100) + 20;
+      break;
+    case 'blur':
+      currentFilters.blur = 3;
+      break;
+  }
+  
+  updateImageFilters();
+}
+
+function resetFilters() {
+  currentFilters = {};
+  updateImageFilters();
+}
+
+function updateImageFilters() {
+  const img = document.getElementById('editImage');
+  if (!img) return;
+  
+  let filterString = '';
+  if (currentFilters.grayscale) filterString += `grayscale(${currentFilters.grayscale}%) `;
+  if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
+  if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
+  if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
+  if (currentFilters.blur) filterString += `blur(${currentFilters.blur}px) `;
+  
+  img.style.filter = filterString;
+}
+
+async function saveEditedPhoto(index) {
+  const img = document.getElementById('editImage');
+  if (!img) return;
+  
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (Object.keys(currentFilters).length > 0) {
+      ctx.filter = img.style.filter;
+    }
+    
+    ctx.drawImage(img, 0, 0);
+    
+    canvas.toBlob((blob) => {
+      const file = new File([blob], selectedFiles[index].name, { type: 'image/jpeg' });
+      selectedFiles[index] = file;
+      
+      URL.revokeObjectURL(previewUrls[index].url);
+      const newUrl = URL.createObjectURL(file);
+      previewUrls[index] = { url: newUrl, type: 'image', file: file };
+      
+      displayPhotoPreviews();
+      document.querySelector('.modal')?.remove();
+      currentFilters = {};
+      msg('✅ Photo updated!', 'success');
+    }, 'image/jpeg', 0.9);
+  } catch (error) {
+    msg('❌ Failed to save photo', 'error');
+  }
 }
 
 function removeSelectedFile(index) {
@@ -649,7 +809,7 @@ function clearSelectedFiles() {
   previewUrls = [];
 }
 
-// COMMUNITIES
+// COMMUNITIES WITH ENHANCED CHAT
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   
@@ -687,22 +847,79 @@ async function loadCommunityMessages() {
       return;
     }
     
-    let html = '';
+    messagesEl.innerHTML = '';
     data.messages.reverse().forEach(msg => {
-      const isOwn = msg.sender_id === currentUser.id;
-      const sender = msg.users?.username || 'User';
-      html += `
-        <div class="chat-message ${isOwn ? 'own' : 'other'}">
-          ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
-          <div class="text">${msg.content}</div>
-        </div>
-      `;
+      appendMessageToChat(msg);
     });
     
-    messagesEl.innerHTML = html;
     messagesEl.scrollTop = messagesEl.scrollHeight;
   } catch (error) {
     console.error('Load messages error:', error);
+  }
+}
+
+function appendMessageToChat(msg) {
+  const messagesEl = document.getElementById('chatMessages');
+  if (!messagesEl) return;
+  
+  const isOwn = msg.sender_id === currentUser.id;
+  const sender = msg.users?.username || 'User';
+  const messageTime = new Date(msg.timestamp);
+  const now = new Date();
+  const canEdit = isOwn && ((now - messageTime) / 1000 / 60) < 2;
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'}`;
+  messageDiv.id = `msg-${msg.id}`;
+  
+  const reactions = msg.message_reactions || [];
+  const reactionCounts = {};
+  reactions.forEach(r => {
+    reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+  });
+  
+  messageDiv.innerHTML = `
+    ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
+    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
+    ${Object.keys(reactionCounts).length > 0 ? `
+      <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
+        ${Object.entries(reactionCounts).map(([emoji, count]) => 
+          `<span style="background:rgba(79,116,163,0.2); padding:2px 6px; border-radius:10px; font-size:12px;">${emoji} ${count}</span>`
+        ).join('')}
+      </div>
+    ` : ''}
+    <div style="display:flex; gap:8px; margin-top:8px; font-size:11px; color:#888;">
+      <span onclick="reactToMessage('${msg.id}')" style="cursor:pointer;">❤️</span>
+      <span onclick="reactToMessage('${msg.id}', '👍')" style="cursor:pointer;">👍</span>
+      <span onclick="reactToMessage('${msg.id}', '😂')" style="cursor:pointer;">😂</span>
+      <span onclick="reactToMessage('${msg.id}', '🔥')" style="cursor:pointer;">🔥</span>
+      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${msg.content.replace(/'/g, "\\'")}')" style="cursor:pointer;">✏️ Edit</span>` : ''}
+      ${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️ Delete</span>` : ''}
+      <span onclick="showMessageViews('${msg.id}')" style="cursor:pointer;">👁️ Views</span>
+    </div>
+  `;
+  
+  messagesEl.appendChild(messageDiv);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  
+  markMessageAsViewed(msg.id);
+}
+
+function updateMessageInChat(msg) {
+  const messageEl = document.getElementById(`msg-${msg.id}`);
+  if (!messageEl) return;
+  
+  const isOwn = msg.sender_id === currentUser.id;
+  const textEl = messageEl.querySelector('.text');
+  if (textEl) {
+    textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
+  }
+}
+
+function removeMessageFromChat(id) {
+  const messageEl = document.getElementById(`msg-${id}`);
+  if (messageEl) {
+    messageEl.remove();
   }
 }
 
@@ -715,15 +932,462 @@ async function sendChatMessage() {
   try {
     await apiCall('/api/community/messages', 'POST', { content });
     input.value = '';
-    loadCommunityMessages();
   } catch (error) {
     msg('❌ Failed to send message', 'error');
   }
 }
 
 function handleChatKeypress(e) {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
     sendChatMessage();
+  }
+}
+
+async function editMessage(messageId, currentContent) {
+  if (editingMessageId) {
+    msg('⚠️ Finish editing current message first', 'error');
+    return;
+  }
+  
+  const newContent = prompt('Edit message:', currentContent);
+  if (!newContent || newContent.trim() === '' || newContent === currentContent) return;
+  
+  try {
+    editingMessageId = messageId;
+    await apiCall(`/api/community/messages/${messageId}`, 'PATCH', { content: newContent.trim() });
+    msg('✅ Message edited', 'success');
+  } catch (error) {
+    msg('❌ ' + error.message, 'error');
+  } finally {
+    editingMessageId = null;
+  }
+}
+
+async function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+  
+  try {
+    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    msg('🗑️ Message deleted', 'success');
+  } catch (error) {
+    msg('❌ Failed to delete', 'error');
+  }
+}
+
+async function reactToMessage(messageId, emoji = '❤️') {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
+  } catch (error) {
+    console.error('React error:', error);
+  }
+}
+
+async function markMessageAsViewed(messageId) {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/view`, 'POST');
+  } catch (error) {
+    console.error('View error:', error);
+  }
+}
+
+async function showMessageViews(messageId) {
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}/views`, 'GET');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-box">
+        <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+        <h2>Message Views (${data.count})</h2>
+        ${data.views.length > 0 ? `
+          <div style="max-height:300px; overflow-y:auto;">
+            ${data.views.map(v => `
+              <div style="padding:10px; border-bottom:1px solid rgba(79,116,163,0.1);">
+                <strong>@${v.users?.username || 'User'}</strong>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p style="text-align:center; color:#888;">No views yet</p>'}
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } catch (error) {
+    msg('❌ Failed to load views', 'error');
+  }
+}
+
+// SEARCH BAR
+function initializeSearchBar() {
+  const searchBox = document.querySelector('.search-box');
+  if (!searchBox) return;
+  
+  let searchTimeout;
+  searchBox.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+      performSearch(query);
+    }, 500);
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-box') && !e.target.closest('.search-results')) {
+      hideSearchResults();
+    }
+  });
+}
+
+async function performSearch(query) {
+  try {
+    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    displaySearchResults(data.users || []);
+  } catch (error) {
+    console.error('Search error:', error);
+  }
+}
+
+function displaySearchResults(users) {
+  let resultsDiv = document.querySelector('.search-results');
+  
+  if (!resultsDiv) {
+    resultsDiv = document.createElement('div');
+    resultsDiv.className = 'search-results';
+    resultsDiv.style.cssText = `
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: rgba(15, 25, 45, 0.98);
+      border: 1px solid rgba(79, 116, 163, 0.3);
+      border-radius: 12px;
+      margin-top: 5px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    `;
+    
+    const searchContainer = document.querySelector('.search-box').parentElement;
+    searchContainer.style.position = 'relative';
+    searchContainer.appendChild(resultsDiv);
+  }
+  
+  if (users.length === 0) {
+    resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">No users found</div>';
+    return;
+  }
+  
+  resultsDiv.innerHTML = users.map(user => `
+    <div onclick="showUserProfile('${user.id}')" style="padding:15px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(79,116,163,0.1)'" onmouseout="this.style.background='transparent'">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">
+          ${user.profile_pic ? `<img src="${user.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600; color:#4f74a3;">@${user.username}</div>
+          <div style="font-size:12px; color:#888;">${user.registration_number || user.email}</div>
+          ${user.college ? `<div style="font-size:11px; color:#666; margin-top:2px;">🎓 ${user.college}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function hideSearchResults() {
+  const resultsDiv = document.querySelector('.search-results');
+  if (resultsDiv) {
+    resultsDiv.remove();
+  }
+}
+
+async function showUserProfile(userId) {
+  hideSearchResults();
+  
+  try {
+    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    const user = data.user;
+    
+    showProfileModal(user);
+  } catch (error) {
+    msg('❌ Failed to load profile', 'error');
+  }
+}
+
+// PROFILE PAGE
+function showProfilePage() {
+  if (!currentUser) return;
+  showProfileModal(currentUser);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showProfileModal(user) {
+  const isOwnProfile = currentUser && user.id === currentUser.id;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box profile-modal-box">
+      <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
+      
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-cover"></div>
+          <div class="profile-main">
+            <div class="profile-photo-section">
+              <div class="profile-photo" style="${user.profile_pic ? `background-image: url('${user.profile_pic}'); background-size: cover;` : ''}">
+                ${!user.profile_pic ? '👤' : ''}
+              </div>
+              ${isOwnProfile ? `
+                <button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>
+              ` : ''}
+              <div class="active-badge">
+                <span class="status-dot"></span>
+                <span>Active Now</span>
+              </div>
+            </div>
+            
+            <div class="profile-name-section">
+              <h2>${user.username}</h2>
+              <div class="nickname-display">
+                <span class="nickname-label">@${user.username}</span>
+              </div>
+              ${user.college ? `<p style="color:#888; font-size:14px;">🎓 ${user.college}</p>` : ''}
+              ${user.registration_number ? `<p style="color:#888; font-size:13px;">📋 ${user.registration_number}</p>` : ''}
+            </div>
+            
+            ${isOwnProfile ? `
+              <button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>
+            ` : ''}
+          </div>
+        </div>
+        
+        <div class="profile-stats-section">
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">${user.postCount || 0}</div>
+            <div class="stat-title">Posts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">${user.badges?.length || 0}</div>
+            <div class="stat-title">Badges</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value">24h</div>
+            <div class="stat-title">Active</div>
+          </div>
+        </div>
+        
+        <div class="profile-description-section">
+          <h3>About</h3>
+          <p id="profileDescriptionText">${user.bio || 'No description added yet. Click edit to add one!'}</p>
+        </div>
+        
+        ${isOwnProfile ? `
+          <div class="edit-profile-section" id="editProfileSection" style="display:none;">
+            <h3>Edit Profile</h3>
+            <div class="edit-form-group">
+              <label>Username</label>
+              <input type="text" id="editUsername" value="${user.username}" maxlength="30">
+            </div>
+            <div class="edit-form-group">
+              <label>Bio</label>
+              <textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">${user.bio || ''}</textarea>
+              <small id="bioCounter">0/200</small>
+            </div>
+            <div class="edit-form-buttons">
+              <button class="btn-save" onclick="saveProfile()">💾 Save</button>
+              <button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${user.badges && user.badges.length > 0 ? `
+          <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
+            <h3 style="color:#4f74a3; margin-bottom:15px;">🏆 Badges</h3>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              ${user.badges.map(badge => `
+                <span style="background:linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2)); border:1px solid rgba(79,116,163,0.3); padding:8px 16px; border-radius:20px; font-size:14px;">${badge}</span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  if (isOwnProfile) {
+    const bioTextarea = document.getElementById('editBio');
+    if (bioTextarea) {
+      bioTextarea.addEventListener('input', updateBioCounter);
+      updateBioCounter();
+    }
+  }
+}
+
+function toggleEditProfile() {
+  const section = document.getElementById('editProfileSection');
+  if (!section) return;
+  
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateBioCounter() {
+  const textarea = document.getElementById('editBio');
+  const counter = document.getElementById('bioCounter');
+  if (textarea && counter) {
+    counter.textContent = `${textarea.value.length}/200`;
+  }
+}
+
+async function saveProfile() {
+  const username = document.getElementById('editUsername')?.value.trim();
+  const bio = document.getElementById('editBio')?.value.trim();
+  
+  if (!username) {
+    msg('⚠️ Username required', 'error');
+    return;
+  }
+  
+  try {
+    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
+    
+    if (data.success) {
+      currentUser.username = data.user.username;
+      currentUser.bio = data.user.bio;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      msg('✅ Profile updated!', 'success');
+      document.querySelector('.modal')?.remove();
+      showProfilePage();
+    }
+  } catch (error) {
+    msg('❌ ' + error.message, 'error');
+  }
+}
+
+function uploadProfilePic() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      msg('⚠️ Image too large (max 5MB)', 'error');
+      return;
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('profilePic', file);
+      
+      const data = await apiCall('/api/profile', 'PATCH', formData);
+      
+      if (data.success) {
+        currentUser.profile_pic = data.user.profile_pic;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        
+        msg('✅ Profile picture updated!', 'success');
+        document.querySelector('.modal')?.remove();
+        showProfilePage();
+      }
+    } catch (error) {
+      msg('❌ Failed to upload', 'error');
+    }
+  };
+  
+  input.click();
+}
+
+// BADGES PAGE
+function loadBadgesPage() {
+  const container = document.getElementById('badges');
+  if (!container) return;
+  
+  const allBadges = [
+    { emoji: '🎓', name: 'Community Member', desc: 'Joined a college community', earned: currentUser?.badges?.includes('🎓 Community Member') },
+    { emoji: '🎨', name: 'First Post', desc: 'Created your first post', earned: currentUser?.badges?.includes('🎨 First Post') },
+    { emoji: '⭐', name: 'Content Creator', desc: 'Posted 10 times', earned: currentUser?.badges?.includes('⭐ Content Creator') },
+    { emoji: '💬', name: 'Chatty', desc: 'Sent 50 messages', earned: false },
+    { emoji: '🔥', name: 'On Fire', desc: '7 day streak', earned: false },
+  ];
+  
+  let html = `
+    <div style="text-align:center; margin-bottom:40px;">
+      <h2 style="font-size:32px; color:#4f74a3; margin-bottom:10px;">🏆 Badges</h2>
+      <p style="color:#888;">Earn badges by being active in the community!</p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">
+  `;
+  
+  allBadges.forEach(badge => {
+    html += `
+      <div style="background:${badge.earned ? 'linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2))' : 'rgba(15,25,45,0.9)'}; border:2px solid ${badge.earned ? '#4f74a3' : 'rgba(79,116,163,0.2)'}; border-radius:16px; padding:30px 20px; text-align:center; transition:all 0.3s ease;" ${badge.earned ? 'style="box-shadow:0 10px 30px rgba(79,116,163,0.3);"' : ''}>
+        <div style="font-size:48px; margin-bottom:15px; filter:${badge.earned ? 'none' : 'grayscale(100%) opacity(0.3)'};">${badge.emoji}</div>
+        <h3 style="color:${badge.earned ? '#4f74a3' : '#666'}; font-size:18px; margin-bottom:8px;">${badge.name}</h3>
+        <p style="color:#888; font-size:13px; margin-bottom:15px;">${badge.desc}</p>
+        <div style="background:${badge.earned ? 'linear-gradient(135deg, #4f74a3, #8da4d3)' : 'rgba(79,116,163,0.1)'}; color:${badge.earned ? 'white' : '#666'}; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;">
+          ${badge.earned ? '✓ Earned' : '🔒 Locked'}
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// FEEDBACK
+function showFeedbackModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Send Feedback</h2>
+      <p style="color:#888; margin-bottom:20px;">We'd love to hear from you!</p>
+      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
+      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea>
+      <button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  
+  if (!subject || !message) {
+    msg('⚠️ Please fill all fields', 'error');
+    return;
+  }
+  
+  try {
+    await apiCall('/api/feedback', 'POST', { subject, message });
+    msg('✅ Thank you for your feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (error) {
+    msg('❌ Failed to submit feedback', 'error');
   }
 }
 
@@ -741,12 +1405,6 @@ function showComplaintModal() {
 
 function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-function showProfilePage() {
-  msg('Profile page coming soon!', 'success');
   document.getElementById('hamburgerMenu').style.display = 'none';
   document.getElementById('optionsMenu').style.display = 'none';
 }
@@ -837,6 +1495,22 @@ function updateLiveStats() {
   });
 }
 
+function updateOnlineCount(count) {
+  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
+  elements.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'liveUsersCount') {
+        el.textContent = count + ' Active';
+      } else if (id === 'footerUsers') {
+        el.textContent = count;
+      } else {
+        el.textContent = count;
+      }
+    }
+  });
+}
+
 function updateLiveNotif(text) {
   const notif = document.getElementById('notifText');
   if (notif) notif.textContent = text;
@@ -894,12 +1568,4 @@ function loadTrending() {
   container.innerHTML = html;
 }
 
-// Load trending on page load
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(loadTrending, 500);
-});
-
-console.log('✅ VibeXpert fully loaded and functional!');
-
-
-
+console.log('✅ VibeXpert Enhanced - All features loaded and functional!');
