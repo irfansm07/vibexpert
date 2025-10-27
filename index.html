@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="google-site-verification" content="iF08Ao0_ThrruneJlNozZfz0StddVhQjJFoVXSMfyvg" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>VibeXpert</title>
+  <title>VibeXpert - Connect With Your College</title>
   <link rel="stylesheet" href="vibemap.css" />
 </head>
 <body class="dark-theme">
+
+<!-- Socket.io CDN -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <!-- LIVE ACTIVITY NOTIFICATION -->
 <div id="liveActivityNotif" class="live-activity-notif">
@@ -143,13 +145,12 @@
     <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
-      <a href="#" class="nav-link" onclick="showPage('communityPlus', event)">Community Plus</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="#" class="nav-link" onclick="showPage('subscriptions', event)">Subscriptions</a>
+      <a href="#" class="nav-link" onclick="showPage('badges', event)">Badges</a>
     </nav>
 
     <div class="header-right">
-      <input type="text" class="search-box" placeholder="Search...">
+      <input type="text" class="search-box" placeholder="Search users...">
       <span class="user-name" id="userName">Hi, User</span>
       
       <button class="options-btn" onclick="toggleOptionsMenu()">
@@ -161,6 +162,7 @@
       <div class="options-menu" id="optionsMenu" style="display:none;">
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
         <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
         <hr>
@@ -176,12 +178,12 @@
       <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
         <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
         <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
-        <div class="menu-item" onclick="showPage('communityPlus', event)">📣 Community Plus</div>
         <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-        <div class="menu-item" onclick="showPage('subscriptions', event)">⭐ Subscriptions</div>
+        <div class="menu-item" onclick="showPage('badges', event)">🏆 Badges</div>
         <hr>
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
         <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
         <hr>
@@ -279,9 +281,9 @@
       </div>
     </section>
 
-    <!-- POSTS - FIXED VERSION -->
+    <!-- POSTS -->
     <section id="posts" class="page" style="display:none;">
-      <h2 class="title">Community Posts</h2>
+      <h2 class="title">My Posts</h2>
       
       <!-- Post Creator with Photo Upload -->
       <div style="background:#1a1a1a; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
@@ -318,6 +320,17 @@
             >
               📷 Camera
             </button>
+            
+            <!-- Post Destination Button -->
+            <button 
+              type="button"
+              onclick="showPostDestinationModal()" 
+              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
+              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
+              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
+            >
+              📍 Where to post?
+            </button>
           </div>
           
           <!-- Post Button -->
@@ -337,68 +350,20 @@
       <div id="postsFeed"></div>
     </section>
 
-    <!-- SUBSCRIPTIONS -->
-    <section id="subscriptions" class="page" style="display:none;">
-      <h2 class="title">Subscriptions</h2>
-      <div class="sub-cards">
-        <div class="sub-card">
-          <span class="badge">Basic</span>
-          <h3>Good Support</h3>
-          <p class="price">₹0</p>
-          <ul>
-            <li>✗ Post in RealVibers</li>
-            <li>✗ Get Comments</li>
-            <li>✗ Post Priority</li>
-            <li>✗ No Time Limit</li>
-            <li>✗ 3x/day Posts</li>
-          </ul>
-          <button>Current</button>
-        </div>
-        <div class="sub-card featured">
-          <span class="badge popular">Most Popular</span>
-          <h3>Premium</h3>
-          <p class="price">₹29<small>/month</small></p>
-          <ul>
-            <li>✓ Post in RealVibers</li>
-            <li>✓ Get Comments</li>
-            <li>✓ Post Priority</li>
-            <li>✓ 5-Hour Limit</li>
-            <li>✗ 3x/day Posts</li>
-          </ul>
-          <button>Subscribe</button>
-        </div>
-        <div class="sub-card">
-          <span class="badge">Ultimate</span>
-          <h3>Premium Plus</h3>
-          <p class="price">₹99<small>/month</small></p>
-          <ul>
-            <li>✓ Post in RealVibers</li>
-            <li>✓ Get Comments</li>
-            <li>✓ Post Priority</li>
-            <li>✓ No Time Limit</li>
-            <li>✓ 3x/day Posts</li>
-          </ul>
-          <button>Subscribe</button>
-        </div>
-      </div>
+    <!-- BADGES PAGE -->
+    <section id="badges" class="page" style="display:none;">
+      <!-- Content loaded dynamically by JS -->
     </section>
 
   </main>
 
   <footer>
-    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0 Users Online</span></p>
+    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
   </footer>
 </div>
 
 <!-- MODALS -->
-<div id="verifyModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('verifyModal')">&times;</span>
-    <h2>Verify Your College</h2>
-    <input type="email" id="verifyEmail" placeholder="Your college email">
-    <button onclick="verifyCollege()">Verify</button>
-  </div>
-</div>
+<div id="verifyModal" class="modal" style="display:none;"></div>
 
 <div id="contactModal" class="modal" style="display:none;">
   <div class="modal-box">
