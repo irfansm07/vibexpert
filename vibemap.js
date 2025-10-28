@@ -1,4 +1,4 @@
-// VIBEXPERT - ENHANCED VERSION WITH ALL FEATURES
+// VIBEXPERT - ENHANCED VERSION WITH ALL FEATURES - UPDATED
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -13,6 +13,96 @@ let selectedFiles = [];
 let previewUrls = [];
 let editingMessageId = null;
 let editTimeout = null;
+let selectedMusic = null;
+let selectedStickers = [];
+
+// Enhanced music library with actual audio files
+const musicLibrary = [
+  {
+    id: 1,
+    name: "Chill Vibes",
+    artist: "LoFi Beats",
+    duration: "2:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",
+    emoji: "🎧"
+  },
+  {
+    id: 2,
+    name: "Upbeat Energy",
+    artist: "Electronic Pop",
+    duration: "3:15",
+    url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",
+    emoji: "⚡"
+  },
+  {
+    id: 3,
+    name: "Dreamy Piano",
+    artist: "Classical",
+    duration: "2:45",
+    url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",
+    emoji: "🎹"
+  },
+  {
+    id: 4,
+    name: "Summer Vibes",
+    artist: "Tropical",
+    duration: "3:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",
+    emoji: "🏖️"
+  },
+  {
+    id: 5,
+    name: "Happy Day",
+    artist: "Pop Rock",
+    duration: "2:50",
+    url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",
+    emoji: "😊"
+  },
+  {
+    id: 6,
+    name: "Relaxing Guitar",
+    artist: "Acoustic",
+    duration: "3:10",
+    url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",
+    emoji: "🎸"
+  }
+];
+
+// Enhanced sticker library with categories
+const stickerLibrary = {
+  emotions: [
+    { id: 'happy', emoji: '😊', name: 'Happy' },
+    { id: 'laugh', emoji: '😂', name: 'Laugh' },
+    { id: 'love', emoji: '❤️', name: 'Love' },
+    { id: 'cool', emoji: '😎', name: 'Cool' },
+    { id: 'fire', emoji: '🔥', name: 'Fire' },
+    { id: 'star', emoji: '⭐', name: 'Star' }
+  ],
+  animals: [
+    { id: 'cat', emoji: '🐱', name: 'Cat' },
+    { id: 'dog', emoji: '🐶', name: 'Dog' },
+    { id: 'panda', emoji: '🐼', name: 'Panda' },
+    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
+    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
+  ],
+  objects: [
+    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+    { id: 'gift', emoji: '🎁', name: 'Gift' },
+    { id: 'camera', emoji: '📷', name: 'Camera' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'book', emoji: '📚', name: 'Book' },
+    { id: 'computer', emoji: '💻', name: 'Computer' }
+  ],
+  nature: [
+    { id: 'sun', emoji: '☀️', name: 'Sun' },
+    { id: 'moon', emoji: '🌙', name: 'Moon' },
+    { id: 'tree', emoji: '🌳', name: 'Tree' },
+    { id: 'flower', emoji: '🌸', name: 'Flower' },
+    { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
+    { id: 'wave', emoji: '🌊', name: 'Wave' }
+  ]
+};
 
 const colleges = {
   nit: [
@@ -78,7 +168,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   }
 }
 
-// INIT
+// INIT - Enhanced with music and sticker event listeners
 document.addEventListener('DOMContentLoaded', function() {
   checkUser();
   showLoginForm();
@@ -89,6 +179,20 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize post destination
   selectedPostDestination = 'profile';
+  
+  // Add event listeners for music and sticker buttons
+  setTimeout(() => {
+    const addMusicBtn = document.getElementById('addMusicBtn');
+    const addStickerBtn = document.getElementById('addStickerBtn');
+    
+    if (addMusicBtn) {
+      addMusicBtn.addEventListener('click', showMusicSelector);
+    }
+    
+    if (addStickerBtn) {
+      addStickerBtn.addEventListener('click', showStickerSelector);
+    }
+  }, 1000);
 });
 
 function checkUser() {
@@ -442,14 +546,14 @@ async function verifyCollegeCode() {
   }
 }
 
-// POSTS WITH DESTINATION SELECTION
+// ENHANCED POSTS WITH MUSIC AND STICKERS
 let selectedPostDestination = 'profile';
 
 async function createPost() {
   const text = document.getElementById('postText').value.trim();
   
-  if(!text && selectedFiles.length === 0) {
-    msg('⚠️ Add text or photos', 'error');
+  if(!text && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
+    msg('⚠️ Add text, photos, music or stickers', 'error');
     return;
   }
   
@@ -464,6 +568,16 @@ async function createPost() {
     const formData = new FormData();
     formData.append('content', text);
     formData.append('postTo', selectedPostDestination);
+    
+    // Add music data if selected
+    if (selectedMusic) {
+      formData.append('music', JSON.stringify(selectedMusic));
+    }
+    
+    // Add stickers data if selected
+    if (selectedStickers.length > 0) {
+      formData.append('stickers', JSON.stringify(selectedStickers));
+    }
     
     selectedFiles.forEach(file => {
       formData.append('media', file);
@@ -482,6 +596,8 @@ async function createPost() {
       
       document.getElementById('postText').value = '';
       clearSelectedFiles();
+      clearSelectedMusic();
+      clearSelectedStickers();
       
       loadPosts();
     }
@@ -513,29 +629,80 @@ async function loadPosts() {
       const time = new Date(post.created_at || post.timestamp).toLocaleString();
       const isOwn = currentUser && authorId === currentUser.id;
       const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
+      const music = post.music || null;
+      const stickers = post.stickers || [];
       
       html += `
-        <div class="post">
-          <div class="post-header">
-            <div>
-              <div class="author">@${author}</div>
-              <div style="font-size:12px; color:#888; margin-top:2px;">${postedTo}</div>
+        <div class="enhanced-post">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                  <span>•</span>
+                  <span>${postedTo}</span>
+                </div>
+              </div>
             </div>
             ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
           </div>
-          ${content ? `<div class="text">${content}</div>` : ''}
           
-          ${media.length > 0 ? `
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:15px 0;">
-              ${media.map(m => 
-                m.type === 'image' 
-                  ? `<img src="${m.url}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${m.url}', '_blank')">` 
-                  : `<video src="${m.url}" controls style="width:100%; border-radius:8px;"></video>`
-              ).join('')}
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `
+                  <span class="post-sticker">${sticker.emoji || sticker}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+              <span>🔄 0</span>
             </div>
-          ` : ''}
-          
-          <div class="time">${time}</div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+              <button class="engagement-btn">🔄 Share</button>
+            </div>
+          </div>
         </div>
       `;
     });
@@ -559,34 +726,192 @@ async function deletePost(postId) {
   }
 }
 
-function showPostDestinationModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
+// ENHANCED MUSIC SELECTOR
+function showMusicSelector() {
+  const modal = document.getElementById('musicSelectorModal');
+  const selector = document.getElementById('musicSelector');
+  
+  if (!modal || !selector) {
+    console.error('Music selector elements not found');
+    return;
+  }
+  
+  let html = '<div class="music-selector">';
+  
+  musicLibrary.forEach(song => {
+    const isSelected = selectedMusic && selectedMusic.id === song.id;
+    html += `
+      <div class="song-item ${isSelected ? 'selected' : ''}" onclick="selectMusic(${song.id})">
+        <div class="song-info">
+          <div class="song-name">${song.emoji} ${song.name}</div>
+          <div class="song-duration">${song.artist} • ${song.duration}</div>
+        </div>
+        <div class="song-preview">
+          <button class="play-btn" onclick="event.stopPropagation(); previewMusic('${song.url}')">▶️</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  selector.innerHTML = html;
   modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>Where do you want to post?</h2>
-      <button onclick="selectPostDestination('profile')" style="margin-bottom:10px;">
-        👤 My Profile<br>
-        <small style="color:#888;">Only you can see</small>
-      </button>
-      <button onclick="selectPostDestination('community')">
-        🌐 Community Feed<br>
-        <small style="color:#888;">All ${currentUser.college || 'college'} members can see</small>
-      </button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+}
+
+function selectMusic(songId) {
+  const song = musicLibrary.find(s => s.id === songId);
+  if (!song) return;
+  
+  selectedMusic = song;
+  updateSelectedAssets();
+  closeModal('musicSelectorModal');
+  msg(`🎵 Added "${song.name}" to your post`, 'success');
+}
+
+function previewMusic(url) {
+  // Stop any currently playing audio
+  document.querySelectorAll('audio').forEach(audio => {
+    audio.pause();
+    audio.currentTime = 0;
+  });
+  
+  // Create and play preview
+  const audio = new Audio(url);
+  audio.play().catch(e => console.log('Audio play failed:', e));
+  
+  // Auto-close preview after 10 seconds
+  setTimeout(() => {
+    audio.pause();
+  }, 10000);
+}
+
+function clearSelectedMusic() {
+  selectedMusic = null;
+  updateSelectedAssets();
+}
+
+// ENHANCED STICKER SELECTOR
+function showStickerSelector() {
+  const modal = document.getElementById('stickerSelectorModal');
+  const selector = document.getElementById('stickerSelector');
+  
+  if (!modal || !selector) {
+    console.error('Sticker selector elements not found');
+    return;
+  }
+  
+  let html = '<div class="sticker-selector">';
+  
+  Object.entries(stickerLibrary).forEach(([category, stickers]) => {
+    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+    html += `
+      <div class="sticker-category">
+        <h4>${categoryName}</h4>
+        <div class="sticker-grid">
+          ${stickers.map(sticker => {
+            const isSelected = selectedStickers.some(s => s.id === sticker.id);
+            return `
+              <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')">
+                <span style="font-size: 32px;">${sticker.emoji}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  selector.innerHTML = html;
+  modal.style.display = 'flex';
+}
+
+function selectSticker(stickerId) {
+  // Find sticker in all categories
+  let selectedSticker = null;
+  for (const category in stickerLibrary) {
+    const sticker = stickerLibrary[category].find(s => s.id === stickerId);
+    if (sticker) {
+      selectedSticker = sticker;
+      break;
+    }
+  }
+  
+  if (!selectedSticker) return;
+  
+  // Check if already selected
+  const alreadySelected = selectedStickers.some(s => s.id === stickerId);
+  if (alreadySelected) {
+    selectedStickers = selectedStickers.filter(s => s.id !== stickerId);
+    msg(`🗑️ Removed ${selectedSticker.emoji} sticker`, 'success');
+  } else {
+    if (selectedStickers.length >= 5) {
+      msg('⚠️ Maximum 5 stickers per post', 'error');
+      return;
+    }
+    selectedStickers.push(selectedSticker);
+    msg(`🎨 Added ${selectedSticker.emoji} sticker`, 'success');
+  }
+  
+  updateSelectedAssets();
+  
+  // Don't close modal to allow multiple sticker selection
+  // closeModal('stickerSelectorModal');
+}
+
+function clearSelectedStickers() {
+  selectedStickers = [];
+  updateSelectedAssets();
+}
+
+// UPDATE SELECTED ASSETS DISPLAY
+function updateSelectedAssets() {
+  const container = document.getElementById('selectedAssets');
+  if (!container) return;
+  
+  let html = '';
+  
+  // Show selected music
+  if (selectedMusic) {
+    html += `
+      <div class="selected-asset">
+        <span>🎵 ${selectedMusic.name}</span>
+        <button onclick="clearSelectedMusic()">✕</button>
+      </div>
+    `;
+  }
+  
+  // Show selected stickers
+  selectedStickers.forEach((sticker, index) => {
+    html += `
+      <div class="selected-asset">
+        <span>${sticker.emoji}</span>
+        <button onclick="removeSticker(${index})">✕</button>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  container.style.display = html ? 'block' : 'none';
+}
+
+function removeSticker(index) {
+  selectedStickers.splice(index, 1);
+  updateSelectedAssets();
+  msg('🗑️ Sticker removed', 'success');
+}
+
+function showPostDestinationModal() {
+  document.getElementById('postDestinationModal').style.display = 'flex';
 }
 
 function selectPostDestination(destination) {
   selectedPostDestination = destination;
-  document.querySelector('.modal')?.remove();
+  closeModal('postDestinationModal');
   msg(`Post will be shared to ${destination === 'profile' ? 'your profile' : 'community feed'}`, 'success');
 }
 
-// PHOTO UPLOAD WITH EDITOR
+// ENHANCED PHOTO UPLOAD WITH BETTER EDITOR
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -601,16 +926,32 @@ function openPhotoGallery() {
 }
 
 function openCamera() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  
-  input.onchange = function(e) {
-    handleFileSelection(e);
-  };
-  
-  input.click();
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        msg('📷 Camera access granted. Taking photo...', 'success');
+        // In a real app, you would capture the photo here
+        // For now, fall back to file input
+        setTimeout(() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.capture = 'environment';
+          input.onchange = function(e) {
+            handleFileSelection(e);
+          };
+          input.click();
+        }, 1000);
+      })
+      .catch(function(error) {
+        console.error('Camera error:', error);
+        msg('⚠️ Camera not available. Using gallery instead.', 'error');
+        openPhotoGallery();
+      });
+  } else {
+    msg('⚠️ Camera not supported. Using gallery instead.', 'error');
+    openPhotoGallery();
+  }
 }
 
 function handleFileSelection(e) {
@@ -660,17 +1001,17 @@ function displayPhotoPreviews() {
   }
   
   container.style.display = 'block';
-  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin:10px 0;">';
+  let html = '<div class="media-preview">';
   
   previewUrls.forEach((preview, index) => {
     html += `
-      <div style="position:relative; border-radius:8px; overflow:hidden; aspect-ratio:1; background:#2a2a2a;">
+      <div class="media-preview-item">
         ${preview.type === 'image' 
-          ? `<img src="${preview.url}" style="width:100%; height:100%; object-fit:cover;">` 
-          : `<video src="${preview.url}" style="width:100%; height:100%; object-fit:cover;"></video>`
+          ? `<img src="${preview.url}" alt="Preview ${index + 1}">` 
+          : `<video src="${preview.url}" controls></video>`
         }
-        ${preview.type === 'image' ? `<button onclick="editPhoto(${index})" style="position:absolute; bottom:5px; left:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">✏️ Edit</button>` : ''}
-        <button onclick="removeSelectedFile(${index})" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:16px; line-height:1;">✕</button>
+        <button onclick="removeSelectedFile(${index})">✕</button>
+        ${preview.type === 'image' ? `<button class="edit-btn" onclick="editPhoto(${index})">✏️ Edit</button>` : ''}
       </div>
     `;
   });
@@ -690,60 +1031,45 @@ function editPhoto(index) {
   showPhotoEditor(preview, index);
 }
 
+// ENHANCED PHOTO EDITOR WITH BETTER UI
 function showPhotoEditor(preview, index) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box" style="max-width:800px;">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>Edit Photo</h2>
-      <div style="position:relative; margin:20px 0;">
-        <img id="editImage" src="${preview.url}" style="max-width:100%; border-radius:8px;">
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-        <button onclick="applyFilter('grayscale')">⚫ Grayscale</button>
-        <button onclick="applyFilter('sepia')">🟤 Sepia</button>
-        <button onclick="applyFilter('brightness')">☀️ Brighten</button>
-        <button onclick="applyFilter('contrast')">🔆 Contrast</button>
-        <button onclick="applyFilter('blur')">🌫️ Blur</button>
-        <button onclick="resetFilters()">↩️ Reset</button>
-      </div>
-      <button onclick="saveEditedPhoto(${index})" style="width:100%;">💾 Save Changes</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+  document.getElementById('photoEditorModal').style.display = 'flex';
+  document.getElementById('editImage').src = preview.url;
+  currentEditIndex = index;
+  currentFilters = {};
 }
 
+let currentEditIndex = -1;
 let currentFilters = {};
 
 function applyFilter(filter) {
   const img = document.getElementById('editImage');
   if (!img) return;
   
+  // Reset all filters first
+  img.style.filter = '';
+  
   switch(filter) {
-    case 'grayscale':
-      currentFilters.grayscale = 100;
+    case 'normal':
+      currentFilters = {};
       break;
-    case 'sepia':
-      currentFilters.sepia = 80;
+    case 'vintage':
+      currentFilters = { sepia: 70, contrast: 120, brightness: 110 };
       break;
-    case 'brightness':
-      currentFilters.brightness = (currentFilters.brightness || 100) + 20;
+    case 'clarendon':
+      currentFilters = { contrast: 130, saturation: 120, brightness: 105 };
       break;
-    case 'contrast':
-      currentFilters.contrast = (currentFilters.contrast || 100) + 20;
+    case 'moon':
+      currentFilters = { grayscale: 100, brightness: 90, contrast: 110 };
       break;
-    case 'blur':
-      currentFilters.blur = 3;
+    case 'lark':
+      currentFilters = { brightness: 115, saturation: 110, contrast: 105 };
+      break;
+    case 'reyes':
+      currentFilters = { sepia: 50, brightness: 115, contrast: 105 };
       break;
   }
   
-  updateImageFilters();
-}
-
-function resetFilters() {
-  currentFilters = {};
   updateImageFilters();
 }
 
@@ -756,41 +1082,69 @@ function updateImageFilters() {
   if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
   if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
   if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
+  if (currentFilters.saturation) filterString += `saturate(${currentFilters.saturation}%) `;
   if (currentFilters.blur) filterString += `blur(${currentFilters.blur}px) `;
+  if (currentFilters.hue) filterString += `hue-rotate(${currentFilters.hue}deg) `;
   
-  img.style.filter = filterString;
+  img.style.filter = filterString || 'none';
 }
 
-async function saveEditedPhoto(index) {
+function resetFilters() {
+  currentFilters = {};
+  updateImageFilters();
+}
+
+function saveEditedPhoto() {
   const img = document.getElementById('editImage');
-  if (!img) return;
+  if (!img || currentEditIndex === -1) return;
   
   try {
     const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
     
+    // Set canvas dimensions to match image
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    
+    // Apply filters if any
     if (Object.keys(currentFilters).length > 0) {
       ctx.filter = img.style.filter;
     }
     
-    ctx.drawImage(img, 0, 0);
+    // Draw image on canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     
+    // Convert to blob and update file
     canvas.toBlob((blob) => {
-      const file = new File([blob], selectedFiles[index].name, { type: 'image/jpeg' });
-      selectedFiles[index] = file;
+      const file = new File([blob], selectedFiles[currentEditIndex].name, { 
+        type: 'image/jpeg',
+        lastModified: new Date().getTime()
+      });
       
-      URL.revokeObjectURL(previewUrls[index].url);
+      // Update selected files array
+      selectedFiles[currentEditIndex] = file;
+      
+      // Update preview URL
+      URL.revokeObjectURL(previewUrls[currentEditIndex].url);
       const newUrl = URL.createObjectURL(file);
-      previewUrls[index] = { url: newUrl, type: 'image', file: file };
+      previewUrls[currentEditIndex] = { 
+        url: newUrl, 
+        type: 'image', 
+        file: file 
+      };
       
+      // Refresh preview
       displayPhotoPreviews();
-      document.querySelector('.modal')?.remove();
+      
+      // Close editor
+      closeModal('photoEditorModal');
+      currentEditIndex = -1;
       currentFilters = {};
-      msg('✅ Photo updated!', 'success');
+      
+      msg('✅ Photo edited successfully!', 'success');
     }, 'image/jpeg', 0.9);
   } catch (error) {
+    console.error('Error saving edited photo:', error);
     msg('❌ Failed to save photo', 'error');
   }
 }
@@ -800,13 +1154,14 @@ function removeSelectedFile(index) {
   selectedFiles.splice(index, 1);
   previewUrls.splice(index, 1);
   displayPhotoPreviews();
-  msg('🗑️ Removed', 'success');
+  msg('🗑️ File removed', 'success');
 }
 
 function clearSelectedFiles() {
   previewUrls.forEach(preview => URL.revokeObjectURL(preview.url));
   selectedFiles = [];
   previewUrls = [];
+  displayPhotoPreviews();
 }
 
 // COMMUNITIES WITH ENHANCED CHAT
