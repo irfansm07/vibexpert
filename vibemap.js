@@ -15,6 +15,7 @@ let editingMessageId = null;
 let editTimeout = null;
 let selectedMusic = null;
 let selectedStickers = [];
+let cropper = null;
 
 // Enhanced music library with actual audio files
 const musicLibrary = [
@@ -101,6 +102,22 @@ const stickerLibrary = {
     { id: 'flower', emoji: '🌸', name: 'Flower' },
     { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
     { id: 'wave', emoji: '🌊', name: 'Wave' }
+  ],
+  food: [
+    { id: 'pizza', emoji: '🍕', name: 'Pizza' },
+    { id: 'burger', emoji: '🍔', name: 'Burger' },
+    { id: 'icecream', emoji: '🍦', name: 'Ice Cream' },
+    { id: 'coffee', emoji: '☕', name: 'Coffee' },
+    { id: 'cake', emoji: '🍰', name: 'Cake' },
+    { id: 'drink', emoji: '🥤', name: 'Drink' }
+  ],
+  activities: [
+    { id: 'sports', emoji: '⚽', name: 'Sports' },
+    { id: 'game', emoji: '🎮', name: 'Game' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'art', emoji: '🎨', name: 'Art' },
+    { id: 'movie', emoji: '🎬', name: 'Movie' },
+    { id: 'travel', emoji: '✈️', name: 'Travel' }
   ]
 };
 
@@ -790,7 +807,7 @@ function clearSelectedMusic() {
   updateSelectedAssets();
 }
 
-// ENHANCED STICKER SELECTOR
+// ENHANCED STICKER SELECTOR WITH SCROLLABLE INTERFACE
 function showStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
@@ -800,30 +817,123 @@ function showStickerSelector() {
     return;
   }
   
-  let html = '<div class="sticker-selector">';
+  let html = `
+    <div class="sticker-selector">
+      <div class="sticker-search-container">
+        <input type="text" id="stickerSearch" placeholder="🔍 Search stickers..." class="sticker-search">
+      </div>
+      <div class="sticker-categories-tabs">
+        ${Object.keys(stickerLibrary).map(category => 
+          `<button class="sticker-tab-btn" onclick="switchStickerCategory('${category}')">${category.charAt(0).toUpperCase() + category.slice(1)}</button>`
+        ).join('')}
+      </div>
+      <div class="sticker-content-area">
+        <div id="stickerCategoryContent" class="sticker-category-content"></div>
+      </div>
+      <div class="sticker-selection-info">
+        <span>Selected: ${selectedStickers.length}/5 stickers</span>
+        <button class="clear-stickers-btn" onclick="clearSelectedStickers()">Clear All</button>
+      </div>
+    </div>
+  `;
   
-  Object.entries(stickerLibrary).forEach(([category, stickers]) => {
-    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-    html += `
-      <div class="sticker-category">
-        <h4>${categoryName}</h4>
+  selector.innerHTML = html;
+  modal.style.display = 'flex';
+  
+  // Initialize first category
+  switchStickerCategory('emotions');
+  
+  // Add search functionality
+  const searchInput = document.getElementById('stickerSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', searchStickers);
+  }
+}
+
+function switchStickerCategory(category) {
+  const content = document.getElementById('stickerCategoryContent');
+  if (!content) return;
+  
+  // Update active tab
+  document.querySelectorAll('.sticker-tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`.sticker-tab-btn[onclick*="${category}"]`)?.classList.add('active');
+  
+  const stickers = stickerLibrary[category] || [];
+  
+  let html = `
+    <div class="sticker-category">
+      <h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+      <div class="sticker-grid">
+        ${stickers.map(sticker => {
+          const isSelected = selectedStickers.some(s => s.id === sticker.id);
+          return `
+            <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')" title="${sticker.name}">
+              <span style="font-size: 32px;">${sticker.emoji}</span>
+              <div class="sticker-name">${sticker.name}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  
+  content.innerHTML = html;
+}
+
+function searchStickers() {
+  const searchTerm = document.getElementById('stickerSearch').value.toLowerCase().trim();
+  const content = document.getElementById('stickerCategoryContent');
+  
+  if (!content) return;
+  
+  if (!searchTerm) {
+    // If search is empty, show current category
+    const activeTab = document.querySelector('.sticker-tab-btn.active');
+    if (activeTab) {
+      const category = activeTab.textContent.toLowerCase();
+      switchStickerCategory(category);
+    }
+    return;
+  }
+  
+  // Search across all categories
+  let allStickers = [];
+  Object.values(stickerLibrary).forEach(categoryStickers => {
+    allStickers = allStickers.concat(categoryStickers);
+  });
+  
+  const filteredStickers = allStickers.filter(sticker => 
+    sticker.name.toLowerCase().includes(searchTerm) || 
+    sticker.emoji.includes(searchTerm)
+  );
+  
+  let html = `
+    <div class="sticker-category">
+      <h4>Search Results for "${searchTerm}"</h4>
+      ${filteredStickers.length > 0 ? `
         <div class="sticker-grid">
-          ${stickers.map(sticker => {
+          ${filteredStickers.map(sticker => {
             const isSelected = selectedStickers.some(s => s.id === sticker.id);
             return `
-              <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')">
+              <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')" title="${sticker.name}">
                 <span style="font-size: 32px;">${sticker.emoji}</span>
+                <div class="sticker-name">${sticker.name}</div>
               </div>
             `;
           }).join('')}
         </div>
-      </div>
-    `;
-  });
+      ` : `
+        <div class="no-stickers-found">
+          <p>No stickers found for "${searchTerm}"</p>
+          <p>Try searching with different keywords</p>
+        </div>
+      `}
+    </div>
+  `;
   
-  html += '</div>';
-  selector.innerHTML = html;
-  modal.style.display = 'flex';
+  content.innerHTML = html;
 }
 
 function selectSticker(stickerId) {
@@ -855,13 +965,47 @@ function selectSticker(stickerId) {
   
   updateSelectedAssets();
   
-  // Don't close modal to allow multiple sticker selection
-  // closeModal('stickerSelectorModal');
+  // Update the sticker selection info
+  const selectionInfo = document.querySelector('.sticker-selection-info');
+  if (selectionInfo) {
+    selectionInfo.querySelector('span').textContent = `Selected: ${selectedStickers.length}/5 stickers`;
+  }
+  
+  // Refresh current view to show updated selection state
+  const searchInput = document.getElementById('stickerSearch');
+  if (searchInput && searchInput.value.trim()) {
+    searchStickers();
+  } else {
+    const activeTab = document.querySelector('.sticker-tab-btn.active');
+    if (activeTab) {
+      const category = activeTab.textContent.toLowerCase();
+      switchStickerCategory(category);
+    }
+  }
 }
 
 function clearSelectedStickers() {
   selectedStickers = [];
   updateSelectedAssets();
+  msg('🗑️ All stickers removed', 'success');
+  
+  // Update the sticker selection info
+  const selectionInfo = document.querySelector('.sticker-selection-info');
+  if (selectionInfo) {
+    selectionInfo.querySelector('span').textContent = `Selected: 0/5 stickers`;
+  }
+  
+  // Refresh current view
+  const searchInput = document.getElementById('stickerSearch');
+  if (searchInput && searchInput.value.trim()) {
+    searchStickers();
+  } else {
+    const activeTab = document.querySelector('.sticker-tab-btn.active');
+    if (activeTab) {
+      const category = activeTab.textContent.toLowerCase();
+      switchStickerCategory(category);
+    }
+  }
 }
 
 // UPDATE SELECTED ASSETS DISPLAY
@@ -911,7 +1055,7 @@ function selectPostDestination(destination) {
   msg(`Post will be shared to ${destination === 'profile' ? 'your profile' : 'community feed'}`, 'success');
 }
 
-// ENHANCED PHOTO UPLOAD WITH BETTER EDITOR
+// ENHANCED PHOTO UPLOAD WITH CROP FUNCTIONALITY
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1011,7 +1155,12 @@ function displayPhotoPreviews() {
           : `<video src="${preview.url}" controls></video>`
         }
         <button onclick="removeSelectedFile(${index})">✕</button>
-        ${preview.type === 'image' ? `<button class="edit-btn" onclick="editPhoto(${index})">✏️ Edit</button>` : ''}
+        ${preview.type === 'image' ? `
+          <div class="media-actions">
+            <button class="edit-btn" onclick="editPhoto(${index})">✏️ Edit</button>
+            <button class="crop-btn" onclick="cropPhoto(${index})">✂️ Crop</button>
+          </div>
+        ` : ''}
       </div>
     `;
   });
@@ -1031,7 +1180,17 @@ function editPhoto(index) {
   showPhotoEditor(preview, index);
 }
 
-// ENHANCED PHOTO EDITOR WITH BETTER UI
+function cropPhoto(index) {
+  const preview = previewUrls[index];
+  if (preview.type !== 'image') {
+    msg('⚠️ Can only crop images', 'error');
+    return;
+  }
+  
+  showCropEditor(preview, index);
+}
+
+// ENHANCED PHOTO EDITOR WITH CROP FUNCTIONALITY
 function showPhotoEditor(preview, index) {
   document.getElementById('photoEditorModal').style.display = 'flex';
   document.getElementById('editImage').src = preview.url;
@@ -1039,7 +1198,135 @@ function showPhotoEditor(preview, index) {
   currentFilters = {};
 }
 
+function showCropEditor(preview, index) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width: 800px;">
+      <span class="close" onclick="closeCropEditor()">&times;</span>
+      <h2>✂️ Crop Photo</h2>
+      <div class="crop-container">
+        <div class="crop-preview">
+          <img id="cropImage" src="${preview.url}" alt="Crop preview">
+        </div>
+        <div class="crop-controls">
+          <div class="crop-aspect-ratios">
+            <h4>Aspect Ratio:</h4>
+            <div class="aspect-ratio-buttons">
+              <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
+              <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
+              <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
+              <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
+              <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
+            </div>
+          </div>
+          <div class="crop-actions">
+            <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
+            <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
+            <button class="btn-primary" onclick="applyCrop(${index})">💾 Apply Crop</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  currentCropIndex = index;
+  
+  // Initialize cropper
+  setTimeout(() => {
+    const image = document.getElementById('cropImage');
+    if (image) {
+      cropper = new Cropper(image, {
+        aspectRatio: NaN, // Free ratio by default
+        viewMode: 1,
+        autoCropArea: 0.8,
+        responsive: true,
+        restore: true,
+        checkCrossOrigin: false,
+        guides: true,
+        center: true,
+        highlight: true,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: true
+      });
+    }
+    
+    // Add aspect ratio change handlers
+    document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.aspect-ratio-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const ratio = this.dataset.ratio;
+        if (ratio === 'free') {
+          cropper.setAspectRatio(NaN);
+        } else {
+          cropper.setAspectRatio(eval(ratio));
+        }
+      });
+    });
+  }, 100);
+}
+
+function closeCropEditor() {
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  document.querySelector('.modal')?.remove();
+}
+
+function rotateImage() {
+  if (cropper) {
+    cropper.rotate(90);
+  }
+}
+
+function resetCrop() {
+  if (cropper) {
+    cropper.reset();
+  }
+}
+
+function applyCrop(index) {
+  if (!cropper) return;
+  
+  const canvas = cropper.getCroppedCanvas();
+  if (!canvas) return;
+  
+  canvas.toBlob((blob) => {
+    const file = new File([blob], selectedFiles[index].name, { 
+      type: 'image/jpeg',
+      lastModified: new Date().getTime()
+    });
+    
+    // Update selected files array
+    selectedFiles[index] = file;
+    
+    // Update preview URL
+    URL.revokeObjectURL(previewUrls[index].url);
+    const newUrl = URL.createObjectURL(file);
+    previewUrls[index] = { 
+      url: newUrl, 
+      type: 'image', 
+      file: file 
+    };
+    
+    // Refresh preview
+    displayPhotoPreviews();
+    
+    // Close editor
+    closeCropEditor();
+    
+    msg('✅ Photo cropped successfully!', 'success');
+  }, 'image/jpeg', 0.9);
+}
+
 let currentEditIndex = -1;
+let currentCropIndex = -1;
 let currentFilters = {};
 
 function applyFilter(filter) {
