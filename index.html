@@ -285,69 +285,59 @@
     <section id="posts" class="page" style="display:none;">
       <h2 class="title">My Posts</h2>
       
-      <!-- Post Creator with Photo Upload -->
-      <div style="background:#1a1a1a; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <!-- Enhanced Post Creator -->
+      <div class="enhanced-post-creator">
         <textarea 
           id="postText" 
-          placeholder="What's on your mind? Share with your college community..." 
-          style="width:100%; min-height:100px; padding:15px; background:#2a2a2a; border:2px solid #333; border-radius:8px; color:#fff; font-size:16px; resize:vertical; font-family:inherit;"
+          class="post-textarea" 
+          placeholder="What's on your mind? Share your vibe... ✨"
+          maxlength="1000"
         ></textarea>
         
-        <!-- Photo Preview Container -->
-        <div id="photoPreviewContainer" style="display:none; margin-top:10px;"></div>
+        <!-- Selected Assets Preview -->
+        <div id="selectedAssets" class="selected-assets"></div>
         
-        <!-- Action Buttons -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; flex-wrap:wrap; gap:10px;">
-          <div style="display:flex; gap:10px;">
-            <!-- Gallery Button -->
-            <button 
-              type="button"
-              onclick="openPhotoGallery()" 
-              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
-              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
-              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
-            >
-              🖼️ Photos
+        <!-- Media Preview Container -->
+        <div id="photoPreviewContainer" class="media-preview"></div>
+        
+        <!-- Enhanced Action Buttons -->
+        <div class="post-actions-row">
+          <div class="post-features">
+            <!-- Media Button -->
+            <button type="button" class="feature-btn" onclick="openPhotoGallery()">
+              🖼️ Media
             </button>
             
             <!-- Camera Button -->
-            <button 
-              type="button"
-              onclick="openCamera()" 
-              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
-              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
-              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
-            >
+            <button type="button" class="feature-btn" onclick="openCamera()">
               📷 Camera
             </button>
             
+            <!-- Music Button -->
+            <button type="button" class="feature-btn" id="addMusicBtn">
+              🎵 Music
+            </button>
+            
+            <!-- Stickers Button -->
+            <button type="button" class="feature-btn" id="addStickerBtn">
+              🎨 Stickers
+            </button>
+            
             <!-- Post Destination Button -->
-            <button 
-              type="button"
-              onclick="showPostDestinationModal()" 
-              style="padding:10px 20px; background:#2a2a2a; border:2px solid #444; border-radius:8px; color:#fff; cursor:pointer; font-size:14px; font-weight:500; transition:all 0.2s;"
-              onmouseover="this.style.background='#3a3a3a'; this.style.borderColor='#6366f1';"
-              onmouseout="this.style.background='#2a2a2a'; this.style.borderColor='#444';"
-            >
-              📍 Where to post?
+            <button type="button" class="feature-btn" onclick="showPostDestinationModal()">
+              📍 Destination
             </button>
           </div>
           
           <!-- Post Button -->
-          <button 
-            type="button"
-            onclick="createPost()" 
-            style="padding:12px 30px; background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; font-weight:600; transition:all 0.2s; box-shadow:0 2px 8px rgba(99,102,241,0.3);"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(99,102,241,0.4)';"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(99,102,241,0.3)';"
-          >
+          <button type="button" class="post-button" onclick="createPost()">
             🚀 Post
           </button>
         </div>
       </div>
       
       <!-- Posts Feed -->
-      <div id="postsFeed"></div>
+      <div id="postsFeed" class="posts-feed"></div>
     </section>
 
     <!-- BADGES PAGE -->
@@ -364,6 +354,79 @@
 
 <!-- MODALS -->
 <div id="verifyModal" class="modal" style="display:none;"></div>
+
+<!-- Enhanced Post Destination Modal -->
+<div id="postDestinationModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
+    <h2>Where to Post?</h2>
+    <div class="destination-options">
+      <div class="destination-option" onclick="selectPostDestination('profile')">
+        <div class="destination-icon">👤</div>
+        <div class="destination-info">
+          <h3>My Profile</h3>
+          <p>Only visible on your personal profile</p>
+        </div>
+      </div>
+      <div class="destination-option" onclick="selectPostDestination('community')">
+        <div class="destination-icon">🌐</div>
+        <div class="destination-info">
+          <h3>Community Feed</h3>
+          <p>Share with your college community</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Music Selector Modal -->
+<div id="musicSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
+    <h2>Add Music to Your Post</h2>
+    <div id="musicSelector" class="music-selector">
+      <!-- Music items will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Sticker Selector Modal -->
+<div id="stickerSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
+    <h2>Add Stickers</h2>
+    <div id="stickerSelector" class="sticker-selector">
+      <!-- Sticker categories will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Photo Editor Modal -->
+<div id="photoEditorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
+    <h2>Edit Photo</h2>
+    <div class="photo-editor">
+      <div class="editor-preview">
+        <img id="editImage" src="" alt="Edit Preview">
+      </div>
+      <div class="editor-controls">
+        <div class="filter-buttons">
+          <button class="filter-btn" onclick="applyFilter('normal')">Normal</button>
+          <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+          <button class="filter-btn" onclick="applyFilter('clarendon')">Clarendon</button>
+          <button class="filter-btn" onclick="applyFilter('moon')">Moon</button>
+          <button class="filter-btn" onclick="applyFilter('lark')">Lark</button>
+          <button class="filter-btn" onclick="applyFilter('reyes')">Reyes</button>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+          <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="contactModal" class="modal" style="display:none;">
   <div class="modal-box">
