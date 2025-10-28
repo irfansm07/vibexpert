@@ -3321,3 +3321,249 @@ body.light-theme footer {
     display: none;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* Enhanced Sticker Selector Styles */
+.sticker-search-container {
+  margin-bottom: 15px;
+}
+
+.sticker-search {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(20, 30, 50, 0.8);
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.sticker-search:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.sticker-categories-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.sticker-tab-btn {
+  padding: 8px 16px;
+  background: rgba(79, 116, 163, 0.1);
+  border: 1px solid rgba(79, 116, 163, 0.3);
+  border-radius: 20px;
+  color: #4f74a3;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.sticker-tab-btn:hover,
+.sticker-tab-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: white;
+}
+
+.sticker-content-area {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.sticker-category-content {
+  padding: 10px;
+}
+
+.sticker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #2a2a2a;
+  text-align: center;
+}
+
+.sticker-item:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+  transform: scale(1.05);
+}
+
+.sticker-item.selected {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.sticker-name {
+  font-size: 11px;
+  color: #888;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.sticker-selection-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(79, 116, 163, 0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #4f74a3;
+}
+
+.clear-stickers-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-stickers-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.no-stickers-found {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.no-stickers-found p {
+  margin: 5px 0;
+}
+
+/* Crop Editor Styles */
+.crop-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.crop-preview {
+  width: 100%;
+  height: 400px;
+  background: #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-preview img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.crop-aspect-ratios h4 {
+  color: #4f74a3;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.aspect-ratio-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aspect-ratio-btn {
+  padding: 8px 16px;
+  background: rgba(79, 116, 163, 0.1);
+  border: 1px solid rgba(79, 116, 163, 0.3);
+  border-radius: 8px;
+  color: #4f74a3;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.aspect-ratio-btn:hover,
+.aspect-ratio-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: white;
+}
+
+.crop-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.media-actions {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+.crop-btn, .edit-btn {
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.crop-btn:hover, .edit-btn:hover {
+  background: rgba(99, 102, 241, 0.8);
+  transform: scale(1.05);
+}
+
+/* Light theme adjustments */
+body.light-theme .sticker-item {
+  background: #f8f9fa;
+}
+
+body.light-theme .sticker-search {
+  background: rgba(255, 255, 255, 0.8);
+  color: #2c3e50;
+}
+
+body.light-theme .sticker-selection-info {
+  background: rgba(79, 116, 163, 0.05);
+}
+
+body.light-theme .crop-preview {
+  background: #f8f9fa;
+}
