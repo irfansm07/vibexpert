@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>VibeXpert</title>
+  <title>VibeXpert - Connect With Your College</title>
   <link rel="stylesheet" href="vibemap.css" />
-  <!-- Cropper.js CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 </head>
 <body class="dark-theme">
+
+<!-- Add this to your HTML file -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<!-- Socket.io CDN -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <!-- LIVE ACTIVITY NOTIFICATION -->
 <div id="liveActivityNotif" class="live-activity-notif">
@@ -43,7 +48,7 @@
         <p><a href="#" onclick="goLogin(event)">Back to Login</a></p>
       </form>
 
-      <!-- SIGNUP FORM (HIDDEN) -->
+      <!-- SIGNUP FORM -->
       <form id="signupForm" onsubmit="signup(event)" style="display:none;">
         <h2>Create Account</h2>
         
@@ -144,13 +149,12 @@
     <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
-      <a href="#" class="nav-link" onclick="showPage('communityPlus', event)">Community Plus</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="#" class="nav-link" onclick="showPage('subscriptions', event)">Subscriptions</a>
+      <a href="#" class="nav-link" onclick="showPage('badges', event)">Badges</a>
     </nav>
 
     <div class="header-right">
-      <input type="text" class="search-box" placeholder="Search...">
+      <input type="text" class="search-box" placeholder="Search users...">
       <span class="user-name" id="userName">Hi, User</span>
       
       <button class="options-btn" onclick="toggleOptionsMenu()">
@@ -162,6 +166,7 @@
       <div class="options-menu" id="optionsMenu" style="display:none;">
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
         <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
         <hr>
@@ -177,12 +182,12 @@
       <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
         <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
         <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
-        <div class="menu-item" onclick="showPage('communityPlus', event)">📣 Community Plus</div>
         <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-        <div class="menu-item" onclick="showPage('subscriptions', event)">⭐ Subscriptions</div>
+        <div class="menu-item" onclick="showPage('badges', event)">🏆 Badges</div>
         <hr>
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
         <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
         <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
         <hr>
@@ -280,164 +285,178 @@
       </div>
     </section>
 
-    <!-- COMMUNITY PLUS (Coming Soon) -->
-    <section id="communityPlus" class="page" style="display:none;">
-      <div class="coming-soon-container">
-        <div class="coming-soon-box">
-          <h2>Community Plus</h2>
-          <p>🚀 Coming Soon!</p>
-          <div class="coming-soon-details">
-            <p>✨ Enhanced community features</p>
-            <p>🎯 Advanced networking tools</p>
-            <p>🌟 Premium community access</p>
-            <p>💫 Exclusive events and groups</p>
-          </div>
-          <button class="home-nav-btn" onclick="goToHome()">Back to Home</button>
-        </div>
-      </div>
-    </section>
-
     <!-- POSTS -->
     <section id="posts" class="page" style="display:none;">
-      <h2 class="title">Posts</h2>
-      <div class="post-box">
-        <textarea id="postText" placeholder="What's on your mind?"></textarea>
-        <div class="post-buttons">
-          <button onclick="showPhotoModal()" class="photo-btn">📷 Photo</button>
-          <button onclick="createPost()" class="post-btn">Post</button>
+      <h2 class="title">My Posts</h2>
+      
+      <!-- Enhanced Post Creator -->
+      <div class="enhanced-post-creator">
+        <textarea 
+          id="postText" 
+          class="post-textarea" 
+          placeholder="What's on your mind? Share your vibe... ✨"
+          maxlength="1000"
+        ></textarea>
+        
+        <!-- Selected Assets Preview -->
+        <div id="selectedAssets" class="selected-assets"></div>
+        
+        <!-- Media Preview Container -->
+        <div id="photoPreviewContainer" class="media-preview"></div>
+        
+        <!-- Post Destination Display -->
+        <div id="postDestinationDisplay" class="post-destination-display">
+          📍 Posting to: <span id="currentDestination">My Profile</span>
+          <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
+        </div>
+        
+        <!-- Enhanced Action Buttons -->
+        <div class="post-actions-row">
+          <div class="post-features">
+            <!-- Media Button -->
+            <button type="button" class="feature-btn" onclick="openPhotoGallery()">
+              🖼️ Media
+            </button>
+            
+            <!-- Camera Button -->
+            <button type="button" class="feature-btn" onclick="openCamera()">
+              📷 Camera
+            </button>
+            
+            <!-- Music Button -->
+            <button type="button" class="feature-btn" id="addMusicBtn">
+              🎵 Music
+            </button>
+            
+            <!-- Stickers Button -->
+            <button type="button" class="feature-btn" id="addStickerBtn">
+              🎨 Stickers
+            </button>
+          </div>
+          
+          <!-- Post Button -->
+          <button type="button" class="post-button" onclick="createPost()">
+            🚀 Post
+          </button>
         </div>
       </div>
-      <div id="postsFeed"></div>
+      
+      <!-- Posts Feed -->
+      <div id="postsFeed" class="posts-feed"></div>
     </section>
 
-    <!-- SUBSCRIPTIONS -->
-    <section id="subscriptions" class="page" style="display:none;">
-      <h2 class="title">Subscriptions</h2>
-      <p class="title">Subscription are off we will be back soon with a mind blowing update 
-      </p>
-      <div class="sub-cards">
-        <div class="sub-card">
-          <span class="badge">Basic</span>
-          <h3>Good Support</h3>
-          <p class="price">₹0</p>
-          <ul>
-            <li>✗ Post in RealVibers</li>
-            <li>✗ Get Comments</li>
-            <li>✗ Post Priority</li>
-            <li>✗ No Time Limit</li>
-            <li>✗ 3x/day Posts</li>
-          </ul>
-          <button>Current</button>
-        </div>
-        <div class="sub-card featured">
-          <span class="badge popular">Most Popular</span>
-          <h3>Premium</h3>
-          <p class="price">₹29<small>/month</small></p>
-          <ul>
-            <li>✓ Post in RealVibers</li>
-            <li>✓ Get Comments</li>
-            <li>✓ Post Priority</li>
-            <li>✓ 5-Hour Limit</li>
-            <li>✗ 3x/day Posts</li>
-          </ul>
-          <button>Subscribe</button>
-        </div>
-        <div class="sub-card">
-          <span class="badge">Ultimate</span>
-          <h3>Premium Plus</h3>
-          <p class="price">₹99<small>/month</small></p>
-          <ul>
-            <li>✓ Post in RealVibers</li>
-            <li>✓ Get Comments</li>
-            <li>✓ Post Priority</li>
-            <li>✓ No Time Limit</li>
-            <li>✓ 3x/day Posts</li>
-          </ul>
-          <button>Subscribe</button>
-        </div>
-      </div>
+    <!-- BADGES PAGE -->
+    <section id="badges" class="page" style="display:none;">
+      <!-- Content loaded dynamically by JS -->
     </section>
 
   </main>
 
   <footer>
-    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0 Users Online</span></p>
+    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
   </footer>
 </div>
 
 <!-- MODALS -->
-<div id="verifyModal" class="modal" style="display:none;">
+<div id="verifyModal" class="modal" style="display:none;"></div>
+
+<!-- Enhanced Post Destination Modal -->
+<div id="postDestinationModal" class="modal" style="display:none;">
   <div class="modal-box">
-    <span class="close" onclick="closeModal('verifyModal')">&times;</span>
-    <h2>Verify Your College</h2>
-    <input type="email" id="verifyEmail" placeholder="Your college email">
-    <button onclick="verifyCollege()">Verify</button>
+    <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
+    <h2>Where to Post?</h2>
+    <div class="destination-options">
+      <div class="destination-option" onclick="selectPostDestination('profile')">
+        <div class="destination-icon">👤</div>
+        <div class="destination-info">
+          <h3>My Profile</h3>
+          <p>Only visible on your personal profile</p>
+        </div>
+      </div>
+      <div class="destination-option" onclick="selectPostDestination('community')">
+        <div class="destination-icon">🌐</div>
+        <div class="destination-info">
+          <h3>Community Feed</h3>
+          <p>Share with your college community</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ENHANCED PHOTO MODAL WITH CROPPING AND FILTERS -->
-<div id="photoModal" class="modal" style="display:none;">
-  <div class="modal-box photo-modal-box">
-    <span class="close" onclick="closeModal('photoModal')">&times;</span>
-    <h2>Share Photo</h2>
-    
-    <div class="photo-upload-section" id="photoUploadSection">
-      <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
-      <button class="upload-btn" onclick="document.getElementById('photoInput').click()">📁 Upload Photo</button>
-      <button class="camera-btn" onclick="openCamera()">📸 Take Photo</button>
+<!-- Music Selector Modal -->
+<div id="musicSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
+    <h2>Add Music to Your Post</h2>
+    <div id="musicSelector" class="music-selector">
+      <!-- Music items will be loaded here -->
     </div>
+  </div>
+</div>
 
-    <div class="photo-editor-section" id="photoEditorSection" style="display:none;">
-      <div class="editor-container">
-        <div class="image-preview-container">
-          <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; display: none;">
-          <div id="cropContainer" style="display:none;"></div>
+<!-- Sticker Selector Modal -->
+<div id="stickerSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
+    <h2>Add Stickers</h2>
+    <div id="stickerSelector" class="sticker-selector">
+      <!-- Sticker categories will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Photo Editor Modal -->
+<div id="photoEditorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
+    <h2>Edit Photo</h2>
+    <div class="photo-editor">
+      <div class="editor-preview">
+        <img id="editImage" src="" alt="Edit Preview">
+      </div>
+      <div class="editor-controls">
+        <div class="filter-buttons">
+          <button class="filter-btn" onclick="applyFilter('normal')">Normal</button>
+          <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+          <button class="filter-btn" onclick="applyFilter('clarendon')">Clarendon</button>
+          <button class="filter-btn" onclick="applyFilter('moon')">Moon</button>
+          <button class="filter-btn" onclick="applyFilter('lark')">Lark</button>
+          <button class="filter-btn" onclick="applyFilter('reyes')">Reyes</button>
         </div>
-        
-        <div class="editor-controls">
-          <div class="control-group">
-            <h4>Crop & Rotate</h4>
-            <button onclick="rotateImage(-90)">↶ Rotate Left</button>
-            <button onclick="rotateImage(90)">↷ Rotate Right</button>
-            <button onclick="resetCrop()">🔄 Reset</button>
-          </div>
-          
-          <div class="control-group">
-            <h4>Filters</h4>
-            <div class="filter-grid">
-              <button class="filter-btn" data-filter="none" onclick="applyFilter('none')">Original</button>
-              <button class="filter-btn" data-filter="grayscale" onclick="applyFilter('grayscale')">Grayscale</button>
-              <button class="filter-btn" data-filter="sepia" onclick="applyFilter('sepia')">Sepia</button>
-              <button class="filter-btn" data-filter="brightness" onclick="applyFilter('brightness')">Bright</button>
-              <button class="filter-btn" data-filter="contrast" onclick="applyFilter('contrast')">Contrast</button>
-              <button class="filter-btn" data-filter="saturate" onclick="applyFilter('saturate')">Saturate</button>
-              <button class="filter-btn" data-filter="hue-rotate" onclick="applyFilter('hue-rotate')">Colorful</button>
-              <button class="filter-btn" data-filter="invert" onclick="applyFilter('invert')">Invert</button>
-            </div>
-          </div>
+        <div class="editor-actions">
+          <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+          <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-          <div class="control-group">
-            <h4>Post To</h4>
-            <div class="post-destination">
-              <label class="destination-option">
-                <input type="radio" name="postDestination" value="profile" checked>
-                <span>👤 Profile</span>
-              </label>
-              <label class="destination-option">
-                <input type="radio" name="postDestination" value="community">
-                <span>👥 Community</span>
-              </label>
-              <label class="destination-option">
-                <input type="radio" name="postDestination" value="both">
-                <span>🌐 Both</span>
-              </label>
-            </div>
+<!-- Crop Editor Modal -->
+<div id="cropEditorModal" class="modal" style="display:none;">
+  <div class="modal-box" style="max-width: 800px;">
+    <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
+    <h2>✂️ Crop Photo</h2>
+    <div class="crop-container">
+      <div class="crop-preview">
+        <img id="cropImage" src="" alt="Crop preview">
+      </div>
+      <div class="crop-controls">
+        <div class="crop-aspect-ratios">
+          <h4>Aspect Ratio:</h4>
+          <div class="aspect-ratio-buttons">
+            <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
+            <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
+            <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
+            <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
+            <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
           </div>
-
-          <div class="editor-actions">
-            <button class="cancel-btn" onclick="cancelEditing()">Cancel</button>
-            <button class="save-btn" onclick="saveEditedPhoto()">Post Photo</button>
-          </div>
+        </div>
+        <div class="crop-actions">
+          <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
+          <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
+          <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
         </div>
       </div>
     </div>
@@ -463,115 +482,6 @@
   </div>
 </div>
 
-<!-- PROFILE PAGE MODAL -->
-<div id="profilePageModal" class="modal" style="display:none;">
-  <div class="modal-box profile-modal-box">
-    <span class="close close-profile" onclick="closeModal('profilePageModal')">&times;</span>
-    
-    <div class="profile-container">
-      <div class="profile-header">
-        <div class="profile-cover"></div>
-        <div class="profile-main">
-          <div class="profile-photo-section">
-            <div class="profile-photo" id="profilePhoto">👤</div>
-            <input type="file" id="avatarUpload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
-            <button class="avatar-upload-btn" onclick="document.getElementById('avatarUpload').click()">📸 Change Avatar</button>
-            <div class="active-badge">
-              <span class="status-dot"></span>
-              <span id="activeText">Active Now</span>
-            </div>
-          </div>
-          <div class="profile-name-section">
-            <h2 id="profileDisplayName">User Name</h2>
-            <p class="nickname-display">
-              <span class="nickname-label">@</span>
-              <span id="nicknameValue">username</span>
-            </p>
-          </div>
-          <button class="profile-edit-btn" onclick="openEditProfile()">✏️ Edit Profile</button>
-        </div>
-      </div>
-      
-      <div class="profile-stats-section">
-        <div class="stat-card">
-          <div class="stat-icon">📝</div>
-          <div class="stat-value" id="profilePostsCount">0</div>
-          <div class="stat-title">Posts</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">❤️</div>
-          <div class="stat-value" id="profileLikesCount">0</div>
-          <div class="stat-title">Likes</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">⏳</div>
-          <div class="stat-value" id="usedHoursCount">0h</div>
-          <div class="stat-title">Active Hours</div>
-        </div>
-      </div>
-      
-      <div class="profile-description-section">
-        <h3>About</h3>
-        <p id="profileDescriptionText">No description added yet. Click edit to add one!</p>
-      </div>
-      
-      <div class="edit-profile-section" id="editProfileSection" style="display:none;">
-        <h3>Edit Your Profile</h3>
-        <div class="edit-form-group">
-          <label>Nickname</label>
-          <input type="text" id="editNickname" placeholder="Enter your nickname" maxlength="25">
-          <small id="nicknameCharCount">0/25</small>
-        </div>
-        <div class="edit-form-group">
-          <label>Description</label>
-          <textarea id="editDescription" placeholder="Tell others about yourself..." maxlength="150" rows="4"></textarea>
-          <small id="descCharCount">0/150</small>
-        </div>
-        <div class="edit-form-buttons">
-          <button class="btn-save" onclick="saveProfile()">Save Changes</button>
-          <button class="btn-cancel" onclick="cancelEditProfile()">Cancel</button>
-        </div>
-      </div>
-      
-      <div class="profile-tabs">
-        <button class="tab-btn active" onclick="switchProfileTab('posts')">My Posts</button>
-        <button class="tab-btn" onclick="switchProfileTab('likes')">Profile Likes</button>
-      </div>
-      
-      <div class="profile-tab-content" id="postsTab">
-        <div id="userPostsContainer" class="user-posts-list"></div>
-        <div id="noPostsMessage" class="empty-state">
-          <p>📝No posts yet. Start sharing!</p>
-        </div>
-      </div>
-      
-      <div class="profile-tab-content" id="likesTab" style="display:none;">
-        <div id="profileLikesContainer" class="profile-likes-list"></div>
-        <div id="noLikesMessage" class="empty-state">
-          <p>💔✋ No likes yet. Keep vibing!</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Audio Element for Music -->
-<audio id="backgroundMusic" loop style="display:none;">
-  <source src="" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-
-<!-- Music Player UI -->
-<div class="music-player" id="musicPlayer" style="display:none;">
-  <div class="music-controls">
-    <button class="music-btn" onclick="toggleMusic()">🎵</button>
-    <span class="music-info" id="musicInfo">No music</span>
-    <button class="music-btn" onclick="nextTrack()">⏭️</button>
-  </div>
-</div>
-
-<!-- External Libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="vibemap.js"></script>
 </body>
 </html>
