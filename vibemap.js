@@ -2211,3 +2211,453 @@ function loadTrending() {
 }
 
 console.log('✅ VibeXpert Enhanced - All features loaded and functional!');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===== ENHANCED PHOTO FUNCTIONALITY =====
+
+// Add these variables at the top with other global variables
+let cropper = null;
+let currentImage = null;
+let currentFilter = 'none';
+let imageRotation = 0;
+let musicPlayer = null;
+let isMusicPlaying = false;
+let currentTrackIndex = 0;
+
+// Add these music tracks
+const musicTracks = [
+  { 
+    id: 'song1', 
+    name: 'Chill Vibes', 
+    artist: 'LoFi Beats',
+    duration: '2:30',
+    emoji: '🎧',
+    url: 'https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3'
+  },
+  { 
+    id: 'song2', 
+    name: 'Upbeat Energy', 
+    artist: 'Electronic Pop',
+    duration: '3:15',
+    emoji: '⚡',
+    url: 'https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3'
+  },
+  { 
+    id: 'song3', 
+    name: 'Dreamy Piano', 
+    artist: 'Classical',
+    duration: '2:45',
+    emoji: '🎹',
+    url: 'https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3'
+  }
+];
+
+// Enhanced photo modal
+function showPhotoModal() {
+  document.getElementById('photoModal').style.display = 'flex';
+  resetPhotoEditor();
+}
+
+function resetPhotoEditor() {
+  document.getElementById('photoUploadSection').style.display = 'block';
+  document.getElementById('photoEditorSection').style.display = 'none';
+  document.getElementById('imagePreview').style.display = 'none';
+  document.getElementById('cropContainer').style.display = 'none';
+  
+  document.getElementById('imagePreview').src = '';
+  document.getElementById('cropContainer').innerHTML = '';
+  
+  currentImage = null;
+  currentFilter = 'none';
+  imageRotation = 0;
+  
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+}
+
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    msg('Please select an image file', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    currentImage = e.target.result;
+    showImageEditor();
+  };
+  reader.readAsDataURL(file);
+}
+
+function openCamera() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        const cameraModal = document.createElement('div');
+        cameraModal.className = 'modal';
+        cameraModal.style.display = 'flex';
+        cameraModal.innerHTML = `
+          <div class="modal-box">
+            <span class="close" onclick="closeCamera()">&times;</span>
+            <h2>Take Photo</h2>
+            <video id="cameraVideo" autoplay playsinline style="width:100%; max-height:400px; border-radius:8px;"></video>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+              <button onclick="capturePhoto()" style="flex:1; padding:12px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:8px; cursor:pointer;">📸 Capture</button>
+              <button onclick="closeCamera()" style="flex:1; padding:12px; background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); border-radius:8px; cursor:pointer;">Cancel</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(cameraModal);
+        
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = stream;
+        
+        window.closeCamera = function() {
+          stream.getTracks().forEach(track => track.stop());
+          cameraModal.remove();
+        };
+        
+        window.capturePhoto = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          
+          currentImage = canvas.toDataURL('image/png');
+          closeCamera();
+          showImageEditor();
+        };
+      })
+      .catch(function(error) {
+        msg('Camera access denied: ' + error.message, 'error');
+      });
+  } else {
+    msg('Camera not supported on this device', 'error');
+  }
+}
+
+function showImageEditor() {
+  document.getElementById('photoUploadSection').style.display = 'none';
+  document.getElementById('photoEditorSection').style.display = 'block';
+  
+  const imagePreview = document.getElementById('imagePreview');
+  const cropContainer = document.getElementById('cropContainer');
+  
+  imagePreview.src = currentImage;
+  imagePreview.style.display = 'block';
+  cropContainer.style.display = 'block';
+  
+  cropContainer.innerHTML = '<img id="editableImage" src="' + currentImage + '" style="max-width:100%; max-height:300px;">';
+  
+  const image = document.getElementById('editableImage');
+  cropper = new Cropper(image, {
+    aspectRatio: 1,
+    viewMode: 1,
+    autoCropArea: 0.8,
+    responsive: true,
+    restore: false,
+    guides: true,
+    center: true,
+    highlight: false,
+    cropBoxMovable: true,
+    cropBoxResizable: true,
+    toggleDragModeOnDblclick: false,
+  });
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector('.filter-btn[data-filter="none"]').classList.add('active');
+}
+
+function rotateImage(degrees) {
+  if (!cropper) return;
+  imageRotation += degrees;
+  cropper.rotate(degrees);
+}
+
+function resetCrop() {
+  if (!cropper) return;
+  cropper.reset();
+  imageRotation = 0;
+  applyFilter('none');
+}
+
+function applyFilter(filter) {
+  if (!cropper) return;
+  currentFilter = filter;
+  const image = document.getElementById('editableImage');
+  image.className = 'filtered-image';
+  image.classList.add(`filter-${filter}`);
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
+}
+
+function cancelEditing() {
+  resetPhotoEditor();
+}
+
+function saveEditedPhoto() {
+  if (!cropper) {
+    msg('Please select an image first', 'error');
+    return;
+  }
+  
+  const canvas = cropper.getCroppedCanvas();
+  if (!canvas) {
+    msg('Error processing image', 'error');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
+  switch(currentFilter) {
+    case 'grayscale': ctx.filter = 'grayscale(100%)'; break;
+    case 'sepia': ctx.filter = 'sepia(100%)'; break;
+    case 'brightness': ctx.filter = 'brightness(150%)'; break;
+    case 'contrast': ctx.filter = 'contrast(200%)'; break;
+    case 'saturate': ctx.filter = 'saturate(200%)'; break;
+    case 'hue-rotate': ctx.filter = 'hue-rotate(90deg)'; break;
+    case 'invert': ctx.filter = 'invert(100%)'; break;
+    default: ctx.filter = 'none';
+  }
+  
+  ctx.drawImage(canvas, 0, 0);
+  const finalImage = canvas.toDataURL('image/png');
+  const postDestination = document.querySelector('input[name="postDestination"]:checked').value;
+  
+  createImagePost(document.getElementById('postText').value.trim(), finalImage, postDestination);
+  closeModal('photoModal');
+  resetPhotoEditor();
+}
+
+function createImagePost(text, imageData, destination) {
+  if (!text && !imageData) {
+    msg('Please add text or image', 'error');
+    return;
+  }
+  
+  const post = {
+    author: currentUser.name,
+    text: text,
+    image: imageData,
+    destination: destination,
+    time: new Date().toLocaleTimeString(),
+    date: new Date().toLocaleDateString()
+  };
+  
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  posts.unshift(post);
+  localStorage.setItem('posts', JSON.stringify(posts));
+  
+  document.getElementById('postText').value = '';
+  
+  let successMsg = '📸 Photo posted!';
+  switch(destination) {
+    case 'profile': successMsg = '📸 Photo posted to your profile!'; break;
+    case 'community': successMsg = '📸 Photo posted to community!'; break;
+    case 'both': successMsg = '📸 Photo posted to profile and community!'; break;
+  }
+  
+  msg(successMsg, 'success');
+  loadPosts();
+  updateHomeStats();
+  
+  if (destination === 'profile' || destination === 'both') {
+    if (document.getElementById('profilePageModal').style.display === 'flex') {
+      loadUserPosts();
+    }
+  }
+}
+
+// Update loadPosts to handle image posts
+function loadPosts() {
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  let html = '';
+  
+  posts.forEach(p => {
+    const hasImage = p.image && p.image !== '';
+    const destinationBadge = p.destination ? 
+      `<span class="post-destination-badge">${getDestinationText(p.destination)}</span>` : '';
+    
+    html += `
+      <div class="post ${hasImage ? 'post-with-image' : ''}">
+        <div class="author">@${p.author}</div>
+        <div class="text">${p.text}</div>
+        ${hasImage ? `<img src="${p.image}" class="post-image" alt="Post image">` : ''}
+        <div class="post-meta">
+          <span class="time">${p.time}</span>
+          ${destinationBadge}
+        </div>
+      </div>
+    `;
+  });
+  
+  document.getElementById('postsFeed').innerHTML = html;
+}
+
+function getDestinationText(destination) {
+  switch(destination) {
+    case 'profile': return '👤 Profile';
+    case 'community': return '👥 Community';
+    case 'both': return '🌐 Both';
+    default: return '';
+  }
+}
+
+// Update loadUserPosts to handle image posts in profile
+function loadUserPosts() {
+  let userPosts = getUserPosts();
+  let container = document.getElementById('userPostsContainer');
+  let noPostsMsg = document.getElementById('noPostsMessage');
+  
+  if(userPosts.length === 0) {
+    container.innerHTML = '';
+    noPostsMsg.style.display = 'block';
+  } else {
+    noPostsMsg.style.display = 'none';
+    container.innerHTML = '';
+    userPosts.reverse().forEach((post, index) => {
+      const hasImage = post.image && post.image !== '';
+      const destinationBadge = post.destination ? 
+        `<span class="post-destination-badge">${getDestinationText(post.destination)}</span>` : '';
+      
+      let postHtml = `
+        <div class="user-post-card">
+          <div class="post-header">
+            <span class="post-time">${post.time}</span>
+            <button class="post-delete-btn" onclick="deleteUserPost(${userPosts.length - 1 - index})">Delete</button>
+          </div>
+          <div class="post-content">${escapeHtml(post.text)}</div>
+          ${hasImage ? `<img src="${post.image}" class="post-image" alt="Post image">` : ''}
+          <div class="post-stats">
+            <span>Posted</span>
+            ${destinationBadge}
+          </div>
+        </div>
+      `;
+      container.innerHTML += postHtml;
+    });
+  }
+}
+
+// ===== MUSIC FUNCTIONALITY =====
+function initMusicPlayer() {
+  musicPlayer = document.getElementById('backgroundMusic');
+  document.getElementById('musicPlayer').style.display = 'block';
+  loadTrack(0);
+}
+
+function loadTrack(index) {
+  if (!musicPlayer || index >= musicTracks.length) return;
+  
+  currentTrackIndex = index;
+  const track = musicTracks[index];
+  musicPlayer.src = track.url;
+  document.getElementById('musicInfo').textContent = `${track.emoji} ${track.name}`;
+  
+  musicPlayer.onloadeddata = function() {
+    if (isMusicPlaying) {
+      musicPlayer.play().catch(e => {
+        console.log('Audio play failed:', e);
+      });
+    }
+  };
+}
+
+function toggleMusic() {
+  if (!musicPlayer) return;
+  
+  if (isMusicPlaying) {
+    musicPlayer.pause();
+    isMusicPlaying = false;
+    document.querySelector('.music-btn').textContent = '🎵';
+  } else {
+    musicPlayer.play().then(() => {
+      isMusicPlaying = true;
+      document.querySelector('.music-btn').textContent = '⏸️';
+    }).catch(e => {
+      msg('Music playback failed: ' + e.message, 'error');
+    });
+  }
+}
+
+function nextTrack() {
+  if (!musicPlayer) return;
+  let nextIndex = (currentTrackIndex + 1) % musicTracks.length;
+  loadTrack(nextIndex);
+  if (isMusicPlaying) {
+    musicPlayer.play().catch(e => {
+      console.log('Audio play failed:', e);
+    });
+  }
+}
+
+// Initialize music player when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initCursor();
+  checkUser();
+  loadTheme();
+  initProfilePage();
+  showLoginForm();
+  startLiveActivityUpdates();
+  startUserCountUpdate();
+  initMusicPlayer(); // Initialize music player
+});
