@@ -8,6 +8,10 @@
 </head>
 <body class="dark-theme">
 
+<!-- Add this to your HTML file -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <!-- Socket.io CDN -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
@@ -281,42 +285,57 @@
       </div>
     </section>
 
-    <!-- ENHANCED POSTS SECTION -->
+    <!-- POSTS -->
     <section id="posts" class="page" style="display:none;">
       <h2 class="title">My Posts</h2>
       
       <!-- Enhanced Post Creator -->
-      <div class="post-creator">
+      <div class="enhanced-post-creator">
         <textarea 
           id="postText" 
-          placeholder="What's on your mind? Share with your community..." 
+          class="post-textarea" 
+          placeholder="What's on your mind? Share your vibe... ✨"
           maxlength="1000"
         ></textarea>
         
-        <div id="charCounter" class="char-counter">0/1000</div>
+        <!-- Selected Assets Preview -->
+        <div id="selectedAssets" class="selected-assets"></div>
         
-        <!-- Photo Preview Container -->
-        <div id="photoPreviewContainer" class="photo-preview-container"></div>
+        <!-- Media Preview Container -->
+        <div id="photoPreviewContainer" class="media-preview"></div>
         
-        <!-- Action Buttons -->
-        <div class="post-actions">
-          <button type="button" onclick="openGallery()" class="action-btn">
-            🖼️ Gallery
-          </button>
+        <!-- Post Destination Display -->
+        <div id="postDestinationDisplay" class="post-destination-display">
+          📍 Posting to: <span id="currentDestination">My Profile</span>
+          <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
+        </div>
+        
+        <!-- Enhanced Action Buttons -->
+        <div class="post-actions-row">
+          <div class="post-features">
+            <!-- Media Button -->
+            <button type="button" class="feature-btn" onclick="openPhotoGallery()">
+              🖼️ Media
+            </button>
+            
+            <!-- Camera Button -->
+            <button type="button" class="feature-btn" onclick="openCamera()">
+              📷 Camera
+            </button>
+            
+            <!-- Music Button -->
+            <button type="button" class="feature-btn" onclick="openMusicSelector()">
+              🎵 Music
+            </button>
+            
+            <!-- Stickers Button -->
+            <button type="button" class="feature-btn" onclick="openStickerSelector()">
+              🎨 Stickers
+            </button>
+          </div>
           
-          <button type="button" onclick="openCamera()" class="action-btn">
-            📷 Camera
-          </button>
-          
-          <button type="button" onclick="openMusicLibrary()" class="action-btn">
-            🎵 Music
-          </button>
-          
-          <button type="button" onclick="showPostDestinationModal()" class="action-btn destination-btn">
-            📍 <span id="destinationText">Profile</span>
-          </button>
-          
-          <button type="button" onclick="createPost()" class="post-submit-btn">
+          <!-- Post Button -->
+          <button type="button" class="post-button" onclick="createPost()">
             🚀 Post
           </button>
         </div>
@@ -341,12 +360,116 @@
 <!-- MODALS -->
 <div id="verifyModal" class="modal" style="display:none;"></div>
 
+<!-- Enhanced Post Destination Modal -->
+<div id="postDestinationModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
+    <h2>Where to Post?</h2>
+    <div class="destination-options">
+      <div class="destination-option" onclick="selectPostDestination('profile')">
+        <div class="destination-icon">👤</div>
+        <div class="destination-info">
+          <h3>My Profile</h3>
+          <p>Only visible on your personal profile</p>
+        </div>
+      </div>
+      <div class="destination-option" onclick="selectPostDestination('community')">
+        <div class="destination-icon">🌐</div>
+        <div class="destination-info">
+          <h3>Community Feed</h3>
+          <p>Share with your college community</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Music Selector Modal -->
+<div id="musicSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
+    <h2>Add Music to Your Post</h2>
+    <div id="musicSelector" class="music-selector">
+      <!-- Music items will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Sticker Selector Modal -->
+<div id="stickerSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
+    <h2>Add Stickers</h2>
+    <div id="stickerSelector" class="sticker-selector">
+      <!-- Sticker categories will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Photo Editor Modal -->
+<div id="photoEditorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
+    <h2>Edit Photo</h2>
+    <div class="photo-editor">
+      <div class="editor-preview">
+        <img id="editImage" src="" alt="Edit Preview">
+      </div>
+      <div class="editor-controls">
+        <div class="filter-buttons">
+          <button class="filter-btn" onclick="applyFilter('normal')">Normal</button>
+          <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+          <button class="filter-btn" onclick="applyFilter('clarendon')">Clarendon</button>
+          <button class="filter-btn" onclick="applyFilter('moon')">Moon</button>
+          <button class="filter-btn" onclick="applyFilter('lark')">Lark</button>
+          <button class="filter-btn" onclick="applyFilter('reyes')">Reyes</button>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+          <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Editor Modal -->
+<div id="cropEditorModal" class="modal" style="display:none;">
+  <div class="modal-box" style="max-width: 800px;">
+    <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
+    <h2>✂️ Crop Photo</h2>
+    <div class="crop-container">
+      <div class="crop-preview">
+        <img id="cropImage" src="" alt="Crop preview">
+      </div>
+      <div class="crop-controls">
+        <div class="crop-aspect-ratios">
+          <h4>Aspect Ratio:</h4>
+          <div class="aspect-ratio-buttons">
+            <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
+            <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
+            <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
+            <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
+            <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
+          </div>
+        </div>
+        <div class="crop-actions">
+          <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
+          <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
+          <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
+          <button class="btn-secondary" onclick="closeModal('cropEditorModal')">❌ Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="contactModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('contactModal')">&times;</span>
     <h2>Contact Us</h2>
     <p>📧 Email: support@vibexpert.com</p>
-    <p>📱 Phone: +91-9347702627</p>
+    <p>📱 Phone: +91-9347702626</p>
     <p>💬 Live Chat: 24/7</p>
   </div>
 </div>
@@ -355,143 +478,8 @@
   <div class="modal-box">
     <span class="close" onclick="closeModal('complaintModal')">&times;</span>
     <h2>Submit Complaint</h2>
-    <textarea id="complaintText" placeholder="Describe your complaint..."></textarea>
+    <textarea id="complaintText" placeholder="Describe your complaint..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
     <button onclick="submitComplaint()">Submit Complaint</button>
-  </div>
-</div>
-
-<!-- IMAGE EDITOR MODAL -->
-<div id="imageEditorModal" class="modal" style="display:none;">
-  <div class="modal-box editor-modal">
-    <span class="close" onclick="closeImageEditor()">&times;</span>
-    <h2>Edit Image</h2>
-    
-    <div class="editor-container">
-      <div class="editor-canvas-wrapper">
-        <canvas id="editorCanvas"></canvas>
-      </div>
-      
-      <div class="editor-tabs">
-        <button class="editor-tab active" onclick="switchEditorTab('filters')">🎨 Filters</button>
-        <button class="editor-tab" onclick="switchEditorTab('crop')">✂️ Crop</button>
-        <button class="editor-tab" onclick="switchEditorTab('stickers')">😊 Stickers</button>
-        <button class="editor-tab" onclick="switchEditorTab('text')">📝 Text</button>
-      </div>
-      
-      <div id="filtersPanel" class="editor-panel active">
-        <div class="filter-controls">
-          <div class="filter-control">
-            <label>Brightness</label>
-            <input type="range" id="brightness" min="0" max="200" value="100" oninput="applyFilters()">
-          </div>
-          <div class="filter-control">
-            <label>Contrast</label>
-            <input type="range" id="contrast" min="0" max="200" value="100" oninput="applyFilters()">
-          </div>
-          <div class="filter-control">
-            <label>Saturation</label>
-            <input type="range" id="saturation" min="0" max="200" value="100" oninput="applyFilters()">
-          </div>
-          <div class="filter-control">
-            <label>Blur</label>
-            <input type="range" id="blur" min="0" max="10" value="0" oninput="applyFilters()">
-          </div>
-          <div class="filter-control">
-            <label>Grayscale</label>
-            <input type="range" id="grayscale" min="0" max="100" value="0" oninput="applyFilters()">
-          </div>
-          <div class="filter-control">
-            <label>Sepia</label>
-            <input type="range" id="sepia" min="0" max="100" value="0" oninput="applyFilters()">
-          </div>
-        </div>
-        <button onclick="resetFilters()" class="reset-btn">Reset Filters</button>
-      </div>
-      
-      <div id="cropPanel" class="editor-panel">
-        <div class="crop-controls">
-          <button onclick="cropSquare()">Square 1:1</button>
-          <button onclick="cropPortrait()">Portrait 4:5</button>
-          <button onclick="cropLandscape()">Landscape 16:9</button>
-          <button onclick="rotateImage()">↻ Rotate 90°</button>
-          <button onclick="flipHorizontal()">↔️ Flip H</button>
-          <button onclick="flipVertical()">↕️ Flip V</button>
-        </div>
-      </div>
-      
-      <div id="stickersPanel" class="editor-panel">
-        <div class="stickers-grid" id="stickersGrid"></div>
-      </div>
-      
-      <div id="textPanel" class="editor-panel">
-        <div class="text-controls">
-          <input type="text" id="textInput" placeholder="Enter text..." maxlength="50">
-          <input type="color" id="textColor" value="#ffffff">
-          <select id="fontSize">
-            <option value="20">Small</option>
-            <option value="30" selected>Medium</option>
-            <option value="40">Large</option>
-            <option value="50">XLarge</option>
-          </select>
-          <button onclick="addTextToImage()">Add Text</button>
-        </div>
-      </div>
-      
-      <div class="editor-actions">
-        <button onclick="saveEditedImage()" class="save-btn">💾 Save</button>
-        <button onclick="closeImageEditor()" class="cancel-btn">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MUSIC LIBRARY MODAL -->
-<div id="musicModal" class="modal" style="display:none;">
-  <div class="modal-box music-modal">
-    <span class="close" onclick="closeMusicModal()">&times;</span>
-    <h2>Add Background Music</h2>
-    
-    <div class="music-tabs">
-      <button class="music-tab active" onclick="switchMusicTab('library')">📚 Library</button>
-      <button class="music-tab" onclick="switchMusicTab('upload')">📤 Upload</button>
-    </div>
-    
-    <div id="musicLibraryPanel" class="music-panel active">
-      <div class="music-search">
-        <input type="text" id="musicSearch" placeholder="Search music..." oninput="filterMusic()">
-      </div>
-      <div id="musicList" class="music-list"></div>
-    </div>
-    
-    <div id="musicUploadPanel" class="music-panel">
-      <div class="upload-area" onclick="document.getElementById('musicFileInput').click()">
-        <p>🎵 Click to upload your music</p>
-        <small>MP3, WAV (max 10MB)</small>
-      </div>
-      <input type="file" id="musicFileInput" accept="audio/*" style="display:none" onchange="handleMusicUpload(event)">
-    </div>
-  </div>
-</div>
-
-<!-- POST DESTINATION MODAL -->
-<div id="destinationModal" class="modal" style="display:none;">
-  <div class="modal-box destination-modal">
-    <span class="close" onclick="closeDestinationModal()">&times;</span>
-    <h2>Where to Post?</h2>
-    
-    <div class="destination-options">
-      <div class="destination-option" onclick="selectDestination('profile')">
-        <div class="destination-icon">👤</div>
-        <h3>My Profile</h3>
-        <p>Only visible on your profile</p>
-      </div>
-      
-      <div class="destination-option" onclick="selectDestination('community')">
-        <div class="destination-icon">🌍</div>
-        <h3>Community Feed</h3>
-        <p>Visible to all college members</p>
-      </div>
-    </div>
   </div>
 </div>
 
