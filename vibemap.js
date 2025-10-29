@@ -11,9 +11,8 @@ let cropEndY = 0;
 let communities = [];
 let userCommunities = [];
 
-// API Configuration - UPDATE THIS WITH YOUR RENDER URL
+// IMPORTANT: UPDATE THIS WITH YOUR ACTUAL RENDER URL
 const API_BASE_URL = 'https://vibexpert-backend-main.onrender.com'; // Replace with your actual Render URL
-// For local development: 'http://localhost:3000'
 
 // DOM elements
 const loginPage = document.getElementById('loginPage');
@@ -413,7 +412,7 @@ function removeImage() {
 // Create post
 async function createPost() {
   const postText = document.getElementById('postText')?.value;
-  const postDestination = document.getElementById('postDestination')?.value || 'profile';
+  const postDestination = document.getElementById('postDestination')?.value || 'general';
   
   if (!postText?.trim() && !selectedImage) {
     showMessage('Please add some text or an image to your post', 'error');
@@ -786,3 +785,196 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 1000);
 });
 
+// University selection functions
+function selectUniversity(type) {
+  showPage('collegeList');
+  document.getElementById('collegeTitle').textContent = getUniversityTitle(type);
+  loadColleges(type);
+}
+
+function getUniversityTitle(type) {
+  const titles = {
+    'nit': 'NIT Colleges',
+    'iit': 'IIT Colleges', 
+    'vit': 'VIT Colleges',
+    'other': 'Other Universities'
+  };
+  return titles[type] || 'Colleges';
+}
+
+function loadColleges(type) {
+  // Mock college data - you would replace this with actual API call
+  const colleges = {
+    nit: [
+      { name: 'NIT Trichy', students: '8500', location: 'Tamil Nadu' },
+      { name: 'NIT Warangal', students: '7800', location: 'Telangana' },
+      { name: 'NIT Surathkal', students: '7200', location: 'Karnataka' }
+    ],
+    iit: [
+      { name: 'IIT Bombay', students: '11000', location: 'Mumbai' },
+      { name: 'IIT Delhi', students: '9500', location: 'Delhi' },
+      { name: 'IIT Madras', students: '10000', location: 'Chennai' }
+    ],
+    vit: [
+      { name: 'VIT Vellore', students: '35000', location: 'Tamil Nadu' },
+      { name: 'VIT Bhopal', students: '12000', location: 'Madhya Pradesh' },
+      { name: 'VIT Chennai', students: '15000', location: 'Tamil Nadu' }
+    ],
+    other: [
+      { name: 'University of Delhi', students: '250000', location: 'Delhi' },
+      { name: 'JNU', students: '8000', location: 'Delhi' },
+      { name: 'BHU', students: '30000', location: 'Varanasi' }
+    ]
+  };
+
+  const container = document.getElementById('collegeContainer');
+  container.innerHTML = '';
+  
+  colleges[type].forEach(college => {
+    const card = document.createElement('div');
+    card.className = 'college-card';
+    card.innerHTML = `
+      <h3>${college.name}</h3>
+      <p>${college.location}</p>
+      <div class="college-stats">
+        <span>👥 ${college.students} students</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function searchColleges() {
+  // Implementation for college search
+  console.log('Searching colleges...');
+}
+
+function backToUniversities() {
+  showPage('home');
+}
+
+// Profile functions
+function showProfilePage() {
+  const modal = document.getElementById('profilePageModal');
+  if (modal) {
+    updateProfileDisplay();
+    modal.style.display = 'flex';
+  }
+}
+
+function updateProfileDisplay() {
+  if (!currentUser) return;
+  
+  document.getElementById('profileDisplayName').textContent = currentUser.username;
+  document.getElementById('nicknameValue').textContent = currentUser.username.toLowerCase();
+  document.getElementById('profileDescriptionText').textContent = currentUser.bio || 'No description added yet. Click edit to add one!';
+}
+
+function openEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'block';
+  document.getElementById('editNickname').value = currentUser.username;
+  document.getElementById('editDescription').value = currentUser.bio || '';
+}
+
+function cancelEditProfile() {
+  document.getElementById('editProfileSection').style.display = 'none';
+}
+
+function saveProfile() {
+  const newNickname = document.getElementById('editNickname').value;
+  const newDescription = document.getElementById('editDescription').value;
+  
+  if (newNickname) {
+    currentUser.username = newNickname;
+    localStorage.setItem('userData', JSON.stringify(currentUser));
+    updateProfileDisplay();
+    showMessage('Profile updated successfully!', 'success');
+  }
+  
+  document.getElementById('editProfileSection').style.display = 'none';
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('profilePhoto').style.backgroundImage = `url(${e.target.result})`;
+      document.getElementById('profilePhoto').textContent = '';
+      showMessage('Profile picture updated!', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function switchProfileTab(tab) {
+  // Implementation for profile tabs
+  console.log('Switching to tab:', tab);
+}
+
+// Image editor functions (basic implementations)
+function openImageEditor() {
+  const modal = document.getElementById('imageEditorModal');
+  if (modal && selectedImage) {
+    modal.style.display = 'flex';
+    // Load image into canvas for editing
+    setTimeout(() => {
+      const canvas = document.getElementById('editorCanvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = selectedImage;
+    }, 100);
+  }
+}
+
+function startCrop() {
+  isCropping = true;
+  showMessage('Click and drag to select crop area', 'info');
+}
+
+function applyCrop() {
+  if (isCropping) {
+    showMessage('Crop applied!', 'success');
+    isCropping = false;
+  }
+}
+
+function resetCrop() {
+  isCropping = false;
+  showMessage('Crop reset', 'info');
+}
+
+function applyAdjustments() {
+  // Implementation for image adjustments
+}
+
+function saveEditedImage() {
+  const canvas = document.getElementById('editorCanvas');
+  selectedImage = canvas.toDataURL('image/jpeg');
+  showImagePreview(selectedImage);
+  closeModal('imageEditorModal');
+  showMessage('Image edited successfully!', 'success');
+}
+
+// Chat functions
+function handleChatKeypress(event) {
+  if (event.key === 'Enter') {
+    sendChatMessage();
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  
+  if (message) {
+    // Implementation for sending chat messages
+    console.log('Sending message:', message);
+    input.value = '';
+  }
+}
