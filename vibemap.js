@@ -12,7 +12,7 @@ let communities = [];
 let userCommunities = [];
 
 // API Configuration - UPDATE THIS WITH YOUR RENDER URL
-const API_BASE_URL = 'https://your-backend-app.onrender.com'; // Replace with your actual Render URL
+const API_BASE_URL = 'https://vibexpert-backend-main.onrender.com'; // Replace with your actual Render URL
 // For local development: 'http://localhost:3000'
 
 // DOM elements
@@ -785,3 +785,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }, 1000);
 });
+
