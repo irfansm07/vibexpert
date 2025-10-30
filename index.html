@@ -154,7 +154,10 @@
     </nav>
 
     <div class="header-right">
-      <input type="text" class="search-box" placeholder="Search users...">
+      <div class="search-container">
+        <input type="text" class="search-box" placeholder="Search users..." id="searchBox">
+        <div class="search-results" id="searchResults" style="display:none;"></div>
+      </div>
       <span class="user-name" id="userName">Hi, User</span>
       
       <button class="options-btn" onclick="toggleOptionsMenu()">
@@ -469,7 +472,7 @@
     <span class="close" onclick="closeModal('contactModal')">&times;</span>
     <h2>Contact Us</h2>
     <p>📧 Email: support@vibexpert.com</p>
-    <p>📱 Phone: +91-9347702627</p>
+    <p>📱 Phone: +91-9347702626</p>
     <p>💬 Live Chat: 24/7</p>
   </div>
 </div>
