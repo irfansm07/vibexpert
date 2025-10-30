@@ -1,4 +1,4 @@
-// VIBEXPERT - ENHANCED VERSION WITH FIXED POST SUBMISSION AND BETTER UX
+// VIBEXPERT - ENHANCED VERSION WITH WORKING SEARCH AND IMPROVED POSTS
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -382,6 +382,105 @@ function showLoginForm() {
   document.getElementById('loginForm').style.display = 'block';
   document.getElementById('forgotPasswordForm').style.display = 'none';
   document.getElementById('signupForm').style.display = 'none';
+}
+
+// ENHANCED SEARCH FUNCTIONALITY
+function initializeSearchBar() {
+  const searchBox = document.getElementById('searchBox');
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchBox) return;
+  
+  let searchTimeout;
+  
+  searchBox.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+      performUserSearch(query);
+    }, 500);
+  });
+  
+  // Hide search results when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+      hideSearchResults();
+    }
+  });
+  
+  // Hide search results when pressing Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideSearchResults();
+    }
+  });
+}
+
+async function performUserSearch(query) {
+  try {
+    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    displaySearchResults(data.users || []);
+  } catch (error) {
+    console.error('Search error:', error);
+    showMessage('❌ Search failed', 'error');
+  }
+}
+
+function displaySearchResults(users) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) return;
+  
+  if (users.length === 0) {
+    searchResults.innerHTML = '<div class="no-results">No users found</div>';
+    searchResults.style.display = 'block';
+    return;
+  }
+  
+  let html = '';
+  users.forEach(user => {
+    html += `
+      <div class="search-result-item" onclick="showUserProfile('${user.id}')">
+        <div class="search-result-avatar">
+          ${user.profile_pic ? `<img src="${user.profile_pic}" alt="${user.username}">` : '👤'}
+        </div>
+        <div class="search-result-info">
+          <div class="search-result-username">@${user.username}</div>
+          <div class="search-result-details">${user.registration_number || user.email}</div>
+          ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  searchResults.innerHTML = html;
+  searchResults.style.display = 'block';
+}
+
+function hideSearchResults() {
+  const searchResults = document.getElementById('searchResults');
+  if (searchResults) {
+    searchResults.style.display = 'none';
+  }
+}
+
+async function showUserProfile(userId) {
+  hideSearchResults();
+  
+  try {
+    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    const user = data.user;
+    
+    showProfileModal(user);
+  } catch (error) {
+    showMessage('❌ Failed to load profile', 'error');
+  }
 }
 
 // ENHANCED POST FEATURES
@@ -1874,109 +1973,6 @@ function toggleTheme() {
   showMessage('🎨 Theme changed!', 'success');
   document.getElementById('hamburgerMenu').style.display = 'none';
   document.getElementById('optionsMenu').style.display = 'none';
-}
-
-// SEARCH FUNCTIONALITY
-function initializeSearchBar() {
-  const searchBox = document.querySelector('.search-box');
-  if (!searchBox) return;
-  
-  let searchTimeout;
-  searchBox.addEventListener('input', (e) => {
-    clearTimeout(searchTimeout);
-    const query = e.target.value.trim();
-    
-    if (query.length < 2) {
-      hideSearchResults();
-      return;
-    }
-    
-    searchTimeout = setTimeout(() => {
-      performSearch(query);
-    }, 500);
-  });
-  
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-box') && !e.target.closest('.search-results')) {
-      hideSearchResults();
-    }
-  });
-}
-
-async function performSearch(query) {
-  try {
-    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
-    displaySearchResults(data.users || []);
-  } catch (error) {
-    console.error('Search error:', error);
-  }
-}
-
-function displaySearchResults(users) {
-  let resultsDiv = document.querySelector('.search-results');
-  
-  if (!resultsDiv) {
-    resultsDiv = document.createElement('div');
-    resultsDiv.className = 'search-results';
-    resultsDiv.style.cssText = `
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: rgba(15, 25, 45, 0.98);
-      border: 1px solid rgba(79, 116, 163, 0.3);
-      border-radius: 12px;
-      margin-top: 5px;
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 1000;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    `;
-    
-    const searchContainer = document.querySelector('.search-box').parentElement;
-    searchContainer.style.position = 'relative';
-    searchContainer.appendChild(resultsDiv);
-  }
-  
-  if (users.length === 0) {
-    resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">No users found</div>';
-    return;
-  }
-  
-  resultsDiv.innerHTML = users.map(user => `
-    <div onclick="showUserProfile('${user.id}')" style="padding:15px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(79,116,163,0.1)'" onmouseout="this.style.background='transparent'">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">
-          ${user.profile_pic ? `<img src="${user.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}
-        </div>
-        <div style="flex:1;">
-          <div style="font-weight:600; color:#4f74a3;">@${user.username}</div>
-          <div style="font-size:12px; color:#888;">${user.registration_number || user.email}</div>
-          ${user.college ? `<div style="font-size:11px; color:#666; margin-top:2px;">🎓 ${user.college}</div>` : ''}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function hideSearchResults() {
-  const resultsDiv = document.querySelector('.search-results');
-  if (resultsDiv) {
-    resultsDiv.remove();
-  }
-}
-
-async function showUserProfile(userId) {
-  hideSearchResults();
-  
-  try {
-    const data = await apiCall(`/api/profile/${userId}`, 'GET');
-    const user = data.user;
-    
-    showProfileModal(user);
-  } catch (error) {
-    showMessage('❌ Failed to load profile', 'error');
-  }
 }
 
 // TRENDING CONTENT
