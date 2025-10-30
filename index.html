@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VibeXpert - Connect With Your College</title>
   <link rel="stylesheet" href="vibemap.css" />
-
-  <!-- CropperJS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-  <!-- Socket.io -->
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 </head>
 <body class="dark-theme">
+
+<!-- Add this to your HTML file -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<!-- Socket.io CDN -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <!-- LIVE ACTIVITY NOTIFICATION -->
 <div id="liveActivityNotif" class="live-activity-notif">
@@ -27,7 +27,7 @@
     <div class="auth-box">
       <h1>VibeXpert</h1>
       <p>Connect With The Verse</p>
-
+      
       <div id="message"></div>
 
       <!-- LOGIN FORM -->
@@ -37,9 +37,7 @@
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button type="submit">Login</button>
         <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
-        <p style="text-align:center; margin-top:10px;">
-          <a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a>
-        </p>
+        <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
       </form>
 
       <!-- FORGOT PASSWORD FORM -->
@@ -53,43 +51,83 @@
       <!-- SIGNUP FORM -->
       <form id="signupForm" onsubmit="signup(event)" style="display:none;">
         <h2>Create Account</h2>
+        
         <input type="text" id="signupName" placeholder="Full Name" required>
         <input type="email" id="signupEmail" placeholder="Email" required>
         <input type="text" id="signupReg" placeholder="Registration Number" required>
-
-        <!-- Gender -->
-        <label>Gender</label>
-        <div class="radio-group">
-          <label><input type="radio" name="gender" value="Male" required> 👨 Male</label>
-          <label><input type="radio" name="gender" value="Female"> 👩 Female</label>
-          <label><input type="radio" name="gender" value="Other"> 🌈 Other</label>
+        
+        <!-- GENDER SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
+        <div style="display:flex; gap:15px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
+            👨 Male
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Female" style="cursor:pointer;">
+            👩 Female
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="gender" value="Other" style="cursor:pointer;">
+            🌈 Other
+          </label>
         </div>
 
-        <!-- Type -->
-        <label>Type</label>
-        <div class="radio-group">
-          <label><input type="radio" name="type" value="Extrovert" required> 😊 Extrovert</label>
-          <label><input type="radio" name="type" value="Introvert"> 🎧 Introvert</label>
+        <!-- TYPE SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Type</label>
+        <div style="display:flex; gap:15px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="type" value="Extrovert" required style="cursor:pointer;">
+            😊 Extrovert
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="radio" name="type" value="Introvert" style="cursor:pointer;">
+            🎧 Introvert
+          </label>
         </div>
 
-        <!-- Interests -->
-        <label>Interested In</label>
-        <div class="checkbox-grid">
-          <label><input type="checkbox" name="interests" value="Games"> 🎮 Games</label>
-          <label><input type="checkbox" name="interests" value="Sports"> ⚽ Sports</label>
-          <label><input type="checkbox" name="interests" value="Music"> 🎵 Music</label>
-          <label><input type="checkbox" name="interests" value="Gossips"> 💬 Gossips</label>
-          <label><input type="checkbox" name="interests" value="Photos"> 📸 Photos</label>
-          <label><input type="checkbox" name="interests" value="Food"> 🍕 Food</label>
-          <label><input type="checkbox" name="interests" value="Love"> ❤️ Love</label>
+        <!-- INTERESTS SELECTION -->
+        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Interested In</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Games" style="cursor:pointer;">
+            🎮 Games
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Sports" style="cursor:pointer;">
+            ⚽ Sports
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Music" style="cursor:pointer;">
+            🎵 Music
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Gossips" style="cursor:pointer;">
+            💬 Gossips
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Photos" style="cursor:pointer;">
+            📸 Photos
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Food" style="cursor:pointer;">
+            🍕 Food
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+            <input type="checkbox" name="interests" value="Love" style="cursor:pointer;">
+            ❤️ Love
+          </label>
         </div>
 
-        <input type="text" id="signupHobbies" placeholder="E.g. painting, football, coding">
+        <!-- HOBBIES -->
+        <input type="text" id="signupHobbies" placeholder="E.g. painting, football, coding" style="margin-bottom:14px; width:100%; padding:14px 16px; border:2px solid rgba(79, 116, 163, 0.3); background:rgba(20, 30, 50, 0.8); color:white; border-radius:10px; font-size:15px; transition:all 0.3s ease;">
+
+        <!-- PASSWORD -->
         <input type="password" id="signupPass" placeholder="Password" required>
         <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
-
+        
         <button type="submit">Create Account</button>
-        <p>Already have an account? <a href="#" onclick="goLogin(event)">Login</a></p>
+        <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
       </form>
     </div>
   </div>
@@ -97,16 +135,17 @@
 
 <!-- MAIN PAGE -->
 <div id="mainPage" class="main-page" style="display:none;">
-
+  
   <!-- HEADER -->
   <header class="header">
     <div class="logo" onclick="goHome()">VibeXpert</div>
-
+    
+    <!-- LIVE USERS COUNTER -->
     <div class="live-counter">
       <span class="live-badge">🔴 Live</span>
       <span id="liveUsersCount">0 Active</span>
     </div>
-
+    
     <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
@@ -116,17 +155,39 @@
 
     <div class="header-right">
       <div class="search-container">
-        <input type="text" class="search-box" id="searchBox" placeholder="Search users...">
-        <div class="search-results" id="searchResults"></div>
+        <input type="text" class="search-box" placeholder="Search users..." id="searchBox">
+        <div class="search-results" id="searchResults" style="display:none;"></div>
       </div>
-
       <span class="user-name" id="userName">Hi, User</span>
-
+      
       <button class="options-btn" onclick="toggleOptionsMenu()">
-        <span></span><span></span><span></span>
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
 
-      <div class="options-menu" id="optionsMenu">
+      <div class="options-menu" id="optionsMenu" style="display:none;">
+        <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
+        <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
+        <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
+        <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
+        <hr>
+        <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+      </div>
+
+      <button class="hamburger-btn" onclick="toggleHamburgerMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
+        <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
+        <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
+        <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
+        <div class="menu-item" onclick="showPage('badges', event)">🏆 Badges</div>
+        <hr>
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
         <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
@@ -146,14 +207,23 @@
       <div class="hero">
         <h1>Welcome to VibeXpert</h1>
         <p>Connect with students across 500+ universities!</p>
-
         <div class="hero-stats">
-          <div><span id="heroOnline">0</span><br>Online Now</div>
-          <div><span id="heroPostsToday">0</span><br>Posts Today</div>
-          <div><span id="heroChats">0</span><br>Active Chats</div>
+          <div class="hero-stat">
+            <span class="stat-num" id="heroOnline">0</span>
+            <span class="stat-label">Online Now</span>
+          </div>
+          <div class="hero-stat">
+            <span class="stat-num" id="heroPostsToday">0</span>
+            <span class="stat-label">Posts Today</span>
+          </div>
+          <div class="hero-stat">
+            <span class="stat-num" id="heroChats">0</span>
+            <span class="stat-label">Active Chats</span>
+          </div>
         </div>
       </div>
 
+      <!-- TRENDING SECTION -->
       <div class="trending-section">
         <h2 class="title">🔥 Trending Now</h2>
         <div id="trendingContainer" class="trending-grid"></div>
@@ -176,7 +246,7 @@
         <div class="card" onclick="selectUniversity('vit')">
           <div class="icon">🎓</div>
           <h3>VIT Colleges</h3>
-          <p>VIT Campuses</p>
+          <p>VIT Bhopal & Other Campuses</p>
           <button>Explore</button>
         </div>
         <div class="card" onclick="selectUniversity('other')">
@@ -188,34 +258,101 @@
       </div>
     </section>
 
+    <!-- COLLEGE LIST -->
+    <section id="collegeList" class="page" style="display:none;">
+      <div class="college-header">
+        <h2 id="collegeTitle">Colleges</h2>
+        <input type="text" id="searchCollege" placeholder="Search colleges..." onkeyup="searchColleges()">
+      </div>
+      <div id="collegeContainer" class="colleges"></div>
+      <div id="pagination" class="pagination"></div>
+      <button class="back-btn" onclick="backToUniversities()">← Back</button>
+    </section>
+
+    <!-- COMMUNITIES -->
+    <section id="communities" class="page" style="display:none;">
+      <h2 class="title">Join Communities</h2>
+      <div id="communitiesContainer"></div>
+      <div id="chatSection" style="display:none; margin-top:40px;">
+        <div class="chat-header">
+          <h3>Community Chat</h3>
+          <div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
+        </div>
+        <div class="chat-box">
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-box">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
+            <button class="send-btn" onclick="sendChatMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- POSTS -->
     <section id="posts" class="page" style="display:none;">
       <h2 class="title">My Posts</h2>
-
+      
+      <!-- Enhanced Post Creator -->
       <div class="enhanced-post-creator">
-        <textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
-
+        <textarea 
+          id="postText" 
+          class="post-textarea" 
+          placeholder="What's on your mind? Share your vibe... ✨"
+          maxlength="1000"
+        ></textarea>
+        
+        <!-- Selected Assets Preview -->
         <div id="selectedAssets" class="selected-assets"></div>
+        
+        <!-- Media Preview Container -->
         <div id="photoPreviewContainer" class="media-preview"></div>
-
-        <div class="post-destination-display">
+        
+        <!-- Post Destination Display -->
+        <div id="postDestinationDisplay" class="post-destination-display">
           📍 Posting to: <span id="currentDestination">My Profile</span>
           <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
         </div>
-
+        
+        <!-- Enhanced Action Buttons -->
         <div class="post-actions-row">
           <div class="post-features">
-            <button class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
-            <button class="feature-btn" onclick="openCamera()">📷 Camera</button>
-            <button class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
-            <button class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
+            <!-- Media Button -->
+            <button type="button" class="feature-btn" onclick="openPhotoGallery()">
+              🖼️ Media
+            </button>
+            
+            <!-- Camera Button -->
+            <button type="button" class="feature-btn" onclick="openCamera()">
+              📷 Camera
+            </button>
+            
+            <!-- Music Button -->
+            <button type="button" class="feature-btn" onclick="openMusicSelector()">
+              🎵 Music
+            </button>
+            
+            <!-- Stickers Button -->
+            <button type="button" class="feature-btn" onclick="openStickerSelector()">
+              🎨 Stickers
+            </button>
           </div>
-          <button class="post-button" onclick="createPost()">🚀 Post</button>
+          
+          <!-- Post Button -->
+          <button type="button" class="post-button" onclick="createPost()">
+            🚀 Post
+          </button>
         </div>
       </div>
-
+      
+      <!-- Posts Feed -->
       <div id="postsFeed" class="posts-feed"></div>
     </section>
+
+    <!-- BADGES PAGE -->
+    <section id="badges" class="page" style="display:none;">
+      <!-- Content loaded dynamically by JS -->
+    </section>
+
   </main>
 
   <footer>
@@ -224,80 +361,128 @@
 </div>
 
 <!-- MODALS -->
-<div id="postDestinationModal" class="selector-modal">
-  <div class="selector-content">
-    <div class="selector-header">
-      <h2>Where to Post?</h2>
-      <button onclick="closeModal('postDestinationModal')">&times;</button>
-    </div>
-    <div class="selector-body">
-      <div class="destination-option" onclick="selectPostDestination('profile')">👤 My Profile</div>
-      <div class="destination-option" onclick="selectPostDestination('community')">🌐 Community Feed</div>
+<div id="verifyModal" class="modal" style="display:none;"></div>
+
+<!-- Enhanced Post Destination Modal -->
+<div id="postDestinationModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
+    <h2>Where to Post?</h2>
+    <div class="destination-options">
+      <div class="destination-option" onclick="selectPostDestination('profile')">
+        <div class="destination-icon">👤</div>
+        <div class="destination-info">
+          <h3>My Profile</h3>
+          <p>Only visible on your personal profile</p>
+        </div>
+      </div>
+      <div class="destination-option" onclick="selectPostDestination('community')">
+        <div class="destination-icon">🌐</div>
+        <div class="destination-info">
+          <h3>Community Feed</h3>
+          <p>Share with your college community</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Music Selector -->
-<div id="musicSelectorModal" class="selector-modal">
-  <div class="selector-content">
-    <div class="selector-header">
-      <h2>Add Music to Your Post</h2>
-      <button onclick="closeModal('musicSelectorModal')">&times;</button>
+<!-- Music Selector Modal -->
+<div id="musicSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
+    <h2>Add Music to Your Post</h2>
+    <div id="musicSelector" class="music-selector">
+      <!-- Music items will be loaded here -->
     </div>
-    <div class="selector-body" id="musicSelector"></div>
   </div>
 </div>
 
-<!-- Sticker Selector -->
-<div id="stickerSelectorModal" class="selector-modal">
-  <div class="selector-content">
-    <div class="selector-header">
-      <h2>Add Stickers</h2>
-      <button onclick="closeModal('stickerSelectorModal')">&times;</button>
+<!-- Sticker Selector Modal -->
+<div id="stickerSelectorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
+    <h2>Add Stickers</h2>
+    <div id="stickerSelector" class="sticker-selector">
+      <!-- Sticker categories will be loaded here -->
     </div>
-    <div class="selector-body" id="stickerSelector"></div>
   </div>
 </div>
 
-<!-- Crop Editor -->
-<div id="cropEditorModal" class="selector-modal">
-  <div class="selector-content">
-    <div class="selector-header">
-      <h2>✂️ Crop Photo</h2>
-      <button onclick="closeModal('cropEditorModal')">&times;</button>
+<!-- Photo Editor Modal -->
+<div id="photoEditorModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
+    <h2>Edit Photo</h2>
+    <div class="photo-editor">
+      <div class="editor-preview">
+        <img id="editImage" src="" alt="Edit Preview">
+      </div>
+      <div class="editor-controls">
+        <div class="filter-buttons">
+          <button class="filter-btn" onclick="applyFilter('normal')">Normal</button>
+          <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
+          <button class="filter-btn" onclick="applyFilter('clarendon')">Clarendon</button>
+          <button class="filter-btn" onclick="applyFilter('moon')">Moon</button>
+          <button class="filter-btn" onclick="applyFilter('lark')">Lark</button>
+          <button class="filter-btn" onclick="applyFilter('reyes')">Reyes</button>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-secondary" onclick="resetFilters()">Reset</button>
+          <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
+        </div>
+      </div>
     </div>
-    <div class="selector-body crop-container">
+  </div>
+</div>
+
+<!-- Crop Editor Modal -->
+<div id="cropEditorModal" class="modal" style="display:none;">
+  <div class="modal-box" style="max-width: 800px;">
+    <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
+    <h2>✂️ Crop Photo</h2>
+    <div class="crop-container">
       <div class="crop-preview">
-        <img id="cropImage" src="" alt="Crop Preview">
+        <img id="cropImage" src="" alt="Crop preview">
       </div>
-      <div class="aspect-ratio-buttons">
-        <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
-        <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
-        <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
-        <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
-        <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
-      </div>
-      <div class="crop-actions">
-        <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
-        <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
-        <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
+      <div class="crop-controls">
+        <div class="crop-aspect-ratios">
+          <h4>Aspect Ratio:</h4>
+          <div class="aspect-ratio-buttons">
+            <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
+            <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
+            <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
+            <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
+            <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
+          </div>
+        </div>
+        <div class="crop-actions">
+          <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
+          <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
+          <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
+          <button class="btn-secondary" onclick="closeModal('cropEditorModal')">❌ Cancel</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Contact Modal -->
-<div id="contactModal" class="selector-modal">
-  <div class="selector-content">
-    <div class="selector-header">
-      <h2>Contact Us</h2>
-      <button onclick="closeModal('contactModal')">&times;</button>
-    </div>
-    <div class="selector-body">
-      <p>📧 Email: support@vibexpert.com</p>
-      <p>📱 Phone: +91-9347702626</p>
-      <p>💬 Live Chat: 24/7</p>
-    </div>
+<div id="contactModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('contactModal')">&times;</span>
+    <h2>Contact Us</h2>
+    <p>📧 Email: support@vibexpert.com</p>
+    <p>📱 Phone: +91-9347702626</p>
+    <p>💬 Live Chat: 24/7</p>
+  </div>
+</div>
+
+<div id="complaintModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('complaintModal')">&times;</span>
+    <h2>Submit Complaint</h2>
+    <textarea id="complaintText" placeholder="Describe your complaint..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
+    <button onclick="submitComplaint()">Submit Complaint</button>
   </div>
 </div>
 
