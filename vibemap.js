@@ -1,4 +1,4 @@
-// VIBEXPERT - ENHANCED VERSION WITH ALL FEATURES - COMPLETE
+// VIBEXPERT - ENHANCED VERSION WITH FIXED POST SUBMISSION AND BETTER UX
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -103,7 +103,7 @@ const stickerLibrary = {
     { id: 'sun', emoji: '☀️', name: 'Sun' },
     { id: 'moon', emoji: '🌙', name: 'Moon' },
     { id: 'tree', emoji: '🌳', name: 'Tree' },
-    { id: 'flower', emoji: '🌸', name: ' Flower' },
+    { id: 'flower', emoji: '🌸', name: 'Flower' },
     { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
     { id: 'wave', emoji: '🌊', name: 'Wave' }
   ],
@@ -488,7 +488,7 @@ function displayPhotoPreviews() {
   container.innerHTML = html;
 }
 
-// Crop Editor Functions - ENHANCED WITH BETTER UX
+// ENHANCED Crop Editor Functions with better UX
 function openCropEditor(index) {
   currentCropIndex = index;
   const imageUrl = previewUrls[index];
@@ -572,12 +572,21 @@ function applyCrop() {
     }, 'image/jpeg', 0.8);
     
     displayPhotoPreviews();
-    closeModal('cropEditorModal');
+    closeCropEditor();
     showMessage('✅ Photo cropped successfully!', 'success');
   }
 }
 
-// Photo Editor Functions
+// NEW: Better close function for crop editor
+function closeCropEditor() {
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  closeModal('cropEditorModal');
+}
+
+// ENHANCED Photo Editor Functions with better UX
 function openPhotoEditor(index) {
   currentEditIndex = index;
   const imageUrl = previewUrls[index];
@@ -599,6 +608,12 @@ function applyFilter(filterName) {
   if (filterName !== 'normal') {
     image.classList.add(`filter-${filterName}`);
   }
+  
+  // Update active filter button
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active-filter');
+  });
+  event.target.classList.add('active-filter');
 }
 
 function resetFilters() {
@@ -626,8 +641,14 @@ function saveEditedPhoto() {
   }, 'image/jpeg', 0.8);
   
   displayPhotoPreviews();
-  closeModal('photoEditorModal');
+  closePhotoEditor();
   showMessage('✅ Photo edited successfully!', 'success');
+}
+
+// NEW: Better close function for photo editor
+function closePhotoEditor() {
+  closeModal('photoEditorModal');
+  currentEditIndex = -1;
 }
 
 function getFilterValue(filterName) {
@@ -649,7 +670,7 @@ function removePhoto(index) {
   showMessage('🗑️ Photo removed', 'success');
 }
 
-// Music Functions - ENHANCED WITH BETTER AUDIO HANDLING
+// ENHANCED Music Functions with better UX
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
   const selector = document.getElementById('musicSelector');
@@ -659,6 +680,8 @@ function openMusicSelector() {
   musicLibrary.forEach(music => {
     const musicItem = document.createElement('div');
     musicItem.className = 'music-item';
+    const isSelected = selectedMusic && selectedMusic.id === music.id;
+    
     musicItem.innerHTML = `
       <div class="music-info">
         <div class="music-emoji">${music.emoji}</div>
@@ -669,7 +692,9 @@ function openMusicSelector() {
       </div>
       <div class="music-actions">
         <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
-        <button class="select-btn" onclick="selectMusic(${music.id})">✅ Select</button>
+        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
+          ${isSelected ? '✓ Selected' : '✅ Select'}
+        </button>
       </div>
     `;
     selector.appendChild(musicItem);
@@ -707,12 +732,19 @@ function previewMusic(url, musicId) {
 function selectMusic(musicId) {
   selectedMusic = musicLibrary.find(m => m.id === musicId);
   updateSelectedAssets();
-  closeModal('musicSelectorModal');
+  closeMusicSelector();
   showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
   
   // Stop preview when selecting
   window.musicPlayer.pause();
   window.musicPlayer.currentTime = 0;
+}
+
+// NEW: Better close function for music selector
+function closeMusicSelector() {
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+  closeModal('musicSelectorModal');
 }
 
 function removeMusic() {
@@ -721,7 +753,7 @@ function removeMusic() {
   showMessage('🎵 Music removed from post', 'success');
 }
 
-// Sticker Functions
+// Sticker Functions (already has good UX)
 function openStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
@@ -780,17 +812,17 @@ function removeStickers() {
   showMessage('🎨 All stickers removed', 'success');
 }
 
-// Post Destination Functions
+// ENHANCED Post Destination Functions
 function showPostDestinationModal() {
   showModal('postDestinationModal');
 }
 
 function selectPostDestination(destination) {
   selectedPostDestination = destination;
-  document.getElementById('currentDestination').textContent = 
-    destination === 'profile' ? 'My Profile' : 'Community Feed';
+  const displayText = destination === 'profile' ? 'My Profile' : 'Community Feed';
+  document.getElementById('currentDestination').textContent = displayText;
   closeModal('postDestinationModal');
-  showMessage(`📍 Post will be shared to ${destination === 'profile' ? 'your profile' : 'community feed'}`, 'success');
+  showMessage(`📍 Post will be shared to ${displayText}`, 'success');
 }
 
 // Update Selected Assets Display
@@ -823,17 +855,24 @@ function updateSelectedAssets() {
   container.style.display = html ? 'block' : 'none';
 }
 
-// Enhanced Create Post Function - FIXED AND OPTIMIZED
+// FIXED: Enhanced Create Post Function with proper validation
 async function createPost() {
   const postText = document.getElementById('postText').value.trim();
   
+  // Validate content
   if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
-    showMessage('Please add some content to your post', 'error');
+    showMessage('⚠️ Please add some content to your post', 'error');
     return;
   }
   
   if (!currentUser) {
-    showMessage('Please login to post', 'error');
+    showMessage('⚠️ Please login to post', 'error');
+    return;
+  }
+  
+  // Confirm post destination
+  const destinationText = selectedPostDestination === 'profile' ? 'your profile' : 'community feed';
+  if (!confirm(`📤 Post to ${destinationText}?`)) {
     return;
   }
   
@@ -859,6 +898,8 @@ async function createPost() {
       formData.append('media', file);
     });
     
+    console.log('Submitting post with destination:', selectedPostDestination);
+    
     const data = await apiCall('/api/posts', 'POST', formData);
     
     if (data.success) {
@@ -867,6 +908,10 @@ async function createPost() {
         : '✅ Your post has been shared to the community feed!';
       
       showMessage(destinationMsg, 'success');
+      
+      if (data.badgeUpdated && data.newBadges && data.newBadges.length > 0) {
+        showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
+      }
       
       resetPostForm();
       loadPosts();
