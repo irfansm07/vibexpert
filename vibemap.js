@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE FIXED VERSION WITH MUSIC & MODAL IMPROVEMENTS
+// VIBEXPERT - COMPLETE FIXED VERSION - NO ERRORS
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -20,6 +20,7 @@ let currentAudioPlayer = null;
 let currentEditIndex = -1;
 let currentCropIndex = -1;
 let currentFilters = {};
+let selectedPostDestination = 'profile';
 
 const musicLibrary = [
   { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
@@ -140,7 +141,6 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateLiveStats, 5000);
   initializeSearchBar();
   loadTrending();
-  selectedPostDestination = 'profile';
   setTimeout(() => {
     const addMusicBtn = document.getElementById('addMusicBtn');
     const addStickerBtn = document.getElementById('addStickerBtn');
@@ -217,7 +217,7 @@ async function signup(e) {
   const password = document.getElementById('signupPass').value;
   const confirm = document.getElementById('signupConfirm').value;
   if(!username || !email || !registrationNumber || !password || !confirm) { msg('Fill all fields', 'error'); return; }
-  if(password !== confirm) { msg('Passwords don\'t match', 'error'); return; }
+  if(password !== confirm) { msg('Passwords do not match', 'error'); return; }
   try {
     msg('Creating account...', 'success');
     await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
@@ -313,7 +313,7 @@ function showColleges() {
   let html = '';
   page.forEach(c => {
     const isConnected = currentUser && currentUser.college === c.name;
-    html += `<div class="college-item"><h3>${c.name}</h3><p>${c.location}</p>${isConnected ? '<button class="verified" disabled>✓ Connected</button>' : `<button onclick="openVerify('${c.name}', '${c.email}')">Connect</button>`}</div>`;
+    html += '<div class="college-item"><h3>' + c.name + '</h3><p>' + c.location + '</p>' + (isConnected ? '<button class="verified" disabled>✓ Connected</button>' : '<button onclick="openVerify(\'' + c.name + '\', \'' + c.email + '\')">Connect</button>') + '</div>';
   });
   document.getElementById('collegeContainer').innerHTML = html;
 }
@@ -334,7 +334,7 @@ function backToUniversities() {
 function openVerify(name, emailDomain) {
   if (currentUser && currentUser.college) { msg('⚠️ You are already connected to ' + currentUser.college, 'error'); return; }
   currentVerifyCollege = {name, emailDomain};
-  const modalHtml = `<div class="modal-box"><span class="close" onclick="closeModal('verifyModal')">&times;</span><h2>Verify Your College</h2><p>Enter your college email to verify</p><p style="color:#888; font-size:13px;">Email must end with: ${emailDomain}</p><input type="email" id="verifyEmail" placeholder="your.email${emailDomain}"><button onclick="requestVerificationCode()">Send Verification Code</button><div id="codeSection" style="display:none; margin-top:20px;"><input type="text" id="verifyCode" placeholder="Enter 6-digit code" maxlength="6"><button onclick="verifyCollegeCode()">Verify Code</button></div></div>`;
+  const modalHtml = '<div class="modal-box"><span class="close" onclick="closeModal(\'verifyModal\')">&times;</span><h2>Verify Your College</h2><p>Enter your college email to verify</p><p style="color:#888; font-size:13px;">Email must end with: ' + emailDomain + '</p><input type="email" id="verifyEmail" placeholder="your.email' + emailDomain + '"><button onclick="requestVerificationCode()">Send Verification Code</button><div id="codeSection" style="display:none; margin-top:20px;"><input type="text" id="verifyCode" placeholder="Enter 6-digit code" maxlength="6"><button onclick="verifyCollegeCode()">Verify Code</button></div></div>';
   document.getElementById('verifyModal').innerHTML = modalHtml;
   document.getElementById('verifyModal').style.display = 'flex';
 }
@@ -371,8 +371,6 @@ async function verifyCollegeCode() {
     msg('❌ ' + error.message, 'error');
   }
 }
-
-let selectedPostDestination = 'profile';
 
 async function createPost() {
   const text = document.getElementById('postText').value.trim();
@@ -426,8 +424,55 @@ async function loadPosts() {
       const postedTo = post.posted_to === 'community' ? '🌍 Community' : '👤 Profile';
       const music = post.music || null;
       const stickers = post.stickers || [];
-      html += `<div class="enhanced-post"><div class="enhanced-post-header"><div class="enhanced-user-info"><div class="enhanced-user-avatar">${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}</div><div class="enhanced-user-details"><div class="enhanced-username">@${author}</div><div class="enhanced-post-meta"><span>${time}</span><span>•</span><span>${postedTo}</span></div></div></div>${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}</div><div class="enhanced-post-content">${content ? `<div class="enhanced-post-text">${content}</div>` : ''}${stickers.length > 0 ? `<div class="post-stickers-container">${stickers.map(sticker => `<span class="post-sticker">${sticker.emoji || sticker}</span>`).join('')}</div>` : ''}${music ? `<div class="post-music-container"><div class="music-player"><div class="music-info"><div class="music-icon">${music.emoji || '🎵'}</div><div class="music-details"><div class="music-name">${music.name}</div><div class="music-duration">${music.artist} • ${music.duration}</div></div></div><audio controls class="post-audio-player" preload="metadata"><source src="${music.url}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>` : ''}${media.length > 0 ? `<div class="enhanced-post-media">${media.map(m => m.type === 'image' ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` : `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`).join('')}</div>` : ''}</div><div class="enhanced-post-footer"><div class="enhanced-post-stats"><span>❤️ 0</span><span>💬 0</span><span>🔄 0</span></div><div class="enhanced-post-engagement"><button class="engagement-btn">❤️ Like</button><button class="engagement-btn">💬 Comment</button><button class="engagement-btn">🔄 Share</button></div></div></div>`;
+      
+      html += '<div class="enhanced-post">';
+      html += '<div class="enhanced-post-header"><div class="enhanced-user-info"><div class="enhanced-user-avatar">';
+      html += post.users?.profile_pic ? '<img src="' + post.users.profile_pic + '" class="enhanced-user-avatar">' : '👤';
+      html += '</div><div class="enhanced-user-details"><div class="enhanced-username">@' + author + '</div>';
+      html += '<div class="enhanced-post-meta"><span>' + time + '</span><span>•</span><span>' + postedTo + '</span></div></div></div>';
+      html += isOwn ? '<button class="post-delete-btn" onclick="deletePost(\'' + post.id + '\')">🗑️ Delete</button>' : '';
+      html += '</div><div class="enhanced-post-content">';
+      
+      if (content) html += '<div class="enhanced-post-text">' + content + '</div>';
+      
+      if (stickers.length > 0) {
+        html += '<div class="post-stickers-container">';
+        stickers.forEach(sticker => {
+          html += '<span class="post-sticker">' + (sticker.emoji || sticker) + '</span>';
+        });
+        html += '</div>';
+      }
+      
+      if (music) {
+        html += '<div class="post-music-container"><div class="music-player"><div class="music-info">';
+        html += '<div class="music-icon">' + (music.emoji || '🎵') + '</div>';
+        html += '<div class="music-details"><div class="music-name">' + music.name + '</div>';
+        html += '<div class="music-duration">' + music.artist + ' • ' + music.duration + '</div></div></div>';
+        html += '<audio controls class="post-audio-player" preload="metadata">';
+        html += '<source src="' + music.url + '" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>';
+      }
+      
+      if (media.length > 0) {
+        html += '<div class="enhanced-post-media">';
+        media.forEach(m => {
+          if (m.type === 'image') {
+            html += '<div class="enhanced-media-item"><img src="' + m.url + '" alt="Post image"></div>';
+          } else {
+            html += '<div class="enhanced-media-item"><video src="' + m.url + '" controls></video></div>';
+          }
+        });
+        html += '</div>';
+      }
+      
+      html += '</div><div class="enhanced-post-footer"><div class="enhanced-post-stats">';
+      html += '<span>❤️ 0</span><span>💬 0</span><span>🔄 0</span></div>';
+      html += '<div class="enhanced-post-engagement">';
+      html += '<button class="engagement-btn">❤️ Like</button>';
+      html += '<button class="engagement-btn">💬 Comment</button>';
+      html += '<button class="engagement-btn">🔄 Share</button>';
+      html += '</div></div></div>';
     });
+    
     feedEl.innerHTML = html;
   } catch (error) {
     console.error('Load posts error:', error);
@@ -438,7 +483,7 @@ async function loadPosts() {
 async function deletePost(postId) {
   if (!confirm('Delete this post?')) return;
   try {
-    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    await apiCall('/api/posts/' + postId, 'DELETE');
     msg('🗑️ Post deleted', 'success');
     loadPosts();
   } catch (error) {
@@ -453,7 +498,10 @@ function showMusicSelector() {
   let html = '<div class="music-selector">';
   musicLibrary.forEach(song => {
     const isSelected = selectedMusic && selectedMusic.id === song.id;
-    html += `<div class="song-item ${isSelected ? 'selected' : ''}" onclick="selectMusic(${song.id})"><div class="song-info"><div class="song-name">${song.emoji} ${song.name}</div><div class="song-duration">${song.artist} • ${song.duration}</div></div><div class="song-preview"><button class="play-btn" onclick="event.stopPropagation(); previewMusic('${song.url}', this)" title="Play Preview">▶️</button></div></div>`;
+    html += '<div class="song-item ' + (isSelected ? 'selected' : '') + '" onclick="selectMusic(' + song.id + ')">';
+    html += '<div class="song-info"><div class="song-name">' + song.emoji + ' ' + song.name + '</div>';
+    html += '<div class="song-duration">' + song.artist + ' • ' + song.duration + '</div></div>';
+    html += '<div class="song-preview"><button class="play-btn" onclick="event.stopPropagation(); previewMusic(\'' + song.url + '\', this)" title="Play Preview">▶️</button></div></div>';
   });
   html += '</div>';
   selector.innerHTML = html;
@@ -466,7 +514,7 @@ function selectMusic(songId) {
   selectedMusic = song;
   updateSelectedAssets();
   closeModal('musicSelectorModal');
-  msg(`🎵 Added "${song.name}" to your post`, 'success');
+  msg('🎵 Added "' + song.name + '" to your post', 'success');
 }
 
 function previewMusic(url, buttonElement) {
@@ -540,7 +588,16 @@ function showStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
   if (!modal || !selector) { console.error('Sticker selector elements not found'); return; }
-  let html = `<div class="sticker-selector"><div class="sticker-search-container"><input type="text" id="stickerSearch" placeholder="🔍 Search stickers..." class="sticker-search"></div><div class="sticker-categories-tabs">${Object.keys(stickerLibrary).map(category => `<button class="sticker-tab-btn" onclick="switchStickerCategory('${category}')">${category.charAt(0).toUpperCase() + category.slice(1)}</button>`).join('')}</div><div class="sticker-content-area"><div id="stickerCategoryContent" class="sticker-category-content"></div></div><div class="sticker-selection-info"><span>Selected: ${selectedStickers.length}/5 stickers</span><button class="clear-stickers-btn" onclick="clearSelectedStickers()">Clear All</button></div></div>`;
+  let html = '<div class="sticker-selector"><div class="sticker-search-container">';
+  html += '<input type="text" id="stickerSearch" placeholder="🔍 Search stickers..." class="sticker-search"></div>';
+  html += '<div class="sticker-categories-tabs">';
+  Object.keys(stickerLibrary).forEach(category => {
+    html += '<button class="sticker-tab-btn" onclick="switchStickerCategory(\'' + category + '\')">';
+    html += category.charAt(0).toUpperCase() + category.slice(1) + '</button>';
+  });
+  html += '</div><div class="sticker-content-area"><div id="stickerCategoryContent" class="sticker-category-content"></div></div>';
+  html += '<div class="sticker-selection-info"><span>Selected: ' + selectedStickers.length + '/5 stickers</span>';
+  html += '<button class="clear-stickers-btn" onclick="clearSelectedStickers()">Clear All</button></div></div>';
   selector.innerHTML = html;
   modal.style.display = 'flex';
   switchStickerCategory('emotions');
@@ -552,12 +609,18 @@ function switchStickerCategory(category) {
   const content = document.getElementById('stickerCategoryContent');
   if (!content) return;
   document.querySelectorAll('.sticker-tab-btn').forEach(btn => btn.classList.remove('active'));
-  document.querySelector(`.sticker-tab-btn[onclick*="${category}"]`)?.classList.add('active');
+  const activeBtn = document.querySelector('.sticker-tab-btn[onclick*="' + category + '"]');
+  if (activeBtn) activeBtn.classList.add('active');
   const stickers = stickerLibrary[category] || [];
-  let html = `<div class="sticker-category"><h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4><div class="sticker-grid">${stickers.map(sticker => {
+  let html = '<div class="sticker-category"><h4>' + category.charAt(0).toUpperCase() + category.slice(1) + '</h4>';
+  html += '<div class="sticker-grid">';
+  stickers.forEach(sticker => {
     const isSelected = selectedStickers.some(s => s.id === sticker.id);
-    return `<div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')" title="${sticker.name}"><span style="font-size: 32px;">${sticker.emoji}</span><div class="sticker-name">${sticker.name}</div></div>`;
-  }).join('')}</div></div>`;
+    html += '<div class="sticker-item ' + (isSelected ? 'selected' : '') + '" onclick="selectSticker(\'' + sticker.id + '\')" title="' + sticker.name + '">';
+    html += '<span style="font-size: 32px;">' + sticker.emoji + '</span>';
+    html += '<div class="sticker-name">' + sticker.name + '</div></div>';
+  });
+  html += '</div></div>';
   content.innerHTML = html;
 }
 
@@ -577,11 +640,24 @@ function searchStickers() {
   Object.values(stickerLibrary).forEach(categoryStickers => {
     allStickers = allStickers.concat(categoryStickers);
   });
-  const filteredStickers = allStickers.filter(sticker => sticker.name.toLowerCase().includes(searchTerm) || sticker.emoji.includes(searchTerm));
-  let html = `<div class="sticker-category"><h4>Search Results for "${searchTerm}"</h4>${filteredStickers.length > 0 ? `<div class="sticker-grid">${filteredStickers.map(sticker => {
-    const isSelected = selectedStickers.some(s => s.id === sticker.id);
-    return `<div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="selectSticker('${sticker.id}')" title="${sticker.name}"><span style="font-size: 32px;">${sticker.emoji}</span><div class="sticker-name">${sticker.name}</div></div>`;
-  }).join('')}</div>` : `<div class="no-stickers-found"><p>No stickers found for "${searchTerm}"</p><p>Try searching with different keywords</p></div>`}</div>`;
+  const filteredStickers = allStickers.filter(sticker => 
+    sticker.name.toLowerCase().includes(searchTerm) || sticker.emoji.includes(searchTerm)
+  );
+  let html = '<div class="sticker-category"><h4>Search Results for "' + searchTerm + '"</h4>';
+  if (filteredStickers.length > 0) {
+    html += '<div class="sticker-grid">';
+    filteredStickers.forEach(sticker => {
+      const isSelected = selectedStickers.some(s => s.id === sticker.id);
+      html += '<div class="sticker-item ' + (isSelected ? 'selected' : '') + '" onclick="selectSticker(\'' + sticker.id + '\')" title="' + sticker.name + '">';
+      html += '<span style="font-size: 32px;">' + sticker.emoji + '</span>';
+      html += '<div class="sticker-name">' + sticker.name + '</div></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="no-stickers-found"><p>No stickers found for "' + searchTerm + '"</p>';
+    html += '<p>Try searching with different keywords</p></div>';
+  }
+  html += '</div>';
   content.innerHTML = html;
 }
 
@@ -595,18 +671,21 @@ function selectSticker(stickerId) {
   const alreadySelected = selectedStickers.some(s => s.id === stickerId);
   if (alreadySelected) {
     selectedStickers = selectedStickers.filter(s => s.id !== stickerId);
-    msg(`🗑️ Removed ${selectedSticker.emoji} sticker`, 'success');
+    msg('🗑️ Removed ' + selectedSticker.emoji + ' sticker', 'success');
   } else {
     if (selectedStickers.length >= 5) { msg('⚠️ Maximum 5 stickers per post', 'error'); return; }
     selectedStickers.push(selectedSticker);
-    msg(`🎨 Added ${selectedSticker.emoji} sticker`, 'success');
+    msg('🎨 Added ' + selectedSticker.emoji + ' sticker', 'success');
   }
   updateSelectedAssets();
   const selectionInfo = document.querySelector('.sticker-selection-info');
-  if (selectionInfo) selectionInfo.querySelector('span').textContent = `Selected: ${selectedStickers.length}/5 stickers`;
+  if (selectionInfo) {
+    selectionInfo.querySelector('span').textContent = 'Selected: ' + selectedStickers.length + '/5 stickers';
+  }
   const searchInput = document.getElementById('stickerSearch');
-  if (searchInput && searchInput.value.trim()) searchStickers();
-  else {
+  if (searchInput && searchInput.value.trim()) {
+    searchStickers();
+  } else {
     const activeTab = document.querySelector('.sticker-tab-btn.active');
     if (activeTab) {
       const category = activeTab.textContent.toLowerCase();
@@ -620,10 +699,13 @@ function clearSelectedStickers() {
   updateSelectedAssets();
   msg('🗑️ All stickers removed', 'success');
   const selectionInfo = document.querySelector('.sticker-selection-info');
-  if (selectionInfo) selectionInfo.querySelector('span').textContent = `Selected: 0/5 stickers`;
+  if (selectionInfo) {
+    selectionInfo.querySelector('span').textContent = 'Selected: 0/5 stickers';
+  }
   const searchInput = document.getElementById('stickerSearch');
-  if (searchInput && searchInput.value.trim()) searchStickers();
-  else {
+  if (searchInput && searchInput.value.trim()) {
+    searchStickers();
+  } else {
     const activeTab = document.querySelector('.sticker-tab-btn.active');
     if (activeTab) {
       const category = activeTab.textContent.toLowerCase();
@@ -636,9 +718,13 @@ function updateSelectedAssets() {
   const container = document.getElementById('selectedAssets');
   if (!container) return;
   let html = '';
-  if (selectedMusic) html += `<div class="selected-asset"><span>🎵 ${selectedMusic.name}</span><button onclick="clearSelectedMusic()">✕</button></div>`;
+  if (selectedMusic) {
+    html += '<div class="selected-asset"><span>🎵 ' + selectedMusic.name + '</span>';
+    html += '<button onclick="clearSelectedMusic()">✕</button></div>';
+  }
   selectedStickers.forEach((sticker, index) => {
-    html += `<div class="selected-asset"><span>${sticker.emoji}</span><button onclick="removeSticker(${index})">✕</button></div>`;
+    html += '<div class="selected-asset"><span>' + sticker.emoji + '</span>';
+    html += '<button onclick="removeSticker(' + index + ')">✕</button></div>';
   });
   container.innerHTML = html;
   container.style.display = html ? 'block' : 'none';
@@ -657,7 +743,7 @@ function showPostDestinationModal() {
 function selectPostDestination(destination) {
   selectedPostDestination = destination;
   closeModal('postDestinationModal');
-  msg(`Post will be shared to ${destination === 'profile' ? 'your profile' : 'community feed'}`, 'success');
+  msg('Post will be shared to ' + (destination === 'profile' ? 'your profile' : 'community feed'), 'success');
 }
 
 function openPhotoGallery() {
@@ -709,14 +795,32 @@ function handleFileSelection(e) {
 function displayPhotoPreviews() {
   const container = document.getElementById('photoPreviewContainer');
   if (!container) { console.warn('Photo preview container not found'); return; }
-  if (previewUrls.length === 0) { container.style.display = 'none'; container.innerHTML = ''; return; }
+  if (previewUrls.length === 0) { 
+    container.style.display = 'none'; 
+    container.innerHTML = ''; 
+    return; 
+  }
   container.style.display = 'block';
   let html = '<div class="media-preview">';
   previewUrls.forEach((preview, index) => {
-    html += `<div class="media-preview-item">${preview.type === 'image' ? `<img src="${preview.url}" alt="Preview ${index + 1}">` : `<video src="${preview.url}" controls></video>`}<button onclick="removeSelectedFile(${index})">✕</button>${preview.type === 'image' ? `<div class="media-actions"><button class="edit-btn" onclick="editPhoto(${index})">✏️ Edit</button><button class="crop-btn" onclick="cropPhoto(${index})">✂️ Crop</button></div>` : ''}</div>`;
+    html += '<div class="media-preview-item">';
+    if (preview.type === 'image') {
+      html += '<img src="' + preview.url + '" alt="Preview ' + (index + 1) + '">';
+    } else {
+      html += '<video src="' + preview.url + '" controls></video>';
+    }
+    html += '<button onclick="removeSelectedFile(' + index + ')">✕</button>';
+    if (preview.type === 'image') {
+      html += '<div class="media-actions">';
+      html += '<button class="edit-btn" onclick="editPhoto(' + index + ')">✏️ Edit</button>';
+      html += '<button class="crop-btn" onclick="cropPhoto(' + index + ')">✂️ Crop</button>';
+      html += '</div>';
+    }
+    html += '</div>';
   });
   html += '</div>';
-  html += `<div style="text-align:right; color:#888; font-size:12px; margin-top:5px;">${selectedFiles.length}/5 files selected</div>`;
+  html += '<div style="text-align:right; color:#888; font-size:12px; margin-top:5px;">';
+  html += selectedFiles.length + '/5 files selected</div>';
   container.innerHTML = html;
 }
 
@@ -743,21 +847,53 @@ function showCropEditor(preview, index) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box" style="max-width: 800px;"><span class="close" onclick="closeCropEditor()">&times;</span><h2>✂️ Crop Photo</h2><div class="crop-container"><div class="crop-preview"><img id="cropImage" src="${preview.url}" alt="Crop preview"></div><div class="crop-controls"><div class="crop-aspect-ratios"><h4>Aspect Ratio:</h4><div class="aspect-ratio-buttons"><button class="aspect-ratio-btn active" data-ratio="free">Free</button><button class="aspect-ratio-btn" data-ratio="1">1:1</button><button class="aspect-ratio-btn" data-ratio="16/9">16:9</button><button class="aspect-ratio-btn" data-ratio="4/3">4:3</button><button class="aspect-ratio-btn" data-ratio="3/2">3:2</button></div></div><div class="crop-actions"><button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button><button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button><button class="btn-primary" onclick="applyCrop(${index})">💾 Apply Crop</button></div></div></div></div>`;
+  let html = '<div class="modal-box" style="max-width: 800px;">';
+  html += '<span class="close" onclick="closeCropEditor()">&times;</span>';
+  html += '<h2>✂️ Crop Photo</h2><div class="crop-container">';
+  html += '<div class="crop-preview"><img id="cropImage" src="' + preview.url + '" alt="Crop preview"></div>';
+  html += '<div class="crop-controls"><div class="crop-aspect-ratios"><h4>Aspect Ratio:</h4>';
+  html += '<div class="aspect-ratio-buttons">';
+  html += '<button class="aspect-ratio-btn active" data-ratio="free">Free</button>';
+  html += '<button class="aspect-ratio-btn" data-ratio="1">1:1</button>';
+  html += '<button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>';
+  html += '<button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>';
+  html += '<button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>';
+  html += '</div></div><div class="crop-actions">';
+  html += '<button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>';
+  html += '<button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>';
+  html += '<button class="btn-primary" onclick="applyCrop(' + index + ')">💾 Apply Crop</button>';
+  html += '</div></div></div></div>';
+  modal.innerHTML = html;
   document.body.appendChild(modal);
   currentCropIndex = index;
   setTimeout(() => {
     const image = document.getElementById('cropImage');
     if (image) {
-      cropper = new Cropper(image, { aspectRatio: NaN, viewMode: 1, autoCropArea: 0.8, responsive: true, restore: true, checkCrossOrigin: false, guides: true, center: true, highlight: true, cropBoxMovable: true, cropBoxResizable: true, toggleDragModeOnDblclick: true });
+      cropper = new Cropper(image, {
+        aspectRatio: NaN,
+        viewMode: 1,
+        autoCropArea: 0.8,
+        responsive: true,
+        restore: true,
+        checkCrossOrigin: false,
+        guides: true,
+        center: true,
+        highlight: true,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: true
+      });
     }
     document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         document.querySelectorAll('.aspect-ratio-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         const ratio = this.dataset.ratio;
-        if (ratio === 'free') cropper.setAspectRatio(NaN);
-        else cropper.setAspectRatio(eval(ratio));
+        if (ratio === 'free') {
+          cropper.setAspectRatio(NaN);
+        } else {
+          cropper.setAspectRatio(eval(ratio));
+        }
       });
     });
   }, 100);
@@ -765,7 +901,12 @@ function showCropEditor(preview, index) {
 
 function closeCropEditor() {
   if (cropper) { cropper.destroy(); cropper = null; }
-  document.querySelector('.modal')?.remove();
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    if (modal.querySelector('#cropImage')) {
+      modal.remove();
+    }
+  });
 }
 
 function rotateImage() {
@@ -781,7 +922,10 @@ function applyCrop(index) {
   const canvas = cropper.getCroppedCanvas();
   if (!canvas) return;
   canvas.toBlob((blob) => {
-    const file = new File([blob], selectedFiles[index].name, { type: 'image/jpeg', lastModified: new Date().getTime() });
+    const file = new File([blob], selectedFiles[index].name, { 
+      type: 'image/jpeg', 
+      lastModified: new Date().getTime() 
+    });
     selectedFiles[index] = file;
     URL.revokeObjectURL(previewUrls[index].url);
     const newUrl = URL.createObjectURL(file);
@@ -811,13 +955,13 @@ function updateImageFilters() {
   const img = document.getElementById('editImage');
   if (!img) return;
   let filterString = '';
-  if (currentFilters.grayscale) filterString += `grayscale(${currentFilters.grayscale}%) `;
-  if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
-  if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
-  if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
-  if (currentFilters.saturation) filterString += `saturate(${currentFilters.saturation}%) `;
-  if (currentFilters.blur) filterString += `blur(${currentFilters.blur}px) `;
-  if (currentFilters.hue) filterString += `hue-rotate(${currentFilters.hue}deg) `;
+  if (currentFilters.grayscale) filterString += 'grayscale(' + currentFilters.grayscale + '%) ';
+  if (currentFilters.sepia) filterString += 'sepia(' + currentFilters.sepia + '%) ';
+  if (currentFilters.brightness) filterString += 'brightness(' + currentFilters.brightness + '%) ';
+  if (currentFilters.contrast) filterString += 'contrast(' + currentFilters.contrast + '%) ';
+  if (currentFilters.saturation) filterString += 'saturate(' + currentFilters.saturation + '%) ';
+  if (currentFilters.blur) filterString += 'blur(' + currentFilters.blur + 'px) ';
+  if (currentFilters.hue) filterString += 'hue-rotate(' + currentFilters.hue + 'deg) ';
   img.style.filter = filterString || 'none';
 }
 
@@ -837,7 +981,10 @@ function saveEditedPhoto() {
     if (Object.keys(currentFilters).length > 0) ctx.filter = img.style.filter;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      const file = new File([blob], selectedFiles[currentEditIndex].name, { type: 'image/jpeg', lastModified: new Date().getTime() });
+      const file = new File([blob], selectedFiles[currentEditIndex].name, { 
+        type: 'image/jpeg', 
+        lastModified: new Date().getTime() 
+      });
       selectedFiles[currentEditIndex] = file;
       URL.revokeObjectURL(previewUrls[currentEditIndex].url);
       const newUrl = URL.createObjectURL(file);
@@ -872,10 +1019,10 @@ function clearSelectedFiles() {
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   if (!currentUser || !currentUser.communityJoined) {
-    container.innerHTML = `<div class="community-guidance"><p>🎓 Connect to your college first to join community chat!</p><button class="home-nav-btn" onclick="showPage('home')">Explore Colleges</button></div>`;
+    container.innerHTML = '<div class="community-guidance"><p>🎓 Connect to your college first to join community chat!</p><button class="home-nav-btn" onclick="showPage(\'home\')">Explore Colleges</button></div>';
     return;
   }
-  container.innerHTML = `<div class="community-card"><h3>${currentUser.college} Community</h3><p>Chat with students from your college</p><button onclick="openCommunityChat()">Open Chat</button></div>`;
+  container.innerHTML = '<div class="community-card"><h3>' + currentUser.college + ' Community</h3><p>Chat with students from your college</p><button onclick="openCommunityChat()">Open Chat</button></div>';
 }
 
 function openCommunityChat() {
@@ -908,26 +1055,57 @@ function appendMessageToChat(msg) {
   const now = new Date();
   const canEdit = isOwn && ((now - messageTime) / 1000 / 60) < 2;
   const messageDiv = document.createElement('div');
-  messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'}`;
-  messageDiv.id = `msg-${msg.id}`;
+  messageDiv.className = 'chat-message ' + (isOwn ? 'own' : 'other');
+  messageDiv.id = 'msg-' + msg.id;
   const reactions = msg.message_reactions || [];
   const reactionCounts = {};
-  reactions.forEach(r => { reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1; });
-  messageDiv.innerHTML = `${!isOwn ? `<div class="sender">@${sender}</div>` : ''}<div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>${Object.keys(reactionCounts).length > 0 ? `<div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">${Object.entries(reactionCounts).map(([emoji, count]) => `<span style="background:rgba(79,116,163,0.2); padding:2px 6px; border-radius:10px; font-size:12px;">${emoji} ${count}</span>`).join('')}</div>` : ''}<div style="display:flex; gap:8px; margin-top:8px; font-size:11px; color:#888;"><span onclick="reactToMessage('${msg.id}')" style="cursor:pointer;">❤️</span><span onclick="reactToMessage('${msg.id}', '👍')" style="cursor:pointer;">👍</span><span onclick="reactToMessage('${msg.id}', '😂')" style="cursor:pointer;">😂</span><span onclick="reactToMessage('${msg.id}', '🔥')" style="cursor:pointer;">🔥</span>${canEdit ? `<span onclick="editMessage('${msg.id}', '${msg.content.replace(/'/g, "\\'")')" style="cursor:pointer;">✏️ Edit</span>` : ''}${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️ Delete</span>` : ''}<span onclick="showMessageViews('${msg.id}')" style="cursor:pointer;">👁️ Views</span></div>`;
+  reactions.forEach(r => { 
+    reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1; 
+  });
+  let html = '';
+  if (!isOwn) html += '<div class="sender">@' + sender + '</div>';
+  html += '<div class="text">' + msg.content;
+  if (msg.edited) html += ' <span style="font-size:10px;color:#888;">(edited)</span>';
+  html += '</div>';
+  if (Object.keys(reactionCounts).length > 0) {
+    html += '<div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">';
+    Object.entries(reactionCounts).forEach(([emoji, count]) => {
+      html += '<span style="background:rgba(79,116,163,0.2); padding:2px 6px; border-radius:10px; font-size:12px;">';
+      html += emoji + ' ' + count + '</span>';
+    });
+    html += '</div>';
+  }
+  html += '<div style="display:flex; gap:8px; margin-top:8px; font-size:11px; color:#888;">';
+  html += '<span onclick="reactToMessage(\'' + msg.id + '\')" style="cursor:pointer;">❤️</span>';
+  html += '<span onclick="reactToMessage(\'' + msg.id + '\', \'👍\')" style="cursor:pointer;">👍</span>';
+  html += '<span onclick="reactToMessage(\'' + msg.id + '\', \'😂\')" style="cursor:pointer;">😂</span>';
+  html += '<span onclick="reactToMessage(\'' + msg.id + '\', \'🔥\')" style="cursor:pointer;">🔥</span>';
+  if (canEdit) {
+    const escapedContent = msg.content.replace(/'/g, "\\'");
+    html += '<span onclick="editMessage(\'' + msg.id + '\', \'' + escapedContent + '\')" style="cursor:pointer;">✏️ Edit</span>';
+  }
+  if (isOwn) {
+    html += '<span onclick="deleteMessage(\'' + msg.id + '\')" style="cursor:pointer;">🗑️ Delete</span>';
+  }
+  html += '<span onclick="showMessageViews(\'' + msg.id + '\')" style="cursor:pointer;">👁️ Views</span>';
+  html += '</div>';
+  messageDiv.innerHTML = html;
   messagesEl.appendChild(messageDiv);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   markMessageAsViewed(msg.id);
 }
 
 function updateMessageInChat(msg) {
-  const messageEl = document.getElementById(`msg-${msg.id}`);
+  const messageEl = document.getElementById('msg-' + msg.id);
   if (!messageEl) return;
   const textEl = messageEl.querySelector('.text');
-  if (textEl) textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
+  if (textEl) {
+    textEl.innerHTML = msg.content + ' <span style="font-size:10px;color:#888;">(edited)</span>';
+  }
 }
 
 function removeMessageFromChat(id) {
-  const messageEl = document.getElementById(`msg-${id}`);
+  const messageEl = document.getElementById('msg-' + id);
   if (messageEl) messageEl.remove();
 }
 
@@ -944,16 +1122,22 @@ async function sendChatMessage() {
 }
 
 function handleChatKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+  if (e.key === 'Enter' && !e.shiftKey) { 
+    e.preventDefault(); 
+    sendChatMessage(); 
+  }
 }
 
 async function editMessage(messageId, currentContent) {
-  if (editingMessageId) { msg('⚠️ Finish editing current message first', 'error'); return; }
+  if (editingMessageId) { 
+    msg('⚠️ Finish editing current message first', 'error'); 
+    return; 
+  }
   const newContent = prompt('Edit message:', currentContent);
   if (!newContent || newContent.trim() === '' || newContent === currentContent) return;
   try {
     editingMessageId = messageId;
-    await apiCall(`/api/community/messages/${messageId}`, 'PATCH', { content: newContent.trim() });
+    await apiCall('/api/community/messages/' + messageId, 'PATCH', { content: newContent.trim() });
     msg('✅ Message edited', 'success');
   } catch (error) {
     msg('❌ ' + error.message, 'error');
@@ -965,16 +1149,17 @@ async function editMessage(messageId, currentContent) {
 async function deleteMessage(messageId) {
   if (!confirm('Delete this message?')) return;
   try {
-    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    await apiCall('/api/community/messages/' + messageId, 'DELETE');
     msg('🗑️ Message deleted', 'success');
   } catch (error) {
     msg('❌ Failed to delete', 'error');
   }
 }
 
-async function reactToMessage(messageId, emoji = '❤️') {
+async function reactToMessage(messageId, emoji) {
+  emoji = emoji || '❤️';
   try {
-    await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
+    await apiCall('/api/community/messages/' + messageId + '/react', 'POST', { emoji });
   } catch (error) {
     console.error('React error:', error);
   }
@@ -982,7 +1167,7 @@ async function reactToMessage(messageId, emoji = '❤️') {
 
 async function markMessageAsViewed(messageId) {
   try {
-    await apiCall(`/api/community/messages/${messageId}/view`, 'POST');
+    await apiCall('/api/community/messages/' + messageId + '/view', 'POST');
   } catch (error) {
     console.error('View error:', error);
   }
@@ -990,11 +1175,25 @@ async function markMessageAsViewed(messageId) {
 
 async function showMessageViews(messageId) {
   try {
-    const data = await apiCall(`/api/community/messages/${messageId}/views`, 'GET');
+    const data = await apiCall('/api/community/messages/' + messageId + '/views', 'GET');
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-box"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>Message Views (${data.count})</h2>${data.views.length > 0 ? `<div style="max-height:300px; overflow-y:auto;">${data.views.map(v => `<div style="padding:10px; border-bottom:1px solid rgba(79,116,163,0.1);"><strong>@${v.users?.username || 'User'}</strong></div>`).join('')}</div>` : '<p style="text-align:center; color:#888;">No views yet</p>'}</div>`;
+    let html = '<div class="modal-box">';
+    html += '<span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>';
+    html += '<h2>Message Views (' + data.count + ')</h2>';
+    if (data.views.length > 0) {
+      html += '<div style="max-height:300px; overflow-y:auto;">';
+      data.views.forEach(v => {
+        html += '<div style="padding:10px; border-bottom:1px solid rgba(79,116,163,0.1);">';
+        html += '<strong>@' + (v.users?.username || 'User') + '</strong></div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p style="text-align:center; color:#888;">No views yet</p>';
+    }
+    html += '</div>';
+    modal.innerHTML = html;
     document.body.appendChild(modal);
   } catch (error) {
     msg('❌ Failed to load views', 'error');
@@ -1008,17 +1207,24 @@ function initializeSearchBar() {
   searchBox.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const query = e.target.value.trim();
-    if (query.length < 2) { hideSearchResults(); return; }
-    searchTimeout = setTimeout(() => { performSearch(query); }, 500);
+    if (query.length < 2) { 
+      hideSearchResults(); 
+      return; 
+    }
+    searchTimeout = setTimeout(() => { 
+      performSearch(query); 
+    }, 500);
   });
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-box') && !e.target.closest('.search-results')) hideSearchResults();
+    if (!e.target.closest('.search-box') && !e.target.closest('.search-results')) {
+      hideSearchResults();
+    }
   });
 }
 
 async function performSearch(query) {
   try {
-    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    const data = await apiCall('/api/search/users?query=' + encodeURIComponent(query), 'GET');
     displaySearchResults(data.users || []);
   } catch (error) {
     console.error('Search error:', error);
@@ -1030,7 +1236,7 @@ function displaySearchResults(users) {
   if (!resultsDiv) {
     resultsDiv = document.createElement('div');
     resultsDiv.className = 'search-results';
-    resultsDiv.style.cssText = `position: absolute; top: 100%; left: 0; right: 0; background: rgba(15, 25, 45, 0.98); border: 1px solid rgba(79, 116, 163, 0.3); border-radius: 12px; margin-top: 5px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);`;
+    resultsDiv.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; background: rgba(15, 25, 45, 0.98); border: 1px solid rgba(79, 116, 163, 0.3); border-radius: 12px; margin-top: 5px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);';
     const searchContainer = document.querySelector('.search-box').parentElement;
     searchContainer.style.position = 'relative';
     searchContainer.appendChild(resultsDiv);
@@ -1039,7 +1245,25 @@ function displaySearchResults(users) {
     resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">No users found</div>';
     return;
   }
-  resultsDiv.innerHTML = users.map(user => `<div onclick="showUserProfile('${user.id}')" style="padding:15px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(79,116,163,0.1)'" onmouseout="this.style.background='transparent'"><div style="display:flex; align-items:center; gap:12px;"><div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">${user.profile_pic ? `<img src="${user.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}</div><div style="flex:1;"><div style="font-weight:600; color:#4f74a3;">@${user.username}</div><div style="font-size:12px; color:#888;">${user.registration_number || user.email}</div>${user.college ? `<div style="font-size:11px; color:#666; margin-top:2px;">🎓 ${user.college}</div>` : ''}</div></div></div>`).join('');
+  let html = '';
+  users.forEach(user => {
+    html += '<div onclick="showUserProfile(\'' + user.id + '\')" style="padding:15px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background=\'rgba(79,116,163,0.1)\'" onmouseout="this.style.background=\'transparent\'">';
+    html += '<div style="display:flex; align-items:center; gap:12px;">';
+    html += '<div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">';
+    if (user.profile_pic) {
+      html += '<img src="' + user.profile_pic + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">';
+    } else {
+      html += '👤';
+    }
+    html += '</div><div style="flex:1;">';
+    html += '<div style="font-weight:600; color:#4f74a3;">@' + user.username + '</div>';
+    html += '<div style="font-size:12px; color:#888;">' + (user.registration_number || user.email) + '</div>';
+    if (user.college) {
+      html += '<div style="font-size:11px; color:#666; margin-top:2px;">🎓 ' + user.college + '</div>';
+    }
+    html += '</div></div></div>';
+  });
+  resultsDiv.innerHTML = html;
 }
 
 function hideSearchResults() {
@@ -1050,7 +1274,7 @@ function hideSearchResults() {
 async function showUserProfile(userId) {
   hideSearchResults();
   try {
-    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    const data = await apiCall('/api/profile/' + userId, 'GET');
     const user = data.user;
     showProfileModal(user);
   } catch (error) {
@@ -1070,7 +1294,57 @@ function showProfileModal(user) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box profile-modal-box"><button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button><div class="profile-container"><div class="profile-header"><div class="profile-cover"></div><div class="profile-main"><div class="profile-photo-section"><div class="profile-photo" style="${user.profile_pic ? `background-image: url('${user.profile_pic}'); background-size: cover;` : ''}">${!user.profile_pic ? '👤' : ''}</div>${isOwnProfile ? `<button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>` : ''}<div class="active-badge"><span class="status-dot"></span><span>Active Now</span></div></div><div class="profile-name-section"><h2>${user.username}</h2><div class="nickname-display"><span class="nickname-label">@${user.username}</span></div>${user.college ? `<p style="color:#888; font-size:14px;">🎓 ${user.college}</p>` : ''}${user.registration_number ? `<p style="color:#888; font-size:13px;">📋 ${user.registration_number}</p>` : ''}</div>${isOwnProfile ? `<button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>` : ''}</div></div><div class="profile-stats-section"><div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${user.postCount || 0}</div><div class="stat-title">Posts</div></div><div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">${user.badges?.length || 0}</div><div class="stat-title">Badges</div></div><div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value">24h</div><div class="stat-title">Active</div></div></div><div class="profile-description-section"><h3>About</h3><p id="profileDescriptionText">${user.bio || 'No description added yet. Click edit to add one!'}</p></div>${isOwnProfile ? `<div class="edit-profile-section" id="editProfileSection" style="display:none;"><h3>Edit Profile</h3><div class="edit-form-group"><label>Username</label><input type="text" id="editUsername" value="${user.username}" maxlength="30"></div><div class="edit-form-group"><label>Bio</label><textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">${user.bio || ''}</textarea><small id="bioCounter">0/200</small></div><div class="edit-form-buttons"><button class="btn-save" onclick="saveProfile()">💾 Save</button><button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button></div></div>` : ''}${user.badges && user.badges.length > 0 ? `<div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;"><h3 style="color:#4f74a3; margin-bottom:15px;">🏆 Badges</h3><div style="display:flex; gap:10px; flex-wrap:wrap;">${user.badges.map(badge => `<span style="background:linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2)); border:1px solid rgba(79,116,163,0.3); padding:8px 16px; border-radius:20px; font-size:14px;">${badge}</span>`).join('')}</div></div>` : ''}</div></div>`;
+  let html = '<div class="modal-box profile-modal-box">';
+  html += '<button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>';
+  html += '<div class="profile-container"><div class="profile-header"><div class="profile-cover"></div>';
+  html += '<div class="profile-main"><div class="profile-photo-section">';
+  html += '<div class="profile-photo" style="' + (user.profile_pic ? 'background-image: url(\'' + user.profile_pic + '\'); background-size: cover;' : '') + '">';
+  if (!user.profile_pic) html += '👤';
+  html += '</div>';
+  if (isOwnProfile) {
+    html += '<button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>';
+  }
+  html += '<div class="active-badge"><span class="status-dot"></span><span>Active Now</span></div>';
+  html += '</div><div class="profile-name-section"><h2>' + user.username + '</h2>';
+  html += '<div class="nickname-display"><span class="nickname-label">@' + user.username + '</span></div>';
+  if (user.college) html += '<p style="color:#888; font-size:14px;">🎓 ' + user.college + '</p>';
+  if (user.registration_number) html += '<p style="color:#888; font-size:13px;">📋 ' + user.registration_number + '</p>';
+  html += '</div>';
+  if (isOwnProfile) {
+    html += '<button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>';
+  }
+  html += '</div></div>';
+  html += '<div class="profile-stats-section">';
+  html += '<div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">' + (user.postCount || 0) + '</div><div class="stat-title">Posts</div></div>';
+  html += '<div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">' + (user.badges?.length || 0) + '</div><div class="stat-title">Badges</div></div>';
+  html += '<div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value">24h</div><div class="stat-title">Active</div></div>';
+  html += '</div>';
+  html += '<div class="profile-description-section"><h3>About</h3>';
+  html += '<p id="profileDescriptionText">' + (user.bio || 'No description added yet. Click edit to add one!') + '</p></div>';
+  if (isOwnProfile) {
+    html += '<div class="edit-profile-section" id="editProfileSection" style="display:none;">';
+    html += '<h3>Edit Profile</h3>';
+    html += '<div class="edit-form-group"><label>Username</label>';
+    html += '<input type="text" id="editUsername" value="' + user.username + '" maxlength="30"></div>';
+    html += '<div class="edit-form-group"><label>Bio</label>';
+    html += '<textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">' + (user.bio || '') + '</textarea>';
+    html += '<small id="bioCounter">0/200</small></div>';
+    html += '<div class="edit-form-buttons">';
+    html += '<button class="btn-save" onclick="saveProfile()">💾 Save</button>';
+    html += '<button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button>';
+    html += '</div></div>';
+  }
+  if (user.badges && user.badges.length > 0) {
+    html += '<div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">';
+    html += '<h3 style="color:#4f74a3; margin-bottom:15px;">🏆 Badges</h3>';
+    html += '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
+    user.badges.forEach(badge => {
+      html += '<span style="background:linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2)); border:1px solid rgba(79,116,163,0.3); padding:8px 16px; border-radius:20px; font-size:14px;">' + badge + '</span>';
+    });
+    html += '</div></div>';
+  }
+  html += '</div></div>';
+  modal.innerHTML = html;
   document.body.appendChild(modal);
   if (isOwnProfile) {
     const bioTextarea = document.getElementById('editBio');
@@ -1090,7 +1364,9 @@ function toggleEditProfile() {
 function updateBioCounter() {
   const textarea = document.getElementById('editBio');
   const counter = document.getElementById('bioCounter');
-  if (textarea && counter) counter.textContent = `${textarea.value.length}/200`;
+  if (textarea && counter) {
+    counter.textContent = textarea.value.length + '/200';
+  }
 }
 
 async function saveProfile() {
@@ -1119,7 +1395,10 @@ function uploadProfilePic() {
   input.onchange = async function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { msg('⚠️ Image too large (max 5MB)', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { 
+      msg('⚠️ Image too large (max 5MB)', 'error'); 
+      return; 
+    }
     try {
       const formData = new FormData();
       formData.append('profilePic', file);
@@ -1146,11 +1425,26 @@ function loadBadgesPage() {
     { emoji: '🎨', name: 'First Post', desc: 'Created your first post', earned: currentUser?.badges?.includes('🎨 First Post') },
     { emoji: '⭐', name: 'Content Creator', desc: 'Posted 10 times', earned: currentUser?.badges?.includes('⭐ Content Creator') },
     { emoji: '💬', name: 'Chatty', desc: 'Sent 50 messages', earned: false },
-    { emoji: '🔥', name: 'On Fire', desc: '7 day streak', earned: false },
+    { emoji: '🔥', name: 'On Fire', desc: '7 day streak', earned: false }
   ];
-  let html = `<div style="text-align:center; margin-bottom:40px;"><h2 style="font-size:32px; color:#4f74a3; margin-bottom:10px;">🏆 Badges</h2><p style="color:#888;">Earn badges by being active in the community!</p></div><div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">`;
+  let html = '<div style="text-align:center; margin-bottom:40px;">';
+  html += '<h2 style="font-size:32px; color:#4f74a3; margin-bottom:10px;">🏆 Badges</h2>';
+  html += '<p style="color:#888;">Earn badges by being active in the community!</p></div>';
+  html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">';
   allBadges.forEach(badge => {
-    html += `<div style="background:${badge.earned ? 'linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2))' : 'rgba(15,25,45,0.9)'}; border:2px solid ${badge.earned ? '#4f74a3' : 'rgba(79,116,163,0.2)'}; border-radius:16px; padding:30px 20px; text-align:center; transition:all 0.3s ease;" ${badge.earned ? 'style="box-shadow:0 10px 30px rgba(79,116,163,0.3);"' : ''}><div style="font-size:48px; margin-bottom:15px; filter:${badge.earned ? 'none' : 'grayscale(100%) opacity(0.3)'};">${badge.emoji}</div><h3 style="color:${badge.earned ? '#4f74a3' : '#666'}; font-size:18px; margin-bottom:8px;">${badge.name}</h3><p style="color:#888; font-size:13px; margin-bottom:15px;">${badge.desc}</p><div style="background:${badge.earned ? 'linear-gradient(135deg, #4f74a3, #8da4d3)' : 'rgba(79,116,163,0.1)'}; color:${badge.earned ? 'white' : '#666'}; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;">${badge.earned ? '✓ Earned' : '🔒 Locked'}</div></div>`;
+    const bgColor = badge.earned ? 'linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2))' : 'rgba(15,25,45,0.9)';
+    const borderColor = badge.earned ? '#4f74a3' : 'rgba(79,116,163,0.2)';
+    const textColor = badge.earned ? '#4f74a3' : '#666';
+    const filter = badge.earned ? 'none' : 'grayscale(100%) opacity(0.3)';
+    const statusBg = badge.earned ? 'linear-gradient(135deg, #4f74a3, #8da4d3)' : 'rgba(79,116,163,0.1)';
+    const statusColor = badge.earned ? 'white' : '#666';
+    const statusText = badge.earned ? '✓ Earned' : '🔒 Locked';
+    html += '<div style="background:' + bgColor + '; border:2px solid ' + borderColor + '; border-radius:16px; padding:30px 20px; text-align:center; transition:all 0.3s ease;">';
+    html += '<div style="font-size:48px; margin-bottom:15px; filter:' + filter + ';">' + badge.emoji + '</div>';
+    html += '<h3 style="color:' + textColor + '; font-size:18px; margin-bottom:8px;">' + badge.name + '</h3>';
+    html += '<p style="color:#888; font-size:13px; margin-bottom:15px;">' + badge.desc + '</p>';
+    html += '<div style="background:' + statusBg + '; color:' + statusColor + '; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;">';
+    html += statusText + '</div></div>';
   });
   html += '</div>';
   container.innerHTML = html;
@@ -1160,7 +1454,15 @@ function showFeedbackModal() {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>📢 Send Feedback</h2><p style="color:#888; margin-bottom:20px;">We'd love to hear from you!</p><input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;"><textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea><button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button></div>`;
+  let html = '<div class="modal-box">';
+  html += '<span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>';
+  html += '<h2>📢 Send Feedback</h2>';
+  html += '<p style="color:#888; margin-bottom:20px;">We would love to hear from you!</p>';
+  html += '<input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">';
+  html += '<textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea>';
+  html += '<button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button>';
+  html += '</div>';
+  modal.innerHTML = html;
   document.body.appendChild(modal);
   document.getElementById('hamburgerMenu').style.display = 'none';
   document.getElementById('optionsMenu').style.display = 'none';
@@ -1169,7 +1471,10 @@ function showFeedbackModal() {
 async function submitFeedback() {
   const subject = document.getElementById('feedbackSubject')?.value.trim();
   const message = document.getElementById('feedbackMessage')?.value.trim();
-  if (!subject || !message) { msg('⚠️ Please fill all fields', 'error'); return; }
+  if (!subject || !message) { 
+    msg('⚠️ Please fill all fields', 'error'); 
+    return; 
+  }
   try {
     await apiCall('/api/feedback', 'POST', { subject, message });
     msg('✅ Thank you for your feedback!', 'success');
@@ -1278,9 +1583,13 @@ function updateOnlineCount(count) {
   elements.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      if (id === 'liveUsersCount') el.textContent = count + ' Active';
-      else if (id === 'footerUsers') el.textContent = count;
-      else el.textContent = count;
+      if (id === 'liveUsersCount') {
+        el.textContent = count + ' Active';
+      } else if (id === 'footerUsers') {
+        el.textContent = count;
+      } else {
+        el.textContent = count;
+      }
     }
   });
 }
@@ -1292,13 +1601,18 @@ function updateLiveNotif(text) {
 
 function msg(text, type) {
   const box = document.getElementById('message');
-  if(!box) { console.log('Message:', text); return; }
+  if(!box) { 
+    console.log('Message:', text); 
+    return; 
+  }
   const div = document.createElement('div');
   div.className = 'msg msg-' + type;
   div.textContent = text;
   box.innerHTML = '';
   box.appendChild(div);
-  setTimeout(() => { if(div.parentNode) div.remove(); }, 4000);
+  setTimeout(() => { 
+    if(div.parentNode) div.remove(); 
+  }, 4000);
 }
 
 function loadTrending() {
@@ -1311,9 +1625,19 @@ function loadTrending() {
   ];
   let html = '';
   trending.forEach(item => {
-    html += `<div class="trending-card"><div class="trending-card-header"><div class="trending-title">${item.title}</div><div class="trending-badge">${item.badge}</div></div><div class="trending-text">${item.text}</div><div class="trending-footer"><div class="trending-engagement"><div class="engagement-item">❤️ ${item.likes}</div><div class="engagement-item">💬 ${item.comments}</div></div></div></div>`;
+    html += '<div class="trending-card">';
+    html += '<div class="trending-card-header">';
+    html += '<div class="trending-title">' + item.title + '</div>';
+    html += '<div class="trending-badge">' + item.badge + '</div>';
+    html += '</div>';
+    html += '<div class="trending-text">' + item.text + '</div>';
+    html += '<div class="trending-footer">';
+    html += '<div class="trending-engagement">';
+    html += '<div class="engagement-item">❤️ ' + item.likes + '</div>';
+    html += '<div class="engagement-item">💬 ' + item.comments + '</div>';
+    html += '</div></div></div>';
   });
   container.innerHTML = html;
 }
 
-console.log('✅ VibeXpert Enhanced - All features loaded and functional!');
+console.log('✅ VibeXpert - All features loaded successfully!');
