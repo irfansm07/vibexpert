@@ -8,7 +8,7 @@
 </head>
 <body class="dark-theme">
 
-<!-- Cropper.js CDN -->
+<!-- Add this to your HTML file -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
@@ -36,8 +36,8 @@
         <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
         <button type="submit">Login</button>
-        <p>Don't have account? <a href="javascript:void(0)" onclick="goSignup(event)">Sign Up</a></p>
-        <p style="text-align:center; margin-top:10px;"><a href="javascript:void(0)" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
+        <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
+        <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
       </form>
 
       <!-- FORGOT PASSWORD FORM -->
@@ -45,7 +45,7 @@
         <h2>Reset Password</h2>
         <input type="email" id="resetEmail" placeholder="Enter your email" required>
         <button type="submit">Send Reset Link</button>
-        <p><a href="javascript:void(0)" onclick="goLogin(event)">Back to Login</a></p>
+        <p><a href="#" onclick="goLogin(event)">Back to Login</a></p>
       </form>
 
       <!-- SIGNUP FORM -->
@@ -127,7 +127,7 @@
         <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
         
         <button type="submit">Create Account</button>
-        <p>Already have account? <a href="javascript:void(0)" onclick="goLogin(event)">Login</a></p>
+        <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
       </form>
     </div>
   </div>
@@ -147,14 +147,17 @@
     </div>
     
     <nav class="nav">
-      <a href="javascript:void(0)" class="nav-link active" onclick="showPage('home', event)">Home</a>
-      <a href="javascript:void(0)" class="nav-link" onclick="showPage('communities', event)">Communities</a>
-      <a href="javascript:void(0)" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="javascript:void(0)" class="nav-link" onclick="showPage('badges', event)">Badges</a>
+      <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
+      <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
+      <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
+      <a href="#" class="nav-link" onclick="showPage('badges', event)">Badges</a>
     </nav>
 
     <div class="header-right">
-      <input type="text" class="search-box" placeholder="Search users...">
+      <div class="search-container">
+        <input type="text" class="search-box" placeholder="Search users..." id="searchBox">
+        <div class="search-results" id="searchResults" style="display:none;"></div>
+      </div>
       <span class="user-name" id="userName">Hi, User</span>
       
       <button class="options-btn" onclick="toggleOptionsMenu()">
@@ -304,6 +307,12 @@
         <!-- Media Preview Container -->
         <div id="photoPreviewContainer" class="media-preview"></div>
         
+        <!-- Post Destination Display -->
+        <div id="postDestinationDisplay" class="post-destination-display">
+          📍 Posting to: <span id="currentDestination">My Profile</span>
+          <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
+        </div>
+        
         <!-- Enhanced Action Buttons -->
         <div class="post-actions-row">
           <div class="post-features">
@@ -318,18 +327,13 @@
             </button>
             
             <!-- Music Button -->
-            <button type="button" class="feature-btn" id="addMusicBtn">
+            <button type="button" class="feature-btn" onclick="openMusicSelector()">
               🎵 Music
             </button>
             
             <!-- Stickers Button -->
-            <button type="button" class="feature-btn" id="addStickerBtn">
+            <button type="button" class="feature-btn" onclick="openStickerSelector()">
               🎨 Stickers
-            </button>
-            
-            <!-- Post Destination Button -->
-            <button type="button" class="feature-btn" onclick="showPostDestinationModal()">
-              📍 Destination
             </button>
           </div>
           
@@ -373,7 +377,7 @@
         </div>
       </div>
       <div class="destination-option" onclick="selectPostDestination('community')">
-        <div class="destination-icon">🌍</div>
+        <div class="destination-icon">🌐</div>
         <div class="destination-info">
           <h3>Community Feed</h3>
           <p>Share with your college community</p>
@@ -426,6 +430,37 @@
         <div class="editor-actions">
           <button class="btn-secondary" onclick="resetFilters()">Reset</button>
           <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Editor Modal -->
+<div id="cropEditorModal" class="modal" style="display:none;">
+  <div class="modal-box" style="max-width: 800px;">
+    <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
+    <h2>✂️ Crop Photo</h2>
+    <div class="crop-container">
+      <div class="crop-preview">
+        <img id="cropImage" src="" alt="Crop preview">
+      </div>
+      <div class="crop-controls">
+        <div class="crop-aspect-ratios">
+          <h4>Aspect Ratio:</h4>
+          <div class="aspect-ratio-buttons">
+            <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
+            <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
+            <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
+            <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
+            <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
+          </div>
+        </div>
+        <div class="crop-actions">
+          <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
+          <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
+          <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
+          <button class="btn-secondary" onclick="closeModal('cropEditorModal')">❌ Cancel</button>
         </div>
       </div>
     </div>
