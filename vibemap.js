@@ -1019,16 +1019,20 @@ async function createPost() {
       formData.append('media', file);
     });
     
-    console.log('Submitting post:', {
-      content: content.substring(0, 50),
+    console.log('📤 Submitting post:', {
+      content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
       hasFiles: hasFiles,
       filesCount: selectedFiles.length,
       hasMusic: hasMusic,
+      musicName: selectedMusic?.name,
       hasStickers: hasStickers,
+      stickersCount: selectedStickers.length,
       destination: selectedPostDestination
     });
     
     const data = await apiCall('/api/posts', 'POST', formData);
+    
+    console.log('✅ Post created response:', data);
     
     if (data.success) {
       const destinationMsg = selectedPostDestination === 'profile' 
@@ -1045,10 +1049,26 @@ async function createPost() {
       }
       
       resetPostForm();
-      loadPosts();
+      
+      // Reload posts to show the new post
+      setTimeout(() => {
+        console.log('🔄 Reloading posts...');
+        loadPosts();
+        
+        // If posted to community, also reload community posts if on that page
+        if (selectedPostDestination === 'community') {
+          const communityFeed = document.getElementById('communityPostsFeed');
+          if (communityFeed) {
+            console.log('🔄 Reloading community posts...');
+            loadCommunityPosts();
+          }
+        }
+      }, 500);
+    } else {
+      throw new Error(data.message || 'Post creation failed');
     }
   } catch (error) {
-    console.error('Create post error:', error);
+    console.error('❌ Create post error:', error);
     showMessage('❌ Failed to create post: ' + error.message, 'error');
   }
 }
@@ -1089,12 +1109,21 @@ async function loadPosts() {
   if(!feedEl) return;
   
   try {
-    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>';
+    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📥 Loading posts...</div>';
     
-    const data = await apiCall('/api/posts?type=my', 'GET');
+    // Load ALL user posts (both profile and community)
+    const data = await apiCall('/api/posts?type=my&limit=50', 'GET');
+    
+    console.log('Loaded posts:', data.posts?.length || 0);
     
     if(!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post! 📝</div>';
+      feedEl.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#888;">
+          <div style="font-size:48px; margin-bottom:16px;">📝</div>
+          <h3 style="color:#4f74a3; margin-bottom:12px;">No posts yet</h3>
+          <p>Share your first post and start your journey!</p>
+        </div>
+      `;
       return;
     }
     
@@ -1111,7 +1140,7 @@ async function loadPosts() {
       const stickers = post.stickers || [];
       
       html += `
-        <div class="enhanced-post">
+        <div class="enhanced-post" data-post-id="${post.id}">
           <div class="enhanced-post-header">
             <div class="enhanced-user-info">
               <div class="enhanced-user-avatar">
@@ -1193,9 +1222,17 @@ async function loadPosts() {
     });
     
     feedEl.innerHTML = html;
+    console.log('✅ Posts loaded and displayed');
   } catch (error) {
     console.error('Load posts error:', error);
-    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts</div>';
+    feedEl.innerHTML = `
+      <div style="text-align:center; padding:40px; color:#ef4444;">
+        <div style="font-size:48px; margin-bottom:16px;">❌</div>
+        <h3 style="margin-bottom:12px;">Failed to load posts</h3>
+        <p style="color:#888;">${error.message}</p>
+        <button onclick="loadPosts()" style="margin-top:20px; padding:10px 24px; background:#4f74a3; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Retry</button>
+      </div>
+    `;
   }
 }
 
@@ -1206,14 +1243,41 @@ function escapeHtml(text) {
 }
 
 async function deletePost(postId) {
-  if (!confirm('Delete this post?')) return;
+  if (!confirm('🗑️ Delete this post permanently?')) return;
   
   try {
+    showMessage('⏳ Deleting post...', 'success');
     await apiCall(`/api/posts/${postId}`, 'DELETE');
-    showMessage('🗑️ Post deleted', 'success');
-    loadPosts();
+    
+    // Remove from DOM immediately
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postElement) {
+      postElement.style.opacity = '0';
+      postElement.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        postElement.remove();
+        
+        // Check if there are any posts left
+        const remainingPosts = document.querySelectorAll('.enhanced-post');
+        if (remainingPosts.length === 0) {
+          const feedEl = document.getElementById('postsFeed');
+          if (feedEl) {
+            feedEl.innerHTML = `
+              <div style="text-align:center; padding:40px; color:#888;">
+                <div style="font-size:48px; margin-bottom:16px;">📝</div>
+                <h3 style="color:#4f74a3; margin-bottom:12px;">No posts yet</h3>
+                <p>Share your first post and start your journey!</p>
+              </div>
+            `;
+          }
+        }
+      }, 300);
+    }
+    
+    showMessage('✅ Post deleted successfully!', 'success');
   } catch (error) {
-    showMessage('❌ Failed to delete', 'error');
+    console.error('Delete post error:', error);
+    showMessage('❌ Failed to delete post: ' + error.message, 'error');
   }
 }
 
@@ -1269,6 +1333,8 @@ function showPage(name, e) {
     loadCommunities();
   } else if(name === 'badges') {
     loadBadgesPage();
+  } else if(name === 'home') {
+    loadTrending();
   }
   
   const hamburgerMenu = document.getElementById('hamburgerMenu');
@@ -1452,7 +1518,142 @@ function loadCommunities() {
       <p>Chat with students from your college</p>
       <button onclick="openCommunityChat()">Open Chat</button>
     </div>
+    
+    <div style="margin-top:40px;">
+      <h3 style="color:#4f74a3; margin-bottom:20px;">🌍 Community Posts</h3>
+      <div id="communityPostsFeed" style="display:flex; flex-direction:column; gap:20px;">
+        <div style="text-align:center; padding:20px; color:#888;">📥 Loading community posts...</div>
+      </div>
+    </div>
   `;
+  
+  // Load community posts
+  loadCommunityPosts();
+}
+
+async function loadCommunityPosts() {
+  const feedEl = document.getElementById('communityPostsFeed');
+  if (!feedEl) return;
+  
+  try {
+    const data = await apiCall('/api/posts?type=community&limit=50', 'GET');
+    
+    console.log('Loaded community posts:', data.posts?.length || 0);
+    
+    if (!data.posts || data.posts.length === 0) {
+      feedEl.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#888;">
+          <div style="font-size:48px; margin-bottom:16px;">🌍</div>
+          <h3 style="color:#4f74a3; margin-bottom:12px;">No community posts yet</h3>
+          <p>Be the first to share something with your community!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    let html = '';
+    data.posts.forEach(post => {
+      const author = post.users?.username || 'User';
+      const authorId = post.users?.id || '';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at || post.timestamp).toLocaleString();
+      const isOwn = currentUser && authorId === currentUser.id;
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post" data-post-id="${post.id}">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                  <span>•</span>
+                  <span>🌍 Community</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${escapeHtml(content)}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => {
+                  const emoji = typeof sticker === 'string' ? sticker : sticker.emoji;
+                  return `<span class="post-sticker">${emoji}</span>`;
+                }).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => {
+                  if (m.type === 'image') {
+                    const filterStyle = m.filter && m.filter !== 'normal' ? `filter: ${getFilterValue(m.filter)};` : '';
+                    return `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${filterStyle}"></div>`;
+                  } else if (m.type === 'video') {
+                    return `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`;
+                  } else if (m.type === 'audio') {
+                    return `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`;
+                  }
+                  return '';
+                }).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+              <span>🔄 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+              <button class="engagement-btn">🔄 Share</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    feedEl.innerHTML = html;
+  } catch (error) {
+    console.error('Load community posts error:', error);
+    feedEl.innerHTML = `
+      <div style="text-align:center; padding:40px; color:#ef4444;">
+        <div style="font-size:48px; margin-bottom:16px;">❌</div>
+        <h3 style="margin-bottom:12px;">Failed to load posts</h3>
+        <p style="color:#888;">${error.message}</p>
+      </div>
+    `;
+  }
 }
 
 function openCommunityChat() {
