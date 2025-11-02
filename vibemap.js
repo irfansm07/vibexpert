@@ -802,9 +802,9 @@ function openMusicSelector() {
         </div>
       </div>
       <div class="music-actions">
-        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
+        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️</button>
         <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-          ${isSelected ? '✓ Selected' : '✅ Select'}
+          ${isSelected ? '✓' : '✅'}
         </button>
       </div>
     `;
@@ -1032,13 +1032,16 @@ async function createPost() {
     
     if (data.success) {
       const destinationMsg = selectedPostDestination === 'profile' 
-        ? '✅ Your post has been added to your profile!' 
-        : '✅ Your post has been shared to the community feed!';
+        ? '✅ Posted to Your Profile!' 
+        : '✅ Posted to Community Feed!';
       
-      showMessage(destinationMsg, 'success');
+      // Show prominent success message
+      showPostSuccessNotification(destinationMsg, selectedPostDestination);
       
       if (data.badgeUpdated && data.newBadges && data.newBadges.length > 0) {
-        showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
+        setTimeout(() => {
+          showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
+        }, 1500);
       }
       
       resetPostForm();
@@ -1902,6 +1905,41 @@ function showMessage(text, type) {
   }, 4000);
 }
 
+// NEW: Post Success Notification
+function showPostSuccessNotification(message, destination) {
+  const notificationDiv = document.createElement('div');
+  notificationDiv.className = 'post-success-notification';
+  
+  const icon = destination === 'profile' ? '👤' : '🌍';
+  const destinationText = destination === 'profile' ? 'Profile' : 'Community';
+  
+  notificationDiv.innerHTML = `
+    <div class="post-success-content">
+      <div class="post-success-icon">${icon}</div>
+      <div class="post-success-text">
+        <div class="post-success-title">Posted Successfully!</div>
+        <div class="post-success-subtitle">Your post is now live on ${destinationText}</div>
+      </div>
+      <div class="post-success-checkmark">✓</div>
+    </div>
+  `;
+  
+  document.body.appendChild(notificationDiv);
+  
+  // Animate in
+  setTimeout(() => {
+    notificationDiv.classList.add('show');
+  }, 100);
+  
+  // Remove after 4 seconds
+  setTimeout(() => {
+    notificationDiv.classList.remove('show');
+    setTimeout(() => {
+      notificationDiv.remove();
+    }, 300);
+  }, 4000);
+}
+
 function updateLiveStats() {
   const onlineCount = Math.floor(Math.random() * 300) + 150;
   const postsToday = Math.floor(Math.random() * 500) + 200;
@@ -2096,5 +2134,95 @@ document.addEventListener('click', function(e) {
     hamburgerMenu.style.display = 'none';
   }
 });
+
+// Add notification styles dynamically
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+  .post-success-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, #4f74a3, #8da4d3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 10px 40px rgba(79, 116, 163, 0.4);
+    z-index: 10000;
+    min-width: 320px;
+    max-width: 400px;
+    transform: translateX(450px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .post-success-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  
+  .post-success-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: white;
+  }
+  
+  .post-success-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  
+  .post-success-text {
+    flex: 1;
+  }
+  
+  .post-success-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  
+  .post-success-subtitle {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  
+  .post-success-checkmark {
+    font-size: 28px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .post-success-notification {
+      top: 70px;
+      right: 10px;
+      left: 10px;
+      min-width: auto;
+      max-width: none;
+      padding: 16px 20px;
+    }
+    
+    .post-success-icon {
+      font-size: 28px;
+    }
+    
+    .post-success-title {
+      font-size: 14px;
+    }
+    
+    .post-success-subtitle {
+      font-size: 12px;
+    }
+  }
+`;
+document.head.appendChild(notificationStyles);
 
 console.log('✅ VibeXpert - Fixed Post Section - All features loaded!');
