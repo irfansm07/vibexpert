@@ -1,4 +1,4 @@
-// VIBEXPERT - ENHANCED VERSION WITH WORKING SEARCH AND IMPROVED POSTS
+// VIBEXPERT - FIXED VERSION WITH WORKING POSTS AND RESPONSIVE MODALS
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -587,7 +587,7 @@ function displayPhotoPreviews() {
   container.innerHTML = html;
 }
 
-// ENHANCED Crop Editor Functions with better UX
+// FIXED: Crop Editor Functions with responsive design
 function openCropEditor(index) {
   currentCropIndex = index;
   const imageUrl = previewUrls[index];
@@ -676,7 +676,6 @@ function applyCrop() {
   }
 }
 
-// NEW: Better close function for crop editor
 function closeCropEditor() {
   if (cropper) {
     cropper.destroy();
@@ -685,7 +684,7 @@ function closeCropEditor() {
   closeModal('cropEditorModal');
 }
 
-// ENHANCED Photo Editor Functions with better UX
+// FIXED: Photo Editor Functions
 function openPhotoEditor(index) {
   currentEditIndex = index;
   const imageUrl = previewUrls[index];
@@ -744,7 +743,6 @@ function saveEditedPhoto() {
   showMessage('✅ Photo edited successfully!', 'success');
 }
 
-// NEW: Better close function for photo editor
 function closePhotoEditor() {
   closeModal('photoEditorModal');
   currentEditIndex = -1;
@@ -762,97 +760,13 @@ function getFilterValue(filterName) {
   return filters[filterName] || 'none';
 }
 
-function removePhoto(index) {
-  selectedFiles.splice(index, 1);
-  previewUrls.splice(index, 1);
-  displayPhotoPreviews();
-  showMessage('🗑️ Photo removed', 'success');
-}
-
-// ENHANCED Music Functions with better UX
-function openMusicSelector() {
-  const modal = document.getElementById('musicSelectorModal');
-  const selector = document.getElementById('musicSelector');
-  
-  selector.innerHTML = '';
-  
-  musicLibrary.forEach(music => {
-    const musicItem = document.createElement('div');
-    musicItem.className = 'music-item';
-    const isSelected = selectedMusic && selectedMusic.id === music.id;
-    
-    musicItem.innerHTML = `
-      <div class="music-info">
-        <div class="music-emoji">${music.emoji}</div>
-        <div class="music-details">
-          <div class="music-name">${music.name}</div>
-          <div class="music-artist">${music.artist} • ${music.duration}</div>
-        </div>
-      </div>
-      <div class="music-actions">
-        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
-        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-          ${isSelected ? '✓ Selected' : '✅ Select'}
-        </button>
-      </div>
-    `;
-    selector.appendChild(musicItem);
-  });
-  
-  showModal('musicSelectorModal');
-}
-
-function previewMusic(url, musicId) {
-  const player = window.musicPlayer;
-  
-  // Stop current playback
-  player.pause();
-  player.currentTime = 0;
-  
-  // Set new source
-  player.src = url;
-  
-  player.play().catch(e => {
-    console.error('Error playing music:', e);
-    showMessage('Could not play music preview. Please try another track.', 'error');
-  });
-  
-  // Update UI to show which track is playing
-  document.querySelectorAll('.music-item').forEach(item => {
-    item.classList.remove('playing');
-  });
-  
-  const currentItem = document.querySelector(`.music-item button[onclick*="${musicId}"]`)?.closest('.music-item');
-  if (currentItem) {
-    currentItem.classList.add('playing');
-  }
-}
-
-function selectMusic(musicId) {
-  selectedMusic = musicLibrary.find(m => m.id === musicId);
-  updateSelectedAssets();
-  closeMusicSelector();
-  showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
-  
-  // Stop preview when selecting
-  window.musicPlayer.pause();
-  window.musicPlayer.currentTime = 0;
-}
-
-// NEW: Better close function for music selector
-function closeMusicSelector() {
-  window.musicPlayer.pause();
-  window.musicPlayer.currentTime = 0;
-  closeModal('musicSelectorModal');
-}
-
 function removeMusic() {
   selectedMusic = null;
   updateSelectedAssets();
   showMessage('🎵 Music removed from post', 'success');
 }
 
-// Sticker Functions (already has good UX)
+// Sticker Functions
 function openStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
@@ -911,7 +825,7 @@ function removeStickers() {
   showMessage('🎨 All stickers removed', 'success');
 }
 
-// ENHANCED Post Destination Functions
+// FIXED: Post Destination Functions
 function showPostDestinationModal() {
   showModal('postDestinationModal');
 }
@@ -1060,7 +974,7 @@ async function loadPosts() {
       const media = post.media || [];
       const time = new Date(post.created_at || post.timestamp).toLocaleString();
       const isOwn = currentUser && authorId === currentUser.id;
-      const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
+      const postedTo = post.posted_to === 'community' ? '🌍 Community' : '👤 Profile';
       const music = post.music || null;
       const stickers = post.stickers || [];
       
@@ -2024,4 +1938,87 @@ document.addEventListener('click', function(e) {
   }
 });
 
-console.log('✅ VibeXpert Enhanced - All features loaded and functional!');
+console.log('✅ VibeXpert Enhanced - All features loaded and functional!');Photo(index) {
+  selectedFiles.splice(index, 1);
+  previewUrls.splice(index, 1);
+  displayPhotoPreviews();
+  showMessage('🗑️ Photo removed', 'success');
+}
+
+// FIXED: Music Functions with responsive modal
+function openMusicSelector() {
+  const modal = document.getElementById('musicSelectorModal');
+  const selector = document.getElementById('musicSelector');
+  
+  selector.innerHTML = '';
+  
+  musicLibrary.forEach(music => {
+    const musicItem = document.createElement('div');
+    musicItem.className = 'music-item';
+    const isSelected = selectedMusic && selectedMusic.id === music.id;
+    
+    musicItem.innerHTML = `
+      <div class="music-info">
+        <div class="music-emoji">${music.emoji}</div>
+        <div class="music-details">
+          <div class="music-name">${music.name}</div>
+          <div class="music-artist">${music.artist} • ${music.duration}</div>
+        </div>
+      </div>
+      <div class="music-actions">
+        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
+        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
+          ${isSelected ? '✓ Selected' : '✅ Select'}
+        </button>
+      </div>
+    `;
+    selector.appendChild(musicItem);
+  });
+  
+  showModal('musicSelectorModal');
+}
+
+function previewMusic(url, musicId) {
+  const player = window.musicPlayer;
+  
+  // Stop current playback
+  player.pause();
+  player.currentTime = 0;
+  
+  // Set new source
+  player.src = url;
+  
+  player.play().catch(e => {
+    console.error('Error playing music:', e);
+    showMessage('Could not play music preview. Please try another track.', 'error');
+  });
+  
+  // Update UI to show which track is playing
+  document.querySelectorAll('.music-item').forEach(item => {
+    item.classList.remove('playing');
+  });
+  
+  const currentItem = document.querySelector(`.music-item button[onclick*="${musicId}"]`)?.closest('.music-item');
+  if (currentItem) {
+    currentItem.classList.add('playing');
+  }
+}
+
+function selectMusic(musicId) {
+  selectedMusic = musicLibrary.find(m => m.id === musicId);
+  updateSelectedAssets();
+  closeMusicSelector();
+  showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
+  
+  // Stop preview when selecting
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+}
+
+function closeMusicSelector() {
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+  closeModal('musicSelectorModal');
+}
+
+function remove
