@@ -1,4 +1,4 @@
-// VIBEXPERT - FIXED VERSION WITH WORKING POSTS AND RESPONSIVE MODALS
+// VIBEXPERT - FIXED POST SECTION
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -407,14 +407,12 @@ function initializeSearchBar() {
     }, 500);
   });
   
-  // Hide search results when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-container')) {
       hideSearchResults();
     }
   });
   
-  // Hide search results when pressing Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       hideSearchResults();
@@ -483,13 +481,15 @@ async function showUserProfile(userId) {
   }
 }
 
-// ENHANCED POST FEATURES
+// ============================================================
+//          FIXED POST SECTION - ALL POST FUNCTIONS
+// ============================================================
 
 // Photo selection with crop and filter options
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*';
+  input.accept = 'image/*,video/*';
   input.multiple = true;
   
   input.onchange = function(e) {
@@ -504,7 +504,7 @@ function openCamera() {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(function(stream) {
         showMessage('📷 Camera access granted. Taking photo...', 'success');
-        // For demo purposes, fall back to file input
+        stream.getTracks().forEach(track => track.stop());
         setTimeout(() => {
           const input = document.createElement('input');
           input.type = 'file';
@@ -528,16 +528,16 @@ function openCamera() {
 }
 
 function handlePhotoSelection(files) {
-  if (!files.length) return;
+  if (!files || files.length === 0) return;
   
   Array.from(files).forEach(file => {
-    if (!file.type.startsWith('image/')) {
-      showMessage('Please select image files only', 'error');
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      showMessage('Please select image or video files only', 'error');
       return;
     }
     
     if (selectedFiles.length >= 5) {
-      showMessage('Maximum 5 photos allowed', 'error');
+      showMessage('Maximum 5 media files allowed', 'error');
       return;
     }
     
@@ -552,7 +552,7 @@ function handlePhotoSelection(files) {
     reader.readAsDataURL(file);
   });
   
-  showMessage(`✅ ${files.length} photo(s) added`, 'success');
+  showMessage(`✅ ${files.length} file(s) added`, 'success');
 }
 
 function displayPhotoPreviews() {
@@ -565,17 +565,25 @@ function displayPhotoPreviews() {
     return;
   }
   
-  container.style.display = 'block';
-  let html = '<div class="media-preview-grid">';
+  container.style.display = 'grid';
+  let html = '';
   
   previewUrls.forEach((previewUrl, index) => {
+    const file = selectedFiles[index];
+    const isVideo = file && file.type.startsWith('video/');
+    
     html += `
       <div class="preview-item">
         <div class="preview-image-container">
-          <img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">
+          ${isVideo ? 
+            `<video src="${previewUrl}" class="preview-image" muted></video>` :
+            `<img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">`
+          }
           <div class="media-actions">
-            <button class="crop-btn" onclick="openCropEditor(${index})">✂️ Crop</button>
-            <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨 Edit</button>
+            ${!isVideo ? `
+              <button class="crop-btn" onclick="openCropEditor(${index})">✂️</button>
+              <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨</button>
+            ` : ''}
             <button class="remove-btn" onclick="removePhoto(${index})">🗑️</button>
           </div>
         </div>
@@ -583,11 +591,9 @@ function displayPhotoPreviews() {
     `;
   });
   
-  html += '</div>';
   container.innerHTML = html;
 }
 
-// FIXED: Crop Editor Functions with responsive design
 function openCropEditor(index) {
   currentCropIndex = index;
   const imageUrl = previewUrls[index];
@@ -595,7 +601,6 @@ function openCropEditor(index) {
   document.getElementById('cropImage').src = imageUrl;
   showModal('cropEditorModal');
   
-  // Initialize cropper with better defaults
   setTimeout(() => {
     const image = document.getElementById('cropImage');
     if (cropper) {
@@ -619,10 +624,7 @@ function openCropEditor(index) {
       zoomable: true,
       zoomOnTouch: true,
       zoomOnWheel: true,
-      wheelZoomRatio: 0.1,
-      ready: function() {
-        console.log('Cropper ready');
-      }
+      wheelZoomRatio: 0.1
     });
     
     setupAspectRatioButtons();
@@ -659,7 +661,7 @@ function resetCrop() {
 }
 
 function applyCrop() {
-  if (cropper) {
+  if (cropper && currentCropIndex >= 0) {
     const canvas = cropper.getCroppedCanvas();
     const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
     
@@ -668,9 +670,9 @@ function applyCrop() {
     canvas.toBlob(function(blob) {
       const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' });
       selectedFiles[currentCropIndex] = file;
+      displayPhotoPreviews();
     }, 'image/jpeg', 0.8);
     
-    displayPhotoPreviews();
     closeCropEditor();
     showMessage('✅ Photo cropped successfully!', 'success');
   }
@@ -682,9 +684,9 @@ function closeCropEditor() {
     cropper = null;
   }
   closeModal('cropEditorModal');
+  currentCropIndex = -1;
 }
 
-// FIXED: Photo Editor Functions
 function openPhotoEditor(index) {
   currentEditIndex = index;
   const imageUrl = previewUrls[index];
@@ -693,25 +695,32 @@ function openPhotoEditor(index) {
   showModal('photoEditorModal');
   
   currentFilters[index] = currentFilters[index] || 'normal';
-  applyFilter('normal');
+  
+  setTimeout(() => {
+    applyFilter('normal');
+  }, 100);
 }
 
 function applyFilter(filterName) {
+  if (currentEditIndex < 0) return;
+  
   const image = document.getElementById('editImage');
+  if (!image) return;
+  
   currentFilters[currentEditIndex] = filterName;
   
-  // Remove all filter classes
   image.className = '';
   
   if (filterName !== 'normal') {
     image.classList.add(`filter-${filterName}`);
   }
   
-  // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.remove('active-filter');
+    if (btn.textContent.toLowerCase().includes(filterName.toLowerCase())) {
+      btn.classList.add('active-filter');
+    }
   });
-  event.target.classList.add('active-filter');
 }
 
 function resetFilters() {
@@ -719,6 +728,8 @@ function resetFilters() {
 }
 
 function saveEditedPhoto() {
+  if (currentEditIndex < 0) return;
+  
   const image = document.getElementById('editImage');
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -726,7 +737,6 @@ function saveEditedPhoto() {
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   
-  // Apply the current filter
   ctx.filter = getFilterValue(currentFilters[currentEditIndex]);
   ctx.drawImage(image, 0, 0);
   
@@ -736,9 +746,9 @@ function saveEditedPhoto() {
   canvas.toBlob(function(blob) {
     const file = new File([blob], `edited-${Date.now()}.jpg`, { type: 'image/jpeg' });
     selectedFiles[currentEditIndex] = file;
+    displayPhotoPreviews();
   }, 'image/jpeg', 0.8);
   
-  displayPhotoPreviews();
   closePhotoEditor();
   showMessage('✅ Photo edited successfully!', 'success');
 }
@@ -760,16 +770,102 @@ function getFilterValue(filterName) {
   return filters[filterName] || 'none';
 }
 
+function removePhoto(index) {
+  selectedFiles.splice(index, 1);
+  previewUrls.splice(index, 1);
+  if (currentFilters[index]) {
+    delete currentFilters[index];
+  }
+  displayPhotoPreviews();
+  showMessage('🗑️ Photo removed', 'success');
+}
+
+function openMusicSelector() {
+  const modal = document.getElementById('musicSelectorModal');
+  const selector = document.getElementById('musicSelector');
+  
+  if (!selector) return;
+  
+  selector.innerHTML = '';
+  
+  musicLibrary.forEach(music => {
+    const musicItem = document.createElement('div');
+    musicItem.className = 'music-item';
+    const isSelected = selectedMusic && selectedMusic.id === music.id;
+    
+    musicItem.innerHTML = `
+      <div class="music-info">
+        <div class="music-emoji">${music.emoji}</div>
+        <div class="music-details">
+          <div class="music-name">${music.name}</div>
+          <div class="music-artist">${music.artist} • ${music.duration}</div>
+        </div>
+      </div>
+      <div class="music-actions">
+        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
+        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
+          ${isSelected ? '✓ Selected' : '✅ Select'}
+        </button>
+      </div>
+    `;
+    selector.appendChild(musicItem);
+  });
+  
+  showModal('musicSelectorModal');
+}
+
+function previewMusic(url, musicId) {
+  const player = window.musicPlayer;
+  
+  player.pause();
+  player.currentTime = 0;
+  
+  player.src = url;
+  
+  player.play().catch(e => {
+    console.error('Error playing music:', e);
+    showMessage('Could not play music preview. Please try another track.', 'error');
+  });
+  
+  document.querySelectorAll('.music-item').forEach(item => {
+    item.classList.remove('playing');
+  });
+  
+  const currentItem = document.querySelector(`.music-item button[onclick*="${musicId}"]`)?.closest('.music-item');
+  if (currentItem) {
+    currentItem.classList.add('playing');
+  }
+}
+
+function selectMusic(musicId) {
+  selectedMusic = musicLibrary.find(m => m.id === musicId);
+  updateSelectedAssets();
+  closeMusicSelector();
+  showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
+  
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+}
+
+function closeMusicSelector() {
+  if (window.musicPlayer) {
+    window.musicPlayer.pause();
+    window.musicPlayer.currentTime = 0;
+  }
+  closeModal('musicSelectorModal');
+}
+
 function removeMusic() {
   selectedMusic = null;
   updateSelectedAssets();
   showMessage('🎵 Music removed from post', 'success');
 }
 
-// Sticker Functions
 function openStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
+  
+  if (!selector) return;
   
   selector.innerHTML = '';
   
@@ -787,12 +883,18 @@ function openStickerSelector() {
     stickerLibrary[category].forEach(sticker => {
       const stickerItem = document.createElement('div');
       stickerItem.className = 'sticker-item';
+      const isSelected = selectedStickers.some(s => s.emoji === sticker.emoji);
+      if (isSelected) {
+        stickerItem.classList.add('selected');
+      }
+      
       stickerItem.innerHTML = `
-        <div class="sticker" onclick="addSticker('${sticker.emoji}', '${sticker.name}')">
-          ${sticker.emoji}
-        </div>
+        <img src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='32'>${sticker.emoji}</text></svg>`)}" alt="${sticker.name}">
         <div class="sticker-name">${sticker.name}</div>
       `;
+      
+      stickerItem.onclick = () => toggleSticker(sticker.emoji, sticker.name);
+      
       stickerGrid.appendChild(stickerItem);
     });
     
@@ -803,20 +905,23 @@ function openStickerSelector() {
   showModal('stickerSelectorModal');
 }
 
-function addSticker(emoji, name) {
-  if (selectedStickers.length >= 5) {
-    showMessage('Maximum 5 stickers allowed per post', 'error');
-    return;
+function toggleSticker(emoji, name) {
+  const existingIndex = selectedStickers.findIndex(s => s.emoji === emoji);
+  
+  if (existingIndex >= 0) {
+    selectedStickers.splice(existingIndex, 1);
+    showMessage(`🎨 Sticker "${name}" removed`, 'success');
+  } else {
+    if (selectedStickers.length >= 5) {
+      showMessage('Maximum 5 stickers allowed per post', 'error');
+      return;
+    }
+    selectedStickers.push({ emoji, name });
+    showMessage(`🎨 Sticker "${name}" added!`, 'success');
   }
   
-  selectedStickers.push({emoji, name});
   updateSelectedAssets();
-  
-  // Add sticker to post text
-  const postText = document.getElementById('postText');
-  postText.value += emoji;
-  
-  showMessage(`🎨 Sticker "${name}" added!`, 'success');
+  openStickerSelector();
 }
 
 function removeStickers() {
@@ -825,7 +930,6 @@ function removeStickers() {
   showMessage('🎨 All stickers removed', 'success');
 }
 
-// FIXED: Post Destination Functions
 function showPostDestinationModal() {
   showModal('postDestinationModal');
 }
@@ -838,7 +942,6 @@ function selectPostDestination(destination) {
   showMessage(`📍 Post will be shared to ${displayText}`, 'success');
 }
 
-// Update Selected Assets Display
 function updateSelectedAssets() {
   const container = document.getElementById('selectedAssets');
   if (!container) return;
@@ -856,24 +959,33 @@ function updateSelectedAssets() {
   
   if (selectedStickers.length > 0) {
     html += `
-      <div class="selected-asset selected-stickers">
-        <span>🎨 Stickers:</span>
-        ${selectedStickers.map(sticker => `<span class="sticker-preview">${sticker.emoji}</span>`).join('')}
+      <div class="selected-asset">
+        <span>🎨 ${selectedStickers.length} Sticker${selectedStickers.length > 1 ? 's' : ''}</span>
+        ${selectedStickers.map(sticker => `<span>${sticker.emoji}</span>`).join('')}
         <button onclick="removeStickers()" class="remove-asset-btn">✕</button>
       </div>
     `;
   }
   
   container.innerHTML = html;
-  container.style.display = html ? 'block' : 'none';
+  container.style.display = html ? 'flex' : 'none';
 }
 
-// FIXED: Enhanced Create Post Function with proper validation
 async function createPost() {
-  const postText = document.getElementById('postText').value.trim();
+  const postText = document.getElementById('postText');
+  if (!postText) {
+    showMessage('❌ Post form not found', 'error');
+    return;
+  }
   
-  // Validate content
-  if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
+  const content = postText.value.trim();
+  
+  const hasContent = content.length > 0;
+  const hasFiles = selectedFiles.length > 0;
+  const hasMusic = selectedMusic !== null;
+  const hasStickers = selectedStickers.length > 0;
+  
+  if (!hasContent && !hasFiles && !hasMusic && !hasStickers) {
     showMessage('⚠️ Please add some content to your post', 'error');
     return;
   }
@@ -883,7 +995,6 @@ async function createPost() {
     return;
   }
   
-  // Confirm post destination
   const destinationText = selectedPostDestination === 'profile' ? 'your profile' : 'community feed';
   if (!confirm(`📤 Post to ${destinationText}?`)) {
     return;
@@ -893,25 +1004,29 @@ async function createPost() {
     showMessage('📤 Creating post...', 'success');
     
     const formData = new FormData();
-    formData.append('content', postText);
+    formData.append('content', content);
     formData.append('postTo', selectedPostDestination);
     
-    // Add music if selected
     if (selectedMusic) {
       formData.append('music', JSON.stringify(selectedMusic));
     }
     
-    // Add stickers if selected
     if (selectedStickers.length > 0) {
       formData.append('stickers', JSON.stringify(selectedStickers));
     }
     
-    // Add files if selected
     selectedFiles.forEach(file => {
       formData.append('media', file);
     });
     
-    console.log('Submitting post with destination:', selectedPostDestination);
+    console.log('Submitting post:', {
+      content: content.substring(0, 50),
+      hasFiles: hasFiles,
+      filesCount: selectedFiles.length,
+      hasMusic: hasMusic,
+      hasStickers: hasStickers,
+      destination: selectedPostDestination
+    });
     
     const data = await apiCall('/api/posts', 'POST', formData);
     
@@ -936,22 +1051,36 @@ async function createPost() {
 }
 
 function resetPostForm() {
-  document.getElementById('postText').value = '';
+  const postText = document.getElementById('postText');
+  if (postText) {
+    postText.value = '';
+  }
+  
   selectedFiles = [];
   previewUrls = [];
   selectedMusic = null;
   selectedStickers = [];
+  currentFilters = {};
   
-  document.getElementById('photoPreviewContainer').innerHTML = '';
-  document.getElementById('photoPreviewContainer').style.display = 'none';
-  document.getElementById('selectedAssets').innerHTML = '';
-  document.getElementById('selectedAssets').style.display = 'none';
+  const photoPreview = document.getElementById('photoPreviewContainer');
+  if (photoPreview) {
+    photoPreview.innerHTML = '';
+    photoPreview.style.display = 'none';
+  }
+  
+  const selectedAssets = document.getElementById('selectedAssets');
+  if (selectedAssets) {
+    selectedAssets.innerHTML = '';
+    selectedAssets.style.display = 'none';
+  }
   
   selectedPostDestination = 'profile';
-  document.getElementById('currentDestination').textContent = 'My Profile';
+  const currentDest = document.getElementById('currentDestination');
+  if (currentDest) {
+    currentDest.textContent = 'My Profile';
+  }
 }
 
-// POST MANAGEMENT
 async function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
   if(!feedEl) return;
@@ -983,7 +1112,7 @@ async function loadPosts() {
           <div class="enhanced-post-header">
             <div class="enhanced-user-info">
               <div class="enhanced-user-avatar">
-                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : '👤'}
               </div>
               <div class="enhanced-user-details">
                 <div class="enhanced-username">@${author}</div>
@@ -998,13 +1127,14 @@ async function loadPosts() {
           </div>
           
           <div class="enhanced-post-content">
-            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            ${content ? `<div class="enhanced-post-text">${escapeHtml(content)}</div>` : ''}
             
             ${stickers.length > 0 ? `
               <div class="post-stickers-container">
-                ${stickers.map(sticker => `
-                  <span class="post-sticker">${sticker.emoji || sticker}</span>
-                `).join('')}
+                ${stickers.map(sticker => {
+                  const emoji = typeof sticker === 'string' ? sticker : sticker.emoji;
+                  return `<span class="post-sticker">${emoji}</span>`;
+                }).join('')}
               </div>
             ` : ''}
             
@@ -1028,13 +1158,17 @@ async function loadPosts() {
             
             ${media.length > 0 ? `
               <div class="enhanced-post-media">
-                ${media.map(m => 
-                  m.type === 'image' 
-                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${m.filter && m.filter !== 'none' ? `filter: ${getFilterValue(m.filter)}` : ''}"></div>` 
-                    : m.type === 'video'
-                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
-                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
-                ).join('')}
+                ${media.map(m => {
+                  if (m.type === 'image') {
+                    const filterStyle = m.filter && m.filter !== 'normal' ? `filter: ${getFilterValue(m.filter)};` : '';
+                    return `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${filterStyle}"></div>`;
+                  } else if (m.type === 'video') {
+                    return `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`;
+                  } else if (m.type === 'audio') {
+                    return `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`;
+                  }
+                  return '';
+                }).join('')}
               </div>
             ` : ''}
           </div>
@@ -1062,6 +1196,12 @@ async function loadPosts() {
   }
 }
 
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 async function deletePost(postId) {
   if (!confirm('Delete this post?')) return;
   
@@ -1073,6 +1213,10 @@ async function deletePost(postId) {
     showMessage('❌ Failed to delete', 'error');
   }
 }
+
+// ============================================================
+//          END OF FIXED POST SECTION
+// ============================================================
 
 // SOCKET FUNCTIONS
 function initializeSocket() {
@@ -1124,7 +1268,10 @@ function showPage(name, e) {
     loadBadgesPage();
   }
   
-  document.getElementById('hamburgerMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  if (hamburgerMenu) {
+    hamburgerMenu.style.display = 'none';
+  }
   
   window.scrollTo(0, 0);
 }
@@ -1353,7 +1500,7 @@ function appendMessageToChat(msg) {
   
   messageDiv.innerHTML = `
     ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
-    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
+    <div class="text">${escapeHtml(msg.content)}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
     ${Object.keys(reactionCounts).length > 0 ? `
       <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
         ${Object.entries(reactionCounts).map(([emoji, count]) => 
@@ -1366,7 +1513,7 @@ function appendMessageToChat(msg) {
       <span onclick="reactToMessage('${msg.id}', '👍')" style="cursor:pointer;">👍</span>
       <span onclick="reactToMessage('${msg.id}', '😂')" style="cursor:pointer;">😂</span>
       <span onclick="reactToMessage('${msg.id}', '🔥')" style="cursor:pointer;">🔥</span>
-      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${msg.content.replace(/'/g, "\\'")}')" style="cursor:pointer;">✏️ Edit</span>` : ''}
+      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${escapeHtml(msg.content).replace(/'/g, "\\'")})" style="cursor:pointer;">✏️ Edit</span>` : ''}
       ${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️ Delete</span>` : ''}
       <span onclick="showMessageViews('${msg.id}')" style="cursor:pointer;">👁️ Views</span>
     </div>
@@ -1382,10 +1529,9 @@ function updateMessageInChat(msg) {
   const messageEl = document.getElementById(`msg-${msg.id}`);
   if (!messageEl) return;
   
-  const isOwn = msg.sender_id === currentUser.id;
   const textEl = messageEl.querySelector('.text');
   if (textEl) {
-    textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
+    textEl.innerHTML = `${escapeHtml(msg.content)} <span style="font-size:10px;color:#888;">(edited)</span>`;
   }
 }
 
@@ -1534,8 +1680,10 @@ function loadBadgesPage() {
 function showProfilePage() {
   if (!currentUser) return;
   showProfileModal(currentUser);
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if (optionsMenu) optionsMenu.style.display = 'none';
 }
 
 function showProfileModal(user) {
@@ -1725,7 +1873,10 @@ function uploadProfilePic() {
 
 // UTILITY FUNCTIONS
 function showModal(modalId) {
-  document.getElementById(modalId).style.display = 'flex';
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
 }
 
 function closeModal(modalId) {
@@ -1794,7 +1945,7 @@ function updateLiveNotif(text) {
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
   const hamburger = document.getElementById('hamburgerMenu');
-  hamburger.style.display = 'none';
+  if (hamburger) hamburger.style.display = 'none';
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
@@ -1806,7 +1957,7 @@ function toggleOptionsMenu() {
 function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
   const options = document.getElementById('optionsMenu');
-  options.style.display = 'none';
+  if (options) options.style.display = 'none';
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
@@ -1817,14 +1968,18 @@ function toggleHamburgerMenu() {
 
 function showComplaintModal() {
   document.getElementById('complaintModal').style.display = 'flex';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if (optionsMenu) optionsMenu.style.display = 'none';
 }
 
 function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if (optionsMenu) optionsMenu.style.display = 'none';
 }
 
 function showFeedbackModal() {
@@ -1842,8 +1997,10 @@ function showFeedbackModal() {
     </div>
   `;
   document.body.appendChild(modal);
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if (optionsMenu) optionsMenu.style.display = 'none';
 }
 
 async function submitFeedback() {
@@ -1885,8 +2042,10 @@ function toggleTheme() {
     body.classList.add('dark-theme');
   }
   showMessage('🎨 Theme changed!', 'success');
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const optionsMenu = document.getElementById('optionsMenu');
+  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  if (optionsMenu) optionsMenu.style.display = 'none';
 }
 
 // TRENDING CONTENT
@@ -1938,87 +2097,4 @@ document.addEventListener('click', function(e) {
   }
 });
 
-console.log('✅ VibeXpert Enhanced - All features loaded and functional!');Photo(index) {
-  selectedFiles.splice(index, 1);
-  previewUrls.splice(index, 1);
-  displayPhotoPreviews();
-  showMessage('🗑️ Photo removed', 'success');
-}
-
-// FIXED: Music Functions with responsive modal
-function openMusicSelector() {
-  const modal = document.getElementById('musicSelectorModal');
-  const selector = document.getElementById('musicSelector');
-  
-  selector.innerHTML = '';
-  
-  musicLibrary.forEach(music => {
-    const musicItem = document.createElement('div');
-    musicItem.className = 'music-item';
-    const isSelected = selectedMusic && selectedMusic.id === music.id;
-    
-    musicItem.innerHTML = `
-      <div class="music-info">
-        <div class="music-emoji">${music.emoji}</div>
-        <div class="music-details">
-          <div class="music-name">${music.name}</div>
-          <div class="music-artist">${music.artist} • ${music.duration}</div>
-        </div>
-      </div>
-      <div class="music-actions">
-        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
-        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-          ${isSelected ? '✓ Selected' : '✅ Select'}
-        </button>
-      </div>
-    `;
-    selector.appendChild(musicItem);
-  });
-  
-  showModal('musicSelectorModal');
-}
-
-function previewMusic(url, musicId) {
-  const player = window.musicPlayer;
-  
-  // Stop current playback
-  player.pause();
-  player.currentTime = 0;
-  
-  // Set new source
-  player.src = url;
-  
-  player.play().catch(e => {
-    console.error('Error playing music:', e);
-    showMessage('Could not play music preview. Please try another track.', 'error');
-  });
-  
-  // Update UI to show which track is playing
-  document.querySelectorAll('.music-item').forEach(item => {
-    item.classList.remove('playing');
-  });
-  
-  const currentItem = document.querySelector(`.music-item button[onclick*="${musicId}"]`)?.closest('.music-item');
-  if (currentItem) {
-    currentItem.classList.add('playing');
-  }
-}
-
-function selectMusic(musicId) {
-  selectedMusic = musicLibrary.find(m => m.id === musicId);
-  updateSelectedAssets();
-  closeMusicSelector();
-  showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
-  
-  // Stop preview when selecting
-  window.musicPlayer.pause();
-  window.musicPlayer.currentTime = 0;
-}
-
-function closeMusicSelector() {
-  window.musicPlayer.pause();
-  window.musicPlayer.currentTime = 0;
-  closeModal('musicSelectorModal');
-}
-
-function remove
+console.log('✅ VibeXpert - Fixed Post Section - All features loaded!');
