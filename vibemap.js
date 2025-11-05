@@ -1,4 +1,4 @@
-// VIBEXPERT - FIXED POST SECTION
+// VIBEXPERT - ENHANCED VERSION WITH WORKING SEARCH AND IMPROVED POSTS
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -20,6 +20,7 @@ let selectedPostDestination = 'profile';
 let currentEditIndex = -1;
 let currentCropIndex = -1;
 let currentFilters = {};
+let searchTimeout = null;
 
 // Enhanced music library with working audio files
 const musicLibrary = [
@@ -384,49 +385,91 @@ function showLoginForm() {
   document.getElementById('signupForm').style.display = 'none';
 }
 
-// ENHANCED SEARCH FUNCTIONALITY
+// ==================== ENHANCED SEARCH FUNCTIONALITY ====================
 function initializeSearchBar() {
   const searchBox = document.getElementById('searchBox');
   const searchResults = document.getElementById('searchResults');
   
-  if (!searchBox) return;
+  if (!searchBox) {
+    console.warn('Search box not found');
+    return;
+  }
   
-  let searchTimeout;
+  console.log('✅ Search bar initialized');
   
+  // Handle search input with debouncing
   searchBox.addEventListener('input', (e) => {
-    clearTimeout(searchTimeout);
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
     const query = e.target.value.trim();
     
+    // Hide results if query is too short
     if (query.length < 2) {
       hideSearchResults();
       return;
     }
     
+    // Debounce search - wait 500ms after user stops typing
     searchTimeout = setTimeout(() => {
       performUserSearch(query);
     }, 500);
   });
   
+  // Handle focus event
+  searchBox.addEventListener('focus', (e) => {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+      performUserSearch(query);
+    }
+  });
+  
+  // Hide search results when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-container')) {
       hideSearchResults();
     }
   });
   
+  // Hide search results when pressing Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       hideSearchResults();
+      searchBox.blur();
     }
   });
 }
 
 async function performUserSearch(query) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) {
+    console.error('Search results container not found');
+    return;
+  }
+  
   try {
+    console.log('🔍 Searching for:', query);
+    
+    // Show loading state
+    searchResults.innerHTML = '<div class="no-results">Searching...</div>';
+    searchResults.style.display = 'block';
+    
     const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    
+    console.log('📊 Search results:', data);
+    
+    if (!data.success) {
+      throw new Error('Search failed');
+    }
+    
     displaySearchResults(data.users || []);
   } catch (error) {
-    console.error('Search error:', error);
-    showMessage('❌ Search failed', 'error');
+    console.error('❌ Search error:', error);
+    searchResults.innerHTML = '<div class="no-results">Search failed. Please try again.</div>';
+    searchResults.style.display = 'block';
   }
 }
 
@@ -436,17 +479,23 @@ function displaySearchResults(users) {
   if (!searchResults) return;
   
   if (users.length === 0) {
-    searchResults.innerHTML = '<div class="no-results">No users found</div>';
+    searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
     searchResults.style.display = 'block';
     return;
   }
   
+  console.log(`✅ Displaying ${users.length} search results`);
+  
   let html = '';
   users.forEach(user => {
+    const avatarContent = user.profile_pic 
+      ? `<img src="${user.profile_pic}" alt="${user.username}">` 
+      : '👤';
+    
     html += `
       <div class="search-result-item" onclick="showUserProfile('${user.id}')">
         <div class="search-result-avatar">
-          ${user.profile_pic ? `<img src="${user.profile_pic}" alt="${user.username}">` : '👤'}
+          ${avatarContent}
         </div>
         <div class="search-result-info">
           <div class="search-result-username">@${user.username}</div>
@@ -471,25 +520,39 @@ function hideSearchResults() {
 async function showUserProfile(userId) {
   hideSearchResults();
   
+  // Clear search box
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) {
+    searchBox.value = '';
+  }
+  
   try {
+    console.log('👤 Loading profile for user:', userId);
+    showMessage('Loading profile...', 'success');
+    
     const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    
+    if (!data.success || !data.user) {
+      throw new Error('User not found');
+    }
+    
     const user = data.user;
+    console.log('✅ Profile loaded:', user.username);
     
     showProfileModal(user);
   } catch (error) {
+    console.error('❌ Failed to load profile:', error);
     showMessage('❌ Failed to load profile', 'error');
   }
 }
 
-// ============================================================
-//          FIXED POST SECTION - ALL POST FUNCTIONS
-// ============================================================
+// ENHANCED POST FEATURES
 
 // Photo selection with crop and filter options
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*,video/*';
+  input.accept = 'image/*';
   input.multiple = true;
   
   input.onchange = function(e) {
@@ -504,7 +567,7 @@ function openCamera() {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(function(stream) {
         showMessage('📷 Camera access granted. Taking photo...', 'success');
-        stream.getTracks().forEach(track => track.stop());
+        // For demo purposes, fall back to file input
         setTimeout(() => {
           const input = document.createElement('input');
           input.type = 'file';
@@ -528,16 +591,16 @@ function openCamera() {
 }
 
 function handlePhotoSelection(files) {
-  if (!files || files.length === 0) return;
+  if (!files.length) return;
   
   Array.from(files).forEach(file => {
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      showMessage('Please select image or video files only', 'error');
+    if (!file.type.startsWith('image/')) {
+      showMessage('Please select image files only', 'error');
       return;
     }
     
     if (selectedFiles.length >= 5) {
-      showMessage('Maximum 5 media files allowed', 'error');
+      showMessage('Maximum 5 photos allowed', 'error');
       return;
     }
     
@@ -552,7 +615,7 @@ function handlePhotoSelection(files) {
     reader.readAsDataURL(file);
   });
   
-  showMessage(`✅ ${files.length} file(s) added`, 'success');
+  showMessage(`✅ ${files.length} photo(s) added`, 'success');
 }
 
 function displayPhotoPreviews() {
@@ -565,25 +628,17 @@ function displayPhotoPreviews() {
     return;
   }
   
-  container.style.display = 'grid';
-  let html = '';
+  container.style.display = 'block';
+  let html = '<div class="media-preview-grid">';
   
   previewUrls.forEach((previewUrl, index) => {
-    const file = selectedFiles[index];
-    const isVideo = file && file.type.startsWith('video/');
-    
     html += `
       <div class="preview-item">
         <div class="preview-image-container">
-          ${isVideo ? 
-            `<video src="${previewUrl}" class="preview-image" muted></video>` :
-            `<img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">`
-          }
+          <img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">
           <div class="media-actions">
-            ${!isVideo ? `
-              <button class="crop-btn" onclick="openCropEditor(${index})">✂️</button>
-              <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨</button>
-            ` : ''}
+            <button class="crop-btn" onclick="openCropEditor(${index})">✂️ Crop</button>
+            <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨 Edit</button>
             <button class="remove-btn" onclick="removePhoto(${index})">🗑️</button>
           </div>
         </div>
@@ -591,9 +646,11 @@ function displayPhotoPreviews() {
     `;
   });
   
+  html += '</div>';
   container.innerHTML = html;
 }
 
+// ENHANCED Crop Editor Functions with better UX
 function openCropEditor(index) {
   currentCropIndex = index;
   const imageUrl = previewUrls[index];
@@ -601,6 +658,7 @@ function openCropEditor(index) {
   document.getElementById('cropImage').src = imageUrl;
   showModal('cropEditorModal');
   
+  // Initialize cropper with better defaults
   setTimeout(() => {
     const image = document.getElementById('cropImage');
     if (cropper) {
@@ -624,7 +682,10 @@ function openCropEditor(index) {
       zoomable: true,
       zoomOnTouch: true,
       zoomOnWheel: true,
-      wheelZoomRatio: 0.1
+      wheelZoomRatio: 0.1,
+      ready: function() {
+        console.log('Cropper ready');
+      }
     });
     
     setupAspectRatioButtons();
@@ -661,7 +722,7 @@ function resetCrop() {
 }
 
 function applyCrop() {
-  if (cropper && currentCropIndex >= 0) {
+  if (cropper) {
     const canvas = cropper.getCroppedCanvas();
     const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
     
@@ -670,23 +731,24 @@ function applyCrop() {
     canvas.toBlob(function(blob) {
       const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' });
       selectedFiles[currentCropIndex] = file;
-      displayPhotoPreviews();
     }, 'image/jpeg', 0.8);
     
+    displayPhotoPreviews();
     closeCropEditor();
     showMessage('✅ Photo cropped successfully!', 'success');
   }
 }
 
+// NEW: Better close function for crop editor
 function closeCropEditor() {
   if (cropper) {
     cropper.destroy();
     cropper = null;
   }
   closeModal('cropEditorModal');
-  currentCropIndex = -1;
 }
 
+// ENHANCED Photo Editor Functions with better UX
 function openPhotoEditor(index) {
   currentEditIndex = index;
   const imageUrl = previewUrls[index];
@@ -695,32 +757,25 @@ function openPhotoEditor(index) {
   showModal('photoEditorModal');
   
   currentFilters[index] = currentFilters[index] || 'normal';
-  
-  setTimeout(() => {
-    applyFilter('normal');
-  }, 100);
+  applyFilter('normal');
 }
 
 function applyFilter(filterName) {
-  if (currentEditIndex < 0) return;
-  
   const image = document.getElementById('editImage');
-  if (!image) return;
-  
   currentFilters[currentEditIndex] = filterName;
   
+  // Remove all filter classes
   image.className = '';
   
   if (filterName !== 'normal') {
     image.classList.add(`filter-${filterName}`);
   }
   
+  // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.remove('active-filter');
-    if (btn.textContent.toLowerCase().includes(filterName.toLowerCase())) {
-      btn.classList.add('active-filter');
-    }
   });
+  event.target.classList.add('active-filter');
 }
 
 function resetFilters() {
@@ -728,8 +783,6 @@ function resetFilters() {
 }
 
 function saveEditedPhoto() {
-  if (currentEditIndex < 0) return;
-  
   const image = document.getElementById('editImage');
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -737,6 +790,7 @@ function saveEditedPhoto() {
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   
+  // Apply the current filter
   ctx.filter = getFilterValue(currentFilters[currentEditIndex]);
   ctx.drawImage(image, 0, 0);
   
@@ -746,13 +800,14 @@ function saveEditedPhoto() {
   canvas.toBlob(function(blob) {
     const file = new File([blob], `edited-${Date.now()}.jpg`, { type: 'image/jpeg' });
     selectedFiles[currentEditIndex] = file;
-    displayPhotoPreviews();
   }, 'image/jpeg', 0.8);
   
+  displayPhotoPreviews();
   closePhotoEditor();
   showMessage('✅ Photo edited successfully!', 'success');
 }
 
+// NEW: Better close function for photo editor
 function closePhotoEditor() {
   closeModal('photoEditorModal');
   currentEditIndex = -1;
@@ -773,18 +828,14 @@ function getFilterValue(filterName) {
 function removePhoto(index) {
   selectedFiles.splice(index, 1);
   previewUrls.splice(index, 1);
-  if (currentFilters[index]) {
-    delete currentFilters[index];
-  }
   displayPhotoPreviews();
   showMessage('🗑️ Photo removed', 'success');
 }
 
+// ENHANCED Music Functions with better UX
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
   const selector = document.getElementById('musicSelector');
-  
-  if (!selector) return;
   
   selector.innerHTML = '';
   
@@ -802,9 +853,9 @@ function openMusicSelector() {
         </div>
       </div>
       <div class="music-actions">
-        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️</button>
+        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
         <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-          ${isSelected ? '✓' : '✅'}
+          ${isSelected ? '✓ Selected' : '✅ Select'}
         </button>
       </div>
     `;
@@ -817,9 +868,11 @@ function openMusicSelector() {
 function previewMusic(url, musicId) {
   const player = window.musicPlayer;
   
+  // Stop current playback
   player.pause();
   player.currentTime = 0;
   
+  // Set new source
   player.src = url;
   
   player.play().catch(e => {
@@ -827,6 +880,7 @@ function previewMusic(url, musicId) {
     showMessage('Could not play music preview. Please try another track.', 'error');
   });
   
+  // Update UI to show which track is playing
   document.querySelectorAll('.music-item').forEach(item => {
     item.classList.remove('playing');
   });
@@ -843,15 +897,15 @@ function selectMusic(musicId) {
   closeMusicSelector();
   showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
   
+  // Stop preview when selecting
   window.musicPlayer.pause();
   window.musicPlayer.currentTime = 0;
 }
 
+// NEW: Better close function for music selector
 function closeMusicSelector() {
-  if (window.musicPlayer) {
-    window.musicPlayer.pause();
-    window.musicPlayer.currentTime = 0;
-  }
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
   closeModal('musicSelectorModal');
 }
 
@@ -861,11 +915,10 @@ function removeMusic() {
   showMessage('🎵 Music removed from post', 'success');
 }
 
+// Sticker Functions (already has good UX)
 function openStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
-  
-  if (!selector) return;
   
   selector.innerHTML = '';
   
@@ -883,18 +936,12 @@ function openStickerSelector() {
     stickerLibrary[category].forEach(sticker => {
       const stickerItem = document.createElement('div');
       stickerItem.className = 'sticker-item';
-      const isSelected = selectedStickers.some(s => s.emoji === sticker.emoji);
-      if (isSelected) {
-        stickerItem.classList.add('selected');
-      }
-      
       stickerItem.innerHTML = `
-        <img src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='32'>${sticker.emoji}</text></svg>`)}" alt="${sticker.name}">
+        <div class="sticker" onclick="addSticker('${sticker.emoji}', '${sticker.name}')">
+          ${sticker.emoji}
+        </div>
         <div class="sticker-name">${sticker.name}</div>
       `;
-      
-      stickerItem.onclick = () => toggleSticker(sticker.emoji, sticker.name);
-      
       stickerGrid.appendChild(stickerItem);
     });
     
@@ -905,23 +952,20 @@ function openStickerSelector() {
   showModal('stickerSelectorModal');
 }
 
-function toggleSticker(emoji, name) {
-  const existingIndex = selectedStickers.findIndex(s => s.emoji === emoji);
-  
-  if (existingIndex >= 0) {
-    selectedStickers.splice(existingIndex, 1);
-    showMessage(`🎨 Sticker "${name}" removed`, 'success');
-  } else {
-    if (selectedStickers.length >= 5) {
-      showMessage('Maximum 5 stickers allowed per post', 'error');
-      return;
-    }
-    selectedStickers.push({ emoji, name });
-    showMessage(`🎨 Sticker "${name}" added!`, 'success');
+function addSticker(emoji, name) {
+  if (selectedStickers.length >= 5) {
+    showMessage('Maximum 5 stickers allowed per post', 'error');
+    return;
   }
   
+  selectedStickers.push({emoji, name});
   updateSelectedAssets();
-  openStickerSelector();
+  
+  // Add sticker to post text
+  const postText = document.getElementById('postText');
+  postText.value += emoji;
+  
+  showMessage(`🎨 Sticker "${name}" added!`, 'success');
 }
 
 function removeStickers() {
@@ -930,6 +974,7 @@ function removeStickers() {
   showMessage('🎨 All stickers removed', 'success');
 }
 
+// ENHANCED Post Destination Functions
 function showPostDestinationModal() {
   showModal('postDestinationModal');
 }
@@ -942,6 +987,7 @@ function selectPostDestination(destination) {
   showMessage(`📍 Post will be shared to ${displayText}`, 'success');
 }
 
+// Update Selected Assets Display
 function updateSelectedAssets() {
   const container = document.getElementById('selectedAssets');
   if (!container) return;
@@ -959,33 +1005,24 @@ function updateSelectedAssets() {
   
   if (selectedStickers.length > 0) {
     html += `
-      <div class="selected-asset">
-        <span>🎨 ${selectedStickers.length} Sticker${selectedStickers.length > 1 ? 's' : ''}</span>
-        ${selectedStickers.map(sticker => `<span>${sticker.emoji}</span>`).join('')}
+      <div class="selected-asset selected-stickers">
+        <span>🎨 Stickers:</span>
+        ${selectedStickers.map(sticker => `<span class="sticker-preview">${sticker.emoji}</span>`).join('')}
         <button onclick="removeStickers()" class="remove-asset-btn">✕</button>
       </div>
     `;
   }
   
   container.innerHTML = html;
-  container.style.display = html ? 'flex' : 'none';
+  container.style.display = html ? 'block' : 'none';
 }
 
+// FIXED: Enhanced Create Post Function with proper validation
 async function createPost() {
-  const postText = document.getElementById('postText');
-  if (!postText) {
-    showMessage('❌ Post form not found', 'error');
-    return;
-  }
+  const postText = document.getElementById('postText').value.trim();
   
-  const content = postText.value.trim();
-  
-  const hasContent = content.length > 0;
-  const hasFiles = selectedFiles.length > 0;
-  const hasMusic = selectedMusic !== null;
-  const hasStickers = selectedStickers.length > 0;
-  
-  if (!hasContent && !hasFiles && !hasMusic && !hasStickers) {
+  // Validate content
+  if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
     showMessage('⚠️ Please add some content to your post', 'error');
     return;
   }
@@ -995,6 +1032,7 @@ async function createPost() {
     return;
   }
   
+  // Confirm post destination
   const destinationText = selectedPostDestination === 'profile' ? 'your profile' : 'community feed';
   if (!confirm(`📤 Post to ${destinationText}?`)) {
     return;
@@ -1004,126 +1042,76 @@ async function createPost() {
     showMessage('📤 Creating post...', 'success');
     
     const formData = new FormData();
-    formData.append('content', content);
+    formData.append('content', postText);
     formData.append('postTo', selectedPostDestination);
     
+    // Add music if selected
     if (selectedMusic) {
       formData.append('music', JSON.stringify(selectedMusic));
     }
     
+    // Add stickers if selected
     if (selectedStickers.length > 0) {
       formData.append('stickers', JSON.stringify(selectedStickers));
     }
     
+    // Add files if selected
     selectedFiles.forEach(file => {
       formData.append('media', file);
     });
     
-    console.log('📤 Submitting post:', {
-      content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
-      hasFiles: hasFiles,
-      filesCount: selectedFiles.length,
-      hasMusic: hasMusic,
-      musicName: selectedMusic?.name,
-      hasStickers: hasStickers,
-      stickersCount: selectedStickers.length,
-      destination: selectedPostDestination
-    });
+    console.log('Submitting post with destination:', selectedPostDestination);
     
     const data = await apiCall('/api/posts', 'POST', formData);
     
-    console.log('✅ Post created response:', data);
-    
     if (data.success) {
       const destinationMsg = selectedPostDestination === 'profile' 
-        ? '✅ Posted to Your Profile!' 
-        : '✅ Posted to Community Feed!';
+        ? '✅ Your post has been added to your profile!' 
+        : '✅ Your post has been shared to the community feed!';
       
-      // Show prominent success message
-      showPostSuccessNotification(destinationMsg, selectedPostDestination);
+      showMessage(destinationMsg, 'success');
       
       if (data.badgeUpdated && data.newBadges && data.newBadges.length > 0) {
-        setTimeout(() => {
-          showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
-        }, 1500);
+        showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
       }
       
       resetPostForm();
-      
-      // Reload posts to show the new post
-      setTimeout(() => {
-        console.log('🔄 Reloading posts...');
-        loadPosts();
-        
-        // If posted to community, also reload community posts if on that page
-        if (selectedPostDestination === 'community') {
-          const communityFeed = document.getElementById('communityPostsFeed');
-          if (communityFeed) {
-            console.log('🔄 Reloading community posts...');
-            loadCommunityPosts();
-          }
-        }
-      }, 500);
-    } else {
-      throw new Error(data.message || 'Post creation failed');
+      loadPosts();
     }
   } catch (error) {
-    console.error('❌ Create post error:', error);
+    console.error('Create post error:', error);
     showMessage('❌ Failed to create post: ' + error.message, 'error');
   }
 }
 
 function resetPostForm() {
-  const postText = document.getElementById('postText');
-  if (postText) {
-    postText.value = '';
-  }
-  
+  document.getElementById('postText').value = '';
   selectedFiles = [];
   previewUrls = [];
   selectedMusic = null;
   selectedStickers = [];
-  currentFilters = {};
   
-  const photoPreview = document.getElementById('photoPreviewContainer');
-  if (photoPreview) {
-    photoPreview.innerHTML = '';
-    photoPreview.style.display = 'none';
-  }
-  
-  const selectedAssets = document.getElementById('selectedAssets');
-  if (selectedAssets) {
-    selectedAssets.innerHTML = '';
-    selectedAssets.style.display = 'none';
-  }
+  document.getElementById('photoPreviewContainer').innerHTML = '';
+  document.getElementById('photoPreviewContainer').style.display = 'none';
+  document.getElementById('selectedAssets').innerHTML = '';
+  document.getElementById('selectedAssets').style.display = 'none';
   
   selectedPostDestination = 'profile';
-  const currentDest = document.getElementById('currentDestination');
-  if (currentDest) {
-    currentDest.textContent = 'My Profile';
-  }
+  document.getElementById('currentDestination').textContent = 'My Profile';
 }
 
+// POST MANAGEMENT
 async function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
   if(!feedEl) return;
   
   try {
-    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📥 Loading posts...</div>';
+    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>';
     
-    // Load ALL user posts (both profile and community)
-    const data = await apiCall('/api/posts?type=my&limit=50', 'GET');
-    
-    console.log('Loaded posts:', data.posts?.length || 0);
+    const data = await apiCall('/api/posts?type=my', 'GET');
     
     if(!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = `
-        <div style="text-align:center; padding:40px; color:#888;">
-          <div style="font-size:48px; margin-bottom:16px;">📝</div>
-          <h3 style="color:#4f74a3; margin-bottom:12px;">No posts yet</h3>
-          <p>Share your first post and start your journey!</p>
-        </div>
-      `;
+      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post! 📝</div>';
       return;
     }
     
@@ -1140,11 +1128,11 @@ async function loadPosts() {
       const stickers = post.stickers || [];
       
       html += `
-        <div class="enhanced-post" data-post-id="${post.id}">
+        <div class="enhanced-post">
           <div class="enhanced-post-header">
             <div class="enhanced-user-info">
               <div class="enhanced-user-avatar">
-                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : '👤'}
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
               </div>
               <div class="enhanced-user-details">
                 <div class="enhanced-username">@${author}</div>
@@ -1159,14 +1147,13 @@ async function loadPosts() {
           </div>
           
           <div class="enhanced-post-content">
-            ${content ? `<div class="enhanced-post-text">${escapeHtml(content)}</div>` : ''}
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
             
             ${stickers.length > 0 ? `
               <div class="post-stickers-container">
-                ${stickers.map(sticker => {
-                  const emoji = typeof sticker === 'string' ? sticker : sticker.emoji;
-                  return `<span class="post-sticker">${emoji}</span>`;
-                }).join('')}
+                ${stickers.map(sticker => `
+                  <span class="post-sticker">${sticker.emoji || sticker}</span>
+                `).join('')}
               </div>
             ` : ''}
             
@@ -1190,17 +1177,13 @@ async function loadPosts() {
             
             ${media.length > 0 ? `
               <div class="enhanced-post-media">
-                ${media.map(m => {
-                  if (m.type === 'image') {
-                    const filterStyle = m.filter && m.filter !== 'normal' ? `filter: ${getFilterValue(m.filter)};` : '';
-                    return `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${filterStyle}"></div>`;
-                  } else if (m.type === 'video') {
-                    return `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`;
-                  } else if (m.type === 'audio') {
-                    return `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`;
-                  }
-                  return '';
-                }).join('')}
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${m.filter && m.filter !== 'none' ? `filter: ${getFilterValue(m.filter)}` : ''}"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
               </div>
             ` : ''}
           </div>
@@ -1222,68 +1205,23 @@ async function loadPosts() {
     });
     
     feedEl.innerHTML = html;
-    console.log('✅ Posts loaded and displayed');
   } catch (error) {
     console.error('Load posts error:', error);
-    feedEl.innerHTML = `
-      <div style="text-align:center; padding:40px; color:#ef4444;">
-        <div style="font-size:48px; margin-bottom:16px;">❌</div>
-        <h3 style="margin-bottom:12px;">Failed to load posts</h3>
-        <p style="color:#888;">${error.message}</p>
-        <button onclick="loadPosts()" style="margin-top:20px; padding:10px 24px; background:#4f74a3; color:white; border:none; border-radius:8px; cursor:pointer;">🔄 Retry</button>
-      </div>
-    `;
+    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts</div>';
   }
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 async function deletePost(postId) {
-  if (!confirm('🗑️ Delete this post permanently?')) return;
+  if (!confirm('Delete this post?')) return;
   
   try {
-    showMessage('⏳ Deleting post...', 'success');
     await apiCall(`/api/posts/${postId}`, 'DELETE');
-    
-    // Remove from DOM immediately
-    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-    if (postElement) {
-      postElement.style.opacity = '0';
-      postElement.style.transform = 'scale(0.9)';
-      setTimeout(() => {
-        postElement.remove();
-        
-        // Check if there are any posts left
-        const remainingPosts = document.querySelectorAll('.enhanced-post');
-        if (remainingPosts.length === 0) {
-          const feedEl = document.getElementById('postsFeed');
-          if (feedEl) {
-            feedEl.innerHTML = `
-              <div style="text-align:center; padding:40px; color:#888;">
-                <div style="font-size:48px; margin-bottom:16px;">📝</div>
-                <h3 style="color:#4f74a3; margin-bottom:12px;">No posts yet</h3>
-                <p>Share your first post and start your journey!</p>
-              </div>
-            `;
-          }
-        }
-      }, 300);
-    }
-    
-    showMessage('✅ Post deleted successfully!', 'success');
+    showMessage('🗑️ Post deleted', 'success');
+    loadPosts();
   } catch (error) {
-    console.error('Delete post error:', error);
-    showMessage('❌ Failed to delete post: ' + error.message, 'error');
+    showMessage('❌ Failed to delete', 'error');
   }
 }
-
-// ============================================================
-//          END OF FIXED POST SECTION
-// ============================================================
 
 // SOCKET FUNCTIONS
 function initializeSocket() {
@@ -1333,14 +1271,9 @@ function showPage(name, e) {
     loadCommunities();
   } else if(name === 'badges') {
     loadBadgesPage();
-  } else if(name === 'home') {
-    loadTrending();
   }
   
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  if (hamburgerMenu) {
-    hamburgerMenu.style.display = 'none';
-  }
+  document.getElementById('hamburgerMenu').style.display = 'none';
   
   window.scrollTo(0, 0);
 }
@@ -1518,142 +1451,7 @@ function loadCommunities() {
       <p>Chat with students from your college</p>
       <button onclick="openCommunityChat()">Open Chat</button>
     </div>
-    
-    <div style="margin-top:40px;">
-      <h3 style="color:#4f74a3; margin-bottom:20px;">🌍 Community Posts</h3>
-      <div id="communityPostsFeed" style="display:flex; flex-direction:column; gap:20px;">
-        <div style="text-align:center; padding:20px; color:#888;">📥 Loading community posts...</div>
-      </div>
-    </div>
   `;
-  
-  // Load community posts
-  loadCommunityPosts();
-}
-
-async function loadCommunityPosts() {
-  const feedEl = document.getElementById('communityPostsFeed');
-  if (!feedEl) return;
-  
-  try {
-    const data = await apiCall('/api/posts?type=community&limit=50', 'GET');
-    
-    console.log('Loaded community posts:', data.posts?.length || 0);
-    
-    if (!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = `
-        <div style="text-align:center; padding:40px; color:#888;">
-          <div style="font-size:48px; margin-bottom:16px;">🌍</div>
-          <h3 style="color:#4f74a3; margin-bottom:12px;">No community posts yet</h3>
-          <p>Be the first to share something with your community!</p>
-        </div>
-      `;
-      return;
-    }
-    
-    let html = '';
-    data.posts.forEach(post => {
-      const author = post.users?.username || 'User';
-      const authorId = post.users?.id || '';
-      const content = post.content || '';
-      const media = post.media || [];
-      const time = new Date(post.created_at || post.timestamp).toLocaleString();
-      const isOwn = currentUser && authorId === currentUser.id;
-      const music = post.music || null;
-      const stickers = post.stickers || [];
-      
-      html += `
-        <div class="enhanced-post" data-post-id="${post.id}">
-          <div class="enhanced-post-header">
-            <div class="enhanced-user-info">
-              <div class="enhanced-user-avatar">
-                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : '👤'}
-              </div>
-              <div class="enhanced-user-details">
-                <div class="enhanced-username">@${author}</div>
-                <div class="enhanced-post-meta">
-                  <span>${time}</span>
-                  <span>•</span>
-                  <span>🌍 Community</span>
-                </div>
-              </div>
-            </div>
-            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
-          </div>
-          
-          <div class="enhanced-post-content">
-            ${content ? `<div class="enhanced-post-text">${escapeHtml(content)}</div>` : ''}
-            
-            ${stickers.length > 0 ? `
-              <div class="post-stickers-container">
-                ${stickers.map(sticker => {
-                  const emoji = typeof sticker === 'string' ? sticker : sticker.emoji;
-                  return `<span class="post-sticker">${emoji}</span>`;
-                }).join('')}
-              </div>
-            ` : ''}
-            
-            ${music ? `
-              <div class="post-music-container">
-                <div class="music-player">
-                  <div class="music-info">
-                    <div class="music-icon">${music.emoji || '🎵'}</div>
-                    <div class="music-details">
-                      <div class="music-name">${music.name}</div>
-                      <div class="music-duration">${music.artist} • ${music.duration}</div>
-                    </div>
-                  </div>
-                  <audio controls class="post-audio-player">
-                    <source src="${music.url}" type="audio/mpeg">
-                  </audio>
-                </div>
-              </div>
-            ` : ''}
-            
-            ${media.length > 0 ? `
-              <div class="enhanced-post-media">
-                ${media.map(m => {
-                  if (m.type === 'image') {
-                    const filterStyle = m.filter && m.filter !== 'normal' ? `filter: ${getFilterValue(m.filter)};` : '';
-                    return `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${filterStyle}"></div>`;
-                  } else if (m.type === 'video') {
-                    return `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`;
-                  } else if (m.type === 'audio') {
-                    return `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`;
-                  }
-                  return '';
-                }).join('')}
-              </div>
-            ` : ''}
-          </div>
-          
-          <div class="enhanced-post-footer">
-            <div class="enhanced-post-stats">
-              <span>❤️ 0</span>
-              <span>💬 0</span>
-              <span>🔄 0</span>
-            </div>
-            <div class="enhanced-post-engagement">
-              <button class="engagement-btn">❤️ Like</button>
-              <button class="engagement-btn">💬 Comment</button>
-              <button class="engagement-btn">🔄 Share</button>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-    
-    feedEl.innerHTML = html;
-  } catch (error) {
-    console.error('Load community posts error:', error);
-    feedEl.innerHTML = `
-      <div style="text-align:center; padding:40px; color:#ef4444;">
-        <div style="font-size:48px; margin-bottom:16px;">❌</div>
-        <h3 style="margin-bottom:12px;">Failed to load posts</h3>
-        <p style="color:#888;">${error.message}</p>
-      </div>
-    `;
-  }
 }
 
 function openCommunityChat() {
@@ -1704,7 +1502,7 @@ function appendMessageToChat(msg) {
   
   messageDiv.innerHTML = `
     ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
-    <div class="text">${escapeHtml(msg.content)}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
+    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
     ${Object.keys(reactionCounts).length > 0 ? `
       <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
         ${Object.entries(reactionCounts).map(([emoji, count]) => 
@@ -1717,7 +1515,7 @@ function appendMessageToChat(msg) {
       <span onclick="reactToMessage('${msg.id}', '👍')" style="cursor:pointer;">👍</span>
       <span onclick="reactToMessage('${msg.id}', '😂')" style="cursor:pointer;">😂</span>
       <span onclick="reactToMessage('${msg.id}', '🔥')" style="cursor:pointer;">🔥</span>
-      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${escapeHtml(msg.content).replace(/'/g, "\\'")})" style="cursor:pointer;">✏️ Edit</span>` : ''}
+      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${msg.content.replace(/'/g, "\\'")}')" style="cursor:pointer;">✏️ Edit</span>` : ''}
       ${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️ Delete</span>` : ''}
       <span onclick="showMessageViews('${msg.id}')" style="cursor:pointer;">👁️ Views</span>
     </div>
@@ -1733,9 +1531,10 @@ function updateMessageInChat(msg) {
   const messageEl = document.getElementById(`msg-${msg.id}`);
   if (!messageEl) return;
   
+  const isOwn = msg.sender_id === currentUser.id;
   const textEl = messageEl.querySelector('.text');
   if (textEl) {
-    textEl.innerHTML = `${escapeHtml(msg.content)} <span style="font-size:10px;color:#888;">(edited)</span>`;
+    textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
   }
 }
 
@@ -1884,10 +1683,8 @@ function loadBadgesPage() {
 function showProfilePage() {
   if (!currentUser) return;
   showProfileModal(currentUser);
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const optionsMenu = document.getElementById('optionsMenu');
-  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
-  if (optionsMenu) optionsMenu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 function showProfileModal(user) {
@@ -2077,10 +1874,7 @@ function uploadProfilePic() {
 
 // UTILITY FUNCTIONS
 function showModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = 'flex';
-  }
+  document.getElementById(modalId).style.display = 'flex';
 }
 
 function closeModal(modalId) {
@@ -2103,41 +1897,6 @@ function showMessage(text, type) {
   
   setTimeout(() => {
     if(div.parentNode) div.remove();
-  }, 4000);
-}
-
-// NEW: Post Success Notification
-function showPostSuccessNotification(message, destination) {
-  const notificationDiv = document.createElement('div');
-  notificationDiv.className = 'post-success-notification';
-  
-  const icon = destination === 'profile' ? '👤' : '🌍';
-  const destinationText = destination === 'profile' ? 'Profile' : 'Community';
-  
-  notificationDiv.innerHTML = `
-    <div class="post-success-content">
-      <div class="post-success-icon">${icon}</div>
-      <div class="post-success-text">
-        <div class="post-success-title">Posted Successfully!</div>
-        <div class="post-success-subtitle">Your post is now live on ${destinationText}</div>
-      </div>
-      <div class="post-success-checkmark">✓</div>
-    </div>
-  `;
-  
-  document.body.appendChild(notificationDiv);
-  
-  // Animate in
-  setTimeout(() => {
-    notificationDiv.classList.add('show');
-  }, 100);
-  
-  // Remove after 4 seconds
-  setTimeout(() => {
-    notificationDiv.classList.remove('show');
-    setTimeout(() => {
-      notificationDiv.remove();
-    }, 300);
   }, 4000);
 }
 
@@ -2184,7 +1943,7 @@ function updateLiveNotif(text) {
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
   const hamburger = document.getElementById('hamburgerMenu');
-  if (hamburger) hamburger.style.display = 'none';
+  hamburger.style.display = 'none';
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
@@ -2196,7 +1955,7 @@ function toggleOptionsMenu() {
 function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
   const options = document.getElementById('optionsMenu');
-  if (options) options.style.display = 'none';
+  options.style.display = 'none';
   
   if(menu.style.display === 'none' || menu.style.display === '') {
     menu.style.display = 'block';
@@ -2207,18 +1966,14 @@ function toggleHamburgerMenu() {
 
 function showComplaintModal() {
   document.getElementById('complaintModal').style.display = 'flex';
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const optionsMenu = document.getElementById('optionsMenu');
-  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
-  if (optionsMenu) optionsMenu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 function showContactModal() {
   document.getElementById('contactModal').style.display = 'flex';
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const optionsMenu = document.getElementById('optionsMenu');
-  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
-  if (optionsMenu) optionsMenu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 function showFeedbackModal() {
@@ -2236,10 +1991,8 @@ function showFeedbackModal() {
     </div>
   `;
   document.body.appendChild(modal);
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const optionsMenu = document.getElementById('optionsMenu');
-  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
-  if (optionsMenu) optionsMenu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 async function submitFeedback() {
@@ -2281,10 +2034,8 @@ function toggleTheme() {
     body.classList.add('dark-theme');
   }
   showMessage('🎨 Theme changed!', 'success');
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const optionsMenu = document.getElementById('optionsMenu');
-  if (hamburgerMenu) hamburgerMenu.style.display = 'none';
-  if (optionsMenu) optionsMenu.style.display = 'none';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
 }
 
 // TRENDING CONTENT
@@ -2336,94 +2087,4 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Add notification styles dynamically
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-  .post-success-notification {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    background: linear-gradient(135deg, #4f74a3, #8da4d3);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 16px;
-    padding: 20px 24px;
-    box-shadow: 0 10px 40px rgba(79, 116, 163, 0.4);
-    z-index: 10000;
-    min-width: 320px;
-    max-width: 400px;
-    transform: translateX(450px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  
-  .post-success-notification.show {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  
-  .post-success-content {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    color: white;
-  }
-  
-  .post-success-icon {
-    font-size: 32px;
-    flex-shrink: 0;
-  }
-  
-  .post-success-text {
-    flex: 1;
-  }
-  
-  .post-success-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-  
-  .post-success-subtitle {
-    font-size: 13px;
-    opacity: 0.9;
-  }
-  
-  .post-success-checkmark {
-    font-size: 28px;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.2);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  
-  @media (max-width: 768px) {
-    .post-success-notification {
-      top: 70px;
-      right: 10px;
-      left: 10px;
-      min-width: auto;
-      max-width: none;
-      padding: 16px 20px;
-    }
-    
-    .post-success-icon {
-      font-size: 28px;
-    }
-    
-    .post-success-title {
-      font-size: 14px;
-    }
-    
-    .post-success-subtitle {
-      font-size: 12px;
-    }
-  }
-`;
-document.head.appendChild(notificationStyles);
-
-console.log('✅ VibeXpert - Fixed Post Section - All features loaded!');
+console.log('✅ VibeXpert Enhanced - All features loaded and functional including SEARCH!');
