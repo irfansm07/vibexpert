@@ -446,7 +446,7 @@ async function performUserSearch(query) {
   const searchResults = document.getElementById('searchResults');
   
   if (!searchResults) {
-    console.error('Search results container not found');
+    console.error('❌ Search results container not found');
     return;
   }
   
@@ -454,21 +454,32 @@ async function performUserSearch(query) {
     console.log('🔍 Searching for:', query);
     
     // Show loading state
-    searchResults.innerHTML = '<div class="no-results">Searching...</div>';
+    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
     searchResults.style.display = 'block';
     
     const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
     
-    console.log('📊 Search results:', data);
+    console.log('📊 Search API response:', data);
+    console.log('📊 Number of users found:', data.users?.length || 0);
     
     if (!data.success) {
       throw new Error('Search failed');
     }
     
+    // Log each user found
+    if (data.users && data.users.length > 0) {
+      console.log('✅ Users found:');
+      data.users.forEach((user, index) => {
+        console.log(`  ${index + 1}. @${user.username} - ${user.email}`);
+      });
+    } else {
+      console.log('⚠️ No users found for query:', query);
+    }
+    
     displaySearchResults(data.users || []);
   } catch (error) {
     console.error('❌ Search error:', error);
-    searchResults.innerHTML = '<div class="no-results">Search failed. Please try again.</div>';
+    searchResults.innerHTML = '<div class="no-results">❌ Search failed. Please try again.</div>';
     searchResults.style.display = 'block';
   }
 }
