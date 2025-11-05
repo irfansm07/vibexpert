@@ -996,6 +996,11 @@ function selectPostDestination(destination) {
   document.getElementById('currentDestination').textContent = displayText;
   closeModal('postDestinationModal');
   showMessage(`📍 Post will be shared to ${displayText}`, 'success');
+  
+  console.log('✅ Post destination set to:', selectedPostDestination);
+  
+  // Reload posts to show the correct feed
+  loadPosts();
 }
 
 // Update Selected Assets Display
@@ -1028,7 +1033,7 @@ function updateSelectedAssets() {
   container.style.display = html ? 'block' : 'none';
 }
 
-// FIXED: Enhanced Create Post Function with proper validation
+// FIXED: Enhanced Create Post Function with proper validation and community check
 async function createPost() {
   const postText = document.getElementById('postText').value.trim();
   
@@ -1041,6 +1046,22 @@ async function createPost() {
   if (!currentUser) {
     showMessage('⚠️ Please login to post', 'error');
     return;
+  }
+  
+  // IMPORTANT: Check if user is trying to post to community but hasn't joined one
+  if (selectedPostDestination === 'community') {
+    if (!currentUser.communityJoined || !currentUser.college) {
+      showMessage('⚠️ Please join a college community first to post to community feed!', 'error');
+      
+      // Show a more detailed modal
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Would you like to explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+      return;
+    }
   }
   
   // Confirm post destination
@@ -1087,6 +1108,8 @@ async function createPost() {
       }
       
       resetPostForm();
+      
+      // Reload the appropriate feed based on destination
       loadPosts();
     }
   } catch (error) {
@@ -1111,7 +1134,7 @@ function resetPostForm() {
   document.getElementById('currentDestination').textContent = 'My Profile';
 }
 
-// POST MANAGEMENT
+// ENHANCED POST MANAGEMENT WITH FILTERING
 async function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
   if(!feedEl) return;
@@ -1119,10 +1142,52 @@ async function loadPosts() {
   try {
     feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>';
     
-    const data = await apiCall('/api/posts?type=my', 'GET');
+    // Check what type of posts to load based on selected destination
+    const currentDestination = selectedPostDestination || 'profile';
+    let endpoint = '/api/posts?type=my';
+    
+    // Load posts based on current post destination setting
+    if (currentDestination === 'profile') {
+      endpoint = '/api/posts/profile';
+      console.log('📝 Loading profile posts');
+    } else if (currentDestination === 'community') {
+      // Check if user has joined a community
+      if (!currentUser.communityJoined || !currentUser.college) {
+        feedEl.innerHTML = `
+          <div style="text-align:center; padding:40px;">
+            <div style="font-size:48px; margin-bottom:20px;">🎓</div>
+            <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
+            <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
+            <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
+          </div>
+        `;
+        return;
+      }
+      endpoint = '/api/posts/community';
+      console.log('📝 Loading community posts');
+    }
+    
+    const data = await apiCall(endpoint, 'GET');
+    
+    // Handle community join requirement
+    if (data.needsJoinCommunity) {
+      feedEl.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
+          <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
+          <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
+          <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
+        </div>
+      `;
+      return;
+    }
     
     if(!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">No posts yet. Be the first to post! 📝</div>';
+      const emptyMessage = currentDestination === 'profile' 
+        ? 'No profile posts yet. Create your first post! 📝' 
+        : 'No community posts yet. Be the first to post! 🌍';
+      
+      feedEl.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">${emptyMessage}</div>`;
       return;
     }
     
@@ -1218,7 +1283,20 @@ async function loadPosts() {
     feedEl.innerHTML = html;
   } catch (error) {
     console.error('Load posts error:', error);
-    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts</div>';
+    
+    // Check if it's a community join error
+    if (error.message && error.message.includes('community')) {
+      feedEl.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
+          <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
+          <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
+          <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
+        </div>
+      `;
+    } else {
+      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts</div>';
+    }
   }
 }
 
