@@ -1033,29 +1033,42 @@ function updateSelectedAssets() {
   container.style.display = html ? 'block' : 'none';
 }
 
-// FIXED: Enhanced Create Post Function with proper validation and community check
+// SIMPLIFIED: Enhanced Create Post Function 
 async function createPost() {
   const postText = document.getElementById('postText').value.trim();
   
+  console.log('🚀 === POST CREATION START ===');
+  console.log('📝 Post text:', postText);
+  console.log('📁 Files:', selectedFiles.length);
+  console.log('🎵 Music:', selectedMusic ? selectedMusic.name : 'None');
+  console.log('🎨 Stickers:', selectedStickers.length);
+  console.log('📍 Destination:', selectedPostDestination);
+  
   // Validate content
   if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
+    console.log('❌ No content to post');
     showMessage('⚠️ Please add some content to your post', 'error');
     return;
   }
   
   if (!currentUser) {
+    console.log('❌ User not logged in');
     showMessage('⚠️ Please login to post', 'error');
     return;
   }
   
-  // IMPORTANT: Check if user is trying to post to community but hasn't joined one
+  // Check community membership for community posts
   if (selectedPostDestination === 'community') {
+    console.log('🔍 Checking community membership...');
+    console.log('Community joined:', currentUser.communityJoined);
+    console.log('College:', currentUser.college);
+    
     if (!currentUser.communityJoined || !currentUser.college) {
-      showMessage('⚠️ Please join a college community first to post to community feed!', 'error');
+      console.log('❌ User not in community');
+      showMessage('⚠️ Please join a college community first!', 'error');
       
-      // Show a more detailed modal
       setTimeout(() => {
-        if (confirm('You need to join a college community first. Would you like to explore colleges now?')) {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
           showPage('home');
           document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
         }
@@ -1064,135 +1077,174 @@ async function createPost() {
     }
   }
   
-  // Confirm post destination
-  const destinationText = selectedPostDestination === 'profile' ? 'your profile' : 'community feed';
-  if (!confirm(`📤 Post to ${destinationText}?`)) {
-    return;
-  }
-  
   try {
+    console.log('✅ All validations passed');
     showMessage('📤 Creating post...', 'success');
     
     const formData = new FormData();
     formData.append('content', postText);
     formData.append('postTo', selectedPostDestination);
     
-    // Add music if selected
+    console.log('📦 FormData created with postTo:', selectedPostDestination);
+    
     if (selectedMusic) {
       formData.append('music', JSON.stringify(selectedMusic));
+      console.log('🎵 Added music:', selectedMusic.name);
     }
     
-    // Add stickers if selected
     if (selectedStickers.length > 0) {
       formData.append('stickers', JSON.stringify(selectedStickers));
+      console.log('🎨 Added stickers:', selectedStickers.length);
     }
     
-    // Add files if selected
-    selectedFiles.forEach(file => {
+    selectedFiles.forEach((file, index) => {
       formData.append('media', file);
+      console.log(`📁 Added file ${index + 1}:`, file.name);
     });
     
-    console.log('Submitting post with destination:', selectedPostDestination);
+    console.log('📤 Sending POST request to /api/posts...');
     
     const data = await apiCall('/api/posts', 'POST', formData);
     
+    console.log('✅ Response received:', data);
+    
     if (data.success) {
-      const destinationMsg = selectedPostDestination === 'profile' 
-        ? '✅ Your post has been added to your profile!' 
-        : '✅ Your post has been shared to the community feed!';
+      const msg = selectedPostDestination === 'profile' 
+        ? '✅ Post added to your profile!' 
+        : '✅ Post shared to community!';
       
-      showMessage(destinationMsg, 'success');
+      showMessage(msg, 'success');
+      console.log('🎉 Post created successfully!');
       
-      if (data.badgeUpdated && data.newBadges && data.newBadges.length > 0) {
-        showMessage(`🏆 New badge(s) earned: ${data.newBadges.join(', ')}`, 'success');
+      if (data.badgeUpdated && data.newBadges?.length > 0) {
+        showMessage(`🏆 New badge: ${data.newBadges.join(', ')}`, 'success');
       }
       
       resetPostForm();
       
-      // Reload the appropriate feed based on destination
-      loadPosts();
+      // Wait a bit then reload posts
+      setTimeout(() => {
+        console.log('🔄 Reloading posts feed...');
+        loadPosts();
+      }, 500);
+    } else {
+      console.log('❌ Post creation failed:', data);
+      showMessage('❌ Failed to create post', 'error');
     }
   } catch (error) {
-    console.error('Create post error:', error);
-    showMessage('❌ Failed to create post: ' + error.message, 'error');
+    console.error('❌ CREATE POST ERROR:', error);
+    showMessage('❌ Error: ' + error.message, 'error');
   }
+  
+  console.log('🏁 === POST CREATION END ===');
 }
 
 function resetPostForm() {
+  console.log('🧹 Resetting post form...');
   document.getElementById('postText').value = '';
   selectedFiles = [];
   previewUrls = [];
   selectedMusic = null;
   selectedStickers = [];
   
-  document.getElementById('photoPreviewContainer').innerHTML = '';
-  document.getElementById('photoPreviewContainer').style.display = 'none';
-  document.getElementById('selectedAssets').innerHTML = '';
-  document.getElementById('selectedAssets').style.display = 'none';
+  const photoContainer = document.getElementById('photoPreviewContainer');
+  if (photoContainer) {
+    photoContainer.innerHTML = '';
+    photoContainer.style.display = 'none';
+  }
   
-  selectedPostDestination = 'profile';
-  document.getElementById('currentDestination').textContent = 'My Profile';
+  const assetsContainer = document.getElementById('selectedAssets');
+  if (assetsContainer) {
+    assetsContainer.innerHTML = '';
+    assetsContainer.style.display = 'none';
+  }
+  
+  // Keep the selected destination
+  console.log('✅ Form reset complete. Destination remains:', selectedPostDestination);
 }
 
-// ENHANCED POST MANAGEMENT WITH FILTERING
+// SIMPLIFIED: Load Posts with Clear Destination Logic
 async function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
-  if(!feedEl) return;
+  if (!feedEl) {
+    console.log('❌ Feed element not found');
+    return;
+  }
+  
+  console.log('📨 === LOADING POSTS ===');
+  console.log('📍 Current destination:', selectedPostDestination);
+  console.log('👤 Current user:', currentUser?.username);
   
   try {
-    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>';
+    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>';
     
-    // Check what type of posts to load based on selected destination
-    const currentDestination = selectedPostDestination || 'profile';
-    let endpoint = '/api/posts?type=my';
+    let endpoint = '/api/posts/profile'; // Default to profile
     
-    // Load posts based on current post destination setting
-    if (currentDestination === 'profile') {
-      endpoint = '/api/posts/profile';
-      console.log('📝 Loading profile posts');
-    } else if (currentDestination === 'community') {
-      // Check if user has joined a community
+    if (selectedPostDestination === 'community') {
+      console.log('🌍 Loading community posts...');
+      
+      // Check community membership
       if (!currentUser.communityJoined || !currentUser.college) {
+        console.log('⚠️ User not in community');
         feedEl.innerHTML = `
           <div style="text-align:center; padding:40px;">
             <div style="font-size:48px; margin-bottom:20px;">🎓</div>
             <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
-            <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
+            <p style="color:#888; margin-bottom:20px;">Connect to your college to see community posts.</p>
             <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
           </div>
         `;
         return;
       }
       endpoint = '/api/posts/community';
-      console.log('📝 Loading community posts');
+    } else {
+      console.log('👤 Loading profile posts...');
     }
+    
+    console.log('🔗 Fetching from:', endpoint);
     
     const data = await apiCall(endpoint, 'GET');
     
-    // Handle community join requirement
+    console.log('✅ Received data:', {
+      success: data.success,
+      postsCount: data.posts?.length || 0
+    });
+    
     if (data.needsJoinCommunity) {
+      console.log('⚠️ Needs to join community');
       feedEl.innerHTML = `
         <div style="text-align:center; padding:40px;">
           <div style="font-size:48px; margin-bottom:20px;">🎓</div>
           <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
-          <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
+          <p style="color:#888; margin-bottom:20px;">Connect to your college to see community posts.</p>
           <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
         </div>
       `;
       return;
     }
     
-    if(!data.posts || data.posts.length === 0) {
-      const emptyMessage = currentDestination === 'profile' 
-        ? 'No profile posts yet. Create your first post! 📝' 
-        : 'No community posts yet. Be the first to post! 🌍';
+    if (!data.posts || data.posts.length === 0) {
+      const emptyMsg = selectedPostDestination === 'profile' 
+        ? '📝 No profile posts yet. Create your first post!' 
+        : '🌍 No community posts yet. Be the first to share!';
       
-      feedEl.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">${emptyMessage}</div>`;
+      console.log('ℹ️ No posts found');
+      feedEl.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">${emptyMsg}</div>`;
       return;
     }
     
+    console.log('✅ Rendering', data.posts.length, 'posts');
+    
     let html = '';
-    data.posts.forEach(post => {
+    data.posts.forEach((post, index) => {
+      console.log(`Rendering post ${index + 1}:`, {
+        id: post.id,
+        author: post.users?.username,
+        postedTo: post.posted_to,
+        hasContent: !!post.content,
+        mediaCount: post.media?.length || 0
+      });
+      
       const author = post.users?.username || 'User';
       const authorId = post.users?.id || '';
       const content = post.content || '';
@@ -1255,7 +1307,7 @@ async function loadPosts() {
               <div class="enhanced-post-media">
                 ${media.map(m => 
                   m.type === 'image' 
-                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image" style="${m.filter && m.filter !== 'none' ? `filter: ${getFilterValue(m.filter)}` : ''}"></div>` 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
                     : m.type === 'video'
                     ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
                     : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
@@ -1281,23 +1333,14 @@ async function loadPosts() {
     });
     
     feedEl.innerHTML = html;
-  } catch (error) {
-    console.error('Load posts error:', error);
+    console.log('✅ Posts rendered successfully');
     
-    // Check if it's a community join error
-    if (error.message && error.message.includes('community')) {
-      feedEl.innerHTML = `
-        <div style="text-align:center; padding:40px;">
-          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
-          <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
-          <p style="color:#888; margin-bottom:20px;">You need to join a college community to view community posts.</p>
-          <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
-        </div>
-      `;
-    } else {
-      feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">Failed to load posts</div>';
-    }
+  } catch (error) {
+    console.error('❌ LOAD POSTS ERROR:', error);
+    feedEl.innerHTML = '<div style="text-align:center; padding:40px; color:#ff6b6b;">❌ Failed to load posts</div>';
   }
+  
+  console.log('🏁 === LOADING POSTS END ===');
 }
 
 async function deletePost(postId) {
