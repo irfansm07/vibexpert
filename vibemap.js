@@ -1,4 +1,4 @@
-// VIBEXPERT - ENHANCED VERSION WITH WORKING SEARCH AND IMPROVED POSTS
+// VIBEXPERT - UPDATED VERSION WITH FIXED POST VISIBILITY
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -165,13 +165,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupEventListeners() {
-  // Music button event listener
   const addMusicBtn = document.getElementById('addMusicBtn');
   if (addMusicBtn) {
     addMusicBtn.addEventListener('click', openMusicSelector);
   }
   
-  // Sticker button event listener
   const addStickerBtn = document.getElementById('addStickerBtn');
   if (addStickerBtn) {
     addStickerBtn.addEventListener('click', openStickerSelector);
@@ -397,28 +395,23 @@ function initializeSearchBar() {
   
   console.log('✅ Search bar initialized');
   
-  // Handle search input with debouncing
   searchBox.addEventListener('input', (e) => {
-    // Clear previous timeout
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
     
     const query = e.target.value.trim();
     
-    // Hide results if query is too short
     if (query.length < 2) {
       hideSearchResults();
       return;
     }
     
-    // Debounce search - wait 500ms after user stops typing
     searchTimeout = setTimeout(() => {
       performUserSearch(query);
     }, 500);
   });
   
-  // Handle focus event
   searchBox.addEventListener('focus', (e) => {
     const query = e.target.value.trim();
     if (query.length >= 2) {
@@ -426,14 +419,12 @@ function initializeSearchBar() {
     }
   });
   
-  // Hide search results when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-container')) {
       hideSearchResults();
     }
   });
   
-  // Hide search results when pressing Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       hideSearchResults();
@@ -453,7 +444,6 @@ async function performUserSearch(query) {
   try {
     console.log('🔍 Searching for:', query);
     
-    // Show loading state
     searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
     searchResults.style.display = 'block';
     
@@ -466,7 +456,6 @@ async function performUserSearch(query) {
       throw new Error('Search failed');
     }
     
-    // Log each user found
     if (data.users && data.users.length > 0) {
       console.log('✅ Users found:');
       data.users.forEach((user, index) => {
@@ -531,7 +520,6 @@ function hideSearchResults() {
 async function showUserProfile(userId) {
   hideSearchResults();
   
-  // Clear search box
   const searchBox = document.getElementById('searchBox');
   if (searchBox) {
     searchBox.value = '';
@@ -559,7 +547,6 @@ async function showUserProfile(userId) {
 
 // ENHANCED POST FEATURES
 
-// Photo selection with crop and filter options
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -578,7 +565,6 @@ function openCamera() {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(function(stream) {
         showMessage('📷 Camera access granted. Taking photo...', 'success');
-        // For demo purposes, fall back to file input
         setTimeout(() => {
           const input = document.createElement('input');
           input.type = 'file';
@@ -661,7 +647,6 @@ function displayPhotoPreviews() {
   container.innerHTML = html;
 }
 
-// ENHANCED Crop Editor Functions with better UX
 function openCropEditor(index) {
   currentCropIndex = index;
   const imageUrl = previewUrls[index];
@@ -669,7 +654,6 @@ function openCropEditor(index) {
   document.getElementById('cropImage').src = imageUrl;
   showModal('cropEditorModal');
   
-  // Initialize cropper with better defaults
   setTimeout(() => {
     const image = document.getElementById('cropImage');
     if (cropper) {
@@ -750,7 +734,6 @@ function applyCrop() {
   }
 }
 
-// NEW: Better close function for crop editor
 function closeCropEditor() {
   if (cropper) {
     cropper.destroy();
@@ -759,7 +742,6 @@ function closeCropEditor() {
   closeModal('cropEditorModal');
 }
 
-// ENHANCED Photo Editor Functions with better UX
 function openPhotoEditor(index) {
   currentEditIndex = index;
   const imageUrl = previewUrls[index];
@@ -775,14 +757,12 @@ function applyFilter(filterName) {
   const image = document.getElementById('editImage');
   currentFilters[currentEditIndex] = filterName;
   
-  // Remove all filter classes
   image.className = '';
   
   if (filterName !== 'normal') {
     image.classList.add(`filter-${filterName}`);
   }
   
-  // Update active filter button
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.classList.remove('active-filter');
   });
@@ -801,7 +781,6 @@ function saveEditedPhoto() {
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   
-  // Apply the current filter
   ctx.filter = getFilterValue(currentFilters[currentEditIndex]);
   ctx.drawImage(image, 0, 0);
   
@@ -818,7 +797,6 @@ function saveEditedPhoto() {
   showMessage('✅ Photo edited successfully!', 'success');
 }
 
-// NEW: Better close function for photo editor
 function closePhotoEditor() {
   closeModal('photoEditorModal');
   currentEditIndex = -1;
@@ -843,7 +821,6 @@ function removePhoto(index) {
   showMessage('🗑️ Photo removed', 'success');
 }
 
-// ENHANCED Music Functions with better UX
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
   const selector = document.getElementById('musicSelector');
@@ -879,11 +856,9 @@ function openMusicSelector() {
 function previewMusic(url, musicId) {
   const player = window.musicPlayer;
   
-  // Stop current playback
   player.pause();
   player.currentTime = 0;
   
-  // Set new source
   player.src = url;
   
   player.play().catch(e => {
@@ -891,7 +866,6 @@ function previewMusic(url, musicId) {
     showMessage('Could not play music preview. Please try another track.', 'error');
   });
   
-  // Update UI to show which track is playing
   document.querySelectorAll('.music-item').forEach(item => {
     item.classList.remove('playing');
   });
@@ -908,12 +882,10 @@ function selectMusic(musicId) {
   closeMusicSelector();
   showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
   
-  // Stop preview when selecting
   window.musicPlayer.pause();
   window.musicPlayer.currentTime = 0;
 }
 
-// NEW: Better close function for music selector
 function closeMusicSelector() {
   window.musicPlayer.pause();
   window.musicPlayer.currentTime = 0;
@@ -926,7 +898,6 @@ function removeMusic() {
   showMessage('🎵 Music removed from post', 'success');
 }
 
-// Sticker Functions (already has good UX)
 function openStickerSelector() {
   const modal = document.getElementById('stickerSelectorModal');
   const selector = document.getElementById('stickerSelector');
@@ -972,7 +943,6 @@ function addSticker(emoji, name) {
   selectedStickers.push({emoji, name});
   updateSelectedAssets();
   
-  // Add sticker to post text
   const postText = document.getElementById('postText');
   postText.value += emoji;
   
@@ -985,12 +955,29 @@ function removeStickers() {
   showMessage('🎨 All stickers removed', 'success');
 }
 
-// ENHANCED Post Destination Functions
+// UPDATED: Post Destination Functions with Community Check
 function showPostDestinationModal() {
   showModal('postDestinationModal');
 }
 
 function selectPostDestination(destination) {
+  // CRITICAL: Check if user can post to community
+  if (destination === 'community') {
+    if (!currentUser.communityJoined || !currentUser.college) {
+      showMessage('⚠️ Please connect to your university first!', 'error');
+      closeModal('postDestinationModal');
+      
+      // Offer to navigate to home page to join community
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+      return;
+    }
+  }
+  
   selectedPostDestination = destination;
   const displayText = destination === 'profile' ? 'My Profile' : 'Community Feed';
   document.getElementById('currentDestination').textContent = displayText;
@@ -998,12 +985,8 @@ function selectPostDestination(destination) {
   showMessage(`📍 Post will be shared to ${displayText}`, 'success');
   
   console.log('✅ Post destination set to:', selectedPostDestination);
-  
-  // Reload posts to show the correct feed
-  loadPosts();
 }
 
-// Update Selected Assets Display
 function updateSelectedAssets() {
   const container = document.getElementById('selectedAssets');
   if (!container) return;
@@ -1033,7 +1016,7 @@ function updateSelectedAssets() {
   container.style.display = html ? 'block' : 'none';
 }
 
-// SIMPLIFIED: Enhanced Create Post Function 
+// UPDATED: Enhanced Create Post Function with Community Check
 async function createPost() {
   const postText = document.getElementById('postText').value.trim();
   
@@ -1057,7 +1040,7 @@ async function createPost() {
     return;
   }
   
-  // Check community membership for community posts
+  // CRITICAL: Check community membership for community posts
   if (selectedPostDestination === 'community') {
     console.log('🔍 Checking community membership...');
     console.log('Community joined:', currentUser.communityJoined);
@@ -1065,7 +1048,7 @@ async function createPost() {
     
     if (!currentUser.communityJoined || !currentUser.college) {
       console.log('❌ User not in community');
-      showMessage('⚠️ Please join a college community first!', 'error');
+      showMessage('⚠️ Please connect to your university first!', 'error');
       
       setTimeout(() => {
         if (confirm('You need to join a college community first. Explore colleges now?')) {
@@ -1122,7 +1105,6 @@ async function createPost() {
       
       resetPostForm();
       
-      // Wait a bit then reload posts
       setTimeout(() => {
         console.log('🔄 Reloading posts feed...');
         loadPosts();
@@ -1133,7 +1115,19 @@ async function createPost() {
     }
   } catch (error) {
     console.error('❌ CREATE POST ERROR:', error);
-    showMessage('❌ Error: ' + error.message, 'error');
+    
+    // Handle specific error for community posts
+    if (error.message.includes('university') || error.message.includes('community')) {
+      showMessage('⚠️ Please connect to your university first!', 'error');
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+    } else {
+      showMessage('❌ Error: ' + error.message, 'error');
+    }
   }
   
   console.log('🏁 === POST CREATION END ===');
@@ -1159,11 +1153,10 @@ function resetPostForm() {
     assetsContainer.style.display = 'none';
   }
   
-  // Keep the selected destination
   console.log('✅ Form reset complete. Destination remains:', selectedPostDestination);
 }
 
-// SIMPLIFIED: Load Posts with Clear Destination Logic
+// UPDATED: Load Posts - Shows ALL posts (profile + community)
 async function loadPosts() {
   const feedEl = document.getElementById('postsFeed');
   if (!feedEl) {
@@ -1172,34 +1165,13 @@ async function loadPosts() {
   }
   
   console.log('📨 === LOADING POSTS ===');
-  console.log('📍 Current destination:', selectedPostDestination);
   console.log('👤 Current user:', currentUser?.username);
   
   try {
     feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>';
     
-    let endpoint = '/api/posts/profile'; // Default to profile
-    
-    if (selectedPostDestination === 'community') {
-      console.log('🌍 Loading community posts...');
-      
-      // Check community membership
-      if (!currentUser.communityJoined || !currentUser.college) {
-        console.log('⚠️ User not in community');
-        feedEl.innerHTML = `
-          <div style="text-align:center; padding:40px;">
-            <div style="font-size:48px; margin-bottom:20px;">🎓</div>
-            <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
-            <p style="color:#888; margin-bottom:20px;">Connect to your college to see community posts.</p>
-            <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
-          </div>
-        `;
-        return;
-      }
-      endpoint = '/api/posts/community';
-    } else {
-      console.log('👤 Loading profile posts...');
-    }
+    // Fetch ALL posts (profile + community)
+    const endpoint = '/api/posts';
     
     console.log('🔗 Fetching from:', endpoint);
     
@@ -1210,23 +1182,8 @@ async function loadPosts() {
       postsCount: data.posts?.length || 0
     });
     
-    if (data.needsJoinCommunity) {
-      console.log('⚠️ Needs to join community');
-      feedEl.innerHTML = `
-        <div style="text-align:center; padding:40px;">
-          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
-          <h3 style="color:#4f74a3; margin-bottom:10px;">Join a Community First!</h3>
-          <p style="color:#888; margin-bottom:20px;">Connect to your college to see community posts.</p>
-          <button class="home-nav-btn" onclick="showPage('home'); document.querySelector('.nav-link[onclick*=\\'home\\']')?.classList.add('active');">Explore Colleges</button>
-        </div>
-      `;
-      return;
-    }
-    
     if (!data.posts || data.posts.length === 0) {
-      const emptyMsg = selectedPostDestination === 'profile' 
-        ? '📝 No profile posts yet. Create your first post!' 
-        : '🌍 No community posts yet. Be the first to share!';
+      const emptyMsg = '📝 No posts yet. Create your first post!';
       
       console.log('ℹ️ No posts found');
       feedEl.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">${emptyMsg}</div>`;
@@ -2219,4 +2176,4 @@ document.addEventListener('click', function(e) {
   }
 });
 
-console.log('✅ VibeXpert Enhanced - All features loaded and functional including SEARCH!');
+console.log('✅ VibeXpert Updated - Profile and Community posts now visible in Posts section!');
