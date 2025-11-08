@@ -1105,9 +1105,28 @@ async function createPost() {
       
       resetPostForm();
       
+      // Reload the appropriate section based on where it was posted
       setTimeout(() => {
-        console.log('🔄 Reloading posts feed...');
+        console.log('🔄 Reloading feeds...');
+        
+        // Always reload the main posts feed
         loadPosts();
+        
+        // If posted to profile and profile modal is open, reload profile posts
+        if (selectedPostDestination === 'profile') {
+          const profilePostsContainer = document.getElementById('userProfilePosts');
+          if (profilePostsContainer) {
+            loadUserProfilePosts(currentUser.id);
+          }
+        }
+        
+        // If posted to community and community section is open, reload community posts
+        if (selectedPostDestination === 'community') {
+          const communityPostsContainer = document.getElementById('communityPostsContainer');
+          if (communityPostsContainer) {
+            loadCommunityPosts();
+          }
+        }
       }, 500);
     } else {
       console.log('❌ Post creation failed:', data);
@@ -1527,7 +1546,7 @@ function loadCommunities() {
   if (!currentUser || !currentUser.communityJoined) {
     container.innerHTML = `
       <div class="community-guidance">
-        <p>🎓 Connect to your college first to join community chat!</p>
+        <p>🎓 Connect to your college first to join community!</p>
         <button class="home-nav-btn" onclick="showPage('home')">Explore Colleges</button>
       </div>
     `;
@@ -1537,10 +1556,155 @@ function loadCommunities() {
   container.innerHTML = `
     <div class="community-card">
       <h3>${currentUser.college} Community</h3>
-      <p>Chat with students from your college</p>
-      <button onclick="openCommunityChat()">Open Chat</button>
+      <p>Share and chat with students from your college</p>
+      <button onclick="openCommunitySection()">Open Community</button>
     </div>
   `;
+}
+
+function openCommunitySection() {
+  document.getElementById('chatSection').style.display = 'block';
+  loadCommunityPosts();
+  loadCommunityMessages();
+}
+
+// NEW: Load community posts (images, videos, etc.)
+async function loadCommunityPosts() {
+  const container = document.getElementById('communityPostsContainer');
+  if (!container) {
+    // Create container if it doesn't exist
+    const chatSection = document.getElementById('chatSection');
+    if (chatSection) {
+      const postsDiv = document.createElement('div');
+      postsDiv.innerHTML = `
+        <div style="margin-bottom:30px;">
+          <div class="chat-header">
+            <h3>📸 Community Posts</h3>
+            <p style="color:#888; font-size:13px; margin:5px 0 0 0;">Share photos, videos, and updates with your community</p>
+          </div>
+          <div id="communityPostsContainer" style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading community posts...</div>
+          </div>
+        </div>
+      `;
+      chatSection.insertBefore(postsDiv, chatSection.firstChild);
+    }
+  }
+  
+  const postsContainer = document.getElementById('communityPostsContainer');
+  if (!postsContainer) return;
+  
+  try {
+    console.log('📨 Loading community posts');
+    
+    const data = await apiCall('/api/posts/community', 'GET');
+    
+    if (data.needsJoinCommunity) {
+      postsContainer.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
+          <h3 style="color:#4f74a3;">Join a Community First!</h3>
+          <p style="color:#888;">Connect to your college to see community posts.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    if (!data.posts || data.posts.length === 0) {
+      postsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📸 No community posts yet. Be the first to share!</div>';
+      return;
+    }
+    
+    let html = '';
+    data.posts.forEach(post => {
+      const author = post.users?.username || 'User';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at).toLocaleString();
+      const isOwn = currentUser && post.user_id === currentUser.id;
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                  <span>•</span>
+                  <span>🌍 Community</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `<span class="post-sticker">${sticker.emoji || sticker}</span>`).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    postsContainer.innerHTML = html;
+    console.log('✅ Community posts loaded');
+  } catch (error) {
+    console.error('❌ Failed to load community posts:', error);
+    if (postsContainer) {
+      postsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#ff6b6b;">❌ Failed to load community posts</div>';
+    }
+  }
 }
 
 function openCommunityChat() {
@@ -1870,6 +2034,14 @@ function showProfileModal(user) {
             </div>
           </div>
         ` : ''}
+        
+        <!-- PROFILE POSTS SECTION -->
+        <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
+          <h3 style="color:#4f74a3; margin-bottom:20px;">📝 Profile Posts</h3>
+          <div id="userProfilePosts" style="display:flex; flex-direction:column; gap:15px;">
+            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -1881,6 +2053,112 @@ function showProfileModal(user) {
       bioTextarea.addEventListener('input', updateBioCounter);
       updateBioCounter();
     }
+  }
+  
+  // Load user's profile posts
+  loadUserProfilePosts(user.id);
+}
+
+// NEW: Load profile posts for a specific user
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  
+  try {
+    console.log('📨 Loading profile posts for user:', userId);
+    
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📝 No profile posts yet.</div>';
+      return;
+    }
+    
+    let html = '';
+    data.posts.forEach(post => {
+      const author = post.users?.username || 'User';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at).toLocaleString();
+      const isOwn = currentUser && post.user_id === currentUser.id;
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post" style="margin:0;">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `<span class="post-sticker">${sticker.emoji || sticker}</span>`).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+    console.log('✅ Profile posts loaded');
+  } catch (error) {
+    console.error('❌ Failed to load profile posts:', error);
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff6b6b;">❌ Failed to load posts</div>';
   }
 }
 
