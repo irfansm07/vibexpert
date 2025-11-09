@@ -1345,8 +1345,58 @@ async function handleForgotPassword(e) {
   }
   
   try {
+    showMessage('📧 Sending reset code...', 'success');
     await apiCall('/api/forgot-password', 'POST', { email });
     showMessage('✅ Check your email for reset code', 'success');
+    
+    // Show code verification section
+    document.getElementById('resetEmailSection').style.display = 'none';
+    document.getElementById('resetCodeSection').style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+async function verifyResetCode(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  const code = document.getElementById('resetCode').value.trim();
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmNewPassword').value;
+  
+  if(!code || code.length !== 6) {
+    showMessage('⚠️ Enter 6-digit code', 'error');
+    return;
+  }
+  
+  if(!newPassword || !confirmPassword) {
+    showMessage('⚠️ Enter new password', 'error');
+    return;
+  }
+  
+  if(newPassword !== confirmPassword) {
+    showMessage('⚠️ Passwords don\'t match', 'error');
+    return;
+  }
+  
+  if(newPassword.length < 6) {
+    showMessage('⚠️ Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('🔍 Verifying code...', 'success');
+    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
+    showMessage('✅ Password reset successful! Please login', 'success');
+    
+    // Reset form and go back to login
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('resetEmailSection').style.display = 'block';
+    document.getElementById('resetCodeSection').style.display = 'none';
+    
+    setTimeout(() => {
+      goLogin(null);
+    }, 2000);
   } catch (error) {
     showMessage('❌ ' + error.message, 'error');
   }
