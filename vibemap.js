@@ -1328,6 +1328,193 @@ document.addEventListener('click', function(e) {
 
 console.log('✅ VibeXpert Updated - All features working on mobile, tablet, and desktop!');
 
+// ==================== POST CELEBRATION MODAL ====================
+
+function showPostCelebrationModal(postCount) {
+  console.log('🎉 Showing celebration for post #', postCount);
+  
+  // Determine milestone
+  let milestone = getMilestoneForPost(postCount);
+  
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'celebration-modal';
+  modal.style.display = 'flex';
+  
+  modal.innerHTML = `
+    <div class="celebration-modal-content">
+      <!-- Confetti Background -->
+      <div class="celebration-confetti"></div>
+      
+      <!-- Icon Circle -->
+      <div class="celebration-icon-circle" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd);">
+        <span style="font-size: 48px;">${milestone.icon}</span>
+      </div>
+      
+      <!-- Emoji -->
+      <div class="celebration-emoji">${milestone.emoji}</div>
+      
+      <!-- Title -->
+      <h2 class="celebration-title" style="color: ${milestone.color};">
+        ${milestone.title}
+      </h2>
+      
+      <!-- Message -->
+      <p class="celebration-message">${milestone.message}</p>
+      
+      <!-- Stats Box -->
+      <div class="celebration-stats" style="background: ${milestone.color}15;">
+        <div class="celebration-count" style="color: ${milestone.color};">${postCount}</div>
+        <div class="celebration-label">TOTAL POSTS</div>
+      </div>
+      
+      <!-- Motivational Quote -->
+      <div class="celebration-quote">
+        "${milestone.quote}"
+      </div>
+      
+      <!-- Continue Button -->
+      <button class="celebration-button" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd); box-shadow: 0 4px 15px ${milestone.color}40;" onclick="closeCelebrationModal()">
+        🚀 Keep Posting!
+      </button>
+      
+      <!-- Share Achievement -->
+      ${postCount >= 10 ? `
+        <button class="celebration-share-btn" onclick="shareAchievement(${postCount})">
+          📢 Share Achievement
+        </button>
+      ` : ''}
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Auto close after 5 seconds
+  setTimeout(() => {
+    closeCelebrationModal();
+  }, 5000);
+  
+  // Play celebration sound effect (if available)
+  playSuccessSound();
+}
+
+function getMilestoneForPost(count) {
+  const milestones = {
+    1: {
+      emoji: '🎉',
+      icon: '⭐',
+      title: 'First Post!',
+      message: 'Congratulations on your first post!',
+      quote: 'Every journey begins with a single step',
+      color: '#667eea'
+    },
+    5: {
+      emoji: '🚀',
+      icon: '📈',
+      title: 'Rising Star!',
+      message: 'You\'re building momentum!',
+      quote: 'Consistency is the key to success',
+      color: '#f093fb'
+    },
+    10: {
+      emoji: '⭐',
+      icon: '🎨',
+      title: 'Content Creator!',
+      message: 'You\'re officially a content creator!',
+      quote: 'Create content that matters',
+      color: '#feca57'
+    },
+    25: {
+      emoji: '🏆',
+      icon: '👑',
+      title: 'Champion!',
+      message: 'You\'re crushing it!',
+      quote: 'Champions are made from dedication',
+      color: '#ff6b6b'
+    },
+    50: {
+      emoji: '💎',
+      icon: '✨',
+      title: 'Diamond Creator!',
+      message: 'You\'re a legend in the making!',
+      quote: 'Shine bright like a diamond',
+      color: '#4ecdc4'
+    },
+    100: {
+      emoji: '👑',
+      icon: '⚡',
+      title: 'Elite Creator!',
+      message: 'You\'re unstoppable!',
+      quote: 'You are an inspiration to others',
+      color: '#a29bfe'
+    }
+  };
+  
+  // Check for exact milestones
+  if (milestones[count]) {
+    return milestones[count];
+  }
+  
+  // For other posts, show a generic celebration
+  if (count % 10 === 0) {
+    return {
+      emoji: '🎊',
+      icon: '🔥',
+      title: `${count} Posts!`,
+      message: 'You\'re on fire!',
+      quote: 'Keep up the amazing work',
+      color: '#667eea'
+    };
+  }
+  
+  // Default celebration for any post
+  return {
+    emoji: '🎉',
+    icon: '✨',
+    title: 'Post Published!',
+    message: 'Your voice matters!',
+    quote: 'Every post brings you closer to your goals',
+    color: '#4f74a3'
+  };
+}
+
+function closeCelebrationModal() {
+  const modal = document.querySelector('.celebration-modal');
+  if (modal) {
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+function shareAchievement(postCount) {
+  const text = `🎉 I just made my ${postCount}th post on VibeXpert! Join me and connect with students across 500+ universities! 🚀`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'VibeXpert Achievement',
+      text: text,
+      url: window.location.origin
+    }).catch(err => console.log('Share cancelled'));
+  } else {
+    // Fallback: Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      showMessage('✅ Achievement copied to clipboard!', 'success');
+    });
+  }
+}
+
+function playSuccessSound() {
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ8PVazn77BdGAg+ltryxnIlBSl+zPLaizsIGWe57+mjUBELTKXh8bllHAU2jdXzzn0pBSh6yvDckTsIF2m98OihUBAMUKnn8bZkHgU7k9n0y3krBSh9y/HajDkHGGu/8OmgTxAMTqnm8LVjHAU4kdXy0H8qBSh7yfDajzsIGWu98OmhTxAMUKjn8bZkHQU7k9jzzn4pBSh8yvHajDkHGGu/8OmgTw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed'));
+  } catch (e) {
+    console.log('Could not play sound');
+  }
+}
+
 function goForgotPassword(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -2175,10 +2362,16 @@ async function createPost() {
       showMessage(msg, 'success');
       console.log('🎉 Post created successfully!');
       
+      // NEW: Show celebration modal with post count
+      const postCount = data.postCount || 1;
+      setTimeout(() => {
+        showPostCelebrationModal(postCount);
+      }, 800);
+      
       if (data.badgeUpdated && data.newBadges?.length > 0) {
         setTimeout(() => {
           showMessage(`🏆 New badge: ${data.newBadges.join(', ')}`, 'success');
-        }, 1500);
+        }, 6000); // Show after celebration modal
       }
       
       resetPostForm();
