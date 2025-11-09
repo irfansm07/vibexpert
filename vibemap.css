@@ -4725,3 +4725,444 @@ body.light-theme .music-name {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   POST CELEBRATION MODAL STYLES
+   Add this to the END of vibemap.css
+   ======================================== */
+
+/* Celebration Modal Container */
+.celebration-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+  padding: 20px;
+}
+
+.celebration-modal-content {
+  background: white;
+  border-radius: 25px;
+  padding: 50px 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  animation: celebrationSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.light-theme .celebration-modal-content {
+  background: white;
+}
+
+/* Confetti Background Animation */
+.celebration-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 20%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(254, 202, 87, 0.1) 0%, transparent 50%);
+  animation: confettiFloat 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Icon Circle */
+.celebration-icon-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: bounceIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.celebration-icon-circle::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.3;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Emoji */
+.celebration-emoji {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: scaleRotate 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+}
+
+/* Title */
+.celebration-title {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 15px;
+  animation: slideUp 0.6s ease-out 0.2s backwards;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Message */
+.celebration-message {
+  font-size: 18px;
+  color: #4a5568;
+  margin-bottom: 25px;
+  font-weight: 500;
+  animation: slideUp 0.6s ease-out 0.3s backwards;
+}
+
+body.light-theme .celebration-message {
+  color: #4a5568;
+}
+
+/* Stats Box */
+.celebration-stats {
+  padding: 25px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  animation: slideUp 0.6s ease-out 0.4s backwards;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.celebration-count {
+  font-size: 56px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  animation: countUp 1s ease-out;
+}
+
+.celebration-label {
+  font-size: 13px;
+  color: #718096;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Quote */
+.celebration-quote {
+  font-size: 15px;
+  color: #718096;
+  font-style: italic;
+  margin-bottom: 25px;
+  padding: 15px;
+  border-left: 4px solid rgba(102, 126, 234, 0.3);
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+  animation: slideUp 0.6s ease-out 0.5s backwards;
+}
+
+/* Continue Button */
+.celebration-button {
+  width: 100%;
+  padding: 18px 30px;
+  border: none;
+  border-radius: 15px;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: slideUp 0.6s ease-out 0.6s backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.celebration-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.celebration-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.celebration-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.celebration-button:active {
+  transform: translateY(-1px);
+}
+
+/* Share Button */
+.celebration-share-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #667eea;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+  animation: slideUp 0.6s ease-out 0.7s backwards;
+}
+
+.celebration-share-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes celebrationSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleRotate {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(20deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes confettiFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(-5deg);
+  }
+}
+
+@keyframes countUp {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .celebration-modal-content {
+    padding: 40px 25px;
+    max-width: 90%;
+  }
+
+  .celebration-icon-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .celebration-icon-circle span {
+    font-size: 40px;
+  }
+
+  .celebration-emoji {
+    font-size: 64px;
+  }
+
+  .celebration-title {
+    font-size: 28px;
+  }
+
+  .celebration-message {
+    font-size: 16px;
+  }
+
+  .celebration-count {
+    font-size: 48px;
+  }
+
+  .celebration-quote {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .celebration-button {
+    padding: 15px 25px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .celebration-modal {
+    padding: 15px;
+  }
+
+  .celebration-modal-content {
+    padding: 30px 20px;
+    border-radius: 20px;
+  }
+
+  .celebration-icon-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .celebration-icon-circle span {
+    font-size: 32px;
+  }
+
+  .celebration-emoji {
+    font-size: 56px;
+  }
+
+  .celebration-title {
+    font-size: 24px;
+  }
+
+  .celebration-message {
+    font-size: 15px;
+  }
+
+  .celebration-count {
+    font-size: 40px;
+  }
+
+  .celebration-stats {
+    padding: 20px;
+  }
+
+  .celebration-quote {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .celebration-button {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .celebration-share-btn {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+}
