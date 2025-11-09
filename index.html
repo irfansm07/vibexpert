@@ -40,12 +40,80 @@
         <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
       </form>
 
-      <!-- FORGOT PASSWORD FORM -->
-      <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)" style="display:none;">
+      <!-- FORGOT PASSWORD FORM - UPDATED VERSION -->
+      <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
         <h2>Reset Password</h2>
-        <input type="email" id="resetEmail" placeholder="Enter your email" required>
-        <button type="submit">Send Reset Link</button>
-        <p><a href="#" onclick="goLogin(event)">Back to Login</a></p>
+        
+        <!-- STEP 1: Enter Email -->
+        <div id="resetEmailSection">
+          <p style="color:#888; font-size:14px; margin-bottom:15px;">
+            Enter your email address and we'll send you a verification code.
+          </p>
+          <input 
+            type="email" 
+            id="resetEmail" 
+            placeholder="Enter your email" 
+            required
+          >
+          <button type="button" onclick="handleForgotPassword(event)">
+            📧 Send Reset Code
+          </button>
+        </div>
+        
+        <!-- STEP 2: Enter Code and New Password -->
+        <div id="resetCodeSection" style="display:none;">
+          <p style="color:#888; font-size:14px; margin-bottom:15px;">
+            📧 Check your email for the 6-digit verification code.
+          </p>
+          
+          <input 
+            type="text" 
+            id="resetCode" 
+            placeholder="Enter 6-digit code" 
+            maxlength="6"
+            pattern="[0-9]{6}"
+            required
+            style="margin-bottom:15px; font-size:20px; letter-spacing:5px; text-align:center; font-weight:bold;"
+          >
+          
+          <input 
+            type="password" 
+            id="newPassword" 
+            placeholder="New Password" 
+            required
+            minlength="6"
+            style="margin-bottom:15px;"
+          >
+          
+          <input 
+            type="password" 
+            id="confirmNewPassword" 
+            placeholder="Confirm New Password" 
+            required
+            minlength="6"
+            style="margin-bottom:15px;"
+          >
+          
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button 
+              type="button" 
+              onclick="verifyResetCode(event)"
+              style="flex:1; min-width:120px;"
+            >
+              🔓 Reset Password
+            </button>
+            
+            <button 
+              type="button" 
+              onclick="resendResetCode()"
+              style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;"
+            >
+              📧 Resend Code
+            </button>
+          </div>
+        </div>
+        
+        <p><a href="#" onclick="goLogin(event)">← Back to Login</a></p>
       </form>
 
       <!-- SIGNUP FORM -->
