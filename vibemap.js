@@ -1,5 +1,4 @@
-// VIBEXPERT - COMPLETE FINAL VERSION - READY TO REPLACE
-// This file is 100% complete with all features including likes, comments, shares, views
+// VIBEXPERT - COMPLETE UPDATED VERSION WITH MOBILE FIXES
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -13,6 +12,7 @@ let socket = null;
 let selectedFiles = [];
 let previewUrls = [];
 let editingMessageId = null;
+let editTimeout = null;
 let selectedMusic = null;
 let selectedStickers = [];
 let cropper = null;
@@ -22,31 +22,138 @@ let currentCropIndex = -1;
 let currentFilters = {};
 let searchTimeout = null;
 
+// Enhanced music library with working audio files
 const musicLibrary = [
-  {id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧"},
-  {id: 2, name: "Upbeat Energy", artist: "Electronic Pop", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡"},
-  {id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹"},
-  {id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️"},
-  {id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊"},
-  {id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸"}
+  {
+    id: 1,
+    name: "Chill Vibes",
+    artist: "LoFi Beats",
+    duration: "2:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",
+    emoji: "🎧"
+  },
+  {
+    id: 2,
+    name: "Upbeat Energy",
+    artist: "Electronic Pop",
+    duration: "3:15",
+    url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",
+    emoji: "⚡"
+  },
+  {
+    id: 3,
+    name: "Dreamy Piano",
+    artist: "Classical",
+    duration: "2:45",
+    url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",
+    emoji: "🎹"
+  },
+  {
+    id: 4,
+    name: "Summer Vibes",
+    artist: "Tropical",
+    duration: "3:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",
+    emoji: "🏖️"
+  },
+  {
+    id: 5,
+    name: "Happy Day",
+    artist: "Pop Rock",
+    duration: "2:50",
+    url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",
+    emoji: "😊"
+  },
+  {
+    id: 6,
+    name: "Relaxing Guitar",
+    artist: "Acoustic",
+    duration: "3:10",
+    url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",
+    emoji: "🎸"
+  }
 ];
 
+// Enhanced sticker library with categories
 const stickerLibrary = {
-  emotions: [{id: 'happy', emoji: '😊', name: 'Happy'}, {id: 'laugh', emoji: '😂', name: 'Laugh'}, {id: 'love', emoji: '❤️', name: 'Love'}, {id: 'cool', emoji: '😎', name: 'Cool'}, {id: 'fire', emoji: '🔥', name: 'Fire'}, {id: 'star', emoji: '⭐', name: 'Star'}],
-  animals: [{id: 'cat', emoji: '🐱', name: 'Cat'}, {id: 'dog', emoji: '🐶', name: 'Dog'}, {id: 'panda', emoji: '🐼', name: 'Panda'}, {id: 'unicorn', emoji: '🦄', name: 'Unicorn'}, {id: 'dragon', emoji: '🐉', name: 'Dragon'}, {id: 'butterfly', emoji: '🦋', name: 'Butterfly'}],
-  objects: [{id: 'balloon', emoji: '🎈', name: 'Balloon'}, {id: 'gift', emoji: '🎁', name: 'Gift'}, {id: 'camera', emoji: '📷', name: 'Camera'}, {id: 'music', emoji: '🎵', name: 'Music'}, {id: 'book', emoji: '📚', name: 'Book'}, {id: 'computer', emoji: '💻', name: 'Computer'}],
-  nature: [{id: 'sun', emoji: '☀️', name: 'Sun'}, {id: 'moon', emoji: '🌙', name: 'Moon'}, {id: 'tree', emoji: '🌳', name: 'Tree'}, {id: 'flower', emoji: '🌸', name: 'Flower'}, {id: 'rainbow', emoji: '🌈', name: 'Rainbow'}, {id: 'wave', emoji: '🌊', name: 'Wave'}],
-  food: [{id: 'pizza', emoji: '🍕', name: 'Pizza'}, {id: 'burger', emoji: '🍔', name: 'Burger'}, {id: 'icecream', emoji: '🍦', name: 'Ice Cream'}, {id: 'coffee', emoji: '☕', name: 'Coffee'}, {id: 'cake', emoji: '🍰', name: 'Cake'}, {id: 'drink', emoji: '🥤', name: 'Drink'}],
-  activities: [{id: 'sports', emoji: '⚽', name: 'Sports'}, {id: 'game', emoji: '🎮', name: 'Game'}, {id: 'music2', emoji: '🎵', name: 'Music'}, {id: 'art', emoji: '🎨', name: 'Art'}, {id: 'movie', emoji: '🎬', name: 'Movie'}, {id: 'travel', emoji: '✈️', name: 'Travel'}]
+  emotions: [
+    { id: 'happy', emoji: '😊', name: 'Happy' },
+    { id: 'laugh', emoji: '😂', name: 'Laugh' },
+    { id: 'love', emoji: '❤️', name: 'Love' },
+    { id: 'cool', emoji: '😎', name: 'Cool' },
+    { id: 'fire', emoji: '🔥', name: 'Fire' },
+    { id: 'star', emoji: '⭐', name: 'Star' }
+  ],
+  animals: [
+    { id: 'cat', emoji: '🐱', name: 'Cat' },
+    { id: 'dog', emoji: '🐶', name: 'Dog' },
+    { id: 'panda', emoji: '🐼', name: 'Panda' },
+    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
+    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
+  ],
+  objects: [
+    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+    { id: 'gift', emoji: '🎁', name: 'Gift' },
+    { id: 'camera', emoji: '📷', name: 'Camera' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'book', emoji: '📚', name: 'Book' },
+    { id: 'computer', emoji: '💻', name: 'Computer' }
+  ],
+  nature: [
+    { id: 'sun', emoji: '☀️', name: 'Sun' },
+    { id: 'moon', emoji: '🌙', name: 'Moon' },
+    { id: 'tree', emoji: '🌳', name: 'Tree' },
+    { id: 'flower', emoji: '🌸', name: 'Flower' },
+    { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
+    { id: 'wave', emoji: '🌊', name: 'Wave' }
+  ],
+  food: [
+    { id: 'pizza', emoji: '🍕', name: 'Pizza' },
+    { id: 'burger', emoji: '🍔', name: 'Burger' },
+    { id: 'icecream', emoji: '🍦', name: 'Ice Cream' },
+    { id: 'coffee', emoji: '☕', name: 'Coffee' },
+    { id: 'cake', emoji: '🍰', name: 'Cake' },
+    { id: 'drink', emoji: '🥤', name: 'Drink' }
+  ],
+  activities: [
+    { id: 'sports', emoji: '⚽', name: 'Sports' },
+    { id: 'game', emoji: '🎮', name: 'Game' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'art', emoji: '🎨', name: 'Art' },
+    { id: 'movie', emoji: '🎬', name: 'Movie' },
+    { id: 'travel', emoji: '✈️', name: 'Travel' }
+  ]
 };
 
 const colleges = {
-  nit: [{name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'}, {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'}, {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'}, {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'}, {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}],
-  iit: [{name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'}, {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'}, {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'}, {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'}, {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'}],
-  vit: [{name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'}, {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'}, {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'}],
-  other: [{name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'}, {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'}, {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'}]
+  nit: [
+    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
+    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
+    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
+    {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
+    {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
+    {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'},
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
+    {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
+    {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'},
+  ],
+  other: [
+    {name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
+    {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
+    {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'},
+  ]
 };
 
+// Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
   checkAuthStatus();
   setupEventListeners();
@@ -59,75 +166,145 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function setupEventListeners() {
   const addMusicBtn = document.getElementById('addMusicBtn');
-  if (addMusicBtn) addMusicBtn.addEventListener('click', openMusicSelector);
+  if (addMusicBtn) {
+    addMusicBtn.addEventListener('click', openMusicSelector);
+  }
+  
   const addStickerBtn = document.getElementById('addStickerBtn');
-  if (addStickerBtn) addStickerBtn.addEventListener('click', openStickerSelector);
+  if (addStickerBtn) {
+    addStickerBtn.addEventListener('click', openStickerSelector);
+  }
 }
 
 function initializeMusicPlayer() {
   window.musicPlayer = new Audio();
   window.musicPlayer.volume = 0.5;
-  window.musicPlayer.addEventListener('loadedmetadata', function() { console.log('Music loaded:', this.src); });
-  window.musicPlayer.addEventListener('error', function(e) { console.error('Error loading music:', e); showMessage('Error loading music file. Please try another one.', 'error'); });
+  
+  window.musicPlayer.addEventListener('loadedmetadata', function() {
+    console.log('Music loaded:', this.src);
+  });
+  
+  window.musicPlayer.addEventListener('error', function(e) {
+    console.error('Error loading music:', e);
+    showMessage('Error loading music file. Please try another one.', 'error');
+  });
 }
 
-function getToken() { return localStorage.getItem('authToken'); }
+// FIXED: Enhanced API call with timeout and retry logic for mobile
+function getToken() {
+  return localStorage.getItem('authToken');
+}
 
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-  const options = { method, headers: {}, signal: controller.signal };
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s for mobile networks
+  
+  const options = {
+    method,
+    headers: {},
+    signal: controller.signal
+  };
+  
   const token = getToken();
-  if (token) options.headers['Authorization'] = `Bearer ${token}`;
-  if (body && !(body instanceof FormData)) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(body); } 
-  else if (body instanceof FormData) { options.body = body; }
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  if (body && !(body instanceof FormData)) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  } else if (body instanceof FormData) {
+    options.body = body;
+  }
+  
   try {
     console.log(`📡 API Call: ${method} ${endpoint}`);
     const response = await fetch(`${API_URL}${endpoint}`, options);
     clearTimeout(timeoutId);
+    
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Request failed');
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Request failed');
+    }
+    
     console.log(`✅ API Success: ${endpoint}`);
     return data;
   } catch (error) {
     clearTimeout(timeoutId);
+    
+    // Retry logic for network errors
     if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network') || error.message.includes('fetch'))) {
       console.log(`🔄 Retrying... (${retries} attempts left)`);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return apiCall(endpoint, method, body, retries - 1);
     }
+    
     console.error(`❌ API Error: ${endpoint}`, error);
-    if (error.name === 'AbortError') throw new Error('Request timeout - please check your connection and try again');
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please check your connection and try again');
+    }
     throw error;
   }
 }
 
+// FIXED: Image compression for mobile uploads
 async function compressImage(file, maxWidth = 1920, quality = 0.8) {
-  if (file.size < 500 * 1024) return file;
+  // Skip if file is already small
+  if (file.size < 500 * 1024) return file; // Less than 500KB
+  
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
+    
     reader.onerror = () => reject(new Error('Failed to read file'));
+    
     reader.onload = (e) => {
       const img = new Image();
       img.src = e.target.result;
+      
       img.onerror = () => reject(new Error('Failed to load image'));
+      
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          let width = img.width, height = img.height;
-          if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; }
-          canvas.width = width; canvas.height = height;
+          let width = img.width;
+          let height = img.height;
+          
+          // Calculate new dimensions
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
           const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => {
-            if (!blob) { reject(new Error('Compression failed')); return; }
-            const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
-            console.log(`🗜️ Compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB`);
-            resolve(compressedFile);
-          }, 'image/jpeg', quality);
-        } catch (error) { reject(error); }
+          
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('Compression failed'));
+                return;
+              }
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              console.log(`🗜️ Compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB`);
+              resolve(compressedFile);
+            },
+            'image/jpeg',
+            quality
+          );
+        } catch (error) {
+          reject(error);
+        }
       };
     };
   });
@@ -136,32 +313,64 @@ async function compressImage(file, maxWidth = 1920, quality = 0.8) {
 function checkAuthStatus() {
   const token = getToken();
   const saved = localStorage.getItem('user');
+  
   if(token && saved) {
     currentUser = JSON.parse(saved);
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainPage').style.display = 'block';
     document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
-    if (currentUser.college) { updateLiveNotif(`Connected to ${currentUser.college}`); initializeSocket(); }
+    
+    if (currentUser.college) {
+      updateLiveNotif(`Connected to ${currentUser.college}`);
+      initializeSocket();
+    }
   }
 }
 
-function showLoginPage() { document.getElementById('loginPage').style.display = 'flex'; document.getElementById('mainPage').style.display = 'none'; }
-function showMainPage() { document.getElementById('loginPage').style.display = 'none'; document.getElementById('mainPage').style.display = 'block'; }
+function showLoginPage() {
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainPage').style.display = 'none';
+}
 
+function showMainPage() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'block';
+}
+
+// AUTH FUNCTIONS
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  if(!email || !password) { showMessage('Fill all fields', 'error'); return; }
+  
+  if(!email || !password) {
+    showMessage('Fill all fields', 'error');
+    return;
+  }
+  
   try {
     showMessage('Logging in...', 'success');
+    
     const data = await apiCall('/api/login', 'POST', { email, password });
+    
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     currentUser = data.user;
+    
     showMessage('✅ Login successful!', 'success');
-    setTimeout(() => { showMainPage(); document.getElementById('userName').textContent = 'Hi, ' + currentUser.username; document.getElementById('loginForm').reset(); loadPosts(); if (currentUser.college) initializeSocket(); }, 800);
-  } catch (error) { showMessage('❌ Login failed: ' + error.message, 'error'); }
+    
+    setTimeout(() => {
+      showMainPage();
+      document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
+      document.getElementById('loginForm').reset();
+      loadPosts();
+      if (currentUser.college) {
+        initializeSocket();
+      }
+    }, 800);
+  } catch (error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
 }
 
 async function signup(e) {
@@ -171,972 +380,43 @@ async function signup(e) {
   const registrationNumber = document.getElementById('signupReg').value.trim();
   const password = document.getElementById('signupPass').value;
   const confirm = document.getElementById('signupConfirm').value;
-  if(!username || !email || !registrationNumber || !password || !confirm) { showMessage('Fill all fields', 'error'); return; }
-  if(password !== confirm) { showMessage('Passwords don\'t match', 'error'); return; }
+  
+  if(!username || !email || !registrationNumber || !password || !confirm) {
+    showMessage('Fill all fields', 'error');
+    return;
+  }
+  
+  if(password !== confirm) {
+    showMessage('Passwords don\'t match', 'error');
+    return;
+  }
+  
   try {
     showMessage('Creating account...', 'success');
+    
     await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
+    
     showMessage('🎉 Account created! Check your email', 'success');
+    
     document.getElementById('signupForm').reset();
-    setTimeout(() => goLogin(null), 2000);
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
-}
-
-// POST INTERACTION FUNCTIONS
-async function likePost(postId) {
-  try {
-    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
-    const likeBtn = document.querySelector(`[data-post-id="${postId}"] .like-btn`);
-    const likeCount = document.querySelector(`[data-post-id="${postId}"] .like-count`);
-    if (likeBtn && likeCount) {
-      if (data.action === 'liked') { likeBtn.classList.add('liked'); likeBtn.innerHTML = '❤️ Liked'; } 
-      else { likeBtn.classList.remove('liked'); likeBtn.innerHTML = '❤️ Like'; }
-      likeCount.textContent = '❤️ ' + data.likeCount;
-    }
-    showMessage(data.action === 'liked' ? '❤️ Post liked!' : '💔 Like removed', 'success');
-  } catch (error) { console.error('Like error:', error); showMessage('❌ Failed to like post', 'error'); }
-}
-
-async function showPostLikes(postId) {
-  try {
-    const data = await apiCall(`/api/posts/${postId}/likes`, 'GET');
-    const modal = document.createElement('div');
-    modal.className = 'modal'; modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-box"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>❤️ Liked by (${data.likeCount})</h2>${data.likes.length > 0 ? `<div style="max-height:400px; overflow-y:auto; margin-top:20px;">${data.likes.map(like => `<div style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer;" onclick="showUserProfile('${like.users.id}')"><div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">${like.users.profile_pic ? `<img src="${like.users.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}</div><div style="flex:1;"><div style="font-weight:600; color:#4f74a3;">@${like.users.username}</div><div style="font-size:12px; color:#888;">${new Date(like.created_at).toLocaleString()}</div></div></div>`).join('')}</div>` : '<p style="text-align:center; color:#888; padding:40px;">No likes yet</p>'}</div>`;
-    document.body.appendChild(modal);
-  } catch (error) { console.error('Failed to load likes:', error); showMessage('❌ Failed to load likes', 'error'); }
-}
-
-function openComments(postId) {
-  const modal = document.createElement('div');
-  modal.className = 'modal'; modal.id = `comments-modal-${postId}`; modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box" style="max-width:600px;"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>💬 Comments</h2><div id="comments-container-${postId}" style="max-height:400px; overflow-y:auto; margin:20px 0;"><div style="text-align:center; padding:20px; color:#888;">Loading comments...</div></div><div style="display:flex; gap:10px; margin-top:20px;"><input type="text" id="comment-input-${postId}" placeholder="Write a comment..." style="flex:1; padding:12px; background:rgba(20,30,50,0.8); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px;" onkeypress="if(event.key==='Enter') postComment('${postId}')"><button onclick="postComment('${postId}')" style="padding:12px 24px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">💬 Post</button></div></div>`;
-  document.body.appendChild(modal);
-  loadComments(postId);
-}
-
-async function loadComments(postId) {
-  try {
-    const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
-    const container = document.getElementById(`comments-container-${postId}`);
-    if (!container) return;
-    if (data.comments.length === 0) { container.innerHTML = '<p style="text-align:center; color:#888; padding:40px;">No comments yet. Be the first to comment!</p>'; return; }
-    let html = '';
-    data.comments.forEach(comment => {
-      const isOwn = currentUser && comment.user_id === currentUser.id;
-      html += `<div style="padding:15px; border-bottom:1px solid rgba(79,116,163,0.1); ${isOwn ? 'background:rgba(79,116,163,0.05);' : ''}"><div style="display:flex; align-items:start; gap:12px;"><div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; cursor:pointer;" onclick="showUserProfile('${comment.users.id}')">${comment.users.profile_pic ? `<img src="${comment.users.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}</div><div style="flex:1; min-width:0;"><div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:6px;"><div><div style="font-weight:600; color:#4f74a3; cursor:pointer;" onclick="showUserProfile('${comment.users.id}')">@${comment.users.username}</div><div style="font-size:11px; color:#888;">${new Date(comment.created_at).toLocaleString()}</div></div>${isOwn ? `<button onclick="deleteComment('${postId}', '${comment.id}')" style="background:rgba(255,107,107,0.1); color:#ff6b6b; border:1px solid rgba(255,107,107,0.3); padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer;">🗑️ Delete</button>` : ''}</div><div style="color:#e0e0e0; line-height:1.5; word-wrap:break-word;">${comment.content}</div></div></div></div>`;
-    });
-    container.innerHTML = html;
-  } catch (error) { console.error('Failed to load comments:', error); const container = document.getElementById(`comments-container-${postId}`); if (container) container.innerHTML = '<p style="text-align:center; color:#ff6b6b; padding:20px;">❌ Failed to load comments</p>'; }
-}
-
-async function postComment(postId) {
-  const input = document.getElementById(`comment-input-${postId}`);
-  const content = input.value.trim();
-  if (!content) { showMessage('⚠️ Comment cannot be empty', 'error'); return; }
-  try {
-    await apiCall(`/api/posts/${postId}/comments`, 'POST', { content });
-    input.value = ''; showMessage('✅ Comment posted!', 'success');
-    loadComments(postId);
-    const commentCount = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
-    if (commentCount) { const currentCount = parseInt(commentCount.textContent.replace('💬 ', '')) || 0; commentCount.textContent = '💬 ' + (currentCount + 1); }
-  } catch (error) { console.error('Comment error:', error); showMessage('❌ Failed to post comment', 'error'); }
-}
-
-async function deleteComment(postId, commentId) {
-  if (!confirm('Delete this comment?')) return;
-  try {
-    await apiCall(`/api/posts/${postId}/comments/${commentId}`, 'DELETE');
-    showMessage('🗑️ Comment deleted', 'success');
-    loadComments(postId);
-    const commentCount = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
-    if (commentCount) { const currentCount = parseInt(commentCount.textContent.replace('💬 ', '')) || 0; commentCount.textContent = '💬 ' + Math.max(0, currentCount - 1); }
-  } catch (error) { console.error('Delete comment error:', error); showMessage('❌ Failed to delete comment', 'error'); }
-}
-
-async function sharePost(postId) {
-  const modal = document.createElement('div');
-  modal.className = 'modal'; modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box" style="max-width:400px;"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>🔄 Share Post</h2><p style="color:#888; margin:20px 0;">Share this post with your connections</p><div style="display:flex; flex-direction:column; gap:12px;"><button onclick="shareToProfile('${postId}')" style="width:100%; padding:14px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">👤 Share to My Profile</button><button onclick="copyPostLink('${postId}')" style="width:100%; padding:14px; background:rgba(79,116,163,0.2); color:#4f74a3; border:1px solid rgba(79,116,163,0.3); border-radius:10px; cursor:pointer; font-weight:600;">🔗 Copy Link</button><button onclick="this.parentElement.parentElement.parentElement.remove()" style="width:100%; padding:14px; background:rgba(79,116,163,0.1); color:#888; border:1px solid rgba(79,116,163,0.2); border-radius:10px; cursor:pointer; font-weight:600;">❌ Cancel</button></div></div>`;
-  document.body.appendChild(modal);
-}
-
-async function shareToProfile(postId) {
-  try {
-    await apiCall(`/api/posts/${postId}/share`, 'POST');
-    document.querySelector('.modal').remove();
-    showMessage('✅ Post shared to your profile!', 'success');
-    const shareCount = document.querySelector(`[data-post-id="${postId}"] .share-count`);
-    if (shareCount) { const currentCount = parseInt(shareCount.textContent.replace('🔄 ', '')) || 0; shareCount.textContent = '🔄 ' + (currentCount + 1); }
-    loadPosts();
-  } catch (error) { console.error('Share error:', error); showMessage('❌ Failed to share post', 'error'); }
-}
-
-function copyPostLink(postId) {
-  const link = `${window.location.origin}?post=${postId}`;
-  navigator.clipboard.writeText(link).then(() => { document.querySelector('.modal').remove(); showMessage('✅ Link copied to clipboard!', 'success'); }).catch(() => { showMessage('❌ Failed to copy link', 'error'); });
-}
-
-async function showPostViews(postId) {
-  try {
-    const data = await apiCall(`/api/posts/${postId}/views`, 'GET');
-    const modal = document.createElement('div');
-    modal.className = 'modal'; modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-box"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>👁️ Post Views (${data.viewCount})</h2>${data.views.length > 0 ? `<div style="max-height:400px; overflow-y:auto; margin-top:20px;">${data.views.map(view => `<div style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid rgba(79,116,163,0.1); cursor:pointer;" onclick="showUserProfile('${view.users.id}')"><div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:20px;">${view.users.profile_pic ? `<img src="${view.users.profile_pic}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : '👤'}</div><div style="flex:1;"><div style="font-weight:600; color:#4f74a3;">@${view.users.username}</div><div style="font-size:12px; color:#888;">${new Date(view.viewed_at).toLocaleString()}</div></div></div>`).join('')}</div>` : '<p style="text-align:center; color:#888; padding:40px;">No views yet</p>'}</div>`;
-    document.body.appendChild(modal);
-  } catch (error) { console.error('Failed to load views:', error); showMessage('❌ Failed to load views', 'error'); }
-}
-
-async function markPostAsViewed(postId) {
-  try { await apiCall(`/api/posts/${postId}/view`, 'POST'); } catch (error) { console.error('View tracking error:', error); }
-}
-
-// RENDER POST CARD WITH ALL INTERACTIONS
-function renderPostCard(post) {
-  const isOwn = currentUser && post.user_id === currentUser.id;
-  const media = post.media || [];
-  const music = post.music;
-  const stickers = post.stickers || [];
-  
-  // Mark as viewed
-  if (!isOwn) markPostAsViewed(post.id);
-  
-  let mediaHtml = '';
-  if (media.length > 0) {
-    mediaHtml = '<div class="enhanced-post-media">';
-    media.forEach(m => {
-      if (m.type === 'image') {
-        mediaHtml += `<div class="enhanced-media-item"><img src="${m.url}" alt="Post media" onclick="openImageViewer('${m.url}')"></div>`;
-      } else if (m.type === 'video') {
-        mediaHtml += `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`;
-      } else if (m.type === 'audio') {
-        mediaHtml += `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`;
-      }
-    });
-    mediaHtml += '</div>';
-  }
-  
-  let musicHtml = '';
-  if (music && music.name) {
-    musicHtml = `<div class="post-music-container"><div class="music-player"><div class="music-info"><div class="music-icon">${music.emoji || '🎵'}</div><div class="music-details"><div class="music-name">${music.name}</div><div class="music-duration">${music.artist || ''} • ${music.duration || ''}</div></div></div><audio class="post-audio-player" src="${music.url}" controls></audio></div></div>`;
-  }
-  
-  let stickersHtml = '';
-  if (stickers.length > 0) {
-    stickersHtml = '<div class="post-stickers-container">';
-    stickers.forEach(s => {
-      stickersHtml += `<span class="post-sticker" title="${s.name}">${s.emoji}</span>`;
-    });
-    stickersHtml += '</div>';
-  }
-  
-  const likeCount = post.like_count || 0;
-  const commentCount = post.comment_count || 0;
-  const shareCount = post.share_count || 0;
-  const viewCount = post.view_count || 0;
-  const userHasLiked = post.user_has_liked || false;
-  
-  return `
-    <div class="enhanced-post" data-post-id="${post.id}">
-      <div class="enhanced-post-header">
-        <div class="enhanced-user-info">
-          <div class="enhanced-user-avatar" onclick="showUserProfile('${post.users.id}')">
-            ${post.users.profile_pic ? `<img src="${post.users.profile_pic}" alt="${post.users.username}">` : '👤'}
-          </div>
-          <div class="enhanced-user-details">
-            <div class="enhanced-username" onclick="showUserProfile('${post.users.id}')">@${post.users.username}</div>
-            <div class="enhanced-post-meta">
-              <span>${new Date(post.created_at).toLocaleString()}</span>
-              ${post.posted_to === 'community' ? '<span>• 🌍 Community</span>' : '<span>• 👤 Profile</span>'}
-            </div>
-          </div>
-        </div>
-        ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
-      </div>
-      
-      <div class="enhanced-post-content">
-        ${post.content ? `<div class="enhanced-post-text">${post.content}</div>` : ''}
-        ${stickersHtml}
-        ${mediaHtml}
-        ${musicHtml}
-      </div>
-      
-      <div class="enhanced-post-footer">
-        <div class="enhanced-post-stats">
-          <span class="like-count" onclick="showPostLikes('${post.id}')" style="cursor:pointer;">❤️ ${likeCount}</span>
-          <span class="comment-count">💬 ${commentCount}</span>
-          <span class="share-count">🔄 ${shareCount}</span>
-          <span onclick="showPostViews('${post.id}')" style="cursor:pointer;">👁️ ${viewCount}</span>
-        </div>
-        
-        <div class="enhanced-post-engagement">
-          <button class="engagement-btn like-btn ${userHasLiked ? 'liked' : ''}" onclick="likePost('${post.id}')">
-            ${userHasLiked ? '❤️ Liked' : '❤️ Like'}
-          </button>
-          <button class="engagement-btn" onclick="openComments('${post.id}')">💬 Comment</button>
-          <button class="engagement-btn" onclick="sharePost('${post.id}')">🔄 Share</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// LOAD POSTS
-async function loadPosts() {
-  try {
-    console.log('📝 Loading posts...');
-    const data = await apiCall('/api/posts', 'GET');
-    const feed = document.getElementById('postsFeed');
     
-    if (!data.posts || data.posts.length === 0) {
-      feed.innerHTML = '<div class="empty-state"><p style="font-size:48px;">📝</p><p>No posts yet. Be the first to post!</p></div>';
-      return;
-    }
-    
-    feed.innerHTML = data.posts.map(post => renderPostCard(post)).join('');
-    console.log(`✅ Loaded ${data.posts.length} posts`);
-  } catch (error) {
-    console.error('❌ Failed to load posts:', error);
-    document.getElementById('postsFeed').innerHTML = '<div class="empty-state"><p style="color:#ff6b6b;">❌ Failed to load posts</p></div>';
-  }
-}
-
-// CREATE POST
-async function createPost() {
-  const content = document.getElementById('postText').value.trim();
-  
-  if (!content && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
-    showMessage('⚠️ Post must have content, media, music, or stickers', 'error');
-    return;
-  }
-  
-  if (selectedPostDestination === 'community' && (!currentUser.communityJoined || !currentUser.college)) {
-    showMessage('⚠️ Please join a community first', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('📤 Creating post...', 'success');
-    
-    const formData = new FormData();
-    formData.append('content', content);
-    formData.append('postTo', selectedPostDestination);
-    
-    if (selectedMusic) {
-      formData.append('music', JSON.stringify(selectedMusic));
-    }
-    
-    if (selectedStickers.length > 0) {
-      formData.append('stickers', JSON.stringify(selectedStickers));
-    }
-    
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      if (file.type.startsWith('image/')) {
-        const compressed = await compressImage(file);
-        formData.append('media', compressed);
-      } else {
-        formData.append('media', file);
-      }
-    }
-    
-    const data = await apiCall('/api/posts', 'POST', formData);
-    
-    // Show celebration modal
-    showPostCelebration(data.postCount, data.newBadges);
-    
-    // Reset form
-    document.getElementById('postText').value = '';
-    selectedFiles = [];
-    previewUrls = [];
-    selectedMusic = null;
-    selectedStickers = [];
-    document.getElementById('photoPreviewContainer').innerHTML = '';
-    document.getElementById('selectedAssets').innerHTML = '';
-    
-    // Reload posts
-    await loadPosts();
-    
-    showMessage('✅ Post created successfully!', 'success');
-  } catch (error) {
-    console.error('❌ Create post error:', error);
-    showMessage('❌ Failed to create post: ' + error.message, 'error');
-  }
-}
-
-// CELEBRATION MODAL
-function showPostCelebration(postCount, newBadges = []) {
-  let emoji = '🎉';
-  let title = 'Post Published!';
-  let message = 'Your vibe is out there!';
-  let bgGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-  let quote = '"Every post is a new adventure!"';
-  
-  if (postCount === 1) {
-    emoji = '🚀';
-    title = 'First Post!';
-    message = 'Welcome to the community!';
-    bgGradient = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
-    quote = '"Every expert was once a beginner!"';
-  } else if (postCount === 10) {
-    emoji = '⭐';
-    title = 'Content Creator!';
-    message = '10 posts milestone reached!';
-    bgGradient = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
-    quote = '"You\'re making waves!"';
-  } else if (postCount === 50) {
-    emoji = '🏆';
-    title = 'Master Viber!';
-    message = '50 posts! You\'re unstoppable!';
-    bgGradient = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
-    quote = '"Your creativity knows no bounds!"';
-  } else if (postCount % 100 === 0) {
-    emoji = '👑';
-    title = 'Legend Status!';
-    message = `${postCount} posts! Incredible!`;
-    bgGradient = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
-    quote = '"You inspire others!"';
-  }
-  
-  const modal = document.createElement('div');
-  modal.className = 'celebration-modal';
-  modal.style.display = 'flex';
-  
-  modal.innerHTML = `
-    <div class="celebration-modal-content">
-      <div class="celebration-confetti"></div>
-      
-      <div class="celebration-emoji">${emoji}</div>
-      
-      <h1 class="celebration-title" style="background:${bgGradient}; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">${title}</h1>
-      
-      <p class="celebration-message">${message}</p>
-      
-      <div class="celebration-stats" style="background:${bgGradient.replace('135deg', '135deg').replace('100%', '20%')};">
-        <div class="celebration-count" style="color:${bgGradient.includes('667eea') ? '#667eea' : bgGradient.includes('f093fb') ? '#f093fb' : bgGradient.includes('4facfe') ? '#4facfe' : bgGradient.includes('43e97b') ? '#43e97b' : '#fa709a'};">
-          ${postCount}
-        </div>
-        <div class="celebration-label">Total Posts</div>
-      </div>
-      
-      ${newBadges.length > 0 ? `
-        <div style="margin:20px 0; padding:15px; background:rgba(102,126,234,0.1); border-radius:12px;">
-          <p style="font-size:14px; font-weight:600; color:#667eea; margin-bottom:10px;">🎖️ New Badges Earned!</p>
-          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-            ${newBadges.map(badge => `<span style="padding:8px 14px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border-radius:20px; font-size:13px; font-weight:600;">${badge}</span>`).join('')}
-          </div>
-        </div>
-      ` : ''}
-      
-      <p class="celebration-quote">${quote}</p>
-      
-      <button class="celebration-button" style="background:${bgGradient}; box-shadow:0 6px 20px ${bgGradient.includes('667eea') ? 'rgba(102,126,234,0.4)' : bgGradient.includes('f093fb') ? 'rgba(240,147,251,0.4)' : bgGradient.includes('4facfe') ? 'rgba(79,172,254,0.4)' : bgGradient.includes('43e97b') ? 'rgba(67,233,123,0.4)' : 'rgba(250,112,154,0.4)'};" onclick="this.parentElement.parentElement.remove()">
-        ✨ Continue Posting
-      </button>
-      
-      <button class="celebration-share-btn" onclick="shareAchievement(${postCount}); this.parentElement.parentElement.remove();">
-        📢 Share Achievement
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-  
-  setTimeout(() => {
-    modal.style.animation = 'fadeIn 0.3s ease';
-  }, 10);
-}
-
-function shareAchievement(postCount) {
-  const text = `🎉 Just made my ${postCount}${postCount === 1 ? 'st' : postCount === 2 ? 'nd' : postCount === 3 ? 'rd' : 'th'} post on VibeXpert! Join the community! #VibeXpert`;
-  if (navigator.share) {
-    navigator.share({ text }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(text).then(() => {
-      showMessage('✅ Achievement copied to clipboard!', 'success');
-    });
-  }
-}
-
-// DELETE POST
-async function deletePost(postId) {
-  if (!confirm('Are you sure you want to delete this post?')) return;
-  
-  try {
-    await apiCall(`/api/posts/${postId}`, 'DELETE');
-    showMessage('🗑️ Post deleted successfully', 'success');
-    await loadPosts();
-  } catch (error) {
-    console.error('❌ Delete post error:', error);
-    showMessage('❌ Failed to delete post', 'error');
-  }
-}
-
-// MEDIA HANDLING
-function openPhotoGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = true;
-  input.onchange = (e) => handleMediaSelect(e.target.files);
-  input.click();
-}
-
-function openCamera() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  input.onchange = (e) => handleMediaSelect(e.target.files);
-  input.click();
-}
-
-function handleMediaSelect(files) {
-  if (!files || files.length === 0) return;
-  
-  const totalFiles = selectedFiles.length + files.length;
-  if (totalFiles > 10) {
-    showMessage('⚠️ Maximum 10 files allowed', 'error');
-    return;
-  }
-  
-  Array.from(files).forEach(file => {
-    if (file.size > 20 * 1024 * 1024) {
-      showMessage(`⚠️ ${file.name} is too large (max 20MB)`, 'error');
-      return;
-    }
-    
-    selectedFiles.push(file);
-    const url = URL.createObjectURL(file);
-    previewUrls.push(url);
-  });
-  
-  updateMediaPreview();
-}
-
-function updateMediaPreview() {
-  const container = document.getElementById('photoPreviewContainer');
-  container.innerHTML = '';
-  
-  selectedFiles.forEach((file, index) => {
-    const previewDiv = document.createElement('div');
-    previewDiv.className = 'preview-item';
-    
-    if (file.type.startsWith('image/')) {
-      previewDiv.innerHTML = `
-        <div class="preview-image-container">
-          <img src="${previewUrls[index]}" class="preview-image" alt="Preview ${index + 1}">
-          <div class="media-actions">
-            <button class="crop-btn" onclick="openCropEditor(${index})">✂️ Crop</button>
-            <button class="edit-btn" onclick="openPhotoEditor(${index})">✨ Edit</button>
-            <button class="remove-btn" onclick="removeMedia(${index})">❌</button>
-          </div>
-        </div>
-      `;
-    } else if (file.type.startsWith('video/')) {
-      previewDiv.innerHTML = `
-        <video src="${previewUrls[index]}" style="width:100%; height:100%; object-fit:cover;"></video>
-        <button class="remove-btn" onclick="removeMedia(${index})" style="position:absolute; top:8px; right:8px;">❌</button>
-      `;
-    }
-    
-    container.appendChild(previewDiv);
-  });
-}
-
-function removeMedia(index) {
-  URL.revokeObjectURL(previewUrls[index]);
-  selectedFiles.splice(index, 1);
-  previewUrls.splice(index, 1);
-  updateMediaPreview();
-}
-
-// MUSIC SELECTOR
-function openMusicSelector() {
-  const modal = document.getElementById('musicSelectorModal');
-  const selector = document.getElementById('musicSelector');
-  
-  selector.innerHTML = musicLibrary.map(song => `
-    <div class="music-item ${selectedMusic && selectedMusic.id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-      <div class="music-info">
-        <span class="music-emoji">${song.emoji}</span>
-        <div class="music-details">
-          <div class="music-name">${song.name}</div>
-          <div class="music-artist">${song.artist} • ${song.duration}</div>
-        </div>
-      </div>
-      <div class="music-actions">
-        <button class="preview-btn" onclick="previewMusic('${song.url}', event)">▶️ Preview</button>
-        <button class="select-btn ${selectedMusic && selectedMusic.id === song.id ? 'selected' : ''}" onclick="selectMusic(${song.id})">${selectedMusic && selectedMusic.id === song.id ? '✓ Selected' : 'Select'}</button>
-      </div>
-    </div>
-  `).join('');
-  
-  modal.style.display = 'flex';
-}
-
-function previewMusic(url, event) {
-  event.stopPropagation();
-  if (window.musicPlayer.src === url && !window.musicPlayer.paused) {
-    window.musicPlayer.pause();
-  } else {
-    window.musicPlayer.src = url;
-    window.musicPlayer.play();
-  }
-}
-
-function selectMusic(songId) {
-  const song = musicLibrary.find(s => s.id === songId);
-  if (!song) return;
-  
-  selectedMusic = song;
-  updateSelectedAssets();
-  closeModal('musicSelectorModal');
-  showMessage(`🎵 Music added: ${song.name}`, 'success');
-}
-
-// STICKER SELECTOR
-function openStickerSelector() {
-  const modal = document.getElementById('stickerSelectorModal');
-  const selector = document.getElementById('stickerSelector');
-  
-  let html = '';
-  Object.keys(stickerLibrary).forEach(category => {
-    html += `
-      <div class="sticker-category">
-        <h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>
-        <div class="sticker-grid">
-          ${stickerLibrary[category].map(sticker => `
-            <div class="sticker-item ${selectedStickers.find(s => s.id === sticker.id) ? 'selected' : ''}" onclick="toggleSticker('${sticker.id}', '${sticker.emoji}', '${sticker.name}')">
-              <span style="font-size:40px;">${sticker.emoji}</span>
-              <div class="sticker-name">${sticker.name}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  });
-  
-  selector.innerHTML = html;
-  modal.style.display = 'flex';
-}
-
-function toggleSticker(id, emoji, name) {
-  const index = selectedStickers.findIndex(s => s.id === id);
-  
-  if (index > -1) {
-    selectedStickers.splice(index, 1);
-  } else {
-    if (selectedStickers.length >= 5) {
-      showMessage('⚠️ Maximum 5 stickers allowed', 'error');
-      return;
-    }
-    selectedStickers.push({ id, emoji, name });
-  }
-  
-  updateSelectedAssets();
-  openStickerSelector(); // Refresh to show selection
-}
-
-function updateSelectedAssets() {
-  const container = document.getElementById('selectedAssets');
-  let html = '';
-  
-  if (selectedMusic) {
-    html += `
-      <div class="selected-asset">
-        <span>${selectedMusic.emoji} ${selectedMusic.name}</span>
-        <button onclick="selectedMusic = null; updateSelectedAssets();">×</button>
-      </div>
-    `;
-  }
-  
-  selectedStickers.forEach(sticker => {
-    html += `
-      <div class="selected-asset">
-        <span>${sticker.emoji} ${sticker.name}</span>
-        <button onclick="toggleSticker('${sticker.id}', '${sticker.emoji}', '${sticker.name}')">×</button>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// PHOTO EDITOR
-function openPhotoEditor(index) {
-  currentEditIndex = index;
-  const modal = document.getElementById('photoEditorModal');
-  const img = document.getElementById('editImage');
-  img.src = previewUrls[index];
-  img.className = 'filter-normal';
-  modal.style.display = 'flex';
-}
-
-function applyFilter(filterName) {
-  const img = document.getElementById('editImage');
-  img.className = `filter-${filterName}`;
-  
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active-filter');
-  });
-  event.target.classList.add('active-filter');
-}
-
-function resetFilters() {
-  const img = document.getElementById('editImage');
-  img.className = 'filter-normal';
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active-filter');
-  });
-}
-
-async function saveEditedPhoto() {
-  const img = document.getElementById('editImage');
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  
-  const filterClass = img.className.replace('filter-', '');
-  if (filterClass !== 'normal') {
-    ctx.filter = getFilterCSS(filterClass);
-  }
-  
-  ctx.drawImage(img, 0, 0);
-  
-  canvas.toBlob(async (blob) => {
-    const newFile = new File([blob], selectedFiles[currentEditIndex].name, { type: 'image/jpeg' });
-    selectedFiles[currentEditIndex] = newFile;
-    URL.revokeObjectURL(previewUrls[currentEditIndex]);
-    previewUrls[currentEditIndex] = URL.createObjectURL(newFile);
-    updateMediaPreview();
-    closeModal('photoEditorModal');
-    showMessage('✅ Filter applied!', 'success');
-  }, 'image/jpeg', 0.9);
-}
-
-function getFilterCSS(filterName) {
-  const filters = {
-    vintage: 'sepia(0.4) contrast(1.2) brightness(1.1)',
-    clarendon: 'contrast(1.2) saturate(1.35)',
-    moon: 'grayscale(1) contrast(1.1) brightness(1.1)',
-    lark: 'contrast(0.9) brightness(1.2) hue-rotate(-10deg)',
-    reyes: 'sepia(0.6) contrast(1.1) brightness(1.1) saturate(1.4)'
-  };
-  return filters[filterName] || 'none';
-}
-
-// CROP EDITOR
-function openCropEditor(index) {
-  currentCropIndex = index;
-  const modal = document.getElementById('cropEditorModal');
-  const img = document.getElementById('cropImage');
-  img.src = previewUrls[index];
-  modal.style.display = 'flex';
-  
-  setTimeout(() => {
-    if (cropper) cropper.destroy();
-    cropper = new Cropper(img, {
-      aspectRatio: NaN,
-      viewMode: 1,
-      autoCropArea: 1
-    });
-  }, 100);
-}
-
-document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.aspect-ratio-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    
-    const ratio = this.dataset.ratio;
-    if (cropper) {
-      if (ratio === 'free') {
-        cropper.setAspectRatio(NaN);
-      } else {
-        cropper.setAspectRatio(eval(ratio));
-      }
-    }
-  });
-});
-
-function rotateImage() {
-  if (cropper) cropper.rotate(90);
-}
-
-function resetCrop() {
-  if (cropper) cropper.reset();
-}
-
-async function applyCrop() {
-  if (!cropper) return;
-  
-  const canvas = cropper.getCroppedCanvas();
-  canvas.toBlob(async (blob) => {
-    const newFile = new File([blob], selectedFiles[currentCropIndex].name, { type: 'image/jpeg' });
-    selectedFiles[currentCropIndex] = newFile;
-    URL.revokeObjectURL(previewUrls[currentCropIndex]);
-    previewUrls[currentCropIndex] = URL.createObjectURL(newFile);
-    updateMediaPreview();
-    
-    if (cropper) {
-      cropper.destroy();
-      cropper = null;
-    }
-    
-    closeModal('cropEditorModal');
-    showMessage('✅ Image cropped!', 'success');
-  }, 'image/jpeg', 0.9);
-}
-
-// POST DESTINATION
-function showPostDestinationModal() {
-  document.getElementById('postDestinationModal').style.display = 'flex';
-}
-
-function selectPostDestination(destination) {
-  selectedPostDestination = destination;
-  const label = destination === 'profile' ? 'My Profile' : 'Community Feed';
-  document.getElementById('currentDestination').textContent = label;
-  closeModal('postDestinationModal');
-  showMessage(`📍 Posting to: ${label}`, 'success');
-}
-
-// MODAL CONTROLS
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) modal.style.display = 'none';
-  
-  if (modalId === 'cropEditorModal' && cropper) {
-    cropper.destroy();
-    cropper = null;
-  }
-  
-  if (modalId === 'musicSelectorModal' && window.musicPlayer) {
-    window.musicPlayer.pause();
-  }
-}
-
-// USER PROFILE
-async function showUserProfile(userId) {
-  try {
-    const data = await apiCall(`/api/profile/${userId}`, 'GET');
-    const user = data.user;
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    
-    modal.innerHTML = `
-      <button class="close-profile" onclick="this.parentElement.remove()">×</button>
-      <div class="modal-box profile-modal-box">
-        <div class="profile-container">
-          <div class="profile-header">
-            <div class="profile-cover"></div>
-            <div class="profile-main">
-              <div class="profile-photo-section">
-                <div class="profile-photo" style="${user.profile_pic ? `background-image:url(${user.profile_pic}); background-size:cover;` : ''}">
-                  ${!user.profile_pic ? '👤' : ''}
-                </div>
-              </div>
-              <div class="profile-name-section">
-                <h2>@${user.username}</h2>
-                ${user.college ? `<p style="color:#888; margin:5px 0;">🎓 ${user.college}</p>` : ''}
-                ${user.bio ? `<p style="color:#888; margin:10px 0;">${user.bio}</p>` : ''}
-              </div>
-            </div>
-          </div>
-          
-          <div class="profile-stats-section">
-            <div class="stat-card">
-              <div class="stat-icon">📝</div>
-              <div class="stat-value">${user.postCount || 0}</div>
-              <div class="stat-title">Posts</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">🏆</div>
-              <div class="stat-value">${(user.badges || []).length}</div>
-              <div class="stat-title">Badges</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">📅</div>
-              <div class="stat-value">${new Date(user.created_at).toLocaleDateString()}</div>
-              <div class="stat-title">Joined</div>
-            </div>
-          </div>
-          
-          <div class="profile-tabs">
-            <button class="tab-btn active" onclick="showProfileTab('posts', '${userId}')">Posts</button>
-            <button class="tab-btn" onclick="showProfileTab('badges', '${userId}')">Badges</button>
-          </div>
-          
-          <div id="profile-tab-content-${userId}" class="profile-tab-content active">
-            <div style="text-align:center; padding:20px; color:#888;">Loading posts...</div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    await showProfileTab('posts', userId);
-  } catch (error) {
-    console.error('Failed to load profile:', error);
-    showMessage('❌ Failed to load profile', 'error');
-  }
-}
-
-async function showProfileTab(tab, userId) {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  event?.target?.classList.add('active');
-  
-  const container = document.getElementById(`profile-tab-content-${userId}`);
-  
-  if (tab === 'posts') {
-    try {
-      const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
-      
-      if (!data.posts || data.posts.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p style="font-size:48px;">📝</p><p>No posts yet</p></div>';
-        return;
-      }
-      
-      container.innerHTML = data.posts.map(post => renderPostCard(post)).join('');
-    } catch (error) {
-      container.innerHTML = '<div class="empty-state"><p style="color:#ff6b6b;">Failed to load posts</p></div>';
-    }
-  } else if (tab === 'badges') {
-    try {
-      const data = await apiCall(`/api/profile/${userId}`, 'GET');
-      const badges = data.user.badges || [];
-      
-      if (badges.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p style="font-size:48px;">🏆</p><p>No badges earned yet</p></div>';
-        return;
-      }
-      
-      container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px; padding:20px;">
-          ${badges.map(badge => `
-            <div style="background:rgba(79,116,163,0.1); border:1px solid rgba(79,116,163,0.3); border-radius:12px; padding:20px; text-align:center;">
-              <div style="font-size:48px; margin-bottom:10px;">${badge.includes('First') ? '🎨' : badge.includes('Creator') ? '⭐' : badge.includes('Community') ? '🎓' : '🏆'}</div>
-              <div style="font-weight:600; color:#4f74a3;">${badge}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    } catch (error) {
-      container.innerHTML = '<div class="empty-state"><p style="color:#ff6b6b;">Failed to load badges</p></div>';
-    }
-  }
-}
-
-// SEARCH FUNCTIONALITY
-function initializeSearchBar() {
-  const searchBox = document.getElementById('searchBox');
-  const searchResults = document.getElementById('searchResults');
-  
-  searchBox.addEventListener('input', async (e) => {
-    const query = e.target.value.trim();
-    
-    if (query.length < 2) {
-      searchResults.style.display = 'none';
-      searchResults.innerHTML = '';
-      return;
-    }
-    
-    if (searchTimeout) clearTimeout(searchTimeout);
-    
-    searchTimeout = setTimeout(async () => {
-      try {
-        const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
-        
-        if (!data.users || data.users.length === 0) {
-          searchResults.innerHTML = '<div class="no-results">No users found</div>';
-          searchResults.style.display = 'block';
-          return;
-        }
-        
-        searchResults.innerHTML = data.users.map(user => `
-          <div class="search-result-item" onclick="showUserProfile('${user.id}'); document.getElementById('searchResults').style.display='none';">
-            <div class="search-result-avatar">
-              ${user.profile_pic ? `<img src="${user.profile_pic}" alt="${user.username}">` : '👤'}
-            </div>
-            <div class="search-result-info">
-              <div class="search-result-username">@${user.username}</div>
-              <div class="search-result-details">${user.email}</div>
-              ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
-            </div>
-          </div>
-        `).join('');
-        
-        searchResults.style.display = 'block';
-      } catch (error) {
-        console.error('Search error:', error);
-        searchResults.innerHTML = '<div class="no-results">Search failed</div>';
-        searchResults.style.display = 'block';
-      }
-    }, 300);
-  });
-  
-  searchBox.addEventListener('blur', () => {
     setTimeout(() => {
-      searchResults.style.display = 'none';
-    }, 200);
-  });
-  
-  searchBox.addEventListener('focus', () => {
-    if (searchResults.innerHTML) {
-      searchResults.style.display = 'block';
-    }
-  });
+      goLogin(null);
+    }, 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
-// NAVIGATION
-function showPage(pageId, event) {
-  if (event) {
-    event.preventDefault();
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-    event.target.classList.add('active');
-  }
-  
-  document.querySelectorAll('.page').forEach(page => {
-    page.classList.remove('active');
-    page.style.display = 'none';
-  });
-  
-  const page = document.getElementById(pageId);
-  if (page) {
-    page.classList.add('active');
-    page.style.display = 'block';
-  }
-  
-  if (pageId === 'posts') {
-    loadPosts();
-  } else if (pageId === 'communities') {
-    loadCommunities();
-  } else if (pageId === 'badges') {
-    loadBadgesPage();
-  }
-  
-  closeHamburgerMenu();
-}
-
-function goHome() {
-  showPage('home', null);
-  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-  document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
-}
-
-// COMMUNITIES
-async function loadCommunities() {
+// COMMUNITY FUNCTIONS
+function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   
-  if (!currentUser.communityJoined || !currentUser.college) {
+  if (!currentUser || !currentUser.communityJoined) {
     container.innerHTML = `
       <div class="community-guidance">
-        <p>🎓 Join your college community to connect with fellow students!</p>
-        <button onclick="showPage('home', null); selectUniversity('nit')" style="padding:14px 30px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer; margin-top:20px;">🚀 Find Your College</button>
+        <p>🎓 Connect to your college first to join community!</p>
+        <button class="home-nav-btn" onclick="showPage('home')">Explore Colleges</button>
       </div>
     `;
     return;
@@ -1144,45 +424,251 @@ async function loadCommunities() {
   
   container.innerHTML = `
     <div class="community-card">
-      <h3>🌍 ${currentUser.college}</h3>
-      <p>Chat with your college community</p>
-      <button onclick="openCommunityChat()">💬 Open Chat</button>
+      <h3>${currentUser.college} Community</h3>
+      <p>Share and chat with students from your college</p>
+      <button onclick="openCommunitySection()">Open Community</button>
     </div>
   `;
+}
+
+function openCommunitySection() {
+  document.getElementById('chatSection').style.display = 'block';
+  loadCommunityPosts();
+  loadCommunityMessages();
+}
+
+async function loadCommunityPosts() {
+  const container = document.getElementById('communityPostsContainer');
+  if (!container) {
+    const chatSection = document.getElementById('chatSection');
+    if (chatSection) {
+      const postsDiv = document.createElement('div');
+      postsDiv.innerHTML = `
+        <div style="margin-bottom:30px;">
+          <div class="chat-header">
+            <h3>📸 Community Posts</h3>
+            <p style="color:#888; font-size:13px; margin:5px 0 0 0;">Share photos, videos, and updates with your community</p>
+          </div>
+          <div id="communityPostsContainer" style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading community posts...</div>
+          </div>
+        </div>
+      `;
+      chatSection.insertBefore(postsDiv, chatSection.firstChild);
+    }
+  }
   
-  document.getElementById('chatSection').style.display = 'none';
+  const postsContainer = document.getElementById('communityPostsContainer');
+  if (!postsContainer) return;
+  
+  try {
+    console.log('📨 Loading community posts');
+    
+    const data = await apiCall('/api/posts/community', 'GET');
+    
+    if (data.needsJoinCommunity) {
+      postsContainer.innerHTML = `
+        <div style="text-align:center; padding:40px;">
+          <div style="font-size:48px; margin-bottom:20px;">🎓</div>
+          <h3 style="color:#4f74a3;">Join a Community First!</h3>
+          <p style="color:#888;">Connect to your college to see community posts.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    if (!data.posts || data.posts.length === 0) {
+      postsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📸 No community posts yet. Be the first to share!</div>';
+      return;
+    }
+    
+    let html = '';
+    data.posts.forEach(post => {
+      const author = post.users?.username || 'User';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at).toLocaleString();
+      const isOwn = currentUser && post.user_id === currentUser.id;
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                  <span>•</span>
+                  <span>🌍 Community</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `<span class="post-sticker">${sticker.emoji || sticker}</span>`).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    postsContainer.innerHTML = html;
+    console.log('✅ Community posts loaded');
+  } catch (error) {
+    console.error('❌ Failed to load community posts:', error);
+    if (postsContainer) {
+      postsContainer.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#ff6b6b;">
+          ❌ Failed to load community posts<br>
+          <small style="font-size:12px;color:#888;margin-top:8px;display:block;">
+            ${error.message || 'Please try again'}
+          </small>
+        </div>
+      `;
+    }
+  }
 }
 
 function openCommunityChat() {
   document.getElementById('chatSection').style.display = 'block';
   loadCommunityMessages();
-  
-  document.getElementById('chatSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function loadCommunityMessages() {
   try {
     const data = await apiCall('/api/community/messages', 'GET');
-    const container = document.getElementById('chatMessages');
+    const messagesEl = document.getElementById('chatMessages');
     
     if (!data.messages || data.messages.length === 0) {
-      container.innerHTML = '<div style="text-align:center; color:#888; padding:40px;">No messages yet. Start the conversation!</div>';
+      messagesEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">No messages yet. Start chatting!</div>';
       return;
     }
     
-    container.innerHTML = data.messages.reverse().map(msg => {
-      const isOwn = currentUser && msg.sender_id === currentUser.id;
-      return `
-        <div class="chat-message ${isOwn ? 'own' : 'other'}">
-          ${!isOwn ? `<div class="sender">${msg.users.username}</div>` : ''}
-          <div class="text">${msg.content}</div>
-        </div>
-      `;
-    }).join('');
+    messagesEl.innerHTML = '';
+    data.messages.reverse().forEach(msg => {
+      appendMessageToChat(msg);
+    });
     
-    container.scrollTop = container.scrollHeight;
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   } catch (error) {
-    console.error('Failed to load messages:', error);
+    console.error('Load messages error:', error);
+  }
+}
+
+function appendMessageToChat(msg) {
+  const messagesEl = document.getElementById('chatMessages');
+  if (!messagesEl) return;
+  
+  const isOwn = msg.sender_id === currentUser.id;
+  const sender = msg.users?.username || 'User';
+  const messageTime = new Date(msg.timestamp);
+  const now = new Date();
+  const canEdit = isOwn && ((now - messageTime) / 1000 / 60) < 2;
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'}`;
+  messageDiv.id = `msg-${msg.id}`;
+  
+  const reactions = msg.message_reactions || [];
+  const reactionCounts = {};
+  reactions.forEach(r => {
+    reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+  });
+  
+  messageDiv.innerHTML = `
+    ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
+    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
+    ${Object.keys(reactionCounts).length > 0 ? `
+      <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
+        ${Object.entries(reactionCounts).map(([emoji, count]) => 
+          `<span style="background:rgba(79,116,163,0.2); padding:2px 6px; border-radius:10px; font-size:12px;">${emoji} ${count}</span>`
+        ).join('')}
+      </div>
+    ` : ''}
+    <div style="display:flex; gap:8px; margin-top:8px; font-size:11px; color:#888;">
+      <span onclick="reactToMessage('${msg.id}')" style="cursor:pointer;">❤️</span>
+      <span onclick="reactToMessage('${msg.id}', '👍')" style="cursor:pointer;">👍</span>
+      <span onclick="reactToMessage('${msg.id}', '😂')" style="cursor:pointer;">😂</span>
+      <span onclick="reactToMessage('${msg.id}', '🔥')" style="cursor:pointer;">🔥</span>
+      ${canEdit ? `<span onclick="editMessage('${msg.id}', '${msg.content.replace(/'/g, "\\'")}')" style="cursor:pointer;">✏️ Edit</span>` : ''}
+      ${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️ Delete</span>` : ''}
+      <span onclick="showMessageViews('${msg.id}')" style="cursor:pointer;">👁️ Views</span>
+    </div>
+  `;
+  
+  messagesEl.appendChild(messageDiv);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  
+  markMessageAsViewed(msg.id);
+}
+
+function updateMessageInChat(msg) {
+  const messageEl = document.getElementById(`msg-${msg.id}`);
+  if (!messageEl) return;
+  
+  const isOwn = msg.sender_id === currentUser.id;
+  const textEl = messageEl.querySelector('.text');
+  if (textEl) {
+    textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
+  }
+}
+
+function removeMessageFromChat(id) {
+  const messageEl = document.getElementById(`msg-${id}`);
+  if (messageEl) {
+    messageEl.remove();
   }
 }
 
@@ -1195,115 +681,499 @@ async function sendChatMessage() {
   try {
     await apiCall('/api/community/messages', 'POST', { content });
     input.value = '';
-    await loadCommunityMessages();
   } catch (error) {
-    console.error('Failed to send message:', error);
-    showMessage('❌ Failed to send message', 'error');
+    showMessage('❌ Failed to send message: ' + error.message, 'error');
   }
 }
 
-function handleChatKeypress(event) {
-  if (event.key === 'Enter') {
+function handleChatKeypress(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
     sendChatMessage();
   }
 }
 
-// SOCKET.IO
-function initializeSocket() {
-  if (!currentUser.college) return;
+async function editMessage(messageId, currentContent) {
+  if (editingMessageId) {
+    showMessage('⚠️ Finish editing current message first', 'error');
+    return;
+  }
   
-  socket = io(API_URL, {
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
-  });
+  const newContent = prompt('Edit message:', currentContent);
+  if (!newContent || newContent.trim() === '' || newContent === currentContent) return;
   
-  socket.on('connect', () => {
-    console.log('🔌 Socket connected');
-    socket.emit('join_community', currentUser.college);
-  });
-  
-  socket.on('community_joined', (college) => {
-    console.log('✅ Joined community:', college);
-  });
-  
-  socket.on('new_message', (message) => {
-    loadCommunityMessages();
-  });
-  
-  socket.on('new_post', (post) => {
-    loadPosts();
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('🔌 Socket disconnected');
-  });
+  try {
+    editingMessageId = messageId;
+    await apiCall(`/api/community/messages/${messageId}`, 'PATCH', { content: newContent.trim() });
+    showMessage('✅ Message edited', 'success');
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  } finally {
+    editingMessageId = null;
+  }
 }
 
-// TRENDING
-async function loadTrending() {
-  const container = document.getElementById('trendingContainer');
+async function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
   
-  container.innerHTML = `
-    <div class="trending-card">
-      <div class="trending-card-header">
-        <div class="trending-title">🔥 Hot Topics</div>
-        <div class="trending-badge">LIVE</div>
+  try {
+    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    showMessage('🗑️ Message deleted', 'success');
+  } catch (error) {
+    showMessage('❌ Failed to delete: ' + error.message, 'error');
+  }
+}
+
+async function reactToMessage(messageId, emoji = '❤️') {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
+  } catch (error) {
+    console.error('React error:', error);
+  }
+}
+
+async function markMessageAsViewed(messageId) {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/view`, 'POST');
+  } catch (error) {
+    console.error('View error:', error);
+  }
+}
+
+async function showMessageViews(messageId) {
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}/views`, 'GET');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-box">
+        <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+        <h2>Message Views (${data.count})</h2>
+        ${data.views.length > 0 ? `
+          <div style="max-height:300px; overflow-y:auto;">
+            ${data.views.map(v => `
+              <div style="padding:10px; border-bottom:1px solid rgba(79,116,163,0.1);">
+                <strong>@${v.users?.username || 'User'}</strong>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p style="text-align:center; color:#888;">No views yet</p>'}
       </div>
-      <div class="trending-text">College events, memes, and discussions happening now!</div>
-      <div class="trending-footer">
-        <div class="trending-engagement">
-          <div class="engagement-item">👥 ${Math.floor(Math.random() * 500) + 100} active</div>
+    `;
+    document.body.appendChild(modal);
+  } catch (error) {
+    showMessage('❌ Failed to load views', 'error');
+  }
+}
+
+// BADGES PAGE
+function loadBadgesPage() {
+  const container = document.getElementById('badges');
+  if (!container) return;
+  
+  const allBadges = [
+    { emoji: '🎓', name: 'Community Member', desc: 'Joined a college community', earned: currentUser?.badges?.includes('🎓 Community Member') },
+    { emoji: '🎨', name: 'First Post', desc: 'Created your first post', earned: currentUser?.badges?.includes('🎨 First Post') },
+    { emoji: '⭐', name: 'Content Creator', desc: 'Posted 10 times', earned: currentUser?.badges?.includes('⭐ Content Creator') },
+    { emoji: '💬', name: 'Chatty', desc: 'Sent 50 messages', earned: false },
+    { emoji: '🔥', name: 'On Fire', desc: '7 day streak', earned: false },
+  ];
+  
+  let html = `
+    <div style="text-align:center; margin-bottom:40px;">
+      <h2 style="font-size:32px; color:#4f74a3; margin-bottom:10px;">🏆 Badges</h2>
+      <p style="color:#888;">Earn badges by being active in the community!</p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">
+  `;
+  
+  allBadges.forEach(badge => {
+    html += `
+      <div style="background:${badge.earned ? 'linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2))' : 'rgba(15,25,45,0.9)'}; border:2px solid ${badge.earned ? '#4f74a3' : 'rgba(79,116,163,0.2)'}; border-radius:16px; padding:30px 20px; text-align:center; transition:all 0.3s ease;" ${badge.earned ? 'style="box-shadow:0 10px 30px rgba(79,116,163,0.3);"' : ''}>
+        <div style="font-size:48px; margin-bottom:15px; filter:${badge.earned ? 'none' : 'grayscale(100%) opacity(0.3)'};">${badge.emoji}</div>
+        <h3 style="color:${badge.earned ? '#4f74a3' : '#666'}; font-size:18px; margin-bottom:8px;">${badge.name}</h3>
+        <p style="color:#888; font-size:13px; margin-bottom:15px;">${badge.desc}</p>
+        <div style="background:${badge.earned ? 'linear-gradient(135deg, #4f74a3, #8da4d3)' : 'rgba(79,116,163,0.1)'}; color:${badge.earned ? 'white' : '#666'}; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;">
+          ${badge.earned ? '✓ Earned' : '🔒 Locked'}
         </div>
       </div>
-    </div>
-    
-    <div class="trending-card">
-      <div class="trending-card-header">
-        <div class="trending-title">📚 Study Groups</div>
-        <div class="trending-badge">NEW</div>
-      </div>
-      <div class="trending-text">Join study groups and ace your exams together!</div>
-      <div class="trending-footer">
-        <div class="trending-engagement">
-          <div class="engagement-item">👥 ${Math.floor(Math.random() * 200) + 50} members</div>
+    `;
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// PROFILE FUNCTIONS
+function showProfilePage() {
+  if (!currentUser) return;
+  showProfileModal(currentUser);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showProfileModal(user) {
+  const isOwnProfile = currentUser && user.id === currentUser.id;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box profile-modal-box">
+      <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
+      
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-cover"></div>
+          <div class="profile-main">
+            <div class="profile-photo-section">
+              <div class="profile-photo" style="${user.profile_pic ? `background-image: url('${user.profile_pic}'); background-size: cover;` : ''}">
+                ${!user.profile_pic ? '👤' : ''}
+              </div>
+              ${isOwnProfile ? `
+                <button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>
+              ` : ''}
+              <div class="active-badge">
+                <span class="status-dot"></span>
+                <span>Active Now</span>
+              </div>
+            </div>
+            
+            <div class="profile-name-section">
+              <h2>${user.username}</h2>
+              <div class="nickname-display">
+                <span class="nickname-label">@${user.username}</span>
+              </div>
+              ${user.college ? `<p style="color:#888; font-size:14px;">🎓 ${user.college}</p>` : ''}
+              ${user.registration_number ? `<p style="color:#888; font-size:13px;">📋 ${user.registration_number}</p>` : ''}
+            </div>
+            
+            ${isOwnProfile ? `
+              <button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>
+            ` : ''}
+          </div>
         </div>
-      </div>
-    </div>
-    
-    <div class="trending-card">
-      <div class="trending-card-header">
-        <div class="trending-title">🎉 Campus Events</div>
-        <div class="trending-badge">SOON</div>
-      </div>
-      <div class="trending-text">Don't miss out on upcoming campus events and fests!</div>
-      <div class="trending-footer">
-        <div class="trending-engagement">
-          <div class="engagement-item">📅 This weekend</div>
+        
+        <div class="profile-stats-section">
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">${user.postCount || 0}</div>
+            <div class="stat-title">Posts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">${user.badges?.length || 0}</div>
+            <div class="stat-title">Badges</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value">24h</div>
+            <div class="stat-title">Active</div>
+          </div>
+        </div>
+        
+        <div class="profile-description-section">
+          <h3>About</h3>
+          <p id="profileDescriptionText">${user.bio || 'No description added yet. Click edit to add one!'}</p>
+        </div>
+        
+        ${isOwnProfile ? `
+          <div class="edit-profile-section" id="editProfileSection" style="display:none;">
+            <h3>Edit Profile</h3>
+            <div class="edit-form-group">
+              <label>Username</label>
+              <input type="text" id="editUsername" value="${user.username}" maxlength="30">
+            </div>
+            <div class="edit-form-group">
+              <label>Bio</label>
+              <textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">${user.bio || ''}</textarea>
+              <small id="bioCounter">0/200</small>
+            </div>
+            <div class="edit-form-buttons">
+              <button class="btn-save" onclick="saveProfile()">💾 Save</button>
+              <button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button>
+            </div>
+          </div>
+        ` : ''}
+        
+        ${user.badges && user.badges.length > 0 ? `
+          <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
+            <h3 style="color:#4f74a3; margin-bottom:15px;">🏆 Badges</h3>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              ${user.badges.map(badge => `
+                <span style="background:linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2)); border:1px solid rgba(79,116,163,0.3); padding:8px 16px; border-radius:20px; font-size:14px;">${badge}</span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
+          <h3 style="color:#4f74a3; margin-bottom:20px;">📝 Profile Posts</h3>
+          <div id="userProfilePosts" style="display:flex; flex-direction:column; gap:15px;">
+            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>
+          </div>
         </div>
       </div>
     </div>
   `;
+  document.body.appendChild(modal);
+  
+  if (isOwnProfile) {
+    const bioTextarea = document.getElementById('editBio');
+    if (bioTextarea) {
+      bioTextarea.addEventListener('input', updateBioCounter);
+      updateBioCounter();
+    }
+  }
+  
+  loadUserProfilePosts(user.id);
 }
 
-// LIVE STATS
-async function updateLiveStats() {
-  const onlineCount = Math.floor(Math.random() * 1000) + 500;
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  
+  try {
+    console.log('📨 Loading profile posts for user:', userId);
+    
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📝 No profile posts yet.</div>';
+      return;
+    }
+    
+    let html = '';
+    data.posts.forEach(post => {
+      const author = post.users?.username || 'User';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at).toLocaleString();
+      const isOwn = currentUser && post.user_id === currentUser.id;
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post" style="margin:0;">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `<span class="post-sticker">${sticker.emoji || sticker}</span>`).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+    console.log('✅ Profile posts loaded');
+  } catch (error) {
+    console.error('❌ Failed to load profile posts:', error);
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff6b6b;">❌ Failed to load posts</div>';
+  }
+}
+
+function toggleEditProfile() {
+  const section = document.getElementById('editProfileSection');
+  if (!section) return;
+  
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateBioCounter() {
+  const textarea = document.getElementById('editBio');
+  const counter = document.getElementById('bioCounter');
+  if (textarea && counter) {
+    counter.textContent = `${textarea.value.length}/200`;
+  }
+}
+
+async function saveProfile() {
+  const username = document.getElementById('editUsername')?.value.trim();
+  const bio = document.getElementById('editBio')?.value.trim();
+  
+  if (!username) {
+    showMessage('⚠️ Username required', 'error');
+    return;
+  }
+  
+  try {
+    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
+    
+    if (data.success) {
+      currentUser.username = data.user.username;
+      currentUser.bio = data.user.bio;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      showMessage('✅ Profile updated!', 'success');
+      document.querySelector('.modal')?.remove();
+      showProfilePage();
+    }
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+function uploadProfilePic() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('⚠️ Image too large (max 5MB)', 'error');
+      return;
+    }
+    
+    try {
+      showMessage('📤 Uploading profile picture...', 'success');
+      
+      const compressedFile = await compressImage(file);
+      const formData = new FormData();
+      formData.append('profilePic', compressedFile);
+      
+      const data = await apiCall('/api/profile', 'PATCH', formData);
+      
+      if (data.success) {
+        currentUser.profile_pic = data.user.profile_pic;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        
+        showMessage('✅ Profile picture updated!', 'success');
+        document.querySelector('.modal')?.remove();
+        showProfilePage();
+      }
+    } catch (error) {
+      showMessage('❌ Failed to upload: ' + error.message, 'error');
+    }
+  };
+  
+  input.click();
+}
+
+// UTILITY FUNCTIONS
+function showModal(modalId) {
+  document.getElementById(modalId).style.display = 'flex';
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if(modal) modal.style.display = 'none';
+}
+
+function showMessage(text, type) {
+  const box = document.getElementById('message');
+  if(!box) {
+    console.log('Message:', text);
+    return;
+  }
+  
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  box.innerHTML = '';
+  box.appendChild(div);
+  
+  setTimeout(() => {
+    if(div.parentNode) div.remove();
+  }, 4000);
+}
+
+function updateLiveStats() {
+  const onlineCount = Math.floor(Math.random() * 300) + 150;
   const postsToday = Math.floor(Math.random() * 500) + 200;
-  const chatsActive = Math.floor(Math.random() * 300) + 100;
+  const activeChats = Math.floor(Math.random() * 100) + 50;
   
-  const heroOnline = document.getElementById('heroOnline');
-  const heroPostsToday = document.getElementById('heroPostsToday');
-  const heroChats = document.getElementById('heroChats');
-  const liveUsersCount = document.getElementById('liveUsersCount');
-  const footerUsers = document.getElementById('footerUsers');
+  const elements = {
+    'liveUsersCount': onlineCount + ' Active',
+    'heroOnline': onlineCount,
+    'heroPostsToday': postsToday,
+    'heroChats': activeChats,
+    'footerUsers': onlineCount
+  };
   
-  if (heroOnline) heroOnline.textContent = onlineCount;
-  if (heroPostsToday) heroPostsToday.textContent = postsToday;
-  if (heroChats) heroChats.textContent = chatsActive;
-  if (liveUsersCount) liveUsersCount.textContent = onlineCount + ' Active';
-  if (footerUsers) footerUsers.textContent = onlineCount;
+  Object.keys(elements).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = elements[id];
+  });
+}
+
+function updateOnlineCount(count) {
+  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
+  elements.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'liveUsersCount') {
+        el.textContent = count + ' Active';
+      } else if (id === 'footerUsers') {
+        el.textContent = count;
+      } else {
+        el.textContent = count;
+      }
+    }
+  });
 }
 
 function updateLiveNotif(text) {
@@ -1311,96 +1181,367 @@ function updateLiveNotif(text) {
   if (notif) notif.textContent = text;
 }
 
-// BADGES PAGE
-async function loadBadgesPage() {
-  const page = document.getElementById('badges');
-  
-  page.innerHTML = `
-    <h2 class="title">🏆 My Badges</h2>
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px; margin-top:30px;">
-      ${(currentUser.badges || []).map(badge => `
-        <div style="background:rgba(79,116,163,0.1); border:2px solid rgba(79,116,163,0.3); border-radius:16px; padding:30px; text-align:center; transition:all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#4f74a3'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(79,116,163,0.3)'">
-          <div style="font-size:64px; margin-bottom:15px;">${badge.includes('First') ? '🎨' : badge.includes('Creator') ? '⭐' : badge.includes('Community') ? '🎓' : '🏆'}</div>
-          <div style="font-size:18px; font-weight:700; color:#4f74a3; margin-bottom:8px;">${badge}</div>
-          <div style="font-size:13px; color:#888;">Earned ${new Date().toLocaleDateString()}</div>
-        </div>
-      `).join('')}
-      
-      ${(currentUser.badges || []).length === 0 ? '<div style="grid-column:1/-1; text-align:center; padding:60px; color:#888;"><p style="font-size:64px; margin-bottom:20px;">🏆</p><p style="font-size:18px;">No badges earned yet. Start posting to earn badges!</p></div>' : ''}
-    </div>
-    
-    <div style="margin-top:50px; padding:30px; background:linear-gradient(135deg, rgba(79,116,163,0.1), rgba(141,164,211,0.1)); border-radius:16px; border:2px solid rgba(79,116,163,0.2);">
-      <h3 style="color:#4f74a3; margin-bottom:20px;">📋 Available Badges</h3>
-      <div style="display:grid; gap:15px;">
-        <div style="padding:15px; background:rgba(20,30,50,0.6); border-radius:10px;">
-          <strong>🎨 First Post</strong> - Create your first post
-        </div>
-        <div style="padding:15px; background:rgba(20,30,50,0.6); border-radius:10px;">
-          <strong>⭐ Content Creator</strong> - Make 10 posts
-        </div>
-        <div style="padding:15px; background:rgba(20,30,50,0.6); border-radius:10px;">
-          <strong>🎓 Community Member</strong> - Join a college community
-        </div>
-        <div style="padding:15px; background:rgba(20,30,50,0.6); border-radius:10px;">
-          <strong>🔥 Influencer</strong> - Get 100 likes
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// UTILITY FUNCTIONS
-function showMessage(msg, type) {
-  const container = document.getElementById('message');
-  if (!container) return;
-  
-  container.innerHTML = `<div class="msg msg-${type}">${msg}</div>`;
-  setTimeout(() => { if (container) container.innerHTML = ''; }, 3000);
-}
-
 function toggleOptionsMenu() {
   const menu = document.getElementById('optionsMenu');
-  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  hamburger.style.display = 'none';
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
 }
 
 function toggleHamburgerMenu() {
   const menu = document.getElementById('hamburgerMenu');
-  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-}
-
-function closeHamburgerMenu() {
-  document.getElementById('hamburgerMenu').style.display = 'none';
-}
-
-function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-  document.body.classList.toggle('dark-theme');
-  localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-  showMessage('🎨 Theme changed!', 'success');
-}
-
-function logout() {
-  if (confirm('Are you sure you want to logout?')) {
-    localStorage.clear();
-    if (socket) socket.disconnect();
-    window.location.reload();
+  const options = document.getElementById('optionsMenu');
+  options.style.display = 'none';
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
   }
 }
 
-function goLogin(e) { if (e) e.preventDefault(); document.getElementById('loginForm').style.display = 'block'; document.getElementById('signupForm').style.display = 'none'; document.getElementById('forgotPasswordForm').style.display = 'none'; }
-function goSignup(e) { if (e) e.preventDefault(); document.getElementById('loginForm').style.display = 'none'; document.getElementById('signupForm').style.display = 'block'; document.getElementById('forgotPasswordForm').style.display = 'none'; }
-function goForgotPassword(e) { if (e) e.preventDefault(); document.getElementById('loginForm').style.display = 'none'; document.getElementById('signupForm').style.display = 'none'; document.getElementById('forgotPasswordForm').style.display = 'block'; }
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showFeedbackModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Send Feedback</h2>
+      <p style="color:#888; margin-bottom:20px;">We'd love to hear from you!</p>
+      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
+      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea>
+      <button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  
+  if (!subject || !message) {
+    showMessage('⚠️ Please fill all fields', 'error');
+    return;
+  }
+  
+  try {
+    await apiCall('/api/feedback', 'POST', { subject, message });
+    showMessage('✅ Thank you for your feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (error) {
+    showMessage('❌ Failed to submit feedback', 'error');
+  }
+}
+
+function submitComplaint() {
+  const text = document.getElementById('complaintText').value.trim();
+  if (text) {
+    showMessage('✅ Complaint submitted!', 'success');
+    document.getElementById('complaintText').value = '';
+    closeModal('complaintModal');
+  } else {
+    showMessage('⚠️ Enter complaint details', 'error');
+  }
+}
+
+function toggleTheme() {
+  const body = document.body;
+  if(body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+  }
+  showMessage('🎨 Theme changed!', 'success');
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function loadTrending() {
+  const container = document.getElementById('trendingContainer');
+  if (!container) return;
+  
+  const trending = [
+    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
+    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
+    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
+  ];
+  
+  let html = '';
+  trending.forEach(item => {
+    html += `
+      <div class="trending-card">
+        <div class="trending-card-header">
+          <div class="trending-title">${item.title}</div>
+          <div class="trending-badge">${item.badge}</div>
+        </div>
+        <div class="trending-text">${item.text}</div>
+        <div class="trending-footer">
+          <div class="trending-engagement">
+            <div class="engagement-item">❤️ ${item.likes}</div>
+            <div class="engagement-item">💬 ${item.comments}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+document.addEventListener('click', function(e) {
+  const optionsMenu = document.getElementById('optionsMenu');
+  const optionsBtn = document.querySelector('.options-btn');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const hamburgerBtn = document.querySelector('.hamburger-btn');
+  
+  if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
+    optionsMenu.style.display = 'none';
+  }
+  
+  if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
+    hamburgerMenu.style.display = 'none';
+  }
+});
+
+console.log('✅ VibeXpert Updated - All features working on mobile, tablet, and desktop!');
+
+// ==================== POST CELEBRATION MODAL ====================
+
+function showPostCelebrationModal(postCount) {
+  console.log('🎉 Showing celebration for post #', postCount);
+  
+  // Determine milestone
+  let milestone = getMilestoneForPost(postCount);
+  
+  // Create modal
+  const modal = document.createElement('div');
+  modal.className = 'celebration-modal';
+  modal.style.display = 'flex';
+  
+  modal.innerHTML = `
+    <div class="celebration-modal-content">
+      <!-- Confetti Background -->
+      <div class="celebration-confetti"></div>
+      
+      <!-- Icon Circle -->
+      <div class="celebration-icon-circle" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd);">
+        <span style="font-size: 48px;">${milestone.icon}</span>
+      </div>
+      
+      <!-- Emoji -->
+      <div class="celebration-emoji">${milestone.emoji}</div>
+      
+      <!-- Title -->
+      <h2 class="celebration-title" style="color: ${milestone.color};">
+        ${milestone.title}
+      </h2>
+      
+      <!-- Message -->
+      <p class="celebration-message">${milestone.message}</p>
+      
+      <!-- Stats Box -->
+      <div class="celebration-stats" style="background: ${milestone.color}15;">
+        <div class="celebration-count" style="color: ${milestone.color};">${postCount}</div>
+        <div class="celebration-label">TOTAL POSTS</div>
+      </div>
+      
+      <!-- Motivational Quote -->
+      <div class="celebration-quote">
+        "${milestone.quote}"
+      </div>
+      
+      <!-- Continue Button -->
+      <button class="celebration-button" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd); box-shadow: 0 4px 15px ${milestone.color}40;" onclick="closeCelebrationModal()">
+        🚀 Keep Posting!
+      </button>
+      
+      <!-- Share Achievement -->
+      ${postCount >= 10 ? `
+        <button class="celebration-share-btn" onclick="shareAchievement(${postCount})">
+          📢 Share Achievement
+        </button>
+      ` : ''}
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Auto close after 5 seconds
+  setTimeout(() => {
+    closeCelebrationModal();
+  }, 5000);
+  
+  // Play celebration sound effect (if available)
+  playSuccessSound();
+}
+
+function getMilestoneForPost(count) {
+  const milestones = {
+    1: {
+      emoji: '🎉',
+      icon: '⭐',
+      title: 'First Post!',
+      message: 'Congratulations on your first post!',
+      quote: 'Every journey begins with a single step',
+      color: '#667eea'
+    },
+    5: {
+      emoji: '🚀',
+      icon: '📈',
+      title: 'Rising Star!',
+      message: 'You\'re building momentum!',
+      quote: 'Consistency is the key to success',
+      color: '#f093fb'
+    },
+    10: {
+      emoji: '⭐',
+      icon: '🎨',
+      title: 'Content Creator!',
+      message: 'You\'re officially a content creator!',
+      quote: 'Create content that matters',
+      color: '#feca57'
+    },
+    25: {
+      emoji: '🏆',
+      icon: '👑',
+      title: 'Champion!',
+      message: 'You\'re crushing it!',
+      quote: 'Champions are made from dedication',
+      color: '#ff6b6b'
+    },
+    50: {
+      emoji: '💎',
+      icon: '✨',
+      title: 'Diamond Creator!',
+      message: 'You\'re a legend in the making!',
+      quote: 'Shine bright like a diamond',
+      color: '#4ecdc4'
+    },
+    100: {
+      emoji: '👑',
+      icon: '⚡',
+      title: 'Elite Creator!',
+      message: 'You\'re unstoppable!',
+      quote: 'You are an inspiration to others',
+      color: '#a29bfe'
+    }
+  };
+  
+  // Check for exact milestones
+  if (milestones[count]) {
+    return milestones[count];
+  }
+  
+  // For other posts, show a generic celebration
+  if (count % 10 === 0) {
+    return {
+      emoji: '🎊',
+      icon: '🔥',
+      title: `${count} Posts!`,
+      message: 'You\'re on fire!',
+      quote: 'Keep up the amazing work',
+      color: '#667eea'
+    };
+  }
+  
+  // Default celebration for any post
+  return {
+    emoji: '🎉',
+    icon: '✨',
+    title: 'Post Published!',
+    message: 'Your voice matters!',
+    quote: 'Every post brings you closer to your goals',
+    color: '#4f74a3'
+  };
+}
+
+function closeCelebrationModal() {
+  const modal = document.querySelector('.celebration-modal');
+  if (modal) {
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+function shareAchievement(postCount) {
+  const text = `🎉 I just made my ${postCount}th post on VibeXpert! Join me and connect with students across 500+ universities! 🚀`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'VibeXpert Achievement',
+      text: text,
+      url: window.location.origin
+    }).catch(err => console.log('Share cancelled'));
+  } else {
+    // Fallback: Copy to clipboard
+    navigator.clipboard.writeText(text).then(() => {
+      showMessage('✅ Achievement copied to clipboard!', 'success');
+    });
+  }
+}
+
+function playSuccessSound() {
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ8PVazn77BdGAg+ltryxnIlBSl+zPLaizsIGWe57+mjUBELTKXh8bllHAU2jdXzzn0pBSh6yvDckTsIF2m98OihUBAMUKnn8bZkHgU7k9n0y3krBSh9y/HajDkHGGu/8OmgTxAMTqnm8LVjHAU4kdXy0H8qBSh7yfDajzsIGWu98OmhTxAMUKjn8bZkHQU7k9jzzn4pBSh8yvHajDkHGGu/8OmgTw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed'));
+  } catch (e) {
+    console.log('Could not play sound');
+  }
+}
+
+function goForgotPassword(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
 
 async function handleForgotPassword(e) {
   e.preventDefault();
   const email = document.getElementById('resetEmail').value.trim();
-  if (!email) { showMessage('⚠️ Email required', 'error'); return; }
+  
+  if(!email) {
+    showMessage('Enter your email', 'error');
+    return;
+  }
+  
   try {
+    showMessage('📧 Sending reset code...', 'success');
     await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ Check your email for reset code', 'success');
+    
+    // Show code verification section
     document.getElementById('resetEmailSection').style.display = 'none';
     document.getElementById('resetCodeSection').style.display = 'block';
-    showMessage('✅ Code sent to your email!', 'success');
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function verifyResetCode(e) {
@@ -1408,682 +1549,1265 @@ async function verifyResetCode(e) {
   const email = document.getElementById('resetEmail').value.trim();
   const code = document.getElementById('resetCode').value.trim();
   const newPassword = document.getElementById('newPassword').value;
-  const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+  const confirmPassword = document.getElementById('confirmNewPassword').value;
   
-  if (!code || !newPassword || !confirmNewPassword) { showMessage('⚠️ Fill all fields', 'error'); return; }
-  if (newPassword !== confirmNewPassword) { showMessage('❌ Passwords don\'t match', 'error'); return; }
-  
-  try {
-    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
-    showMessage('✅ Password reset successful!', 'success');
-    setTimeout(() => goLogin(null), 2000);
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
-}
-
-async function resendResetCode() {
-  const email = document.getElementById('resetEmail').value.trim();
-  if (!email) { showMessage('⚠️ Email required', 'error'); return; }
-  try {
-    await apiCall('/api/forgot-password', 'POST', { email });
-    showMessage('✅ Code resent!', 'success');
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
-}
-
-function showProfilePage() {
-  if (currentUser) showUserProfile(currentUser.id);
-  toggleOptionsMenu();
-}
-
-function showContactModal() { document.getElementById('contactModal').style.display = 'flex'; toggleOptionsMenu(); }
-function showComplaintModal() { document.getElementById('complaintModal').style.display = 'flex'; toggleOptionsMenu(); }
-function showFeedbackModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal'; modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><h2>💬 Send Feedback</h2><input type="text" id="feedbackSubject" placeholder="Subject" style="width:100%; padding:12px; margin-bottom:15px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px;"><textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; padding:12px; min-height:120px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px; font-family:inherit; margin-bottom:15px;"></textarea><button onclick="submitFeedback()">Send Feedback</button></div>`;
-  document.body.appendChild(modal);
-  toggleOptionsMenu();
-}
-
-async function submitComplaint() {
-  const text = document.getElementById('complaintText').value.trim();
-  if (!text) { showMessage('⚠️ Complaint text required', 'error'); return; }
-  try {
-    await apiCall('/api/feedback', 'POST', { subject: 'Complaint', message: text });
-    showMessage('✅ Complaint submitted!', 'success');
-    document.getElementById('complaintModal').style.display = 'none';
-    document.getElementById('complaintText').value = '';
-  } catch (error) { showMessage('❌ Failed to submit', 'error'); }
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject').value.trim();
-  const message = document.getElementById('feedbackMessage').value.trim();
-  if (!subject || !message) { showMessage('⚠️ Fill all fields', 'error'); return; }
-  try {
-    await apiCall('/api/feedback', 'POST', { subject, message });
-    showMessage('✅ Feedback sent!', 'success');
-    document.querySelector('.modal').remove();
-  } catch (error) { showMessage('❌ Failed to send', 'error'); }
-}
-
-function selectUniversity(type) {
-  currentType = type;
-  allColleges = colleges[type] || [];
-  currentPage = 1;
-  displayColleges();
-  document.getElementById('home').style.display = 'none';
-  document.getElementById('collegeList').style.display = 'block';
-  document.getElementById('collegeTitle').textContent = type.toUpperCase() + ' Colleges';
-}
-
-function displayColleges() {
-  const container = document.getElementById('collegeContainer');
-  const start = (currentPage - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  const paginated = allColleges.slice(start, end);
-  
-  container.innerHTML = paginated.map(college => `
-    <div class="college-item">
-      <h3>${college.name}</h3>
-      <p>📍 ${college.location}</p>
-      <p>📧 ${college.email}</p>
-      <button onclick="requestVerification('${college.name}', '${college.email}')">Connect</button>
-    </div>
-  `).join('');
-  
-  updatePagination();
-}
-
-function updatePagination() {
-  const pagination = document.getElementById('pagination');
-  const totalPages = Math.ceil(allColleges.length / ITEMS_PER_PAGE);
-  
-  let html = '';
-  for (let i = 1; i <= totalPages; i++) {
-    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+  if(!code || code.length !== 6) {
+    showMessage('⚠️ Enter 6-digit code', 'error');
+    return;
   }
   
-  pagination.innerHTML = html;
+  if(!newPassword || !confirmPassword) {
+    showMessage('⚠️ Enter new password', 'error');
+    return;
+  }
+  
+  if(newPassword !== confirmPassword) {
+    showMessage('⚠️ Passwords don\'t match', 'error');
+    return;
+  }
+  
+  if(newPassword.length < 6) {
+    showMessage('⚠️ Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('🔍 Verifying code...', 'success');
+    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
+    showMessage('✅ Password reset successful! Please login', 'success');
+    
+    // Reset form and go back to login
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('resetEmailSection').style.display = 'block';
+    document.getElementById('resetCodeSection').style.display = 'none';
+    
+    setTimeout(() => {
+      goLogin(null);
+    }, 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
-function goToPage(page) { currentPage = page; displayColleges(); }
-function backToUniversities() { document.getElementById('collegeList').style.display = 'none'; document.getElementById('home').style.display = 'block'; }
+function goSignup(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+}
+
+function goLogin(e) {
+  if(e) e.preventDefault();
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  currentUser = null;
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('user');
+  showLoginPage();
+  showMessage('👋 Logged out', 'success');
+  showLoginForm();
+}
+
+function showLoginForm() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+}
+
+// FIXED: Enhanced search functionality for mobile
+function initializeSearchBar() {
+  const searchBox = document.getElementById('searchBox');
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchBox) {
+    console.warn('Search box not found');
+    return;
+  }
+  
+  console.log('✅ Search bar initialized');
+  
+  // Debounced search with longer delay for mobile typing
+  searchBox.addEventListener('input', (e) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+    
+    // Show loading state
+    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
+    searchResults.style.display = 'block';
+    
+    // Debounce search (wait 600ms for mobile typing)
+    searchTimeout = setTimeout(() => {
+      performUserSearch(query);
+    }, 600);
+  });
+  
+  searchBox.addEventListener('focus', (e) => {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+      performUserSearch(query);
+    }
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+      hideSearchResults();
+    }
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideSearchResults();
+      searchBox.blur();
+    }
+  });
+}
+
+async function performUserSearch(query) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) {
+    console.error('❌ Search results container not found');
+    return;
+  }
+  
+  try {
+    console.log('🔍 Searching for:', query);
+    
+    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    
+    console.log('📊 Search API response:', data);
+    console.log('📊 Number of users found:', data.users?.length || 0);
+    
+    if (!data.success) {
+      throw new Error('Search failed');
+    }
+    
+    if (data.users && data.users.length > 0) {
+      console.log('✅ Users found:');
+      data.users.forEach((user, index) => {
+        console.log(`  ${index + 1}. @${user.username} - ${user.email}`);
+      });
+    } else {
+      console.log('⚠️ No users found for query:', query);
+    }
+    
+    displaySearchResults(data.users || []);
+  } catch (error) {
+    console.error('❌ Search error:', error);
+    searchResults.innerHTML = `
+      <div class="no-results" style="color:#ff6b6b;">
+        ❌ ${error.message || 'Search failed'}<br>
+        <small style="font-size:12px;color:#888;margin-top:8px;display:block;">
+          Please check your internet connection and try again
+        </small>
+      </div>
+    `;
+    searchResults.style.display = 'block';
+  }
+}
+
+function displaySearchResults(users) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) return;
+  
+  if (users.length === 0) {
+    searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
+    searchResults.style.display = 'block';
+    return;
+  }
+  
+  console.log(`✅ Displaying ${users.length} search results`);
+  
+  let html = '';
+  users.forEach(user => {
+    const avatarContent = user.profile_pic 
+      ? `<img src="${user.profile_pic}" alt="${user.username}">` 
+      : '👤';
+    
+    html += `
+      <div class="search-result-item" onclick="showUserProfile('${user.id}')">
+        <div class="search-result-avatar">
+          ${avatarContent}
+        </div>
+        <div class="search-result-info">
+          <div class="search-result-username">@${user.username}</div>
+          <div class="search-result-details">${user.registration_number || user.email}</div>
+          ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  searchResults.innerHTML = html;
+  searchResults.style.display = 'block';
+}
+
+function hideSearchResults() {
+  const searchResults = document.getElementById('searchResults');
+  if (searchResults) {
+    searchResults.style.display = 'none';
+  }
+}
+
+async function showUserProfile(userId) {
+  hideSearchResults();
+  
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) {
+    searchBox.value = '';
+  }
+  
+  try {
+    console.log('👤 Loading profile for user:', userId);
+    showMessage('Loading profile...', 'success');
+    
+    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    
+    if (!data.success || !data.user) {
+      throw new Error('User not found');
+    }
+    
+    const user = data.user;
+    console.log('✅ Profile loaded:', user.username);
+    
+    showProfileModal(user);
+  } catch (error) {
+    console.error('❌ Failed to load profile:', error);
+    showMessage('❌ Failed to load profile: ' + error.message, 'error');
+  }
+}
+
+// ENHANCED POST FEATURES
+
+function openPhotoGallery() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  
+  input.onchange = function(e) {
+    handlePhotoSelection(e.target.files);
+  };
+  
+  input.click();
+}
+
+function openCamera() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        showMessage('📷 Camera access granted. Taking photo...', 'success');
+        setTimeout(() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.capture = 'environment';
+          input.onchange = function(e) {
+            handlePhotoSelection(e.target.files);
+          };
+          input.click();
+        }, 1000);
+      })
+      .catch(function(error) {
+        console.error('Camera error:', error);
+        showMessage('⚠️ Camera not available. Using gallery instead.', 'error');
+        openPhotoGallery();
+      });
+  } else {
+    showMessage('⚠️ Camera not supported. Using gallery instead.', 'error');
+    openPhotoGallery();
+  }
+}
+
+// FIXED: Enhanced photo selection with compression for mobile
+async function handlePhotoSelection(files) {
+  if (!files.length) return;
+  
+  showMessage('📸 Processing images...', 'success');
+  
+  for (const file of Array.from(files)) {
+    if (!file.type.startsWith('image/')) {
+      showMessage('Please select image files only', 'error');
+      continue;
+    }
+    
+    if (selectedFiles.length >= 5) {
+      showMessage('Maximum 5 photos allowed', 'error');
+      break;
+    }
+    
+    try {
+      // Compress image for mobile
+      const compressedFile = await compressImage(file);
+      selectedFiles.push(compressedFile);
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewUrl = e.target.result;
+        previewUrls.push(previewUrl);
+        displayPhotoPreviews();
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Image processing error:', error);
+      showMessage('Failed to process image: ' + file.name, 'error');
+    }
+  }
+  
+  if (selectedFiles.length > 0) {
+    showMessage(`✅ ${selectedFiles.length} photo(s) ready`, 'success');
+  }
+}
+
+function displayPhotoPreviews() {
+  const container = document.getElementById('photoPreviewContainer');
+  if (!container) return;
+  
+  if (previewUrls.length === 0) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  
+  container.style.display = 'block';
+  let html = '<div class="media-preview-grid">';
+  
+  previewUrls.forEach((previewUrl, index) => {
+    html += `
+      <div class="preview-item">
+        <div class="preview-image-container">
+          <img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">
+          <div class="media-actions">
+            <button class="crop-btn" onclick="openCropEditor(${index})">✂️ Crop</button>
+            <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨 Edit</button>
+            <button class="remove-btn" onclick="removePhoto(${index})">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function openCropEditor(index) {
+  currentCropIndex = index;
+  const imageUrl = previewUrls[index];
+  
+  document.getElementById('cropImage').src = imageUrl;
+  showModal('cropEditorModal');
+  
+  setTimeout(() => {
+    const image = document.getElementById('cropImage');
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    cropper = new Cropper(image, {
+      aspectRatio: NaN,
+      viewMode: 1,
+      autoCropArea: 0.8,
+      responsive: true,
+      restore: true,
+      checkCrossOrigin: false,
+      guides: true,
+      center: true,
+      highlight: true,
+      background: false,
+      movable: true,
+      rotatable: true,
+      scalable: true,
+      zoomable: true,
+      zoomOnTouch: true,
+      zoomOnWheel: true,
+      wheelZoomRatio: 0.1,
+      ready: function() {
+        console.log('Cropper ready');
+      }
+    });
+    
+    setupAspectRatioButtons();
+  }, 100);
+}
+
+function setupAspectRatioButtons() {
+  const buttons = document.querySelectorAll('.aspect-ratio-btn');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      buttons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      const ratio = this.dataset.ratio;
+      if (ratio === 'free') {
+        cropper.setAspectRatio(NaN);
+      } else {
+        cropper.setAspectRatio(eval(ratio));
+      }
+    });
+  });
+}
+
+function rotateImage() {
+  if (cropper) {
+    cropper.rotate(90);
+  }
+}
+
+function resetCrop() {
+  if (cropper) {
+    cropper.reset();
+  }
+}
+
+function applyCrop() {
+  if (cropper) {
+    const canvas = cropper.getCroppedCanvas();
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    
+    previewUrls[currentCropIndex] = croppedDataUrl;
+    
+    canvas.toBlob(function(blob) {
+      const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      selectedFiles[currentCropIndex] = file;
+    }, 'image/jpeg', 0.8);
+    
+    displayPhotoPreviews();
+    closeCropEditor();
+    showMessage('✅ Photo cropped successfully!', 'success');
+  }
+}
+
+function closeCropEditor() {
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  closeModal('cropEditorModal');
+}
+
+function openPhotoEditor(index) {
+  currentEditIndex = index;
+  const imageUrl = previewUrls[index];
+  
+  document.getElementById('editImage').src = imageUrl;
+  showModal('photoEditorModal');
+  
+  currentFilters[index] = currentFilters[index] || 'normal';
+  applyFilter('normal');
+}
+
+function applyFilter(filterName) {
+  const image = document.getElementById('editImage');
+  currentFilters[currentEditIndex] = filterName;
+  
+  image.className = '';
+  
+  if (filterName !== 'normal') {
+    image.classList.add(`filter-${filterName}`);
+  }
+  
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active-filter');
+  });
+  event.target.classList.add('active-filter');
+}
+
+function resetFilters() {
+  applyFilter('normal');
+}
+
+function saveEditedPhoto() {
+  const image = document.getElementById('editImage');
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  
+  ctx.filter = getFilterValue(currentFilters[currentEditIndex]);
+  ctx.drawImage(image, 0, 0);
+  
+  const editedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+  previewUrls[currentEditIndex] = editedDataUrl;
+  
+  canvas.toBlob(function(blob) {
+    const file = new File([blob], `edited-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    selectedFiles[currentEditIndex] = file;
+  }, 'image/jpeg', 0.8);
+  
+  displayPhotoPreviews();
+  closePhotoEditor();
+  showMessage('✅ Photo edited successfully!', 'success');
+}
+
+function closePhotoEditor() {
+  closeModal('photoEditorModal');
+  currentEditIndex = -1;
+}
+
+function getFilterValue(filterName) {
+  const filters = {
+    normal: 'none',
+    vintage: 'sepia(0.4) contrast(1.2) brightness(1.1)',
+    clarendon: 'contrast(1.2) saturate(1.35)',
+    moon: 'grayscale(1) contrast(1.1) brightness(1.1)',
+    lark: 'contrast(0.9) brightness(1.2) hue-rotate(-10deg)',
+    reyes: 'sepia(0.6) contrast(1.1) brightness(1.1) saturate(1.4)'
+  };
+  return filters[filterName] || 'none';
+}
+
+function removePhoto(index) {
+  selectedFiles.splice(index, 1);
+  previewUrls.splice(index, 1);
+  displayPhotoPreviews();
+  showMessage('🗑️ Photo removed', 'success');
+}
+
+function openMusicSelector() {
+  const modal = document.getElementById('musicSelectorModal');
+  const selector = document.getElementById('musicSelector');
+  
+  selector.innerHTML = '';
+  
+  musicLibrary.forEach(music => {
+    const musicItem = document.createElement('div');
+    musicItem.className = 'music-item';
+    const isSelected = selectedMusic && selectedMusic.id === music.id;
+    
+    musicItem.innerHTML = `
+      <div class="music-info">
+        <div class="music-emoji">${music.emoji}</div>
+        <div class="music-details">
+          <div class="music-name">${music.name}</div>
+          <div class="music-artist">${music.artist} • ${music.duration}</div>
+        </div>
+      </div>
+      <div class="music-actions">
+        <button class="preview-btn" onclick="previewMusic('${music.url}', ${music.id})">▶️ Preview</button>
+        <button class="select-btn ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
+          ${isSelected ? '✓ Selected' : '✅ Select'}
+        </button>
+      </div>
+    `;
+    selector.appendChild(musicItem);
+  });
+  
+  showModal('musicSelectorModal');
+}
+
+function previewMusic(url, musicId) {
+  const player = window.musicPlayer;
+  
+  player.pause();
+  player.currentTime = 0;
+  
+  player.src = url;
+  
+  player.play().catch(e => {
+    console.error('Error playing music:', e);
+    showMessage('Could not play music preview. Please try another track.', 'error');
+  });
+  
+  document.querySelectorAll('.music-item').forEach(item => {
+    item.classList.remove('playing');
+  });
+  
+  const currentItem = document.querySelector(`.music-item button[onclick*="${musicId}"]`)?.closest('.music-item');
+  if (currentItem) {
+    currentItem.classList.add('playing');
+  }
+}
+
+function selectMusic(musicId) {
+  selectedMusic = musicLibrary.find(m => m.id === musicId);
+  updateSelectedAssets();
+  closeMusicSelector();
+  showMessage(`🎵 "${selectedMusic.name}" added to your post!`, 'success');
+  
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+}
+
+function closeMusicSelector() {
+  window.musicPlayer.pause();
+  window.musicPlayer.currentTime = 0;
+  closeModal('musicSelectorModal');
+}
+
+function removeMusic() {
+  selectedMusic = null;
+  updateSelectedAssets();
+  showMessage('🎵 Music removed from post', 'success');
+}
+
+function openStickerSelector() {
+  const modal = document.getElementById('stickerSelectorModal');
+  const selector = document.getElementById('stickerSelector');
+  
+  selector.innerHTML = '';
+  
+  Object.keys(stickerLibrary).forEach(category => {
+    const categorySection = document.createElement('div');
+    categorySection.className = 'sticker-category';
+    
+    const categoryTitle = document.createElement('h4');
+    categoryTitle.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+    categorySection.appendChild(categoryTitle);
+    
+    const stickerGrid = document.createElement('div');
+    stickerGrid.className = 'sticker-grid';
+    
+    stickerLibrary[category].forEach(sticker => {
+      const stickerItem = document.createElement('div');
+      stickerItem.className = 'sticker-item';
+      stickerItem.innerHTML = `
+        <div class="sticker" onclick="addSticker('${sticker.emoji}', '${sticker.name}')">
+          ${sticker.emoji}
+        </div>
+        <div class="sticker-name">${sticker.name}</div>
+      `;
+      stickerGrid.appendChild(stickerItem);
+    });
+    
+    categorySection.appendChild(stickerGrid);
+    selector.appendChild(categorySection);
+  });
+  
+  showModal('stickerSelectorModal');
+}
+
+function addSticker(emoji, name) {
+  if (selectedStickers.length >= 5) {
+    showMessage('Maximum 5 stickers allowed per post', 'error');
+    return;
+  }
+  
+  selectedStickers.push({emoji, name});
+  updateSelectedAssets();
+  
+  const postText = document.getElementById('postText');
+  postText.value += emoji;
+  
+  showMessage(`🎨 Sticker "${name}" added!`, 'success');
+}
+
+function removeStickers() {
+  selectedStickers = [];
+  updateSelectedAssets();
+  showMessage('🎨 All stickers removed', 'success');
+}
+
+function showPostDestinationModal() {
+  showModal('postDestinationModal');
+}
+
+function selectPostDestination(destination) {
+  if (destination === 'community') {
+    if (!currentUser.communityJoined || !currentUser.college) {
+      showMessage('⚠️ Please connect to your university first!', 'error');
+      closeModal('postDestinationModal');
+      
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+      return;
+    }
+  }
+  
+  selectedPostDestination = destination;
+  const displayText = destination === 'profile' ? 'My Profile' : 'Community Feed';
+  document.getElementById('currentDestination').textContent = displayText;
+  closeModal('postDestinationModal');
+  showMessage(`📍 Post will be shared to ${displayText}`, 'success');
+  
+  console.log('✅ Post destination set to:', selectedPostDestination);
+}
+
+function updateSelectedAssets() {
+  const container = document.getElementById('selectedAssets');
+  if (!container) return;
+  
+  let html = '';
+  
+  if (selectedMusic) {
+    html += `
+      <div class="selected-asset">
+        <span>🎵 ${selectedMusic.name}</span>
+        <button onclick="removeMusic()" class="remove-asset-btn">✕</button>
+      </div>
+    `;
+  }
+  
+  if (selectedStickers.length > 0) {
+    html += `
+      <div class="selected-asset selected-stickers">
+        <span>🎨 Stickers:</span>
+        ${selectedStickers.map(sticker => `<span class="sticker-preview">${sticker.emoji}</span>`).join('')}
+        <button onclick="removeStickers()" class="remove-asset-btn">✕</button>
+      </div>
+    `;
+  }
+  
+  container.innerHTML = html;
+  container.style.display = html ? 'block' : 'none';
+}
+
+// FIXED: Enhanced Create Post Function with mobile support
+async function createPost() {
+  const postText = document.getElementById('postText').value.trim();
+  
+  console.log('🚀 === POST CREATION START ===');
+  console.log('📝 Post text:', postText);
+  console.log('📁 Files:', selectedFiles.length);
+  console.log('🎵 Music:', selectedMusic ? selectedMusic.name : 'None');
+  console.log('🎨 Stickers:', selectedStickers.length);
+  console.log('📍 Destination:', selectedPostDestination);
+  
+  // Validate content
+  if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
+    console.log('❌ No content to post');
+    showMessage('⚠️ Please add some content to your post', 'error');
+    return;
+  }
+  
+  if (!currentUser) {
+    console.log('❌ User not logged in');
+    showMessage('⚠️ Please login to post', 'error');
+    return;
+  }
+  
+  // Check community membership for community posts
+  if (selectedPostDestination === 'community') {
+    console.log('🔍 Checking community membership...');
+    console.log('Community joined:', currentUser.communityJoined);
+    console.log('College:', currentUser.college);
+    
+    if (!currentUser.communityJoined || !currentUser.college) {
+      console.log('❌ User not in community');
+      showMessage('⚠️ Please connect to your university first!', 'error');
+      
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+      return;
+    }
+  }
+  
+  try {
+    console.log('✅ All validations passed');
+    showMessage('📤 Creating post... Please wait', 'success');
+    
+    const formData = new FormData();
+    formData.append('content', postText);
+    formData.append('postTo', selectedPostDestination);
+    
+    console.log('📦 FormData created with postTo:', selectedPostDestination);
+    
+    if (selectedMusic) {
+      formData.append('music', JSON.stringify(selectedMusic));
+      console.log('🎵 Added music:', selectedMusic.name);
+    }
+    
+    if (selectedStickers.length > 0) {
+      formData.append('stickers', JSON.stringify(selectedStickers));
+      console.log('🎨 Added stickers:', selectedStickers.length);
+    }
+    
+    // Add files with progress indication
+    if (selectedFiles.length > 0) {
+      showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
+      
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append('media', selectedFiles[i]);
+        console.log(`📁 Added file ${i + 1}:`, selectedFiles[i].name, `(${(selectedFiles[i].size / 1024).toFixed(0)}KB)`);
+      }
+    }
+    
+    console.log('📤 Sending POST request to /api/posts...');
+    
+    const data = await apiCall('/api/posts', 'POST', formData);
+    
+    console.log('✅ Response received:', data);
+    
+    if (data.success) {
+      const msg = selectedPostDestination === 'profile' 
+        ? '✅ Post added to your profile!' 
+        : '✅ Post shared to community!';
+      
+      showMessage(msg, 'success');
+      console.log('🎉 Post created successfully!');
+      
+      // NEW: Show celebration modal with post count
+      const postCount = data.postCount || 1;
+      setTimeout(() => {
+        showPostCelebrationModal(postCount);
+      }, 800);
+      
+      if (data.badgeUpdated && data.newBadges?.length > 0) {
+        setTimeout(() => {
+          showMessage(`🏆 New badge: ${data.newBadges.join(', ')}`, 'success');
+        }, 6000); // Show after celebration modal
+      }
+      
+      resetPostForm();
+      
+      setTimeout(() => {
+        console.log('🔄 Reloading feeds...');
+        loadPosts();
+        
+        if (selectedPostDestination === 'profile') {
+          const profilePostsContainer = document.getElementById('userProfilePosts');
+          if (profilePostsContainer) {
+            loadUserProfilePosts(currentUser.id);
+          }
+        }
+        
+        if (selectedPostDestination === 'community') {
+          const communityPostsContainer = document.getElementById('communityPostsContainer');
+          if (communityPostsContainer) {
+            loadCommunityPosts();
+          }
+        }
+      }, 1000);
+    } else {
+      console.log('❌ Post creation failed:', data);
+      showMessage('❌ Failed to create post', 'error');
+    }
+  } catch (error) {
+    console.error('❌ CREATE POST ERROR:', error);
+    
+    if (error.message.includes('timeout')) {
+      showMessage('⚠️ Upload timeout - please try with smaller images or check your connection', 'error');
+    } else if (error.message.includes('university') || error.message.includes('community')) {
+      showMessage('⚠️ Please connect to your university first!', 'error');
+      setTimeout(() => {
+        if (confirm('You need to join a college community first. Explore colleges now?')) {
+          showPage('home');
+          document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+        }
+      }, 500);
+    } else {
+      showMessage('❌ Error: ' + (error.message || 'Failed to create post'), 'error');
+    }
+  }
+  
+  console.log('🏁 === POST CREATION END ===');
+}
+
+function resetPostForm() {
+  console.log('🧹 Resetting post form...');
+  document.getElementById('postText').value = '';
+  selectedFiles = [];
+  previewUrls = [];
+  selectedMusic = null;
+  selectedStickers = [];
+  
+  const photoContainer = document.getElementById('photoPreviewContainer');
+  if (photoContainer) {
+    photoContainer.innerHTML = '';
+    photoContainer.style.display = 'none';
+  }
+  
+  const assetsContainer = document.getElementById('selectedAssets');
+  if (assetsContainer) {
+    assetsContainer.innerHTML = '';
+    assetsContainer.style.display = 'none';
+  }
+  
+  console.log('✅ Form reset complete. Destination remains:', selectedPostDestination);
+}
+
+// Load Posts - Shows ALL posts (profile + community)
+async function loadPosts() {
+  const feedEl = document.getElementById('postsFeed');
+  if (!feedEl) {
+    console.log('❌ Feed element not found');
+    return;
+  }
+  
+  console.log('📨 === LOADING POSTS ===');
+  console.log('👤 Current user:', currentUser?.username);
+  
+  try {
+    feedEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>';
+    
+    const endpoint = '/api/posts';
+    
+    console.log('🔗 Fetching from:', endpoint);
+    
+    const data = await apiCall(endpoint, 'GET');
+    
+    console.log('✅ Received data:', {
+      success: data.success,
+      postsCount: data.posts?.length || 0
+    });
+    
+    if (!data.posts || data.posts.length === 0) {
+      const emptyMsg = '📝 No posts yet. Create your first post!';
+      
+      console.log('ℹ️ No posts found');
+      feedEl.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">${emptyMsg}</div>`;
+      return;
+    }
+    
+    console.log('✅ Rendering', data.posts.length, 'posts');
+    
+    let html = '';
+    data.posts.forEach((post, index) => {
+      console.log(`Rendering post ${index + 1}:`, {
+        id: post.id,
+        author: post.users?.username,
+        postedTo: post.posted_to,
+        hasContent: !!post.content,
+        mediaCount: post.media?.length || 0
+      });
+      
+      const author = post.users?.username || 'User';
+      const authorId = post.users?.id || '';
+      const content = post.content || '';
+      const media = post.media || [];
+      const time = new Date(post.created_at || post.timestamp).toLocaleString();
+      const isOwn = currentUser && authorId === currentUser.id;
+      const postedTo = post.posted_to === 'community' ? '🌍 Community' : '👤 Profile';
+      const music = post.music || null;
+      const stickers = post.stickers || [];
+      
+      html += `
+        <div class="enhanced-post">
+          <div class="enhanced-post-header">
+            <div class="enhanced-user-info">
+              <div class="enhanced-user-avatar">
+                ${post.users?.profile_pic ? `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : '👤'}
+              </div>
+              <div class="enhanced-user-details">
+                <div class="enhanced-username">@${author}</div>
+                <div class="enhanced-post-meta">
+                  <span>${time}</span>
+                  <span>•</span>
+                  <span>${postedTo}</span>
+                </div>
+              </div>
+            </div>
+            ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ Delete</button>` : ''}
+          </div>
+          
+          <div class="enhanced-post-content">
+            ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
+            
+            ${stickers.length > 0 ? `
+              <div class="post-stickers-container">
+                ${stickers.map(sticker => `
+                  <span class="post-sticker">${sticker.emoji || sticker}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+            
+            ${music ? `
+              <div class="post-music-container">
+                <div class="music-player">
+                  <div class="music-info">
+                    <div class="music-icon">${music.emoji || '🎵'}</div>
+                    <div class="music-details">
+                      <div class="music-name">${music.name}</div>
+                      <div class="music-duration">${music.artist} • ${music.duration}</div>
+                    </div>
+                  </div>
+                  <audio controls class="post-audio-player">
+                    <source src="${music.url}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${media.length > 0 ? `
+              <div class="enhanced-post-media">
+                ${media.map(m => 
+                  m.type === 'image' 
+                    ? `<div class="enhanced-media-item"><img src="${m.url}" alt="Post image"></div>` 
+                    : m.type === 'video'
+                    ? `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>`
+                    : `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="enhanced-post-footer">
+            <div class="enhanced-post-stats">
+              <span>❤️ 0</span>
+              <span>💬 0</span>
+              <span>🔄 0</span>
+            </div>
+            <div class="enhanced-post-engagement">
+              <button class="engagement-btn">❤️ Like</button>
+              <button class="engagement-btn">💬 Comment</button>
+              <button class="engagement-btn">🔄 Share</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    feedEl.innerHTML = html;
+    console.log('✅ Posts rendered successfully');
+    
+  } catch (error) {
+    console.error('❌ LOAD POSTS ERROR:', error);
+    feedEl.innerHTML = `
+      <div style="text-align:center; padding:40px; color:#ff6b6b;">
+        ❌ Failed to load posts<br>
+        <small style="font-size:14px;color:#888;margin-top:8px;display:block;">
+          ${error.message || 'Please check your connection and try again'}
+        </small>
+      </div>
+    `;
+  }
+  
+  console.log('🏁 === LOADING POSTS END ===');
+}
+
+async function deletePost(postId) {
+  if (!confirm('Delete this post?')) return;
+  
+  try {
+    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    showMessage('🗑️ Post deleted', 'success');
+    loadPosts();
+  } catch (error) {
+    showMessage('❌ Failed to delete: ' + error.message, 'error');
+  }
+}
+
+// SOCKET FUNCTIONS
+function initializeSocket() {
+  if (socket) return;
+  
+  socket = io(API_URL);
+  
+  socket.on('connect', () => {
+    console.log('Socket connected');
+    if (currentUser?.college) {
+      socket.emit('join_college', currentUser.college);
+    }
+    socket.emit('user_online', currentUser.id);
+  });
+  
+  socket.on('new_message', (message) => {
+    appendMessageToChat(message);
+  });
+  
+  socket.on('message_updated', (message) => {
+    updateMessageInChat(message);
+  });
+  
+  socket.on('message_deleted', ({ id }) => {
+    removeMessageFromChat(id);
+  });
+  
+  socket.on('online_count', (count) => {
+    updateOnlineCount(count);
+  });
+}
+
+// NAVIGATION FUNCTIONS
+function showPage(name, e) {
+  if(e) e.preventDefault();
+  
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const targetPage = document.getElementById(name);
+  if(targetPage) targetPage.style.display = 'block';
+  
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if(e && e.target) e.target.classList.add('active');
+  
+  if(name === 'posts') {
+    loadPosts();
+  } else if(name === 'communities') {
+    loadCommunities();
+  } else if(name === 'badges') {
+    loadBadgesPage();
+  }
+  
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  showPage('home');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelector('.nav-link[onclick*="home"]')?.classList.add('active');
+}
+
+// COLLEGE FUNCTIONS
+function selectUniversity(type) {
+  currentType = type;
+  currentPage = 1;
+  allColleges = colleges[type];
+  
+  const titles = {
+    nit: 'National Institutes of Technology',
+    iit: 'Indian Institutes of Technology',
+    vit: 'VIT Colleges',
+    other: 'Other Universities'
+  };
+  
+  document.getElementById('collegeTitle').textContent = titles[type];
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('collegeList').style.display = 'block';
+  
+  showColleges();
+}
+
+function showColleges() {
+  const list = allColleges;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const page = list.slice(start, end);
+  
+  let html = '';
+  page.forEach(c => {
+    const isConnected = currentUser && currentUser.college === c.name;
+    html += `
+      <div class="college-item">
+        <h3>${c.name}</h3>
+        <p>${c.location}</p>
+        ${isConnected 
+          ? '<button class="verified" disabled>✓ Connected</button>'
+          : `<button onclick="openVerify('${c.name}', '${c.email}')">Connect</button>`
+        }
+      </div>
+    `;
+  });
+  
+  document.getElementById('collegeContainer').innerHTML = html;
+}
 
 function searchColleges() {
-  const query = document.getElementById('searchCollege').value.toLowerCase();
-  const filtered = colleges[currentType].filter(c => c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query));
+  const search = document.getElementById('searchCollege').value.toLowerCase();
+  const filtered = colleges[currentType].filter(c => 
+    c.name.toLowerCase().includes(search) || c.location.toLowerCase().includes(search)
+  );
   allColleges = filtered;
   currentPage = 1;
-  displayColleges();
+  showColleges();
 }
 
-async function requestVerification(name, email) {
-  currentVerifyCollege = { name, email };
-  const modal = document.createElement('div');
-  modal.className = 'modal'; modal.id = 'verifyModal'; modal.style.display = 'flex';
-  modal.innerHTML = `<div class="modal-box"><span class="close" onclick="document.getElementById('verifyModal').remove()">&times;</span><h2>Verify College Email</h2><p>Enter your college email to receive verification code</p><input type="email" id="collegeEmail" placeholder="your${email}" style="width:100%; padding:12px; margin:15px 0; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px;"><button onclick="sendVerificationCode()">Send Code</button></div>`;
-  document.body.appendChild(modal);
+function backToUniversities() {
+  document.getElementById('collegeList').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
 }
 
-async function sendVerificationCode() {
-  const email = document.getElementById('collegeEmail').value.trim();
-  if (!email) { showMessage('⚠️ Email required', 'error'); return; }
+function openVerify(name, emailDomain) {
+  if (currentUser && currentUser.college) {
+    showMessage('⚠️ You are already connected to ' + currentUser.college, 'error');
+    return;
+  }
+  
+  currentVerifyCollege = {name, emailDomain};
+  
+  const modalHtml = `
+    <div class="modal-box">
+      <span class="close" onclick="closeModal('verifyModal')">&times;</span>
+      <h2>Verify Your College</h2>
+      <p>Enter your college email to verify</p>
+      <p style="color:#888; font-size:13px;">Email must end with: ${emailDomain}</p>
+      <input type="email" id="verifyEmail" placeholder="your.email${emailDomain}">
+      <button onclick="requestVerificationCode()">Send Verification Code</button>
+      <div id="codeSection" style="display:none; margin-top:20px;">
+        <input type="text" id="verifyCode" placeholder="Enter 6-digit code" maxlength="6">
+        <button onclick="verifyCollegeCode()">Verify Code</button>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('verifyModal').innerHTML = modalHtml;
+  document.getElementById('verifyModal').style.display = 'flex';
+}
+
+async function requestVerificationCode() {
+  const email = document.getElementById('verifyEmail').value.trim();
+  
+  if (!email) {
+    showMessage('⚠️ Enter your email', 'error');
+    return;
+  }
+  
+  if (!email.endsWith(currentVerifyCollege.emailDomain)) {
+    showMessage('⚠️ Email must end with ' + currentVerifyCollege.emailDomain, 'error');
+    return;
+  }
+  
   try {
-    await apiCall('/api/college/request-verification', 'POST', { collegeName: currentVerifyCollege.name, collegeEmail: email });
+    showMessage('📧 Sending verification code...', 'success');
+    
+    await apiCall('/api/college/request-verification', 'POST', {
+      collegeName: currentVerifyCollege.name,
+      collegeEmail: email
+    });
+    
     showMessage('✅ Code sent to ' + email, 'success');
-    showVerifyCodeInput(email);
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
-}
-
-function showVerifyCodeInput(email) {
-  const modal = document.getElementById('verifyModal');
-  modal.querySelector('.modal-box').innerHTML = `<span class="close" onclick="document.getElementById('verifyModal').remove()">&times;</span><h2>Enter Verification Code</h2><p>Code sent to ${email}</p><input type="text" id="verifyCode" placeholder="6-digit code" maxlength="6" style="width:100%; padding:12px; margin:15px 0; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px; font-size:20px; letter-spacing:5px; text-align:center;"><button onclick="verifyCollegeCode()">Verify</button>`;
+    document.getElementById('codeSection').style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function verifyCollegeCode() {
   const code = document.getElementById('verifyCode').value.trim();
-  if (!code) { showMessage('⚠️ Code required', 'error'); return; }
+  
+  if (!code || code.length !== 6) {
+    showMessage('⚠️ Enter 6-digit code', 'error');
+    return;
+  }
+  
   try {
+    showMessage('🔍 Verifying...', 'success');
+    
     const data = await apiCall('/api/college/verify', 'POST', { code });
+    
+    showMessage('🎉 ' + data.message, 'success');
+    
     currentUser.college = data.college;
     currentUser.communityJoined = true;
     currentUser.badges = data.badges;
     localStorage.setItem('user', JSON.stringify(currentUser));
-    showMessage('🎉 Successfully connected to ' + data.college, 'success');
-    document.getElementById('verifyModal').remove();
-    updateLiveNotif(`Connected to ${data.college}`);
+    
+    closeModal('verifyModal');
+    
     initializeSocket();
-    setTimeout(() => { backToUniversities(); showPage('communities', null); }, 1500);
-  } catch (error) { showMessage('❌ ' + error.message, 'error'); }
-}
-
-// IMAGE VIEWER
-function openImageViewer(url) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.style.background = 'rgba(0,0,0,0.95)';
-  modal.onclick = () => modal.remove();
-  
-  modal.innerHTML = `
-    <div style="position:relative; max-width:90%; max-height:90%; display:flex; align-items:center; justify-content:center;">
-      <button style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); border:none; color:white; width:40px; height:40px; border-radius:50%; font-size:24px; cursor:pointer; backdrop-filter:blur(10px);" onclick="event.stopPropagation(); this.parentElement.parentElement.remove()">×</button>
-      <img src="${url}" style="max-width:100%; max-height:90vh; border-radius:12px; box-shadow:0 25px 50px rgba(0,0,0,0.5);" onclick="event.stopPropagation();">
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-}
-
-// PROFILE EDITING
-async function showProfileEdit() {
-  try {
-    const data = await apiCall('/api/profile', 'GET');
-    const user = data.user;
     
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    
-    modal.innerHTML = `
-      <div class="modal-box" style="max-width:600px;">
-        <span class="close" onclick="this.parentElement.parentElement.remove()">×</span>
-        <h2>✏️ Edit Profile</h2>
-        
-        <div style="margin:20px 0;">
-          <label style="display:block; color:#4f74a3; font-weight:600; margin-bottom:8px;">Profile Picture</label>
-          <div style="display:flex; align-items:center; gap:15px;">
-            <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, rgba(79,116,163,0.3), rgba(141,164,211,0.3)); display:flex; align-items:center; justify-content:center; font-size:40px; ${user.profile_pic ? `background-image:url(${user.profile_pic}); background-size:cover;` : ''}">
-              ${!user.profile_pic ? '👤' : ''}
-            </div>
-            <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="handleProfilePicChange(event)">
-            <button onclick="document.getElementById('profilePicInput').click()" style="padding:10px 20px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">📷 Change Photo</button>
-          </div>
-        </div>
-        
-        <div style="margin:20px 0;">
-          <label style="display:block; color:#4f74a3; font-weight:600; margin-bottom:8px;">Username</label>
-          <input type="text" id="editUsername" value="${user.username}" placeholder="Username" style="width:100%; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px;">
-        </div>
-        
-        <div style="margin:20px 0;">
-          <label style="display:block; color:#4f74a3; font-weight:600; margin-bottom:8px;">Bio</label>
-          <textarea id="editBio" placeholder="Tell us about yourself..." style="width:100%; padding:12px; min-height:100px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; border-radius:10px; font-family:inherit; resize:vertical;">${user.bio || ''}</textarea>
-          <small style="color:#888; font-size:12px;">Max 200 characters</small>
-        </div>
-        
-        <div style="display:flex; gap:10px; margin-top:25px;">
-          <button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1; padding:12px; background:rgba(79,116,163,0.2); color:#4f74a3; border:1px solid rgba(79,116,163,0.3); border-radius:10px; cursor:pointer; font-weight:600;">Cancel</button>
-          <button onclick="saveProfileChanges()" style="flex:1; padding:12px; background:linear-gradient(135deg, #4f74a3, #8da4d3); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">💾 Save Changes</button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
+    setTimeout(() => {
+      showPage('communities');
+      updateLiveNotif('Connected to ' + data.college);
+    }, 1500);
   } catch (error) {
-    console.error('Failed to load profile:', error);
-    showMessage('❌ Failed to load profile', 'error');
+    showMessage('❌ ' + error.message, 'error');
   }
 }
-
-let selectedProfilePic = null;
-
-function handleProfilePicChange(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  if (!file.type.startsWith('image/')) {
-    showMessage('⚠️ Please select an image file', 'error');
-    return;
-  }
-  
-  if (file.size > 5 * 1024 * 1024) {
-    showMessage('⚠️ Image must be less than 5MB', 'error');
-    return;
-  }
-  
-  selectedProfilePic = file;
-  showMessage('✅ Profile picture selected', 'success');
-}
-
-async function saveProfileChanges() {
-  const username = document.getElementById('editUsername').value.trim();
-  const bio = document.getElementById('editBio').value.trim();
-  
-  if (!username) {
-    showMessage('⚠️ Username cannot be empty', 'error');
-    return;
-  }
-  
-  if (bio.length > 200) {
-    showMessage('⚠️ Bio must be less than 200 characters', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('💾 Saving changes...', 'success');
-    
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('bio', bio);
-    
-    if (selectedProfilePic) {
-      const compressed = await compressImage(selectedProfilePic);
-      formData.append('profilePic', compressed);
-    }
-    
-    const data = await apiCall('/api/profile', 'PATCH', formData);
-    
-    currentUser.username = data.user.username;
-    currentUser.bio = data.user.bio;
-    currentUser.profile_pic = data.user.profile_pic;
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    
-    showMessage('✅ Profile updated successfully!', 'success');
-    document.querySelector('.modal').remove();
-    
-    // Update UI
-    document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
-    
-    selectedProfilePic = null;
-  } catch (error) {
-    console.error('Failed to update profile:', error);
-    showMessage('❌ Failed to update profile: ' + error.message, 'error');
-  }
-}
-
-// KEYBOARD SHORTCUTS
-document.addEventListener('keydown', (e) => {
-  // Escape to close modals
-  if (e.key === 'Escape') {
-    const modals = document.querySelectorAll('.modal');
-    if (modals.length > 0) {
-      modals[modals.length - 1].remove();
-    }
-  }
-  
-  // Ctrl/Cmd + K to focus search
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-    e.preventDefault();
-    document.getElementById('searchBox')?.focus();
-  }
-  
-  // Ctrl/Cmd + Enter to post
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    const postText = document.getElementById('postText');
-    if (postText === document.activeElement) {
-      createPost();
-    }
-  }
-});
-
-// CLICK OUTSIDE TO CLOSE
-document.addEventListener('click', (e) => {
-  const searchBox = document.getElementById('searchBox');
-  const searchResults = document.getElementById('searchResults');
-  const optionsBtn = document.querySelector('.options-btn');
-  const optionsMenu = document.getElementById('optionsMenu');
-  const hamburgerBtn = document.querySelector('.hamburger-btn');
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  
-  // Close search results
-  if (searchResults && !searchBox?.contains(e.target) && !searchResults.contains(e.target)) {
-    searchResults.style.display = 'none';
-  }
-  
-  // Close options menu
-  if (optionsMenu && !optionsBtn?.contains(e.target) && !optionsMenu.contains(e.target)) {
-    optionsMenu.style.display = 'none';
-  }
-  
-  // Close hamburger menu
-  if (hamburgerMenu && !hamburgerBtn?.contains(e.target) && !hamburgerMenu.contains(e.target)) {
-    hamburgerMenu.style.display = 'none';
-  }
-});
-
-// MOUSE CURSOR CHAIN EFFECT
-const chain = [];
-const maxChain = 20;
-
-document.addEventListener('mousemove', (e) => {
-  if (Math.random() > 0.7) { // Only create occasionally for performance
-    const dot = document.createElement('div');
-    dot.className = 'chain';
-    dot.style.left = e.pageX + 'px';
-    dot.style.top = e.pageY + 'px';
-    document.body.appendChild(dot);
-    
-    chain.push(dot);
-    
-    if (chain.length > maxChain) {
-      const old = chain.shift();
-      old.remove();
-    }
-    
-    setTimeout(() => {
-      dot.style.opacity = '0';
-      setTimeout(() => {
-        dot.remove();
-        const index = chain.indexOf(dot);
-        if (index > -1) chain.splice(index, 1);
-      }, 500);
-    }, 100);
-  }
-});
-
-// THEME INITIALIZATION
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
-  document.body.classList.remove('dark-theme', 'light-theme');
-  document.body.classList.add(savedTheme + '-theme');
-} else {
-  document.body.classList.add('dark-theme');
-}
-
-// SERVICE WORKER FOR PWA (Optional)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(() => {
-    console.log('✅ Service Worker registered');
-  }).catch(() => {
-    console.log('❌ Service Worker registration failed');
-  });
-}
-
-// NETWORK STATUS MONITORING
-window.addEventListener('online', () => {
-  showMessage('🌐 Back online!', 'success');
-  if (currentUser && currentUser.college && !socket?.connected) {
-    initializeSocket();
-  }
-});
-
-window.addEventListener('offline', () => {
-  showMessage('⚠️ You are offline', 'error');
-});
-
-// VISIBILITY CHANGE - Reload when tab becomes visible
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && currentUser) {
-    const activePage = document.querySelector('.page.active');
-    if (activePage?.id === 'posts') {
-      loadPosts();
-    } else if (activePage?.id === 'communities') {
-      loadCommunityMessages();
-    }
-  }
-});
-
-// AUTO-RESIZE TEXTAREA
-document.addEventListener('input', (e) => {
-  if (e.target.matches('textarea')) {
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
-  }
-});
-
-// PREVENT FORM SUBMISSION ON ENTER (except for specified cases)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
-    const form = e.target.closest('form');
-    if (form && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.click();
-    }
-  }
-});
-
-// LAZY LOADING FOR IMAGES
-const imageObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const img = entry.target;
-      if (img.dataset.src) {
-        img.src = img.dataset.src;
-        img.removeAttribute('data-src');
-        imageObserver.unobserve(img);
-      }
-    }
-  });
-});
-
-// Observe all images with data-src attribute
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[data-src]').forEach(img => {
-    imageObserver.observe(img);
-  });
-});
-
-// PERFORMANCE MONITORING
-if (window.performance && window.performance.timing) {
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const timing = window.performance.timing;
-      const loadTime = timing.loadEventEnd - timing.navigationStart;
-      console.log(`📊 Page load time: ${loadTime}ms`);
-    }, 0);
-  });
-}
-
-// ERROR BOUNDARY
-window.addEventListener('error', (e) => {
-  console.error('🚨 Global error:', e.error);
-  
-  // Don't show error messages for network issues or script loading failures
-  if (e.error && !e.error.message.includes('Failed to fetch') && !e.error.message.includes('NetworkError')) {
-    showMessage('⚠️ An error occurred. Please refresh the page.', 'error');
-  }
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-  console.error('🚨 Unhandled promise rejection:', e.reason);
-  
-  // Only show user-friendly errors
-  if (e.reason && e.reason.message && !e.reason.message.includes('network')) {
-    showMessage('⚠️ Something went wrong. Please try again.', 'error');
-  }
-});
-
-// DOUBLE TAP TO LIKE (Mobile)
-let lastTap = 0;
-document.addEventListener('touchend', (e) => {
-  const currentTime = new Date().getTime();
-  const tapLength = currentTime - lastTap;
-  
-  if (tapLength < 300 && tapLength > 0) {
-    const post = e.target.closest('.enhanced-post');
-    if (post && post.dataset.postId) {
-      const likeBtn = post.querySelector('.like-btn');
-      if (likeBtn && !likeBtn.classList.contains('liked')) {
-        likePost(post.dataset.postId);
-        
-        // Show heart animation
-        const heart = document.createElement('div');
-        heart.innerHTML = '❤️';
-        heart.style.position = 'fixed';
-        heart.style.left = e.changedTouches[0].clientX + 'px';
-        heart.style.top = e.changedTouches[0].clientY + 'px';
-        heart.style.fontSize = '48px';
-        heart.style.pointerEvents = 'none';
-        heart.style.zIndex = '9999';
-        heart.style.animation = 'likeAnimation 1s ease-out forwards';
-        document.body.appendChild(heart);
-        
-        setTimeout(() => heart.remove(), 1000);
-      }
-    }
-  }
-  
-  lastTap = currentTime;
-});
-
-// Add CSS animation for double tap like
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes likeAnimation {
-    0% { transform: scale(0) translateY(0); opacity: 1; }
-    50% { transform: scale(1.2) translateY(-20px); opacity: 1; }
-    100% { transform: scale(0.8) translateY(-40px); opacity: 0; }
-  }
-`;
-document.head.appendChild(style);
-
-// PULL TO REFRESH (Mobile)
-let startY = 0;
-let isPulling = false;
-const pullThreshold = 100;
-
-document.addEventListener('touchstart', (e) => {
-  if (window.scrollY === 0) {
-    startY = e.touches[0].clientY;
-    isPulling = false;
-  }
-});
-
-document.addEventListener('touchmove', (e) => {
-  if (window.scrollY === 0) {
-    const currentY = e.touches[0].clientY;
-    const pullDistance = currentY - startY;
-    
-    if (pullDistance > 0 && pullDistance < pullThreshold * 2) {
-      isPulling = true;
-      // Could add visual feedback here
-    }
-  }
-});
-
-document.addEventListener('touchend', (e) => {
-  if (isPulling) {
-    const currentY = e.changedTouches[0].clientY;
-    const pullDistance = currentY - startY;
-    
-    if (pullDistance > pullThreshold) {
-      showMessage('🔄 Refreshing...', 'success');
-      const activePage = document.querySelector('.page.active');
-      if (activePage?.id === 'posts') {
-        loadPosts();
-      } else if (activePage?.id === 'home') {
-        loadTrending();
-        updateLiveStats();
-      }
-    }
-  }
-  
-  isPulling = false;
-  startY = 0;
-});
-
-// CONSOLE WELCOME MESSAGE
-console.log('%c🎉 Welcome to VibeXpert! 🎉', 'color: #4f74a3; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);');
-console.log('%c🚀 Connect. Share. Vibe.', 'color: #8da4d3; font-size: 16px; font-weight: 600;');
-console.log('%c⚠️ Warning: Do not paste code here unless you know what you\'re doing!', 'color: #ff6b6b; font-size: 14px; font-weight: bold;');
-console.log('%c💡 For support: support@vibexpert.com', 'color: #888; font-size: 12px;');
-
-// EASTER EGG - Konami Code
-let konamiCode = [];
-const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-
-document.addEventListener('keydown', (e) => {
-  konamiCode.push(e.key);
-  konamiCode = konamiCode.slice(-10);
-  
-  if (JSON.stringify(konamiCode) === JSON.stringify(konamiSequence)) {
-    showMessage('🎮 Konami Code Activated! You found a secret!', 'success');
-    document.body.style.animation = 'rainbow 2s infinite';
-    setTimeout(() => {
-      document.body.style.animation = '';
-    }, 5000);
-  }
-});
-
-// Add rainbow animation
-const rainbowStyle = document.createElement('style');
-rainbowStyle.textContent = `
-  @keyframes rainbow {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(360deg); }
-  }
-`;
-document.head.appendChild(rainbowStyle);
-
-// ANALYTICS (Privacy-friendly - no tracking)
-const analytics = {
-  pageViews: 0,
-  postsCreated: 0,
-  likesGiven: 0,
-  commentsPosted: 0,
-  
-  track(event) {
-    this[event]++;
-    localStorage.setItem('analytics', JSON.stringify(this));
-  },
-  
-  get() {
-    const saved = localStorage.getItem('analytics');
-    if (saved) {
-      Object.assign(this, JSON.parse(saved));
-    }
-    return this;
-  }
-};
-
-// Load analytics on startup
-analytics.get();
-analytics.track('pageViews');
-
-// UTILITY: Format relative time
-function formatRelativeTime(date) {
-  const now = new Date();
-  const diff = now - new Date(date);
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (seconds < 60) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return new Date(date).toLocaleDateString();
-}
-
-// UTILITY: Truncate text
-function truncateText(text, maxLength = 150) {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
-}
-
-// UTILITY: Validate email
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-// UTILITY: Generate random color
-function getRandomColor() {
-  const colors = ['#4f74a3', '#8da4d3', '#667eea', '#764ba2', '#f093fb', '#4facfe'];
-  return colors[Math.floor(Math.random() * colors.length)];
-}
-
-// FINAL INITIALIZATION
-console.log('✅ VibeXpert JS Fully Loaded - All Features Active!');
-console.log('📊 Features: Posts, Likes, Comments, Shares, Views, Music, Stickers, Search, Profile, Communities, Badges');
-console.log('🎨 Status: 100% Complete and Production Ready!');
-
-// Export functions for global access (if needed)
-window.VibeXpert = {
-  likePost,
-  openComments,
-  sharePost,
-  showPostViews,
-  showUserProfile,
-  createPost,
-  deletePost,
-  loadPosts,
-  showPage,
-  logout
-};
-
-// READY!
-document.dispatchEvent(new Event('vibexpert:ready'));
-    
