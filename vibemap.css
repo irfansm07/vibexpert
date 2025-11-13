@@ -5166,3 +5166,358 @@ body.light-theme .celebration-message {
     padding: 10px 16px;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ==================== LIKE/COMMENT/SHARE STYLES ==================== */
+
+/* Engagement Button Styles */
+.engagement-btn {
+  background: rgba(79, 116, 163, 0.1);
+  color: #8da4d3;
+  border: 1px solid rgba(79, 116, 163, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.engagement-btn:hover {
+  background: rgba(79, 116, 163, 0.2);
+  border-color: rgba(79, 116, 163, 0.5);
+  transform: translateY(-2px);
+}
+
+.engagement-btn:active {
+  transform: translateY(0);
+}
+
+.engagement-btn.liked {
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.3));
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.engagement-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Share Modal Styles */
+.share-option-btn {
+  background: rgba(79, 116, 163, 0.1);
+  border: 1px solid rgba(79, 116, 163, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.share-option-btn:hover {
+  background: rgba(79, 116, 163, 0.2);
+  border-color: rgba(79, 116, 163, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(79, 116, 163, 0.3);
+}
+
+.share-option-btn:active {
+  transform: translateY(-2px);
+}
+
+/* Comment Modal Styles */
+#commentModal .modal-box {
+  background: linear-gradient(135deg, rgba(15, 25, 45, 0.98), rgba(20, 30, 50, 0.98));
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  max-width: 600px;
+  width: 90%;
+}
+
+.comment-item {
+  background: rgba(15, 25, 45, 0.9);
+  border: 1px solid rgba(79, 116, 163, 0.2);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  border-color: rgba(79, 116, 163, 0.4);
+  box-shadow: 0 4px 15px rgba(79, 116, 163, 0.2);
+}
+
+/* Post Stats */
+.enhanced-post-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 13px;
+  color: #888;
+}
+
+.enhanced-post-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Post Engagement Footer */
+.enhanced-post-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(79, 116, 163, 0.1);
+}
+
+.enhanced-post-engagement {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .engagement-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .share-option-btn {
+    padding: 15px;
+    font-size: 13px;
+  }
+  
+  .enhanced-post-engagement {
+    gap: 8px;
+  }
+  
+  #commentModal .modal-box {
+    width: 95%;
+    max-height: 90vh;
+  }
+}
+
+/* Animation for like button */
+@keyframes likeAnimation {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.engagement-btn.liked {
+  animation: likeAnimation 0.3s ease;
+}
+
+/* Share URL Input */
+#shareUrlInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #4f74a3;
+  text-align: center;
+  font-size: 14px;
+  padding: 8px;
+}
+
+#shareUrlInput:focus {
+  outline: none;
+}
+
+/* Comment Input */
+#commentInput {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  background: rgba(20, 30, 50, 0.6);
+  border: 1px solid rgba(79, 116, 163, 0.3);
+  border-radius: 10px;
+  color: white;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+#commentInput:focus {
+  outline: none;
+  border-color: rgba(79, 116, 163, 0.6);
+  box-shadow: 0 0 15px rgba(79, 116, 163, 0.2);
+}
+
+/* Comments Container */
+#commentsContainer {
+  margin: 20px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#commentsContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#commentsContainer::-webkit-scrollbar-track {
+  background: rgba(79, 116, 163, 0.1);
+  border-radius: 10px;
+}
+
+#commentsContainer::-webkit-scrollbar-thumb {
+  background: rgba(79, 116, 163, 0.3);
+  border-radius: 10px;
+}
+
+#commentsContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 116, 163, 0.5);
+}
+
+/* Loading State */
+.engagement-btn.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.engagement-btn.loading::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Enhanced Post User Info Clickable */
+.enhanced-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-user-info:hover {
+  transform: translateX(4px);
+}
+
+.enhanced-user-info:hover .enhanced-username {
+  color: #4f74a3;
+}
+
+/* Post Delete Button */
+.post-delete-btn {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.post-delete-btn:hover {
+  background: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Real-time Update Animation */
+@keyframes pulseUpdate {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 116, 163, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 116, 163, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 116, 163, 0);
+  }
+}
+
+.enhanced-post.updated {
+  animation: pulseUpdate 0.6s ease;
+}
+
+/* Share Success Toast */
+.share-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #4f74a3, #8da4d3);
+  color: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .enhanced-post-engagement {
+    justify-content: center;
+  }
+  
+  .engagement-btn {
+    flex: 1;
+    min-width: 100px;
+    justify-content: center;
+  }
+}
