@@ -2975,3 +2975,4 @@ async function verifyCollegeCode() {
     showMessage('❌ ' + error.message, 'error');
   }
 }
+
