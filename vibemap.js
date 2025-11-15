@@ -1,4 +1,5 @@
-// VIBEXPERT - COMPLETE UPDATED VERSION WITH FUNCTIONAL LIKE/COMMENT/SHARE
+// VIBEXPERT - COMPLETE UPDATED VERSION WITH REWARDS SYSTEM
+// This is the complete vibemap.js file - Replace your existing file with this
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -22,6 +23,11 @@ let currentCropIndex = -1;
 let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
+
+// NEW: Rewards System Variables
+let rewardData = null;
+let leaderboardData = null;
+let shopItems = [];
 
 // Enhanced music library with working audio files
 const musicLibrary = [
@@ -191,6 +197,560 @@ function initializeMusicPlayer() {
   });
 }
 
+// ==================== REWARDS SYSTEM FUNCTIONS ====================
+
+async function loadRewardsPage() {
+  const container = document.getElementById('rewards');
+  if (!container) return;
+  
+  container.innerHTML = '<div style="text-align:center; padding:40px; color:#888;">⏳ Loading rewards...</div>';
+  
+  try {
+    // Fetch reward status
+    const statusData = await apiCall('/api/rewards/status', 'GET');
+    const leaderboardData = await apiCall('/api/rewards/leaderboard?period=weekly', 'GET');
+    const shopData = await apiCall('/api/rewards/shop', 'GET');
+    
+    rewardData = statusData;
+    
+    const levelColors = {
+      'Bronze': '#CD7F32',
+      'Silver': '#C0C0C0',
+      'Gold': '#FFD700',
+      'Platinum': '#E5E4E2'
+    };
+    
+    const levelIcons = {
+      'Bronze': '🥉',
+      'Silver': '🥈',
+      'Gold': '🥇',
+      'Platinum': '💎'
+    };
+    
+    const currentLevelColor = levelColors[rewardData.level] || '#667eea';
+    const currentLevelIcon = levelIcons[rewardData.level] || '🏆';
+    
+    let html = `
+      <div class="rewards-page">
+        <!-- Rewards Header -->
+        <div class="rewards-header">
+          <div class="rewards-header-content">
+            <div class="rewards-points-display">
+              <div class="rewards-points-value">🪙 ${rewardData.points || 0}</div>
+              <div class="rewards-points-label">Reward Points</div>
+            </div>
+            <div class="rewards-level-display">
+              <div class="rewards-level-icon">${currentLevelIcon}</div>
+              <div class="rewards-level-name" style="color: ${currentLevelColor};">${rewardData.level || 'Bronze'}</div>
+              <div class="rewards-level-subtitle">Level</div>
+            </div>
+          </div>
+          
+          ${rewardData.nextLevel ? `
+            <div class="rewards-progress-section">
+              <div class="rewards-progress-bar">
+                <div class="rewards-progress-fill" style="width: ${rewardData.progress || 0}%">
+                  <div class="rewards-progress-text">${Math.round(rewardData.progress || 0)}%</div>
+                </div>
+              </div>
+              <div class="rewards-progress-info">
+                <span>${rewardData.points || 0} / ${rewardData.pointsToNext + (rewardData.points || 0)} points</span>
+                <span>Next: ${rewardData.nextLevel} ${levelIcons[rewardData.nextLevel]}</span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Daily Login Streak -->
+        <div class="streak-display">
+          <div class="streak-content">
+            <div class="streak-info">
+              <div class="streak-icon">🔥</div>
+              <div class="streak-details">
+                <h3>Daily Login Streak</h3>
+                <div class="streak-days">${rewardData.streak || 0} days in a row! Keep it up! 🚀</div>
+              </div>
+            </div>
+            <div class="streak-calendar">
+              ${generateStreakCalendar(rewardData.streak || 0)}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Daily Rewards -->
+        <div class="rewards-grid">
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">📅</div>
+              <div>
+                <div class="reward-card-title">Daily Login</div>
+                <div class="reward-card-subtitle">Visit every day</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Come back daily to earn bonus points! Build your streak for extra rewards.
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+10 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn ${rewardData.dailyClaimed ? 'reward-claimed' : ''}" 
+                      onclick="claimDailyReward()" 
+                      ${rewardData.dailyClaimed ? 'disabled' : ''}>
+                ${rewardData.dailyClaimed ? '✅ Claimed Today' : '🎁 Claim Now'}
+              </button>
+            </div>
+          </div>
+          
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">📝</div>
+              <div>
+                <div class="reward-card-title">Create a Post</div>
+                <div class="reward-card-subtitle">Share your thoughts</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Post content to your profile or community feed and earn points!
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+25 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn" onclick="showPage('posts', event)">
+                📝 Go to Posts
+              </button>
+            </div>
+          </div>
+          
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">💬</div>
+              <div>
+                <div class="reward-card-title">Engage & Interact</div>
+                <div class="reward-card-subtitle">Be active!</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Like, comment, and share posts to earn points and build your reputation.
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+5-15 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn" onclick="showPage('home', event)">
+                🏠 Explore Feed
+              </button>
+            </div>
+          </div>
+          
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">🎓</div>
+              <div>
+                <div class="reward-card-title">Join Community</div>
+                <div class="reward-card-subtitle">Connect with peers</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Verify your college and join your community to unlock bonus rewards!
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+100 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn ${currentUser?.college ? 'reward-claimed' : ''}" 
+                      onclick="${currentUser?.college ? '' : 'showPage(\'home\', event)'}" 
+                      ${currentUser?.college ? 'disabled' : ''}>
+                ${currentUser?.college ? '✅ Joined' : '🎓 Join Now'}
+              </button>
+            </div>
+          </div>
+          
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">📢</div>
+              <div>
+                <div class="reward-card-title">Share VibeXpert</div>
+                <div class="reward-card-subtitle">Once per day</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Share VibeXpert with friends on social media and earn bonus points!
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+50 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn ${rewardData.shareClaimed ? 'reward-claimed' : ''}" 
+                      onclick="shareVibeXpert()" 
+                      ${rewardData.shareClaimed ? 'disabled' : ''}>
+                ${rewardData.shareClaimed ? '✅ Shared Today' : '📢 Share Now'}
+              </button>
+            </div>
+          </div>
+          
+          <div class="reward-card">
+            <div class="reward-card-header">
+              <div class="reward-card-icon">🎯</div>
+              <div>
+                <div class="reward-card-title">Complete Profile</div>
+                <div class="reward-card-subtitle">One-time bonus</div>
+              </div>
+            </div>
+            <div class="reward-card-content">
+              <div class="reward-card-description">
+                Add a profile picture and bio to earn a one-time completion bonus!
+              </div>
+              <div class="reward-card-points">
+                <span>🪙</span>
+                <span>+50 points</span>
+              </div>
+            </div>
+            <div class="reward-card-action">
+              <button class="reward-claim-btn ${(currentUser?.profile_pic && currentUser?.bio) ? 'reward-claimed' : ''}" 
+                      onclick="showProfilePage()" 
+                      ${(currentUser?.profile_pic && currentUser?.bio) ? 'disabled' : ''}>
+                ${(currentUser?.profile_pic && currentUser?.bio) ? '✅ Completed' : '✏️ Complete Profile'}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Leaderboard -->
+        <div class="leaderboard-section">
+          <div class="leaderboard-header">
+            <div class="leaderboard-title">
+              🏆 Leaderboard
+            </div>
+            <div class="leaderboard-tabs">
+              <button class="leaderboard-tab active" onclick="loadLeaderboard('weekly')">📅 Weekly</button>
+              <button class="leaderboard-tab" onclick="loadLeaderboard('monthly')">📆 Monthly</button>
+              <button class="leaderboard-tab" onclick="loadLeaderboard('alltime')">⏰ All Time</button>
+            </div>
+          </div>
+          <div class="leaderboard-list" id="leaderboardList">
+            ${renderLeaderboard(leaderboardData?.users || [])}
+          </div>
+        </div>
+        
+        <!-- Reward Shop -->
+        <div class="reward-shop-section">
+          <div class="reward-shop-title">
+            🛍️ Reward Shop
+          </div>
+          <div class="reward-shop-grid">
+            ${renderShopItems(shopData?.items || [])}
+          </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        ${rewardData.history && rewardData.history.length > 0 ? `
+          <div class="reward-history-section">
+            <div class="reward-history-title">
+              📜 Recent Activity
+            </div>
+            <div class="reward-history-list">
+              ${renderRewardHistory(rewardData.history)}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+    container.innerHTML = html;
+    
+  } catch (error) {
+    console.error('❌ Load rewards error:', error);
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px; color:#ff6b6b;">
+        ❌ Failed to load rewards<br>
+        <small style="font-size:14px;color:#888;margin-top:8px;display:block;">
+          ${error.message || 'Please try again'}
+        </small>
+      </div>
+    `;
+  }
+}
+
+function generateStreakCalendar(streak) {
+  const today = new Date().getDay(); // 0-6
+  const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  let html = '';
+  
+  for (let i = 0; i < 7; i++) {
+    const isCompleted = streak > (6 - i);
+    const isToday = i === today;
+    const classes = ['streak-day'];
+    if (isCompleted) classes.push('completed');
+    if (isToday) classes.push('today');
+    
+    html += `<div class="${classes.join(' ')}">${days[i]}</div>`;
+  }
+  
+  return html;
+}
+
+function renderLeaderboard(users) {
+  if (!users || users.length === 0) {
+    return '<div style="text-align:center; padding:20px; color:#888;">No leaderboard data yet</div>';
+  }
+  
+  let html = '';
+  users.forEach((user, index) => {
+    const rank = index + 1;
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    
+    html += `
+      <div class="leaderboard-item">
+        <div class="leaderboard-rank ${rankClass}">#${rank}</div>
+        <div class="leaderboard-avatar">
+          ${user.profile_pic ? `<img src="${user.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : '👤'}
+        </div>
+        <div class="leaderboard-info">
+          <div class="leaderboard-name">@${user.username}</div>
+          <div class="leaderboard-college">${user.college || 'VibeXpert'}</div>
+        </div>
+        <div class="leaderboard-points">
+          🪙 ${user.reward_points || 0}
+        </div>
+      </div>
+    `;
+  });
+  
+  return html;
+}
+
+function renderShopItems(items) {
+  if (!items || items.length === 0) {
+    return '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#888;">Shop coming soon! 🚀</div>';
+  }
+  
+  let html = '';
+  items.forEach(item => {
+    const canAfford = currentUser && rewardData && rewardData.points >= item.price;
+    
+    html += `
+      <div class="shop-item" onclick="${canAfford && !item.owned ? `purchaseShopItem('${item.id}')` : ''}">
+        <div class="shop-item-preview">
+          ${item.preview || item.icon}
+        </div>
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-description">${item.description}</div>
+        <div class="shop-item-footer">
+          <div class="shop-item-price">
+            <span>🪙</span>
+            <span>${item.price}</span>
+          </div>
+          <button class="shop-buy-btn" ${!canAfford || item.owned ? 'disabled' : ''}>
+            ${item.owned ? '✅ Owned' : canAfford ? '🛒 Buy' : '🔒 Locked'}
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  return html;
+}
+
+function renderRewardHistory(history) {
+  if (!history || history.length === 0) {
+    return '<div style="text-align:center; padding:20px; color:#888;">No recent activity</div>';
+  }
+  
+  let html = '';
+  history.slice(0, 10).forEach(item => {
+    const isPositive = item.points > 0;
+    const timeAgo = formatTimeAgo(item.timestamp);
+    
+    html += `
+      <div class="reward-history-item">
+        <div class="reward-history-info">
+          <div class="reward-history-action">${item.reason}</div>
+          <div class="reward-history-time">${timeAgo}</div>
+        </div>
+        <div class="reward-history-points ${isPositive ? 'positive' : 'negative'}">
+          ${isPositive ? '+' : ''}${item.points} 🪙
+        </div>
+      </div>
+    `;
+  });
+  
+  return html;
+}
+
+async function claimDailyReward() {
+  try {
+    showMessage('🎁 Claiming daily reward...', 'success');
+    
+    const data = await apiCall('/api/rewards/daily-login', 'POST');
+    
+    if (data.success) {
+      showAchievementPopup('Daily Login!', `+${data.reward.earned} points earned! 🎉`);
+      showMessage(`✅ ${data.message}`, 'success');
+      
+      // Update UI
+      setTimeout(() => {
+        loadRewardsPage();
+      }, 1500);
+    }
+  } catch (error) {
+    console.error('❌ Daily reward error:', error);
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+async function shareVibeXpert() {
+  const shareText = `🎓 I'm on VibeXpert connecting with students from 500+ universities! Join me and earn rewards! 🚀\n\n`;
+  const shareUrl = window.location.origin;
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'VibeXpert - Connect With Your College',
+        text: shareText,
+        url: shareUrl
+      });
+      
+      // Award points for sharing
+      await awardSharePoints();
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Share error:', err);
+      }
+    }
+  } else {
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareText + shareUrl);
+      showMessage('✅ Link copied! Share it to earn points!', 'success');
+      
+      // Award points anyway
+      await awardSharePoints();
+    } catch (err) {
+      showMessage('⚠️ Could not copy link', 'error');
+    }
+  }
+}
+
+async function awardSharePoints() {
+  try {
+    const data = await apiCall('/api/rewards/share', 'POST');
+    
+    if (data.success) {
+      showAchievementPopup('Shared VibeXpert!', data.message);
+      setTimeout(() => {
+        loadRewardsPage();
+      }, 1500);
+    }
+  } catch (error) {
+    console.error('❌ Share reward error:', error);
+  }
+}
+
+async function loadLeaderboard(period) {
+  try {
+    // Update active tab
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    const data = await apiCall(`/api/rewards/leaderboard?period=${period}`, 'GET');
+    
+    const listContainer = document.getElementById('leaderboardList');
+    if (listContainer) {
+      listContainer.innerHTML = renderLeaderboard(data.users || []);
+    }
+  } catch (error) {
+    console.error('❌ Load leaderboard error:', error);
+  }
+}
+
+async function purchaseShopItem(itemId) {
+  if (!confirm('Purchase this item?')) return;
+  
+  try {
+    showMessage('🛒 Processing purchase...', 'success');
+    
+    const data = await apiCall('/api/rewards/shop/purchase', 'POST', { itemId });
+    
+    if (data.success) {
+      showAchievementPopup('Purchase Complete!', `${data.item.name} is now yours! 🎉`);
+      showMessage(`✅ ${data.message}`, 'success');
+      
+      // Update UI
+      setTimeout(() => {
+        loadRewardsPage();
+      }, 1500);
+    }
+  } catch (error) {
+    console.error('❌ Purchase error:', error);
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+function showAchievementPopup(title, message) {
+  const popup = document.createElement('div');
+  popup.className = 'achievement-popup';
+  popup.innerHTML = `
+    <div class="achievement-popup-content">
+      <div class="achievement-popup-icon">🎉</div>
+      <div class="achievement-popup-info">
+        <h3>${title}</h3>
+        <p>${message}</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(popup);
+  
+  // Play success sound
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ8PVazn77BdGAg+ltryxnIlBSl+zPLaizsIGWe57+mjUBELTKXh8bllHAU2jdXzzn0pBSh6yvDckTsIF2m98OihUBAMUKnn8bZkHgU7k9n0y3krBSh9y/HajDkHGGu/8OmgTxAMTqnm8LVjHAU4kdXy0H8qBSh7yfDajzsIGWu98OmhTxAMUKjn8bZkHQU7k9jzzn4pBSh8yvHajDkHGGu/8OmgTw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed'));
+  } catch (e) {
+    console.log('Could not play sound');
+  }
+  
+  setTimeout(() => {
+    popup.style.animation = 'fadeOut 0.5s ease';
+    setTimeout(() => {
+      popup.remove();
+    }, 500);
+  }, 4000);
+}
+
+function formatTimeAgo(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diff = Math.floor((now - time) / 1000); // seconds
+  
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return time.toLocaleDateString();
+}
+
+// ==================== END REWARDS SYSTEM ====================
+
 // FIXED: Enhanced API call with timeout and retry logic for mobile
 function getToken() {
   return localStorage.getItem('authToken');
@@ -356,6 +916,13 @@ async function login(e) {
     
     showMessage('✅ Login successful!', 'success');
     
+    // Show daily login reward notification if applicable
+    if (data.dailyReward) {
+      setTimeout(() => {
+        showAchievementPopup('Daily Login Bonus!', `+${data.dailyReward.earned} points earned! 🎉`);
+      }, 1000);
+    }
+    
     setTimeout(() => {
       showMainPage();
       document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
@@ -405,7 +972,7 @@ async function signup(e) {
   }
 }
 
-// ==================== NEW: LIKE FUNCTIONALITY ====================
+// ==================== LIKE FUNCTIONALITY ====================
 
 async function toggleLike(postId) {
   if (!currentUser) {
@@ -451,7 +1018,7 @@ async function toggleLike(postId) {
   }
 }
 
-// ==================== NEW: COMMENT FUNCTIONALITY ====================
+// ==================== COMMENT FUNCTIONALITY ====================
 
 function openCommentModal(postId) {
   if (!currentUser) {
@@ -595,7 +1162,7 @@ async function deleteComment(commentId, postId) {
   }
 }
 
-// ==================== NEW: SHARE FUNCTIONALITY ====================
+// ==================== SHARE FUNCTIONALITY ====================
 
 function sharePost(postId, postContent = '', author = '') {
   const shareModal = document.createElement('div');
@@ -1001,271 +1568,6 @@ async function showMessageViews(messageId) {
   }
 }
 
-// BADGES PAGE
-function loadBadgesPage() {
-  const container = document.getElementById('badges');
-  if (!container) return;
-  
-  const allBadges = [
-    { emoji: '🎓', name: 'Community Member', desc: 'Joined a college community', earned: currentUser?.badges?.includes('🎓 Community Member') },
-    { emoji: '🎨', name: 'First Post', desc: 'Created your first post', earned: currentUser?.badges?.includes('🎨 First Post') },
-    { emoji: '⭐', name: 'Content Creator', desc: 'Posted 10 times', earned: currentUser?.badges?.includes('⭐ Content Creator') },
-    { emoji: '💬', name: 'Chatty', desc: 'Sent 50 messages', earned: false },
-    { emoji: '🔥', name: 'On Fire', desc: '7 day streak', earned: false },
-  ];
-  
-  let html = `
-    <div style="text-align:center; margin-bottom:40px;">
-      <h2 style="font-size:32px; color:#4f74a3; margin-bottom:10px;">🏆 Badges</h2>
-      <p style="color:#888;">Earn badges by being active in the community!</p>
-    </div>
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">
-  `;
-  
-  allBadges.forEach(badge => {
-    html += `
-      <div style="background:${badge.earned ? 'linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2))' : 'rgba(15,25,45,0.9)'}; border:2px solid ${badge.earned ? '#4f74a3' : 'rgba(79,116,163,0.2)'}; border-radius:16px; padding:30px 20px; text-align:center; transition:all 0.3s ease;" ${badge.earned ? 'style="box-shadow:0 10px 30px rgba(79,116,163,0.3);"' : ''}>
-        <div style="font-size:48px; margin-bottom:15px; filter:${badge.earned ? 'none' : 'grayscale(100%) opacity(0.3)'};">${badge.emoji}</div>
-        <h3 style="color:${badge.earned ? '#4f74a3' : '#666'}; font-size:18px; margin-bottom:8px;">${badge.name}</h3>
-        <p style="color:#888; font-size:13px; margin-bottom:15px;">${badge.desc}</p>
-        <div style="background:${badge.earned ? 'linear-gradient(135deg, #4f74a3, #8da4d3)' : 'rgba(79,116,163,0.1)'}; color:${badge.earned ? 'white' : '#666'}; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block;">
-          ${badge.earned ? '✓ Earned' : '🔒 Locked'}
-        </div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// PROFILE FUNCTIONS
-function showProfilePage() {
-  if (!currentUser) return;
-  showProfileModal(currentUser);
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-function showProfileModal(user) {
-  const isOwnProfile = currentUser && user.id === currentUser.id;
-  
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box profile-modal-box">
-      <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
-      
-      <div class="profile-container">
-        <div class="profile-header">
-          <div class="profile-cover"></div>
-          <div class="profile-main">
-            <div class="profile-photo-section">
-              <div class="profile-photo" style="${user.profile_pic ? `background-image: url('${user.profile_pic}'); background-size: cover;` : ''}">
-                ${!user.profile_pic ? '👤' : ''}
-              </div>
-              ${isOwnProfile ? `
-                <button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>
-              ` : ''}
-              <div class="active-badge">
-                <span class="status-dot"></span>
-                <span>Active Now</span>
-              </div>
-            </div>
-            
-            <div class="profile-name-section">
-              <h2>${user.username}</h2>
-              <div class="nickname-display">
-                <span class="nickname-label">@${user.username}</span>
-              </div>
-              ${user.college ? `<p style="color:#888; font-size:14px;">🎓 ${user.college}</p>` : ''}
-              ${user.registration_number ? `<p style="color:#888; font-size:13px;">📋 ${user.registration_number}</p>` : ''}
-            </div>
-            
-            ${isOwnProfile ? `
-              <button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>
-            ` : ''}
-          </div>
-        </div>
-        
-        <div class="profile-stats-section">
-          <div class="stat-card">
-            <div class="stat-icon">📝</div>
-            <div class="stat-value">${user.postCount || 0}</div>
-            <div class="stat-title">Posts</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-value">${user.badges?.length || 0}</div>
-            <div class="stat-title">Badges</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⏱️</div>
-            <div class="stat-value">24h</div>
-            <div class="stat-title">Active</div>
-          </div>
-        </div>
-        
-        <div class="profile-description-section">
-          <h3>About</h3>
-          <p id="profileDescriptionText">${user.bio || 'No description added yet. Click edit to add one!'}</p>
-        </div>
-        
-        ${isOwnProfile ? `
-          <div class="edit-profile-section" id="editProfileSection" style="display:none;">
-            <h3>Edit Profile</h3>
-            <div class="edit-form-group">
-              <label>Username</label>
-              <input type="text" id="editUsername" value="${user.username}" maxlength="30">
-            </div>
-            <div class="edit-form-group">
-              <label>Bio</label>
-              <textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">${user.bio || ''}</textarea>
-              <small id="bioCounter">0/200</small>
-            </div>
-            <div class="edit-form-buttons">
-              <button class="btn-save" onclick="saveProfile()">💾 Save</button>
-              <button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button>
-            </div>
-          </div>
-        ` : ''}
-        
-        ${user.badges && user.badges.length > 0 ? `
-          <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
-            <h3 style="color:#4f74a3; margin-bottom:15px;">🏆 Badges</h3>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              ${user.badges.map(badge => `
-                <span style="background:linear-gradient(135deg, rgba(79,116,163,0.2), rgba(141,164,211,0.2)); border:1px solid rgba(79,116,163,0.3); padding:8px 16px; border-radius:20px; font-size:14px;">${badge}</span>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        
-        <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
-          <h3 style="color:#4f74a3; margin-bottom:20px;">📝 Profile Posts</h3>
-          <div id="userProfilePosts" style="display:flex; flex-direction:column; gap:15px;">
-            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  
-  if (isOwnProfile) {
-    const bioTextarea = document.getElementById('editBio');
-    if (bioTextarea) {
-      bioTextarea.addEventListener('input', updateBioCounter);
-      updateBioCounter();
-    }
-  }
-  
-  loadUserProfilePosts(user.id);
-}
-
-async function loadUserProfilePosts(userId) {
-  const container = document.getElementById('userProfilePosts');
-  if (!container) return;
-  
-  try {
-    console.log('📨 Loading profile posts for user:', userId);
-    
-    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
-    
-    if (!data.posts || data.posts.length === 0) {
-      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📝 No profile posts yet.</div>';
-      return;
-    }
-    
-    container.innerHTML = renderPosts(data.posts);
-    console.log('✅ Profile posts loaded');
-  } catch (error) {
-    console.error('❌ Failed to load profile posts:', error);
-    container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff6b6b;">❌ Failed to load posts</div>';
-  }
-}
-
-function toggleEditProfile() {
-  const section = document.getElementById('editProfileSection');
-  if (!section) return;
-  
-  section.style.display = section.style.display === 'none' ? 'block' : 'none';
-}
-
-function updateBioCounter() {
-  const textarea = document.getElementById('editBio');
-  const counter = document.getElementById('bioCounter');
-  if (textarea && counter) {
-    counter.textContent = `${textarea.value.length}/200`;
-  }
-}
-
-async function saveProfile() {
-  const username = document.getElementById('editUsername')?.value.trim();
-  const bio = document.getElementById('editBio')?.value.trim();
-  
-  if (!username) {
-    showMessage('⚠️ Username required', 'error');
-    return;
-  }
-  
-  try {
-    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
-    
-    if (data.success) {
-      currentUser.username = data.user.username;
-      currentUser.bio = data.user.bio;
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      
-      showMessage('✅ Profile updated!', 'success');
-      document.querySelector('.modal')?.remove();
-      showProfilePage();
-    }
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-function uploadProfilePic() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  
-  input.onchange = async function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showMessage('⚠️ Image too large (max 5MB)', 'error');
-      return;
-    }
-    
-    try {
-      showMessage('📤 Uploading profile picture...', 'success');
-      
-      const compressedFile = await compressImage(file);
-      const formData = new FormData();
-      formData.append('profilePic', compressedFile);
-      
-      const data = await apiCall('/api/profile', 'PATCH', formData);
-      
-      if (data.success) {
-        currentUser.profile_pic = data.user.profile_pic;
-        localStorage.setItem('user', JSON.stringify(currentUser));
-        
-        showMessage('✅ Profile picture updated!', 'success');
-        document.querySelector('.modal')?.remove();
-        showProfilePage();
-      }
-    } catch (error) {
-      showMessage('❌ Failed to upload: ' + error.message, 'error');
-    }
-  };
-  
-  input.click();
-}
-
 // UTILITY FUNCTIONS
 function showModal(modalId) {
   document.getElementById(modalId).style.display = 'flex';
@@ -1479,8 +1781,6 @@ document.addEventListener('click', function(e) {
   }
 });
 
-console.log('✅ VibeXpert Updated - All features working on mobile, tablet, and desktop!');
-
 // ==================== POST CELEBRATION MODAL ====================
 
 function showPostCelebrationModal(postCount) {
@@ -1651,6 +1951,7 @@ function playSuccessSound() {
   }
 }
 
+// PASSWORD RESET FUNCTIONS
 function goForgotPassword(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -1723,6 +2024,12 @@ async function verifyResetCode(e) {
   }
 }
 
+function resendResetCode() {
+  document.getElementById('resetEmailSection').style.display = 'block';
+  document.getElementById('resetCodeSection').style.display = 'none';
+  showMessage('📧 Please request a new code', 'success');
+}
+
 function goSignup(e) {
   e.preventDefault();
   document.getElementById('loginForm').style.display = 'none';
@@ -1756,6 +2063,7 @@ function showLoginForm() {
   document.getElementById('signupForm').style.display = 'none';
 }
 
+// SEARCH BAR INITIALIZATION
 function initializeSearchBar() {
   const searchBox = document.getElementById('searchBox');
   const searchResults = document.getElementById('searchResults');
@@ -1922,6 +2230,222 @@ async function showUserProfile(userId) {
     console.error('❌ Failed to load profile:', error);
     showMessage('❌ Failed to load profile: ' + error.message, 'error');
   }
+}
+
+// PROFILE FUNCTIONS
+function showProfilePage() {
+  if (!currentUser) return;
+  showProfileModal(currentUser);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showProfileModal(user) {
+  const isOwnProfile = currentUser && user.id === currentUser.id;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box profile-modal-box">
+      <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
+      
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-cover"></div>
+          <div class="profile-main">
+            <div class="profile-photo-section">
+              <div class="profile-photo" style="${user.profile_pic ? `background-image: url('${user.profile_pic}'); background-size: cover;` : ''}">
+                ${!user.profile_pic ? '👤' : ''}
+              </div>
+              ${isOwnProfile ? `
+                <button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change Avatar</button>
+              ` : ''}
+              <div class="active-badge">
+                <span class="status-dot"></span>
+                <span>Active Now</span>
+              </div>
+            </div>
+            
+            <div class="profile-name-section">
+              <h2>${user.username}</h2>
+              <div class="nickname-display">
+                <span class="nickname-label">@${user.username}</span>
+              </div>
+              ${user.college ? `<p style="color:#888; font-size:14px;">🎓 ${user.college}</p>` : ''}
+              ${user.registration_number ? `<p style="color:#888; font-size:13px;">📋 ${user.registration_number}</p>` : ''}
+            </div>
+            
+            ${isOwnProfile ? `
+              <button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit Profile</button>
+            ` : ''}
+          </div>
+        </div>
+        
+        <div class="profile-stats-section">
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">${user.postCount || 0}</div>
+            <div class="stat-title">Posts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🪙</div>
+            <div class="stat-value">${user.rewardPoints || 0}</div>
+            <div class="stat-title">Points</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">${user.rewardLevel || 'Bronze'}</div>
+            <div class="stat-title">Level</div>
+          </div>
+        </div>
+        
+        <div class="profile-description-section">
+          <h3>About</h3>
+          <p id="profileDescriptionText">${user.bio || 'No description added yet. Click edit to add one!'}</p>
+        </div>
+        
+        ${isOwnProfile ? `
+          <div class="edit-profile-section" id="editProfileSection" style="display:none;">
+            <h3>Edit Profile</h3>
+            <div class="edit-form-group">
+              <label>Username</label>
+              <input type="text" id="editUsername" value="${user.username}" maxlength="30">
+            </div>
+            <div class="edit-form-group">
+              <label>Bio</label>
+              <textarea id="editBio" maxlength="200" rows="4" placeholder="Tell us about yourself...">${user.bio || ''}</textarea>
+              <small id="bioCounter">0/200</small>
+            </div>
+            <div class="edit-form-buttons">
+              <button class="btn-save" onclick="saveProfile()">💾 Save</button>
+              <button class="btn-cancel" onclick="toggleEditProfile()">❌ Cancel</button>
+            </div>
+          </div>
+        ` : ''}
+        
+        <div style="background:rgba(15,25,45,0.9); border:1px solid rgba(79,116,163,0.2); border-radius:12px; padding:20px; margin-top:20px;">
+          <h3 style="color:#4f74a3; margin-bottom:20px;">📝 Profile Posts</h3>
+          <div id="userProfilePosts" style="display:flex; flex-direction:column; gap:15px;">
+            <div style="text-align:center; padding:20px; color:#888;">⏳ Loading posts...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  if (isOwnProfile) {
+    const bioTextarea = document.getElementById('editBio');
+    if (bioTextarea) {
+      bioTextarea.addEventListener('input', updateBioCounter);
+      updateBioCounter();
+    }
+  }
+  
+  loadUserProfilePosts(user.id);
+}
+
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  
+  try {
+    console.log('📨 Loading profile posts for user:', userId);
+    
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">📝 No profile posts yet.</div>';
+      return;
+    }
+    
+    container.innerHTML = renderPosts(data.posts);
+    console.log('✅ Profile posts loaded');
+  } catch (error) {
+    console.error('❌ Failed to load profile posts:', error);
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff6b6b;">❌ Failed to load posts</div>';
+  }
+}
+
+function toggleEditProfile() {
+  const section = document.getElementById('editProfileSection');
+  if (!section) return;
+  
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateBioCounter() {
+  const textarea = document.getElementById('editBio');
+  const counter = document.getElementById('bioCounter');
+  if (textarea && counter) {
+    counter.textContent = `${textarea.value.length}/200`;
+  }
+}
+
+async function saveProfile() {
+  const username = document.getElementById('editUsername')?.value.trim();
+  const bio = document.getElementById('editBio')?.value.trim();
+  
+  if (!username) {
+    showMessage('⚠️ Username required', 'error');
+    return;
+  }
+  
+  try {
+    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
+    
+    if (data.success) {
+      currentUser.username = data.user.username;
+      currentUser.bio = data.user.bio;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      showMessage('✅ Profile updated!', 'success');
+      document.querySelector('.modal')?.remove();
+      showProfilePage();
+    }
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+function uploadProfilePic() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('⚠️ Image too large (max 5MB)', 'error');
+      return;
+    }
+    
+    try {
+      showMessage('📤 Uploading profile picture...', 'success');
+      
+      const compressedFile = await compressImage(file);
+      const formData = new FormData();
+      formData.append('profilePic', compressedFile);
+      
+      const data = await apiCall('/api/profile', 'PATCH', formData);
+      
+      if (data.success) {
+        currentUser.profile_pic = data.user.profile_pic;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        
+        showMessage('✅ Profile picture updated!', 'success');
+        document.querySelector('.modal')?.remove();
+        showProfilePage();
+      }
+    } catch (error) {
+      showMessage('❌ Failed to upload: ' + error.message, 'error');
+    }
+  };
+  
+  input.click();
 }
 
 // ENHANCED POST FEATURES
@@ -2492,9 +3016,9 @@ async function createPost() {
         showPostCelebrationModal(postCount);
       }, 800);
       
-      if (data.badgeUpdated && data.newBadges?.length > 0) {
+      if (data.reward) {
         setTimeout(() => {
-          showMessage(`🏆 New badge: ${data.newBadges.join(', ')}`, 'success');
+          showAchievementPopup('Post Reward!', `+${data.reward.earned} points earned! 🎉`);
         }, 6000);
       }
       
@@ -2566,7 +3090,7 @@ function resetPostForm() {
   console.log('✅ Form reset complete. Destination remains:', selectedPostDestination);
 }
 
-// ==================== NEW: RENDER POSTS HELPER ====================
+// ==================== RENDER POSTS HELPER ====================
 
 function renderPosts(posts) {
   let html = '';
@@ -2814,8 +3338,8 @@ function showPage(name, e) {
     loadPosts();
   } else if(name === 'communities') {
     loadCommunities();
-  } else if(name === 'badges') {
-    loadBadgesPage();
+  } else if(name === 'rewards') {
+    loadRewardsPage();
   }
   
   document.getElementById('hamburgerMenu').style.display = 'none';
@@ -2960,10 +3484,16 @@ async function verifyCollegeCode() {
     
     currentUser.college = data.college;
     currentUser.communityJoined = true;
-    currentUser.badges = data.badges;
     localStorage.setItem('user', JSON.stringify(currentUser));
     
     closeModal('verifyModal');
+    
+    // Show reward notification
+    if (data.reward) {
+      setTimeout(() => {
+        showAchievementPopup('College Joined!', `+${data.reward.earned} points earned! 🎉`);
+      }, 1000);
+    }
     
     initializeSocket();
     
@@ -2975,3 +3505,5 @@ async function verifyCollegeCode() {
     showMessage('❌ ' + error.message, 'error');
   }
 }
+
+console.log('✅ VibeXpert Complete - All features including Rewards System loaded successfully!');
