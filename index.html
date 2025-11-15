@@ -9,11 +9,8 @@
 </head>
 <body class="dark-theme">
 
-<!-- Add this to your HTML file -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-<!-- Socket.io CDN -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <!-- LIVE ACTIVITY NOTIFICATION -->
@@ -41,76 +38,32 @@
         <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
       </form>
 
-      <!-- FORGOT PASSWORD FORM - UPDATED VERSION -->
+      <!-- FORGOT PASSWORD FORM -->
       <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
         <h2>Reset Password</h2>
         
-        <!-- STEP 1: Enter Email -->
         <div id="resetEmailSection">
           <p style="color:#888; font-size:14px; margin-bottom:15px;">
             Enter your email address and we'll send you a verification code.
           </p>
-          <input 
-            type="email" 
-            id="resetEmail" 
-            placeholder="Enter your email" 
-            required
-          >
-          <button type="button" onclick="handleForgotPassword(event)">
-            📧 Send Reset Code
-          </button>
+          <input type="email" id="resetEmail" placeholder="Enter your email" required>
+          <button type="button" onclick="handleForgotPassword(event)">📧 Send Reset Code</button>
         </div>
         
-        <!-- STEP 2: Enter Code and New Password -->
         <div id="resetCodeSection" style="display:none;">
           <p style="color:#888; font-size:14px; margin-bottom:15px;">
             📧 Check your email for the 6-digit verification code.
           </p>
           
-          <input 
-            type="text" 
-            id="resetCode" 
-            placeholder="Enter 6-digit code" 
-            maxlength="6"
-            pattern="[0-9]{6}"
-            required
-            style="margin-bottom:15px; font-size:20px; letter-spacing:5px; text-align:center; font-weight:bold;"
-          >
+          <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required style="margin-bottom:15px; font-size:20px; letter-spacing:5px; text-align:center; font-weight:bold;">
           
-          <input 
-            type="password" 
-            id="newPassword" 
-            placeholder="New Password" 
-            required
-            minlength="6"
-            style="margin-bottom:15px;"
-          >
+          <input type="password" id="newPassword" placeholder="New Password" required minlength="6" style="margin-bottom:15px;">
           
-          <input 
-            type="password" 
-            id="confirmNewPassword" 
-            placeholder="Confirm New Password" 
-            required
-            minlength="6"
-            style="margin-bottom:15px;"
-          >
+          <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required minlength="6" style="margin-bottom:15px;">
           
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button 
-              type="button" 
-              onclick="verifyResetCode(event)"
-              style="flex:1; min-width:120px;"
-            >
-              🔓 Reset Password
-            </button>
-            
-            <button 
-              type="button" 
-              onclick="resendResetCode()"
-              style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;"
-            >
-              📧 Resend Code
-            </button>
+            <button type="button" onclick="verifyResetCode(event)" style="flex:1; min-width:120px;">🔓 Reset Password</button>
+            <button type="button" onclick="resendResetCode()" style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;">📧 Resend Code</button>
           </div>
         </div>
         
@@ -125,7 +78,6 @@
         <input type="email" id="signupEmail" placeholder="Email" required>
         <input type="text" id="signupReg" placeholder="Registration Number" required>
         
-        <!-- GENDER SELECTION -->
         <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
         <div style="display:flex; gap:15px; margin-bottom:15px;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
@@ -142,7 +94,6 @@
           </label>
         </div>
 
-        <!-- TYPE SELECTION -->
         <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Type</label>
         <div style="display:flex; gap:15px; margin-bottom:15px;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
@@ -155,7 +106,6 @@
           </label>
         </div>
 
-        <!-- INTERESTS SELECTION -->
         <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Interested In</label>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
@@ -188,10 +138,8 @@
           </label>
         </div>
 
-        <!-- HOBBIES -->
         <input type="text" id="signupHobbies" placeholder="E.g. painting, football, coding" style="margin-bottom:14px; width:100%; padding:14px 16px; border:2px solid rgba(79, 116, 163, 0.3); background:rgba(20, 30, 50, 0.8); color:white; border-radius:10px; font-size:15px; transition:all 0.3s ease;">
 
-        <!-- PASSWORD -->
         <input type="password" id="signupPass" placeholder="Password" required>
         <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
         
@@ -209,7 +157,6 @@
   <header class="header">
     <div class="logo" onclick="goHome()">VibeXpert</div>
     
-    <!-- LIVE USERS COUNTER -->
     <div class="live-counter">
       <span class="live-badge">🔴 Live</span>
       <span id="liveUsersCount">0 Active</span>
@@ -219,7 +166,7 @@
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="#" class="nav-link" onclick="showPage('badges', event)">Badges</a>
+      <a href="#" class="nav-link" onclick="showPage('rewards', event)">Rewards</a>
     </nav>
 
     <div class="header-right">
@@ -255,7 +202,7 @@
         <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
         <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
         <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-        <div class="menu-item" onclick="showPage('badges', event)">🏆 Badges</div>
+        <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
         <hr>
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
@@ -292,7 +239,6 @@
         </div>
       </div>
 
-      <!-- TRENDING SECTION -->
       <div class="trending-section">
         <h2 class="title">🔥 Trending Now</h2>
         <div id="trendingContainer" class="trending-grid"></div>
@@ -361,65 +307,34 @@
     <section id="posts" class="page" style="display:none;">
       <h2 class="title">My Posts</h2>
       
-      <!-- Enhanced Post Creator -->
       <div class="enhanced-post-creator">
-        <textarea 
-          id="postText" 
-          class="post-textarea" 
-          placeholder="What's on your mind? Share your vibe... ✨"
-          maxlength="1000"
-        ></textarea>
+        <textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
         
-        <!-- Selected Assets Preview -->
         <div id="selectedAssets" class="selected-assets"></div>
-        
-        <!-- Media Preview Container -->
         <div id="photoPreviewContainer" class="media-preview"></div>
         
-        <!-- Post Destination Display -->
         <div id="postDestinationDisplay" class="post-destination-display">
           📍 Posting to: <span id="currentDestination">My Profile</span>
           <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
         </div>
         
-        <!-- Enhanced Action Buttons -->
         <div class="post-actions-row">
           <div class="post-features">
-            <!-- Media Button -->
-            <button type="button" class="feature-btn" onclick="openPhotoGallery()">
-              🖼️ Media
-            </button>
-            
-            <!-- Camera Button -->
-            <button type="button" class="feature-btn" onclick="openCamera()">
-              📷 Camera
-            </button>
-            
-            <!-- Music Button -->
-            <button type="button" class="feature-btn" onclick="openMusicSelector()">
-              🎵 Music
-            </button>
-            
-            <!-- Stickers Button -->
-            <button type="button" class="feature-btn" onclick="openStickerSelector()">
-              🎨 Stickers
-            </button>
+            <button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
+            <button type="button" class="feature-btn" onclick="openCamera()">📷 Camera</button>
+            <button type="button" class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
+            <button type="button" class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
           </div>
-          
-          <!-- Post Button -->
-          <button type="button" class="post-button" onclick="createPost()">
-            🚀 Post
-          </button>
+          <button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
         </div>
       </div>
       
-      <!-- Posts Feed -->
       <div id="postsFeed" class="posts-feed"></div>
     </section>
 
-    <!-- BADGES PAGE -->
-    <section id="badges" class="page" style="display:none;">
-      <!-- Content loaded dynamically by JS -->
+    <!-- REWARDS PAGE -->
+    <section id="rewards" class="page" style="display:none;">
+      <div id="rewardsContent"></div>
     </section>
 
   </main>
@@ -432,7 +347,6 @@
 <!-- MODALS -->
 <div id="verifyModal" class="modal" style="display:none;"></div>
 
-<!-- Enhanced Post Destination Modal -->
 <div id="postDestinationModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
@@ -456,29 +370,22 @@
   </div>
 </div>
 
-<!-- Music Selector Modal -->
 <div id="musicSelectorModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
     <h2>Add Music to Your Post</h2>
-    <div id="musicSelector" class="music-selector">
-      <!-- Music items will be loaded here -->
-    </div>
+    <div id="musicSelector" class="music-selector"></div>
   </div>
 </div>
 
-<!-- Sticker Selector Modal -->
 <div id="stickerSelectorModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
     <h2>Add Stickers</h2>
-    <div id="stickerSelector" class="sticker-selector">
-      <!-- Sticker categories will be loaded here -->
-    </div>
+    <div id="stickerSelector" class="sticker-selector"></div>
   </div>
 </div>
 
-<!-- Photo Editor Modal -->
 <div id="photoEditorModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
@@ -505,7 +412,6 @@
   </div>
 </div>
 
-<!-- Crop Editor Modal -->
 <div id="cropEditorModal" class="modal" style="display:none;">
   <div class="modal-box" style="max-width: 800px;">
     <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
