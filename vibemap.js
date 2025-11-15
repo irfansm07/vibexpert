@@ -1,3 +1,412 @@
+// VIBEXPERT - COMPLETE VERSION WITH REWARDS SYSTEM
+
+const API_URL = 'https://vibexpert-backend-main.onrender.com';
+
+let currentUser = null;
+let currentType = null;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 10;
+let currentVerifyCollege = null;
+let allColleges = [];
+let socket = null;
+let selectedFiles = [];
+let previewUrls = [];
+let editingMessageId = null;
+let editTimeout = null;
+let selectedMusic = null;
+let selectedStickers = [];
+let cropper = null;
+let selectedPostDestination = 'profile';
+let currentEditIndex = -1;
+let currentCropIndex = -1;
+let currentFilters = {};
+let searchTimeout = null;
+let currentCommentPostId = null;
+
+const musicLibrary = [
+  {
+    id: 1,
+    name: "Chill Vibes",
+    artist: "LoFi Beats",
+    duration: "2:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",
+    emoji: "🎧"
+  },
+  {
+    id: 2,
+    name: "Upbeat Energy",
+    artist: "Electronic Pop",
+    duration: "3:15",
+    url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",
+    emoji: "⚡"
+  },
+  {
+    id: 3,
+    name: "Dreamy Piano",
+    artist: "Classical",
+    duration: "2:45",
+    url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",
+    emoji: "🎹"
+  },
+  {
+    id: 4,
+    name: "Summer Vibes",
+    artist: "Tropical",
+    duration: "3:30",
+    url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",
+    emoji: "🏖️"
+  },
+  {
+    id: 5,
+    name: "Happy Day",
+    artist: "Pop Rock",
+    duration: "2:50",
+    url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",
+    emoji: "😊"
+  },
+  {
+    id: 6,
+    name: "Relaxing Guitar",
+    artist: "Acoustic",
+    duration: "3:10",
+    url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",
+    emoji: "🎸"
+  }
+];
+
+const stickerLibrary = {
+  emotions: [
+    { id: 'happy', emoji: '😊', name: 'Happy' },
+    { id: 'laugh', emoji: '😂', name: 'Laugh' },
+    { id: 'love', emoji: '❤️', name: 'Love' },
+    { id: 'cool', emoji: '😎', name: 'Cool' },
+    { id: 'fire', emoji: '🔥', name: 'Fire' },
+    { id: 'star', emoji: '⭐', name: 'Star' }
+  ],
+  animals: [
+    { id: 'cat', emoji: '🐱', name: 'Cat' },
+    { id: 'dog', emoji: '🐶', name: 'Dog' },
+    { id: 'panda', emoji: '🐼', name: 'Panda' },
+    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
+    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
+  ],
+  objects: [
+    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+    { id: 'gift', emoji: '🎁', name: 'Gift' },
+    { id: 'camera', emoji: '📷', name: 'Camera' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'book', emoji: '📚', name: 'Book' },
+    { id: 'computer', emoji: '💻', name: 'Computer' }
+  ],
+  nature: [
+    { id: 'sun', emoji: '☀️', name: 'Sun' },
+    { id: 'moon', emoji: '🌙', name: 'Moon' },
+    { id: 'tree', emoji: '🌳', name: 'Tree' },
+    { id: 'flower', emoji: '🌸', name: 'Flower' },
+    { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
+    { id: 'wave', emoji: '🌊', name: 'Wave' }
+  ],
+  food: [
+    { id: 'pizza', emoji: '🍕', name: 'Pizza' },
+    { id: 'burger', emoji: '🍔', name: 'Burger' },
+    { id: 'icecream', emoji: '🍦', name: 'Ice Cream' },
+    { id: 'coffee', emoji: '☕', name: 'Coffee' },
+    { id: 'cake', emoji: '🍰', name: 'Cake' },
+    { id: 'drink', emoji: '🥤', name: 'Drink' }
+  ],
+  activities: [
+    { id: 'sports', emoji: '⚽', name: 'Sports' },
+    { id: 'game', emoji: '🎮', name: 'Game' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'art', emoji: '🎨', name: 'Art' },
+    { id: 'movie', emoji: '🎬', name: 'Movie' },
+    { id: 'travel', emoji: '✈️', name: 'Travel' }
+  ]
+};
+
+const colleges = {
+  nit: [
+    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
+    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
+    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
+    {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
+    {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
+    {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'},
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
+    {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
+    {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'},
+  ],
+  other: [
+    {name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
+    {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
+    {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'},
+  ]
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkAuthStatus();
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+});
+
+function setupEventListeners() {
+  const addMusicBtn = document.getElementById('addMusicBtn');
+  if (addMusicBtn) {
+    addMusicBtn.addEventListener('click', openMusicSelector);
+  }
+  
+  const addStickerBtn = document.getElementById('addStickerBtn');
+  if (addStickerBtn) {
+    addStickerBtn.addEventListener('click', openStickerSelector);
+  }
+}
+
+function initializeMusicPlayer() {
+  window.musicPlayer = new Audio();
+  window.musicPlayer.volume = 0.5;
+  
+  window.musicPlayer.addEventListener('loadedmetadata', function() {
+    console.log('Music loaded:', this.src);
+  });
+  
+  window.musicPlayer.addEventListener('error', function(e) {
+    console.error('Error loading music:', e);
+    showMessage('Error loading music file. Please try another one.', 'error');
+  });
+}
+
+function getToken() {
+  return localStorage.getItem('authToken');
+}
+
+async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  const options = {
+    method,
+    headers: {},
+    signal: controller.signal
+  };
+  
+  const token = getToken();
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  if (body && !(body instanceof FormData)) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  } else if (body instanceof FormData) {
+    options.body = body;
+  }
+  
+  try {
+    console.log(`📡 API Call: ${method} ${endpoint}`);
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    clearTimeout(timeoutId);
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Request failed');
+    }
+    
+    console.log(`✅ API Success: ${endpoint}`);
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network') || error.message.includes('fetch'))) {
+      console.log(`🔄 Retrying... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return apiCall(endpoint, method, body, retries - 1);
+    }
+    
+    console.error(`❌ API Error: ${endpoint}`, error);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please check your connection and try again');
+    }
+    throw error;
+  }
+}
+
+async function compressImage(file, maxWidth = 1920, quality = 0.8) {
+  if (file.size < 500 * 1024) return file;
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('Compression failed'));
+                return;
+              }
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              console.log(`🗜️ Compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB`);
+              resolve(compressedFile);
+            },
+            'image/jpeg',
+            quality
+          );
+        } catch (error) {
+          reject(error);
+        }
+      };
+    };
+  });
+}
+
+function checkAuthStatus() {
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  
+  if(token && saved) {
+    currentUser = JSON.parse(saved);
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainPage').style.display = 'block';
+    document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
+    
+    if (currentUser.college) {
+      updateLiveNotif(`Connected to ${currentUser.college}`);
+      initializeSocket();
+    }
+  }
+}
+
+function showLoginPage() {
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainPage').style.display = 'none';
+}
+
+function showMainPage() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'block';
+}
+
+async function login(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  
+  if(!email || !password) {
+    showMessage('Fill all fields', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('Logging in...', 'success');
+    
+    const data = await apiCall('/api/login', 'POST', { email, password });
+    
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    
+    showMessage('✅ Login successful!', 'success');
+    
+    // Show daily reward if earned
+    if (data.dailyReward) {
+      setTimeout(() => {
+        showMessage(`🎁 Daily Login Reward: +${data.dailyReward.earned} points!`, 'success');
+      }, 1500);
+    }
+    
+    setTimeout(() => {
+      showMainPage();
+      document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
+      document.getElementById('loginForm').reset();
+      loadPosts();
+      if (currentUser.college) {
+        initializeSocket();
+      }
+    }, 800);
+  } catch (error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
+}
+
+async function signup(e) {
+  e.preventDefault();
+  const username = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const registrationNumber = document.getElementById('signupReg').value.trim();
+  const password = document.getElementById('signupPass').value;
+  const confirm = document.getElementById('signupConfirm').value;
+  
+  if(!username || !email || !registrationNumber || !password || !confirm) {
+    showMessage('Fill all fields', 'error');
+    return;
+  }
+  
+  if(password !== confirm) {
+    showMessage('Passwords don\'t match', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('Creating account...', 'success');
+    
+    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
+    
+    showMessage('🎉 Account created! Check your email', 'success');
+    
+    document.getElementById('signupForm').reset();
+    
+    setTimeout(() => {
+      goLogin(null);
+    }, 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
 function displayPhotoPreviews() {
   const container = document.getElementById('photoPreviewContainer');
   if (!container) return;
@@ -974,1247 +1383,6 @@ async function verifyCollegeCode() {
   }
 }
 
-console.log('✅ VibeXpert with Rewards System - All features working on mobile, tablet, and desktop!');function toggleEditProfile() {
-  const section = document.getElementById('editProfileSection');
-  if (!section) return;
-  
-  section.style.display = section.style.display === 'none' ? 'block' : 'none';
-}
-
-function updateBioCounter() {
-  const textarea = document.getElementById('editBio');
-  const counter = document.getElementById('bioCounter');
-  if (textarea && counter) {
-    counter.textContent = `${textarea.value.length}/200`;
-  }
-}
-
-async function saveProfile() {
-  const username = document.getElementById('editUsername')?.value.trim();
-  const bio = document.getElementById('editBio')?.value.trim();
-  
-  if (!username) {
-    showMessage('⚠️ Username required', 'error');
-    return;
-  }
-  
-  try {
-    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
-    
-    if (data.success) {
-      currentUser.username = data.user.username;
-      currentUser.bio = data.user.bio;
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      
-      showMessage('✅ Profile updated!', 'success');
-      document.querySelector('.modal')?.remove();
-      showProfilePage();
-    }
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-function uploadProfilePic() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  
-  input.onchange = async function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showMessage('⚠️ Image too large (max 5MB)', 'error');
-      return;
-    }
-    
-    try {
-      showMessage('📤 Uploading profile picture...', 'success');
-      
-      const compressedFile = await compressImage(file);
-      const formData = new FormData();
-      formData.append('profilePic', compressedFile);
-      
-      const data = await apiCall('/api/profile', 'PATCH', formData);
-      
-      if (data.success) {
-        currentUser.profile_pic = data.user.profile_pic;
-        localStorage.setItem('user', JSON.stringify(currentUser));
-        
-        showMessage('✅ Profile picture updated!', 'success');
-        document.querySelector('.modal')?.remove();
-        showProfilePage();
-      }
-    } catch (error) {
-      showMessage('❌ Failed to upload: ' + error.message, 'error');
-    }
-  };
-  
-  input.click();
-}
-
-function showModal(modalId) {
-  document.getElementById(modalId).style.display = 'flex';
-}
-
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if(modal) modal.style.display = 'none';
-}
-
-function showMessage(text, type) {
-  const box = document.getElementById('message');
-  if(!box) {
-    console.log('Message:', text);
-    return;
-  }
-  
-  const div = document.createElement('div');
-  div.className = 'msg msg-' + type;
-  div.textContent = text;
-  box.innerHTML = '';
-  box.appendChild(div);
-  
-  setTimeout(() => {
-    if(div.parentNode) div.remove();
-  }, 4000);
-}
-
-function updateLiveStats() {
-  const onlineCount = Math.floor(Math.random() * 300) + 150;
-  const postsToday = Math.floor(Math.random() * 500) + 200;
-  const activeChats = Math.floor(Math.random() * 100) + 50;
-  
-  const elements = {
-    'liveUsersCount': onlineCount + ' Active',
-    'heroOnline': onlineCount,
-    'heroPostsToday': postsToday,
-    'heroChats': activeChats,
-    'footerUsers': onlineCount
-  };
-  
-  Object.keys(elements).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = elements[id];
-  });
-}
-
-function updateOnlineCount(count) {
-  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
-  elements.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      if (id === 'liveUsersCount') {
-        el.textContent = count + ' Active';
-      } else if (id === 'footerUsers') {
-        el.textContent = count;
-      } else {
-        el.textContent = count;
-      }
-    }
-  });
-}
-
-function updateLiveNotif(text) {
-  const notif = document.getElementById('notifText');
-  if (notif) notif.textContent = text;
-}
-
-function toggleOptionsMenu() {
-  const menu = document.getElementById('optionsMenu');
-  const hamburger = document.getElementById('hamburgerMenu');
-  hamburger.style.display = 'none';
-  
-  if(menu.style.display === 'none' || menu.style.display === '') {
-    menu.style.display = 'block';
-  } else {
-    menu.style.display = 'none';
-  }
-}
-
-function toggleHamburgerMenu() {
-  const menu = document.getElementById('hamburgerMenu');
-  const options = document.getElementById('optionsMenu');
-  options.style.display = 'none';
-  
-  if(menu.style.display === 'none' || menu.style.display === '') {
-    menu.style.display = 'block';
-  } else {
-    menu.style.display = 'none';
-  }
-}
-
-function showComplaintModal() {
-  document.getElementById('complaintModal').style.display = 'flex';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-function showContactModal() {
-  document.getElementById('contactModal').style.display = 'flex';
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-function showFeedbackModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Send Feedback</h2>
-      <p style="color:#888; margin-bottom:20px;">We'd love to hear from you!</p>
-      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
-      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea>
-      <button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  
-  if (!subject || !message) {
-    showMessage('⚠️ Please fill all fields', 'error');
-    return;
-  }
-  
-  try {
-    await apiCall('/api/feedback', 'POST', { subject, message });
-    showMessage('✅ Thank you for your feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (error) {
-    showMessage('❌ Failed to submit feedback', 'error');
-  }
-}
-
-function submitComplaint() {
-  const text = document.getElementById('complaintText').value.trim();
-  if (text) {
-    showMessage('✅ Complaint submitted!', 'success');
-    document.getElementById('complaintText').value = '';
-    closeModal('complaintModal');
-  } else {
-    showMessage('⚠️ Enter complaint details', 'error');
-  }
-}
-
-function toggleTheme() {
-  const body = document.body;
-  if(body.classList.contains('dark-theme')) {
-    body.classList.remove('dark-theme');
-    body.classList.add('light-theme');
-  } else {
-    body.classList.remove('light-theme');
-    body.classList.add('dark-theme');
-  }
-  showMessage('🎨 Theme changed!', 'success');
-  document.getElementById('hamburgerMenu').style.display = 'none';
-  document.getElementById('optionsMenu').style.display = 'none';
-}
-
-function loadTrending() {
-  const container = document.getElementById('trendingContainer');
-  if (!container) return;
-  
-  const trending = [
-    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
-    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
-    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
-  ];
-  
-  let html = '';
-  trending.forEach(item => {
-    html += `
-      <div class="trending-card">
-        <div class="trending-card-header">
-          <div class="trending-title">${item.title}</div>
-          <div class="trending-badge">${item.badge}</div>
-        </div>
-        <div class="trending-text">${item.text}</div>
-        <div class="trending-footer">
-          <div class="trending-engagement">
-            <div class="engagement-item">❤️ ${item.likes}</div>
-            <div class="engagement-item">💬 ${item.comments}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-document.addEventListener('click', function(e) {
-  const optionsMenu = document.getElementById('optionsMenu');
-  const optionsBtn = document.querySelector('.options-btn');
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const hamburgerBtn = document.querySelector('.hamburger-btn');
-  
-  if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
-    optionsMenu.style.display = 'none';
-  }
-  
-  if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
-    hamburgerMenu.style.display = 'none';
-  }
-});
-
-function showPostCelebrationModal(postCount) {
-  console.log('🎉 Showing celebration for post #', postCount);
-  
-  let milestone = getMilestoneForPost(postCount);
-  
-  const modal = document.createElement('div');
-  modal.className = 'celebration-modal';
-  modal.style.display = 'flex';
-  
-  modal.innerHTML = `
-    <div class="celebration-modal-content">
-      <div class="celebration-confetti"></div>
-      
-      <div class="celebration-icon-circle" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd);">
-        <span style="font-size: 48px;">${milestone.icon}</span>
-      </div>
-      
-      <div class="celebration-emoji">${milestone.emoji}</div>
-      
-      <h2 class="celebration-title" style="color: ${milestone.color};">
-        ${milestone.title}
-      </h2>
-      
-      <p class="celebration-message">${milestone.message}</p>
-      
-      <div class="celebration-stats" style="background: ${milestone.color}15;">
-        <div class="celebration-count" style="color: ${milestone.color};">${postCount}</div>
-        <div class="celebration-label">TOTAL POSTS</div>
-      </div>
-      
-      <div class="celebration-quote">
-        "${milestone.quote}"
-      </div>
-      
-      <button class="celebration-button" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd); box-shadow: 0 4px 15px ${milestone.color}40;" onclick="closeCelebrationModal()">
-        🚀 Keep Posting!
-      </button>
-      
-      ${postCount >= 10 ? `
-        <button class="celebration-share-btn" onclick="shareAchievement(${postCount})">
-          📢 Share Achievement
-        </button>
-      ` : ''}
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-  
-  setTimeout(() => {
-    closeCelebrationModal();
-  }, 5000);
-  
-  playSuccessSound();
-}
-
-function getMilestoneForPost(count) {
-  const milestones = {
-    1: {
-      emoji: '🎉',
-      icon: '⭐',
-      title: 'First Post!',
-      message: 'Congratulations on your first post!',
-      quote: 'Every journey begins with a single step',
-      color: '#667eea'
-    },
-    5: {
-      emoji: '🚀',
-      icon: '📈',
-      title: 'Rising Star!',
-      message: 'You\'re building momentum!',
-      quote: 'Consistency is the key to success',
-      color: '#f093fb'
-    },
-    10: {
-      emoji: '⭐',
-      icon: '🎨',
-      title: 'Content Creator!',
-      message: 'You\'re officially a content creator!',
-      quote: 'Create content that matters',
-      color: '#feca57'
-    },
-    25: {
-      emoji: '🏆',
-      icon: '👑',
-      title: 'Champion!',
-      message: 'You\'re crushing it!',
-      quote: 'Champions are made from dedication',
-      color: '#ff6b6b'
-    },
-    50: {
-      emoji: '💎',
-      icon: '✨',
-      title: 'Diamond Creator!',
-      message: 'You\'re a legend in the making!',
-      quote: 'Shine bright like a diamond',
-      color: '#4ecdc4'
-    },
-    100: {
-      emoji: '👑',
-      icon: '⚡',
-      title: 'Elite Creator!',
-      message: 'You\'re unstoppable!',
-      quote: 'You are an inspiration to others',
-      color: '#a29bfe'
-    }
-  };
-  
-  if (milestones[count]) {
-    return milestones[count];
-  }
-  
-  if (count % 10 === 0) {
-    return {
-      emoji: '🎊',
-      icon: '🔥',
-      title: `${count} Posts!`,
-      message: 'You\'re on fire!',
-      quote: 'Keep up the amazing work',
-      color: '#667eea'
-    };
-  }
-  
-  return {
-    emoji: '🎉',
-    icon: '✨',
-    title: 'Post Published!',
-    message: 'Your voice matters!',
-    quote: 'Every post brings you closer to your goals',
-    color: '#4f74a3'
-  };
-}
-
-function closeCelebrationModal() {
-  const modal = document.querySelector('.celebration-modal');
-  if (modal) {
-    modal.style.animation = 'fadeOut 0.3s ease';
-    setTimeout(() => {
-      modal.remove();
-    }, 300);
-  }
-}
-
-function shareAchievement(postCount) {
-  const text = `🎉 I just made my ${postCount}th post on VibeXpert! Join me and connect with students across 500+ universities! 🚀`;
-  
-  if (navigator.share) {
-    navigator.share({
-      title: 'VibeXpert Achievement',
-      text: text,
-      url: window.location.origin
-    }).catch(err => console.log('Share cancelled'));
-  } else {
-    navigator.clipboard.writeText(text).then(() => {
-      showMessage('✅ Achievement copied to clipboard!', 'success');
-    });
-  }
-}
-
-function playSuccessSound() {
-  try {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ8PVazn77BdGAg+ltryxnIlBSl+zPLaizsIGWe57+mjUBELTKXh8bllHAU2jdXzzn0pBSh6yvDckTsIF2m98OihUBAMUKnn8bZkHgU7k9n0y3krBSh9y/HajDkHGGu/8OmgTxAMTqnm8LVjHAU4kdXy0H8qBSh7yfDajzsIGWu98OmhTxAMUKjn8bZkHQU7k9jzzn4pBSh8yvHajDkHGGu/8OmgTw==');
-    audio.volume = 0.3;
-    audio.play().catch(e => console.log('Audio play failed'));
-  } catch (e) {
-    console.log('Could not play sound');
-  }
-}
-
-function goForgotPassword(e) {
-  e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'block';
-}
-
-async function handleForgotPassword(e) {
-  e.preventDefault();
-  const email = document.getElementById('resetEmail').value.trim();
-  
-  if(!email) {
-    showMessage('Enter your email', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('📧 Sending reset code...', 'success');
-    await apiCall('/api/forgot-password', 'POST', { email });
-    showMessage('✅ Check your email for reset code', 'success');
-    
-    document.getElementById('resetEmailSection').style.display = 'none';
-    document.getElementById('resetCodeSection').style.display = 'block';
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-async function verifyResetCode(e) {
-  e.preventDefault();
-  const email = document.getElementById('resetEmail').value.trim();
-  const code = document.getElementById('resetCode').value.trim();
-  const newPassword = document.getElementById('newPassword').value;
-  const confirmPassword = document.getElementById('confirmNewPassword').value;
-  
-  if(!code || code.length !== 6) {
-    showMessage('⚠️ Enter 6-digit code', 'error');
-    return;
-  }
-  
-  if(!newPassword || !confirmPassword) {
-    showMessage('⚠️ Enter new password', 'error');
-    return;
-  }
-  
-  if(newPassword !== confirmPassword) {
-    showMessage('⚠️ Passwords don\'t match', 'error');
-    return;
-  }
-  
-  if(newPassword.length < 6) {
-    showMessage('⚠️ Password must be at least 6 characters', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('🔍 Verifying code...', 'success');
-    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
-    showMessage('✅ Password reset successful! Please login', 'success');
-    
-    document.getElementById('forgotPasswordForm').reset();
-    document.getElementById('resetEmailSection').style.display = 'block';
-    document.getElementById('resetCodeSection').style.display = 'none';
-    
-    setTimeout(() => {
-      goLogin(null);
-    }, 2000);
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-function goSignup(e) {
-  e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'block';
-}
-
-function goLogin(e) {
-  if(e) e.preventDefault();
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-}
-
-function logout() {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
-  currentUser = null;
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('user');
-  showLoginPage();
-  showMessage('👋 Logged out', 'success');
-  showLoginForm();
-}
-
-function showLoginForm() {
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'none';
-}
-
-function initializeSearchBar() {
-  const searchBox = document.getElementById('searchBox');
-  const searchResults = document.getElementById('searchResults');
-  
-  if (!searchBox) {
-    console.warn('Search box not found');
-    return;
-  }
-  
-  console.log('✅ Search bar initialized');
-  
-  searchBox.addEventListener('input', (e) => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-    
-    const query = e.target.value.trim();
-    
-    if (query.length < 2) {
-      hideSearchResults();
-      return;
-    }
-    
-    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
-    searchResults.style.display = 'block';
-    
-    searchTimeout = setTimeout(() => {
-      performUserSearch(query);
-    }, 600);
-  });
-  
-  searchBox.addEventListener('focus', (e) => {
-    const query = e.target.value.trim();
-    if (query.length >= 2) {
-      performUserSearch(query);
-    }
-  });
-  
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-container')) {
-      hideSearchResults();
-    }
-  });
-  
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      hideSearchResults();
-      searchBox.blur();
-    }
-  });
-}
-
-async function performUserSearch(query) {
-  const searchResults = document.getElementById('searchResults');
-  
-  if (!searchResults) {
-    console.error('❌ Search results container not found');
-    return;
-  }
-  
-  try {
-    console.log('🔍 Searching for:', query);
-    
-    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
-    
-    console.log('📊 Search API response:', data);
-    console.log('📊 Number of users found:', data.users?.length || 0);
-    
-    if (!data.success) {
-      throw new Error('Search failed');
-    }
-    
-    if (data.users && data.users.length > 0) {
-      console.log('✅ Users found:');
-      data.users.forEach((user, index) => {
-        console.log(`  ${index + 1}. @${user.username} - ${user.email}`);
-      });
-    } else {
-      console.log('⚠️ No users found for query:', query);
-    }
-    
-    displaySearchResults(data.users || []);
-  } catch (error) {
-    console.error('❌ Search error:', error);
-    searchResults.innerHTML = `
-      <div class="no-results" style="color:#ff6b6b;">
-        ❌ ${error.message || 'Search failed'}<br>
-        <small style="font-size:12px;color:#888;margin-top:8px;display:block;">
-          Please check your internet connection and try again
-        </small>
-      </div>
-    `;
-    searchResults.style.display = 'block';
-  }
-}
-
-function displaySearchResults(users) {
-  const searchResults = document.getElementById('searchResults');
-  
-  if (!searchResults) return;
-  
-  if (users.length === 0) {
-    searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
-    searchResults.style.display = 'block';
-    return;
-  }
-  
-  console.log(`✅ Displaying ${users.length} search results`);
-  
-  let html = '';
-  users.forEach(user => {
-    const avatarContent = user.profile_pic 
-      ? `<img src="${user.profile_pic}" alt="${user.username}">` 
-      : '👤';
-    
-    html += `
-      <div class="search-result-item" onclick="showUserProfile('${user.id}')">
-        <div class="search-result-avatar">
-          ${avatarContent}
-        </div>
-        <div class="search-result-info">
-          <div class="search-result-username">@${user.username}</div>
-          <div class="search-result-details">${user.registration_number || user.email}</div>
-          ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
-        </div>
-      </div>
-    `;
-  });
-  
-  searchResults.innerHTML = html;
-  searchResults.style.display = 'block';
-}
-
-function hideSearchResults() {
-  const searchResults = document.getElementById('searchResults');
-  if (searchResults) {
-    searchResults.style.display = 'none';
-  }
-}
-
-async function showUserProfile(userId) {
-  hideSearchResults();
-  
-  const searchBox = document.getElementById('searchBox');
-  if (searchBox) {
-    searchBox.value = '';
-  }
-  
-  try {
-    console.log('👤 Loading profile for user:', userId);
-    showMessage('Loading profile...', 'success');
-    
-    const data = await apiCall(`/api/profile/${userId}`, 'GET');
-    
-    if (!data.success || !data.user) {
-      throw new Error('User not found');
-    }
-    
-    const user = data.user;
-    console.log('✅ Profile loaded:', user.username);
-    
-    showProfileModal(user);
-  } catch (error) {
-    console.error('❌ Failed to load profile:', error);
-    showMessage('❌ Failed to load profile: ' + error.message, 'error');
-  }
-}
-
-function openPhotoGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.multiple = true;
-  
-  input.onchange = function(e) {
-    handlePhotoSelection(e.target.files);
-  };
-  
-  input.click();
-}
-
-function openCamera() {
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(function(stream) {
-        showMessage('📷 Camera access granted. Taking photo...', 'success');
-        setTimeout(() => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.capture = 'environment';
-          input.onchange = function(e) {
-            handlePhotoSelection(e.target.files);
-          };
-          input.click();
-        }, 1000);
-      })
-      .catch(function(error) {
-        console.error('Camera error:', error);
-        showMessage('⚠️ Camera not available. Using gallery instead.', 'error');
-        openPhotoGallery();
-      });
-  } else {
-    showMessage('⚠️ Camera not supported. Using gallery instead.', 'error');
-    openPhotoGallery();
-  }
-}
-
-async function handlePhotoSelection(files) {
-  if (!files.length) return;
-  
-  showMessage('📸 Processing images...', 'success');
-  
-  for (const file of Array.from(files)) {
-    if (!file.type.startsWith('image/')) {
-      showMessage('Please select image files only', 'error');
-      continue;
-    }
-    
-    if (selectedFiles.length >= 5) {
-      showMessage('Maximum 5 photos allowed', 'error');
-      break;
-    }
-    
-    try {
-      const compressedFile = await compressImage(file);
-      selectedFiles.push(compressedFile);
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const previewUrl = e.target.result;
-        previewUrls.push(previewUrl);
-        displayPhotoPreviews();
-      };
-      reader.readAsDataURL(compressedFile);
-    } catch (error) {
-      console.error('Image processing error:', error);
-      showMessage('Failed to process image: ' + file.name, 'error');
-    }
-  }
-  
-  if (selectedFiles.length > 0) {
-    showMessage(`✅ ${selectedFiles.length} photo(s) ready`, 'success');
-  }
-}
-
-function displayPhotoPreviews() {
-  const container = document.getElementById('photoPreviewContainer');
-  if (!container) return;
-  
-  if (previewUrls.length === 0) {
-    container.style.display = 'none';
-    container.innerHTML = '';
-    return;
-  }
-  
-  container.style.display = 'block';
-  let html = '<div class="media-preview-grid">';
-  
-  previewUrls.forEach((previewUrl, index) => {
-    html += `
-      <div class="preview-item">
-        <div class="preview-image-container">
-          <img src="${previewUrl}" alt="Preview ${index + 1}" class="preview-image">
-          <div class="media-actions">
-            <button class="crop-btn" onclick="openCropEditor(${index})">✂️ Crop</button>
-            <button class="edit-btn" onclick="openPhotoEditor(${index})">🎨 Edit</button>
-            <button class="remove-btn" onclick="removePhoto// VIBEXPERT - COMPLETE VERSION WITH REWARDS SYSTEM
-
-const API_URL = 'https://vibexpert-backend-main.onrender.com';
-
-let currentUser = null;
-let currentType = null;
-let currentPage = 1;
-const ITEMS_PER_PAGE = 10;
-let currentVerifyCollege = null;
-let allColleges = [];
-let socket = null;
-let selectedFiles = [];
-let previewUrls = [];
-let editingMessageId = null;
-let editTimeout = null;
-let selectedMusic = null;
-let selectedStickers = [];
-let cropper = null;
-let selectedPostDestination = 'profile';
-let currentEditIndex = -1;
-let currentCropIndex = -1;
-let currentFilters = {};
-let searchTimeout = null;
-let currentCommentPostId = null;
-
-const musicLibrary = [
-  {
-    id: 1,
-    name: "Chill Vibes",
-    artist: "LoFi Beats",
-    duration: "2:30",
-    url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",
-    emoji: "🎧"
-  },
-  {
-    id: 2,
-    name: "Upbeat Energy",
-    artist: "Electronic Pop",
-    duration: "3:15",
-    url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",
-    emoji: "⚡"
-  },
-  {
-    id: 3,
-    name: "Dreamy Piano",
-    artist: "Classical",
-    duration: "2:45",
-    url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",
-    emoji: "🎹"
-  },
-  {
-    id: 4,
-    name: "Summer Vibes",
-    artist: "Tropical",
-    duration: "3:30",
-    url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",
-    emoji: "🏖️"
-  },
-  {
-    id: 5,
-    name: "Happy Day",
-    artist: "Pop Rock",
-    duration: "2:50",
-    url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",
-    emoji: "😊"
-  },
-  {
-    id: 6,
-    name: "Relaxing Guitar",
-    artist: "Acoustic",
-    duration: "3:10",
-    url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",
-    emoji: "🎸"
-  }
-];
-
-const stickerLibrary = {
-  emotions: [
-    { id: 'happy', emoji: '😊', name: 'Happy' },
-    { id: 'laugh', emoji: '😂', name: 'Laugh' },
-    { id: 'love', emoji: '❤️', name: 'Love' },
-    { id: 'cool', emoji: '😎', name: 'Cool' },
-    { id: 'fire', emoji: '🔥', name: 'Fire' },
-    { id: 'star', emoji: '⭐', name: 'Star' }
-  ],
-  animals: [
-    { id: 'cat', emoji: '🐱', name: 'Cat' },
-    { id: 'dog', emoji: '🐶', name: 'Dog' },
-    { id: 'panda', emoji: '🐼', name: 'Panda' },
-    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
-    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
-    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
-  ],
-  objects: [
-    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
-    { id: 'gift', emoji: '🎁', name: 'Gift' },
-    { id: 'camera', emoji: '📷', name: 'Camera' },
-    { id: 'music', emoji: '🎵', name: 'Music' },
-    { id: 'book', emoji: '📚', name: 'Book' },
-    { id: 'computer', emoji: '💻', name: 'Computer' }
-  ],
-  nature: [
-    { id: 'sun', emoji: '☀️', name: 'Sun' },
-    { id: 'moon', emoji: '🌙', name: 'Moon' },
-    { id: 'tree', emoji: '🌳', name: 'Tree' },
-    { id: 'flower', emoji: '🌸', name: 'Flower' },
-    { id: 'rainbow', emoji: '🌈', name: 'Rainbow' },
-    { id: 'wave', emoji: '🌊', name: 'Wave' }
-  ],
-  food: [
-    { id: 'pizza', emoji: '🍕', name: 'Pizza' },
-    { id: 'burger', emoji: '🍔', name: 'Burger' },
-    { id: 'icecream', emoji: '🍦', name: 'Ice Cream' },
-    { id: 'coffee', emoji: '☕', name: 'Coffee' },
-    { id: 'cake', emoji: '🍰', name: 'Cake' },
-    { id: 'drink', emoji: '🥤', name: 'Drink' }
-  ],
-  activities: [
-    { id: 'sports', emoji: '⚽', name: 'Sports' },
-    { id: 'game', emoji: '🎮', name: 'Game' },
-    { id: 'music', emoji: '🎵', name: 'Music' },
-    { id: 'art', emoji: '🎨', name: 'Art' },
-    { id: 'movie', emoji: '🎬', name: 'Movie' },
-    { id: 'travel', emoji: '✈️', name: 'Travel' }
-  ]
-};
-
-const colleges = {
-  nit: [
-    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
-    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
-    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
-  ],
-  iit: [
-    {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
-    {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
-    {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
-    {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
-    {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'},
-  ],
-  vit: [
-    {name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
-    {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
-    {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'},
-  ],
-  other: [
-    {name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
-    {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
-    {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'},
-  ]
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-  checkAuthStatus();
-  setupEventListeners();
-  initializeMusicPlayer();
-  updateLiveStats();
-  setInterval(updateLiveStats, 5000);
-  initializeSearchBar();
-  loadTrending();
-});
-
-function setupEventListeners() {
-  const addMusicBtn = document.getElementById('addMusicBtn');
-  if (addMusicBtn) {
-    addMusicBtn.addEventListener('click', openMusicSelector);
-  }
-  
-  const addStickerBtn = document.getElementById('addStickerBtn');
-  if (addStickerBtn) {
-    addStickerBtn.addEventListener('click', openStickerSelector);
-  }
-}
-
-function initializeMusicPlayer() {
-  window.musicPlayer = new Audio();
-  window.musicPlayer.volume = 0.5;
-  
-  window.musicPlayer.addEventListener('loadedmetadata', function() {
-    console.log('Music loaded:', this.src);
-  });
-  
-  window.musicPlayer.addEventListener('error', function(e) {
-    console.error('Error loading music:', e);
-    showMessage('Error loading music file. Please try another one.', 'error');
-  });
-}
-
-function getToken() {
-  return localStorage.getItem('authToken');
-}
-
-async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-  
-  const options = {
-    method,
-    headers: {},
-    signal: controller.signal
-  };
-  
-  const token = getToken();
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  if (body && !(body instanceof FormData)) {
-    options.headers['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(body);
-  } else if (body instanceof FormData) {
-    options.body = body;
-  }
-  
-  try {
-    console.log(`📡 API Call: ${method} ${endpoint}`);
-    const response = await fetch(`${API_URL}${endpoint}`, options);
-    clearTimeout(timeoutId);
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Request failed');
-    }
-    
-    console.log(`✅ API Success: ${endpoint}`);
-    return data;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    
-    if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network') || error.message.includes('fetch'))) {
-      console.log(`🔄 Retrying... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return apiCall(endpoint, method, body, retries - 1);
-    }
-    
-    console.error(`❌ API Error: ${endpoint}`, error);
-    
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout - please check your connection and try again');
-    }
-    throw error;
-  }
-}
-
-async function compressImage(file, maxWidth = 1920, quality = 0.8) {
-  if (file.size < 500 * 1024) return file;
-  
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target.result;
-      
-      img.onerror = () => reject(new Error('Failed to load image'));
-      
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Compression failed'));
-                return;
-              }
-              const compressedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-              });
-              console.log(`🗜️ Compressed: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB`);
-              resolve(compressedFile);
-            },
-            'image/jpeg',
-            quality
-          );
-        } catch (error) {
-          reject(error);
-        }
-      };
-    };
-  });
-}
-
-function checkAuthStatus() {
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  
-  if(token && saved) {
-    currentUser = JSON.parse(saved);
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainPage').style.display = 'block';
-    document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
-    
-    if (currentUser.college) {
-      updateLiveNotif(`Connected to ${currentUser.college}`);
-      initializeSocket();
-    }
-  }
-}
-
-function showLoginPage() {
-  document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('mainPage').style.display = 'none';
-}
-
-function showMainPage() {
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('mainPage').style.display = 'block';
-}
-
-async function login(e) {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  
-  if(!email || !password) {
-    showMessage('Fill all fields', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('Logging in...', 'success');
-    
-    const data = await apiCall('/api/login', 'POST', { email, password });
-    
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    currentUser = data.user;
-    
-    showMessage('✅ Login successful!', 'success');
-    
-    // Show daily reward if earned
-    if (data.dailyReward) {
-      setTimeout(() => {
-        showMessage(`🎁 Daily Login Reward: +${data.dailyReward.earned} points!`, 'success');
-      }, 1500);
-    }
-    
-    setTimeout(() => {
-      showMainPage();
-      document.getElementById('userName').textContent = 'Hi, ' + currentUser.username;
-      document.getElementById('loginForm').reset();
-      loadPosts();
-      if (currentUser.college) {
-        initializeSocket();
-      }
-    }, 800);
-  } catch (error) {
-    showMessage('❌ Login failed: ' + error.message, 'error');
-  }
-}
-
-async function signup(e) {
-  e.preventDefault();
-  const username = document.getElementById('signupName').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const registrationNumber = document.getElementById('signupReg').value.trim();
-  const password = document.getElementById('signupPass').value;
-  const confirm = document.getElementById('signupConfirm').value;
-  
-  if(!username || !email || !registrationNumber || !password || !confirm) {
-    showMessage('Fill all fields', 'error');
-    return;
-  }
-  
-  if(password !== confirm) {
-    showMessage('Passwords don\'t match', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('Creating account...', 'success');
-    
-    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
-    
-    showMessage('🎉 Account created! Check your email', 'success');
-    
-    document.getElementById('signupForm').reset();
-    
-    setTimeout(() => {
-      goLogin(null);
-    }, 2000);
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
 async function toggleLike(postId) {
   if (!currentUser) {
     showMessage('⚠️ Please login to like posts', 'error');
@@ -2873,7 +2041,7 @@ function appendMessageToChat(msg) {
   
   messageDiv.innerHTML = `
     ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
-    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
+    <div class="text">${msg.content}${msg.is_edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
     ${Object.keys(reactionCounts).length > 0 ? `
       <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
         ${Object.entries(reactionCounts).map(([emoji, count]) => 
@@ -2902,7 +2070,6 @@ function updateMessageInChat(msg) {
   const messageEl = document.getElementById(`msg-${msg.id}`);
   if (!messageEl) return;
   
-  const isOwn = msg.sender_id === currentUser.id;
   const textEl = messageEl.querySelector('.text');
   if (textEl) {
     textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
@@ -3149,4 +2316,822 @@ async function loadUserProfilePosts(userId) {
 
 function toggleEditProfile() {
   const section = document.getElementById('editProfileSection');
-  if (!
+  if (!section) return;
+  
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateBioCounter() {
+  const textarea = document.getElementById('editBio');
+  const counter = document.getElementById('bioCounter');
+  if (textarea && counter) {
+    counter.textContent = `${textarea.value.length}/200`;
+  }
+}
+
+async function saveProfile() {
+  const username = document.getElementById('editUsername')?.value.trim();
+  const bio = document.getElementById('editBio')?.value.trim();
+  
+  if (!username) {
+    showMessage('⚠️ Username required', 'error');
+    return;
+  }
+  
+  try {
+    const data = await apiCall('/api/profile', 'PATCH', { username, bio });
+    
+    if (data.success) {
+      currentUser.username = data.user.username;
+      currentUser.bio = data.user.bio;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      showMessage('✅ Profile updated!', 'success');
+      document.querySelector('.modal')?.remove();
+      showProfilePage();
+    }
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+function uploadProfilePic() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('⚠️ Image too large (max 5MB)', 'error');
+      return;
+    }
+    
+    try {
+      showMessage('📤 Uploading profile picture...', 'success');
+      
+      const compressedFile = await compressImage(file);
+      const formData = new FormData();
+      formData.append('profilePic', compressedFile);
+      
+      const data = await apiCall('/api/profile', 'PATCH', formData);
+      
+      if (data.success) {
+        currentUser.profile_pic = data.user.profile_pic;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        
+        showMessage('✅ Profile picture updated!', 'success');
+        document.querySelector('.modal')?.remove();
+        showProfilePage();
+      }
+    } catch (error) {
+      showMessage('❌ Failed to upload: ' + error.message, 'error');
+    }
+  };
+  
+  input.click();
+}
+
+async function showUserProfile(userId) {
+  hideSearchResults();
+  
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) {
+    searchBox.value = '';
+  }
+  
+  try {
+    console.log('👤 Loading profile for user:', userId);
+    showMessage('Loading profile...', 'success');
+    
+    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    
+    if (!data.success || !data.user) {
+      throw new Error('User not found');
+    }
+    
+    const user = data.user;
+    console.log('✅ Profile loaded:', user.username);
+    
+    showProfileModal(user);
+  } catch (error) {
+    console.error('❌ Failed to load profile:', error);
+    showMessage('❌ Failed to load profile: ' + error.message, 'error');
+  }
+}
+
+function showModal(modalId) {
+  document.getElementById(modalId).style.display = 'flex';
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if(modal) modal.style.display = 'none';
+}
+
+function showMessage(text, type) {
+  const box = document.getElementById('message');
+  if(!box) {
+    console.log('Message:', text);
+    return;
+  }
+  
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  box.innerHTML = '';
+  box.appendChild(div);
+  
+  setTimeout(() => {
+    if(div.parentNode) div.remove();
+  }, 4000);
+}
+
+function updateLiveStats() {
+  const onlineCount = Math.floor(Math.random() * 300) + 150;
+  const postsToday = Math.floor(Math.random() * 500) + 200;
+  const activeChats = Math.floor(Math.random() * 100) + 50;
+  
+  const elements = {
+    'liveUsersCount': onlineCount + ' Active',
+    'heroOnline': onlineCount,
+    'heroPostsToday': postsToday,
+    'heroChats': activeChats,
+    'footerUsers': onlineCount
+  };
+  
+  Object.keys(elements).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = elements[id];
+  });
+}
+
+function updateOnlineCount(count) {
+  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
+  elements.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'liveUsersCount') {
+        el.textContent = count + ' Active';
+      } else if (id === 'footerUsers') {
+        el.textContent = count;
+      } else {
+        el.textContent = count;
+      }
+    }
+  });
+}
+
+function updateLiveNotif(text) {
+  const notif = document.getElementById('notifText');
+  if (notif) notif.textContent = text;
+}
+
+function toggleOptionsMenu() {
+  const menu = document.getElementById('optionsMenu');
+  const hamburger = document.getElementById('hamburgerMenu');
+  hamburger.style.display = 'none';
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+function toggleHamburgerMenu() {
+  const menu = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  options.style.display = 'none';
+  
+  if(menu.style.display === 'none' || menu.style.display === '') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+function showComplaintModal() {
+  document.getElementById('complaintModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showContactModal() {
+  document.getElementById('contactModal').style.display = 'flex';
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function showFeedbackModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Send Feedback</h2>
+      <p style="color:#888; margin-bottom:20px;">We'd love to hear from you!</p>
+      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
+      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%; min-height:120px; padding:12px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); border-radius:10px; color:white; font-family:inherit; resize:vertical;"></textarea>
+      <button onclick="submitFeedback()" style="width:100%; margin-top:15px;">📤 Send Feedback</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  
+  if (!subject || !message) {
+    showMessage('⚠️ Please fill all fields', 'error');
+    return;
+  }
+  
+  try {
+    await apiCall('/api/feedback', 'POST', { subject, message });
+    showMessage('✅ Thank you for your feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (error) {
+    showMessage('❌ Failed to submit feedback', 'error');
+  }
+}
+
+function submitComplaint() {
+  const text = document.getElementById('complaintText').value.trim();
+  if (text) {
+    showMessage('✅ Complaint submitted!', 'success');
+    document.getElementById('complaintText').value = '';
+    closeModal('complaintModal');
+  } else {
+    showMessage('⚠️ Enter complaint details', 'error');
+  }
+}
+
+function toggleTheme() {
+  const body = document.body;
+  if(body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+  }
+  showMessage('🎨 Theme changed!', 'success');
+  document.getElementById('hamburgerMenu').style.display = 'none';
+  document.getElementById('optionsMenu').style.display = 'none';
+}
+
+function loadTrending() {
+  const container = document.getElementById('trendingContainer');
+  if (!container) return;
+  
+  const trending = [
+    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
+    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
+    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
+  ];
+  
+  let html = '';
+  trending.forEach(item => {
+    html += `
+      <div class="trending-card">
+        <div class="trending-card-header">
+          <div class="trending-title">${item.title}</div>
+          <div class="trending-badge">${item.badge}</div>
+        </div>
+        <div class="trending-text">${item.text}</div>
+        <div class="trending-footer">
+          <div class="trending-engagement">
+            <div class="engagement-item">❤️ ${item.likes}</div>
+            <div class="engagement-item">💬 ${item.comments}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+document.addEventListener('click', function(e) {
+  const optionsMenu = document.getElementById('optionsMenu');
+  const optionsBtn = document.querySelector('.options-btn');
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const hamburgerBtn = document.querySelector('.hamburger-btn');
+  
+  if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
+    optionsMenu.style.display = 'none';
+  }
+  
+  if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
+    hamburgerMenu.style.display = 'none';
+  }
+});
+
+function showPostCelebrationModal(postCount) {
+  console.log('🎉 Showing celebration for post #', postCount);
+  
+  let milestone = getMilestoneForPost(postCount);
+  
+  const modal = document.createElement('div');
+  modal.className = 'celebration-modal';
+  modal.style.display = 'flex';
+  
+  modal.innerHTML = `
+    <div class="celebration-modal-content">
+      <div class="celebration-confetti"></div>
+      
+      <div class="celebration-icon-circle" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd);">
+        <span style="font-size: 48px;">${milestone.icon}</span>
+      </div>
+      
+      <div class="celebration-emoji">${milestone.emoji}</div>
+      
+      <h2 class="celebration-title" style="color: ${milestone.color};">
+        ${milestone.title}
+      </h2>
+      
+      <p class="celebration-message">${milestone.message}</p>
+      
+      <div class="celebration-stats" style="background: ${milestone.color}15;">
+        <div class="celebration-count" style="color: ${milestone.color};">${postCount}</div>
+        <div class="celebration-label">TOTAL POSTS</div>
+      </div>
+      
+      <div class="celebration-quote">
+        "${milestone.quote}"
+      </div>
+      
+      <button class="celebration-button" style="background: linear-gradient(135deg, ${milestone.color}, ${milestone.color}dd); box-shadow: 0 4px 15px ${milestone.color}40;" onclick="closeCelebrationModal()">
+        🚀 Keep Posting!
+      </button>
+      
+      ${postCount >= 10 ? `
+        <button class="celebration-share-btn" onclick="shareAchievement(${postCount})">
+          📢 Share Achievement
+        </button>
+      ` : ''}
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  setTimeout(() => {
+    closeCelebrationModal();
+  }, 5000);
+  
+  playSuccessSound();
+}
+
+function getMilestoneForPost(count) {
+  const milestones = {
+    1: {
+      emoji: '🎉',
+      icon: '⭐',
+      title: 'First Post!',
+      message: 'Congratulations on your first post!',
+      quote: 'Every journey begins with a single step',
+      color: '#667eea'
+    },
+    5: {
+      emoji: '🚀',
+      icon: '📈',
+      title: 'Rising Star!',
+      message: 'You\'re building momentum!',
+      quote: 'Consistency is the key to success',
+      color: '#f093fb'
+    },
+    10: {
+      emoji: '⭐',
+      icon: '🎨',
+      title: 'Content Creator!',
+      message: 'You\'re officially a content creator!',
+      quote: 'Create content that matters',
+      color: '#feca57'
+    },
+    25: {
+      emoji: '🏆',
+      icon: '👑',
+      title: 'Champion!',
+      message: 'You\'re crushing it!',
+      quote: 'Champions are made from dedication',
+      color: '#ff6b6b'
+    },
+    50: {
+      emoji: '💎',
+      icon: '✨',
+      title: 'Diamond Creator!',
+      message: 'You\'re a legend in the making!',
+      quote: 'Shine bright like a diamond',
+      color: '#4ecdc4'
+    },
+    100: {
+      emoji: '👑',
+      icon: '⚡',
+      title: 'Elite Creator!',
+      message: 'You\'re unstoppable!',
+      quote: 'You are an inspiration to others',
+      color: '#a29bfe'
+    }
+  };
+  
+  if (milestones[count]) {
+    return milestones[count];
+  }
+  
+  if (count % 10 === 0) {
+    return {
+      emoji: '🎊',
+      icon: '🔥',
+      title: `${count} Posts!`,
+      message: 'You\'re on fire!',
+      quote: 'Keep up the amazing work',
+      color: '#667eea'
+    };
+  }
+  
+  return {
+    emoji: '🎉',
+    icon: '✨',
+    title: 'Post Published!',
+    message: 'Your voice matters!',
+    quote: 'Every post brings you closer to your goals',
+    color: '#4f74a3'
+  };
+}
+
+function closeCelebrationModal() {
+  const modal = document.querySelector('.celebration-modal');
+  if (modal) {
+    modal.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+function shareAchievement(postCount) {
+  const text = `🎉 I just made my ${postCount}th post on VibeXpert! Join me and connect with students across 500+ universities! 🚀`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'VibeXpert Achievement',
+      text: text,
+      url: window.location.origin
+    }).catch(err => console.log('Share cancelled'));
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      showMessage('✅ Achievement copied to clipboard!', 'success');
+    });
+  }
+}
+
+function playSuccessSound() {
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ8PVazn77BdGAg+ltryxnIlBSl+zPLaizsIGWe57+mjUBELTKXh8bllHAU2jdXzzn0pBSh6yvDckTsIF2m98OihUBAMUKnn8bZkHgU7k9n0y3krBSh9y/HajDkHGGu/8OmgTxAMTqnm8LVjHAU4kdXy0H8qBSh7yfDajzsIGWu98OmhTxAMUKjn8bZkHQU7k9jzzn4pBSh8yvHajDkHGGu/8OmgTw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed'));
+  } catch (e) {
+    console.log('Could not play sound');
+  }
+}
+
+function goForgotPassword(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  
+  if(!email) {
+    showMessage('Enter your email', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('📧 Sending reset code...', 'success');
+    await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ Check your email for reset code', 'success');
+    
+    document.getElementById('resetEmailSection').style.display = 'none';
+    document.getElementById('resetCodeSection').style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+async function verifyResetCode(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  const code = document.getElementById('resetCode').value.trim();
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmNewPassword').value;
+  
+  if(!code || code.length !== 6) {
+    showMessage('⚠️ Enter 6-digit code', 'error');
+    return;
+  }
+  
+  if(!newPassword || !confirmPassword) {
+    showMessage('⚠️ Enter new password', 'error');
+    return;
+  }
+  
+  if(newPassword !== confirmPassword) {
+    showMessage('⚠️ Passwords don\'t match', 'error');
+    return;
+  }
+  
+  if(newPassword.length < 6) {
+    showMessage('⚠️ Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('🔍 Verifying code...', 'success');
+    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
+    showMessage('✅ Password reset successful! Please login', 'success');
+    
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('resetEmailSection').style.display = 'block';
+    document.getElementById('resetCodeSection').style.display = 'none';
+    
+    setTimeout(() => {
+      goLogin(null);
+    }, 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+function resendResetCode() {
+  const email = document.getElementById('resetEmail').value.trim();
+  if (email) {
+    apiCall('/api/forgot-password', 'POST', { email })
+      .then(() => showMessage('✅ Code resent!', 'success'))
+      .catch(err => showMessage('❌ ' + err.message, 'error'));
+  }
+}
+
+function goSignup(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+}
+
+function goLogin(e) {
+  if(e) e.preventDefault();
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  currentUser = null;
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('user');
+  showLoginPage();
+  showMessage('👋 Logged out', 'success');
+  showLoginForm();
+}
+
+function showLoginForm() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+}
+
+function initializeSearchBar() {
+  const searchBox = document.getElementById('searchBox');
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchBox) {
+    console.warn('Search box not found');
+    return;
+  }
+  
+  console.log('✅ Search bar initialized');
+  
+  searchBox.addEventListener('input', (e) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+    
+    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
+    searchResults.style.display = 'block';
+    
+    searchTimeout = setTimeout(() => {
+      performUserSearch(query);
+    }, 600);
+  });
+  
+  searchBox.addEventListener('focus', (e) => {
+    const query = e.target.value.trim();
+    if (query.length >= 2) {
+      performUserSearch(query);
+    }
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+      hideSearchResults();
+    }
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideSearchResults();
+      searchBox.blur();
+    }
+  });
+}
+
+async function performUserSearch(query) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) {
+    console.error('❌ Search results container not found');
+    return;
+  }
+  
+  try {
+    console.log('🔍 Searching for:', query);
+    
+    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+    
+    console.log('📊 Search API response:', data);
+    console.log('📊 Number of users found:', data.users?.length || 0);
+    
+    if (!data.success) {
+      throw new Error('Search failed');
+    }
+    
+    if (data.users && data.users.length > 0) {
+      console.log('✅ Users found:');
+      data.users.forEach((user, index) => {
+        console.log(`  ${index + 1}. @${user.username} - ${user.email}`);
+      });
+    } else {
+      console.log('⚠️ No users found for query:', query);
+    }
+    
+    displaySearchResults(data.users || []);
+  } catch (error) {
+    console.error('❌ Search error:', error);
+    searchResults.innerHTML = `
+      <div class="no-results" style="color:#ff6b6b;">
+        ❌ ${error.message || 'Search failed'}<br>
+        <small style="font-size:12px;color:#888;margin-top:8px;display:block;">
+          Please check your internet connection and try again
+        </small>
+      </div>
+    `;
+    searchResults.style.display = 'block';
+  }
+}
+
+function displaySearchResults(users) {
+  const searchResults = document.getElementById('searchResults');
+  
+  if (!searchResults) return;
+  
+  if (users.length === 0) {
+    searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
+    searchResults.style.display = 'block';
+    return;
+  }
+  
+  console.log(`✅ Displaying ${users.length} search results`);
+  
+  let html = '';
+  users.forEach(user => {
+    const avatarContent = user.profile_pic 
+      ? `<img src="${user.profile_pic}" alt="${user.username}">` 
+      : '👤';
+    
+    html += `
+      <div class="search-result-item" onclick="showUserProfile('${user.id}')">
+        <div class="search-result-avatar">
+          ${avatarContent}
+        </div>
+        <div class="search-result-info">
+          <div class="search-result-username">@${user.username}</div>
+          <div class="search-result-details">${user.registration_number || user.email}</div>
+          ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  searchResults.innerHTML = html;
+  searchResults.style.display = 'block';
+}
+
+function hideSearchResults() {
+  const searchResults = document.getElementById('searchResults');
+  if (searchResults) {
+    searchResults.style.display = 'none';
+  }
+}
+
+function openPhotoGallery() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  
+  input.onchange = function(e) {
+    handlePhotoSelection(e.target.files);
+  };
+  
+  input.click();
+}
+
+function openCamera() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(function(stream) {
+        showMessage('📷 Camera access granted. Taking photo...', 'success');
+        setTimeout(() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.capture = 'environment';
+          input.onchange = function(e) {
+            handlePhotoSelection(e.target.files);
+          };
+          input.click();
+        }, 1000);
+      })
+      .catch(function(error) {
+        console.error('Camera error:', error);
+        showMessage('⚠️ Camera not available. Using gallery instead.', 'error');
+        openPhotoGallery();
+      });
+  } else {
+    showMessage('⚠️ Camera not supported. Using gallery instead.', 'error');
+    openPhotoGallery();
+  }
+}
+
+async function handlePhotoSelection(files) {
+  if (!files.length) return;
+  
+  showMessage('📸 Processing images...', 'success');
+  
+  for (const file of Array.from(files)) {
+    if (!file.type.startsWith('image/')) {
+      showMessage('Please select image files only', 'error');
+      continue;
+    }
+    
+    if (selectedFiles.length >= 5) {
+      showMessage('Maximum 5 photos allowed', 'error');
+      break;
+    }
+    
+    try {
+      const compressedFile = await compressImage(file);
+      selectedFiles.push(compressedFile);
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewUrl = e.target.result;
+        previewUrls.push(previewUrl);
+        displayPhotoPreviews();
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch (error) {
+      console.error('Image processing error:', error);
+      showMessage('Failed to process image: ' + file.name, 'error');
+    }
+  }
+  
+  if (selectedFiles.length > 0) {
+    showMessage(`✅ ${selectedFiles.length} photo(s) ready`, 'success');
+  }
+}
+
+console.log('✅ VibeXpert with Rewards System - All features working on mobile, tablet, and desktop!');
