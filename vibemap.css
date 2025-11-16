@@ -5521,3 +5521,413 @@ body.light-theme .celebration-message {
     justify-content: center;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ==========================================
+   REWARDS SYSTEM STYLES
+   Add these to your existing vibemap.css
+   ========================================== */
+
+/* Reward Task Cards */
+.reward-task-card {
+  background: rgba(15, 25, 45, 0.9);
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  border-radius: 16px;
+  padding: 30px 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+body.light-theme .reward-task-card {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.reward-task-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 116, 163, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.reward-task-card:hover::before {
+  left: 100%;
+}
+
+.reward-task-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #4f74a3;
+  box-shadow: 0 15px 40px rgba(79, 116, 163, 0.3);
+}
+
+.reward-task-card.completed {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.reward-task-card.completed:hover {
+  transform: translateY(-5px);
+}
+
+/* Achievement Cards */
+.reward-achievement-card {
+  background: linear-gradient(135deg, rgba(15, 25, 45, 0.95), rgba(20, 30, 50, 0.95));
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  border-radius: 18px;
+  padding: 30px;
+  transition: all 0.4s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+body.light-theme .reward-achievement-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(245, 247, 250, 0.95));
+}
+
+.reward-achievement-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(79, 116, 163, 0.1), transparent);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.reward-achievement-card:hover {
+  transform: translateY(-8px);
+  border-color: #4f74a3;
+  box-shadow: 0 20px 50px rgba(79, 116, 163, 0.4);
+}
+
+/* Shop Cards */
+.reward-shop-card {
+  background: rgba(15, 25, 45, 0.95);
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  border-radius: 20px;
+  padding: 30px 25px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+body.light-theme .reward-shop-card {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.reward-shop-card:hover {
+  transform: translateY(-12px) scale(1.03);
+  border-color: #4f74a3;
+  box-shadow: 0 20px 50px rgba(79, 116, 163, 0.4);
+}
+
+.reward-shop-card button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(79, 116, 163, 0.5);
+}
+
+.reward-category-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reward-category-badge.cosmetic {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.3));
+  color: #ec4899;
+  border: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+.reward-category-badge.premium {
+  background: linear-gradient(135deg, rgba(254, 202, 87, 0.2), rgba(254, 202, 87, 0.3));
+  color: #feca57;
+  border: 1px solid rgba(254, 202, 87, 0.4);
+}
+
+.reward-category-badge.utility {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.3));
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+/* Leaderboard */
+.leaderboard-container {
+  background: rgba(15, 25, 45, 0.9);
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .leaderboard-container {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  margin-bottom: 12px;
+  background: rgba(20, 30, 50, 0.6);
+  border: 2px solid rgba(79, 116, 163, 0.2);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+body.light-theme .leaderboard-item {
+  background: rgba(245, 247, 250, 0.8);
+}
+
+.leaderboard-item:hover {
+  transform: translateX(8px);
+  border-color: #4f74a3;
+  box-shadow: 0 8px 20px rgba(79, 116, 163, 0.2);
+}
+
+.leaderboard-item.top-rank {
+  background: linear-gradient(135deg, rgba(254, 202, 87, 0.15), rgba(254, 202, 87, 0.1));
+  border-color: rgba(254, 202, 87, 0.5);
+  box-shadow: 0 8px 25px rgba(254, 202, 87, 0.2);
+}
+
+.leaderboard-rank {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 116, 163, 0.2);
+  border: 2px solid rgba(79, 116, 163, 0.4);
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 18px;
+  color: #4f74a3;
+  flex-shrink: 0;
+}
+
+.leaderboard-rank.rank-1,
+.leaderboard-rank.rank-2,
+.leaderboard-rank.rank-3 {
+  background: linear-gradient(135deg, rgba(254, 202, 87, 0.3), rgba(254, 202, 87, 0.2));
+  border-color: #feca57;
+  font-size: 28px;
+  box-shadow: 0 0 20px rgba(254, 202, 87, 0.3);
+}
+
+.leaderboard-trend {
+  font-size: 24px;
+  transition: transform 0.3s ease;
+}
+
+.leaderboard-trend.trend-up {
+  animation: trendUp 1s ease-in-out infinite;
+}
+
+.leaderboard-trend.trend-down {
+  animation: trendDown 1s ease-in-out infinite;
+}
+
+@keyframes trendUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes trendDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+/* Points Display */
+.points-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(254, 202, 87, 0.2), rgba(254, 202, 87, 0.1));
+  border: 2px solid rgba(254, 202, 87, 0.4);
+  padding: 8px 18px;
+  border-radius: 25px;
+  font-weight: 700;
+  color: #feca57;
+  font-size: 16px;
+  box-shadow: 0 0 20px rgba(254, 202, 87, 0.3);
+  animation: pointsPulse 2s ease-in-out infinite;
+}
+
+@keyframes pointsPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(254, 202, 87, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(254, 202, 87, 0.5); }
+}
+
+/* Progress Bars */
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(79, 116, 163, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f74a3, #8da4d3, #4f74a3);
+  background-size: 200% 100%;
+  animation: progressShine 2s linear infinite;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+@keyframes progressShine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Reward Unlock Animation */
+@keyframes rewardUnlock {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(20deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.reward-unlocked {
+  animation: rewardUnlock 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Daily Task Completion Effect */
+.task-complete-effect {
+  position: relative;
+}
+
+.task-complete-effect::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 80px;
+  color: #22c55e;
+  animation: checkmark 0.6s ease;
+  pointer-events: none;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* Confetti Effect (Optional) */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: #feca57;
+  position: absolute;
+  animation: confettiFall 3s ease-out forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .reward-task-card,
+  .reward-achievement-card,
+  .reward-shop-card {
+    padding: 20px 15px;
+  }
+  
+  .leaderboard-item {
+    padding: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .leaderboard-rank {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .leaderboard-rank.rank-1,
+  .leaderboard-rank.rank-2,
+  .leaderboard-rank.rank-3 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .reward-category-badge {
+    font-size: 9px;
+    padding: 4px 10px;
+  }
+  
+  .points-display {
+    font-size: 14px;
+    padding: 6px 14px;
+  }
+}
