@@ -41,7 +41,7 @@
         <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
       </form>
 
-      <!-- FORGOT PASSWORD FORM - UPDATED VERSION -->
+      <!-- FORGOT PASSWORD FORM -->
       <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
         <h2>Reset Password</h2>
         
@@ -142,55 +142,6 @@
           </label>
         </div>
 
-        <!-- TYPE SELECTION -->
-        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Type</label>
-        <div style="display:flex; gap:15px; margin-bottom:15px;">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="radio" name="type" value="Extrovert" required style="cursor:pointer;">
-            😊 Extrovert
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="radio" name="type" value="Introvert" style="cursor:pointer;">
-            🎧 Introvert
-          </label>
-        </div>
-
-        <!-- INTERESTS SELECTION -->
-        <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Interested In</label>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Games" style="cursor:pointer;">
-            🎮 Games
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Sports" style="cursor:pointer;">
-            ⚽ Sports
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Music" style="cursor:pointer;">
-            🎵 Music
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Gossips" style="cursor:pointer;">
-            💬 Gossips
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Photos" style="cursor:pointer;">
-            📸 Photos
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Food" style="cursor:pointer;">
-            🍕 Food
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-            <input type="checkbox" name="interests" value="Love" style="cursor:pointer;">
-            ❤️ Love
-          </label>
-        </div>
-
-        <!-- HOBBIES -->
-        <input type="text" id="signupHobbies" placeholder="E.g. painting, football, coding" style="margin-bottom:14px; width:100%; padding:14px 16px; border:2px solid rgba(79, 116, 163, 0.3); background:rgba(20, 30, 50, 0.8); color:white; border-radius:10px; font-size:15px; transition:all 0.3s ease;">
-
         <!-- PASSWORD -->
         <input type="password" id="signupPass" placeholder="Password" required>
         <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
@@ -219,7 +170,7 @@
       <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="#" class="nav-link" onclick="showPage('badges', event)">Badges</a>
+      <a href="#" class="nav-link" onclick="showPage('rewards', event)">Rewards</a>
     </nav>
 
     <div class="header-right">
@@ -255,7 +206,7 @@
         <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
         <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
         <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-        <div class="menu-item" onclick="showPage('badges', event)">🏆 Badges</div>
+        <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
         <hr>
         <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
         <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
@@ -417,9 +368,9 @@
       <div id="postsFeed" class="posts-feed"></div>
     </section>
 
-    <!-- BADGES PAGE -->
-    <section id="badges" class="page" style="display:none;">
-      <!-- Content loaded dynamically by JS -->
+    <!-- REWARDS PAGE (REPLACES BADGES) -->
+    <section id="rewards" class="page" style="display:none;">
+      <!-- Content loaded dynamically by loadRewardsPage() -->
     </section>
 
   </main>
