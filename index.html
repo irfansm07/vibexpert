@@ -1,735 +1,641 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="google-adsense-account" content="ca-pub-2362238474761949">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VibeXpert - Connect With Your College</title>
-  <link rel="stylesheet" href="vibemap.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0f2e 25%, #2d1b4d 50%, #1a0f2e 75%, #0a0a0a 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 25, 45, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(79, 116, 163, 0.2);
+      border-radius: 20px;
+      padding: 45px 35px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.6s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 44px;
+      font-weight: 800;
+      text-align: center;
+      background: linear-gradient(135deg, #4f74a3, #8da4d3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #a0a0a0;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+
+    .message {
+      min-height: 20px;
+      margin-bottom: 15px;
+    }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      animation: slideDown 0.3s ease;
+    }
+
+    .msg-success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .msg-error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    form {
+      display: none;
+    }
+
+    form.active {
+      display: block;
+    }
+
+    h2 {
+      font-size: 20px;
+      color: #4f74a3;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      border: 2px solid rgba(79, 116, 163, 0.3);
+      background: rgba(20, 30, 50, 0.8);
+      color: white;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4f74a3;
+      box-shadow: 0 0 15px rgba(79, 116, 163, 0.3);
+    }
+
+    input::placeholder {
+      color: #666;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #4f74a3, #8da4d3);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(79, 116, 163, 0.2);
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(79, 116, 163, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    p {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #a0a0a0;
+    }
+
+    a {
+      color: #4f74a3;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    a:hover {
+      color: #8da4d3;
+    }
+
+    .gender-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .gender-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #d0d0d0;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(79, 116, 163, 0.08);
+      border: 1px solid rgba(79, 116, 163, 0.25);
+      flex: 1;
+      transition: all 0.3s ease;
+    }
+
+    .gender-label:hover {
+      background: rgba(79, 116, 163, 0.15);
+      border-color: #4f74a3;
+    }
+
+    input[type="radio"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #4f74a3;
+      border-radius: 50%;
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(79, 116, 163, 0.1), rgba(141, 164, 211, 0.1));
+      transition: all 0.3s ease;
+      margin: 0;
+    }
+
+    input[type="radio"]:checked {
+      background: linear-gradient(135deg, #4f74a3, #8da4d3);
+      border-color: #8da4d3;
+      box-shadow: 0 0 20px rgba(79, 116, 163, 0.6);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .api-status {
+      text-align: center;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .api-status.online {
+      background: rgba(34, 197, 94, 0.1);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      display: block;
+    }
+
+    .api-status.offline {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      display: block;
+    }
+  </style>
 </head>
-<body class="dark-theme">
-
-<!-- Add this to your HTML file -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-<!-- Socket.io CDN -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
-<!-- LIVE ACTIVITY NOTIFICATION -->
-<div id="liveActivityNotif" class="live-activity-notif">
-  <div class="notif-dot"></div>
-  <span id="notifText">Loading...</span>
-</div>
-
-<!-- ========================================
-     NEW: ABOUT US LANDING PAGE
-     ======================================== -->
-<div id="aboutUsPage" class="about-us-page">
-  <!-- Scroll Progress Bar -->
-  <div class="scroll-progress-bar">
-    <div class="scroll-progress-fill" id="scrollProgressFill"></div>
-  </div>
-
-  <!-- Hero Section -->
-  <section class="about-hero">
-    <div class="about-hero-content">
-      <div class="about-logo-large">VibeXpert</div>
-      <h1 class="about-hero-title">Connect. Share. Vibe.</h1>
-      <p class="about-hero-subtitle">The Ultimate Social Platform for College Students</p>
-      <div class="about-scroll-indicator">
-        <span>Scroll to Explore</span>
-        <div class="scroll-arrow">↓</div>
-      </div>
-    </div>
-    <div class="about-hero-background">
-      <div class="floating-element" style="top: 10%; left: 10%;">🎓</div>
-      <div class="floating-element" style="top: 20%; right: 15%;">📚</div>
-      <div class="floating-element" style="bottom: 20%; left: 20%;">🎨</div>
-      <div class="floating-element" style="bottom: 15%; right: 10%;">🎵</div>
-      <div class="floating-element" style="top: 50%; left: 5%;">💬</div>
-      <div class="floating-element" style="top: 30%; right: 8%;">🚀</div>
-    </div>
-  </section>
-
-  <!-- What is VibeXpert -->
-  <section class="about-section">
-    <div class="about-container">
-      <h2 class="about-section-title">What is VibeXpert?</h2>
-      <div class="about-grid">
-        <div class="about-card reveal-on-scroll">
-          <div class="about-card-icon">🌍</div>
-          <h3>500+ Universities</h3>
-          <p>Connect with students from IITs, NITs, VITs, and universities across India</p>
-        </div>
-        <div class="about-card reveal-on-scroll">
-          <div class="about-card-icon">💬</div>
-          <h3>Real-Time Chat</h3>
-          <p>Engage in live conversations with your college community instantly</p>
-        </div>
-        <div class="about-card reveal-on-scroll">
-          <div class="about-card-icon">📸</div>
-          <h3>Rich Media Sharing</h3>
-          <p>Share photos, videos, music, and stickers to express yourself</p>
-        </div>
-        <div class="about-card reveal-on-scroll">
-          <div class="about-card-icon">🏆</div>
-          <h3>Rewards System</h3>
-          <p>Earn points, unlock achievements, and climb the leaderboard</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="about-section about-features-section">
-    <div class="about-container">
-      <h2 class="about-section-title">Powerful Features</h2>
-      
-      <div class="feature-showcase reveal-on-scroll">
-        <div class="feature-showcase-image">
-          <div class="feature-mockup">
-            <div class="mockup-header">
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-            </div>
-            <div class="mockup-content">
-              <div class="mockup-post">
-                <div class="mockup-avatar">👤</div>
-                <div class="mockup-text">
-                  <div class="mockup-line"></div>
-                  <div class="mockup-line short"></div>
-                </div>
-              </div>
-              <div class="mockup-image"></div>
-              <div class="mockup-actions">
-                <span>❤️</span>
-                <span>💬</span>
-                <span>🔄</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="feature-showcase-text">
-          <h3>📱 Enhanced Post Creation</h3>
-          <ul>
-            <li>✨ Add photos, videos, and audio</li>
-            <li>🎵 Attach music from our library</li>
-            <li>🎨 Decorate with fun stickers</li>
-            <li>✂️ Crop and edit your media</li>
-            <li>🌍 Share to profile or community</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="feature-showcase feature-showcase-reverse reveal-on-scroll">
-        <div class="feature-showcase-text">
-          <h3>🎓 College Communities</h3>
-          <ul>
-            <li>🔐 Verified college email system</li>
-            <li>💬 Private community chat rooms</li>
-            <li>📢 Share updates with classmates</li>
-            <li>👥 Real-time online indicators</li>
-            <li>🏅 Earn badges for engagement</li>
-          </ul>
-        </div>
-        <div class="feature-showcase-image">
-          <div class="feature-mockup">
-            <div class="mockup-header">
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-            </div>
-            <div class="mockup-content">
-              <div class="mockup-chat-message left">
-                <div class="chat-bubble">Hey! Anyone up for study group?</div>
-              </div>
-              <div class="mockup-chat-message right">
-                <div class="chat-bubble">Count me in! 📚</div>
-              </div>
-              <div class="mockup-chat-message left">
-                <div class="chat-bubble">Library at 4pm?</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="feature-showcase reveal-on-scroll">
-        <div class="feature-showcase-image">
-          <div class="feature-mockup">
-            <div class="mockup-header">
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-              <span class="mockup-dot"></span>
-            </div>
-            <div class="mockup-content">
-              <div class="reward-card-mockup">
-                <div class="reward-icon">🏆</div>
-                <div class="reward-title">Daily Streak</div>
-                <div class="reward-progress">
-                  <div class="progress-bar-mockup"></div>
-                </div>
-                <div class="reward-points">+50 pts</div>
-              </div>
-              <div class="reward-card-mockup">
-                <div class="reward-icon">⭐</div>
-                <div class="reward-title">Content Creator</div>
-                <div class="reward-progress">
-                  <div class="progress-bar-mockup" style="width: 70%"></div>
-                </div>
-                <div class="reward-points">+200 pts</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="feature-showcase-text">
-          <h3>🎁 Rewards & Achievements</h3>
-          <ul>
-            <li>🎯 Complete daily tasks</li>
-            <li>🏅 Unlock achievements</li>
-            <li>💎 Redeem exclusive rewards</li>
-            <li>📊 Compete on leaderboards</li>
-            <li>✨ Premium themes & badges</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Stats Section -->
-  <section class="about-section about-stats-section">
-    <div class="about-container">
-      <h2 class="about-section-title">Growing Community</h2>
-      <div class="stats-grid reveal-on-scroll">
-        <div class="stat-item">
-          <div class="stat-number" data-count="500">0</div>
-          <div class="stat-label">Universities</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-count="10000">0</div>
-          <div class="stat-label">Active Students</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-count="50000">0</div>
-          <div class="stat-label">Posts Shared</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-count="100000">0</div>
-          <div class="stat-label">Messages Sent</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why Choose Section -->
-  <section class="about-section">
-    <div class="about-container">
-      <h2 class="about-section-title">Why Choose VibeXpert?</h2>
-      <div class="why-choose-grid">
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">🔒</div>
-          <h4>Safe & Secure</h4>
-          <p>Verified college emails ensure you connect with real students</p>
-        </div>
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">⚡</div>
-          <h4>Lightning Fast</h4>
-          <p>Real-time updates and instant messaging for seamless communication</p>
-        </div>
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">🎨</div>
-          <h4>Express Yourself</h4>
-          <p>Rich media tools to share your college life authentically</p>
-        </div>
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">🌙</div>
-          <h4>Dark/Light Mode</h4>
-          <p>Beautiful themes that adapt to your preference</p>
-        </div>
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">📱</div>
-          <h4>Mobile Optimized</h4>
-          <p>Smooth experience on any device, anywhere</p>
-        </div>
-        <div class="why-choose-item reveal-on-scroll">
-          <div class="why-choose-icon">🆓</div>
-          <h4>100% Free</h4>
-          <p>All features available at no cost to students</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="about-section about-testimonials-section">
-    <div class="about-container">
-      <h2 class="about-section-title">What Students Say</h2>
-      <div class="testimonials-grid">
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-avatar">👨‍🎓</div>
-          <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The community chat is amazing for study groups."</p>
-          <div class="testimonial-author">Rahul S.</div>
-          <div class="testimonial-college">IIT Delhi</div>
-          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-        </div>
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-avatar">👩‍🎓</div>
-          <p class="testimonial-text">"Love the rewards system! It's fun to earn badges and compete with friends. The interface is so clean!"</p>
-          <div class="testimonial-author">Priya M.</div>
-          <div class="testimonial-college">NIT Bhopal</div>
-          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-        </div>
-        <div class="testimonial-card reveal-on-scroll">
-          <div class="testimonial-avatar">👨‍💻</div>
-          <p class="testimonial-text">"Finally, a platform designed for college students! The music and sticker features are super creative."</p>
-          <div class="testimonial-author">Arjun K.</div>
-          <div class="testimonial-college">VIT Vellore</div>
-          <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="about-section about-cta-section">
-    <div class="about-container">
-      <div class="cta-box reveal-on-scroll">
-        <h2>Ready to Join the Vibe?</h2>
-        <p>Connect with thousands of students from 500+ universities</p>
-        <div class="cta-features">
-          <span>✅ Free Forever</span>
-          <span>✅ Verified Communities</span>
-          <span>✅ Rich Features</span>
-        </div>
-        <button class="cta-button" onclick="showAuthPopup()">
-          Get Started Now →
-        </button>
-        <p class="cta-note">🔒 Your college email keeps you safe</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="about-footer">
-    <div class="about-container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>VibeXpert</h3>
-          <p>The ultimate social platform for college students across India</p>
-        </div>
-        <div class="footer-section">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="#" onclick="showAuthPopup()">Join Now</a></li>
-            <li><a href="#" onclick="showAuthPopup()">Login</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>Contact</h4>
-          <p>📧 support@vibexpert.com</p>
-          <p>📱 +91-9347702626</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 VibeXpert. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-</div>
-
-<!-- AUTH POPUP MODAL -->
-<div id="authPopup" class="auth-popup" style="display:none;">
-  <div class="auth-popup-overlay" onclick="closeAuthPopup()"></div>
-  <div class="auth-popup-content">
-    <button class="auth-popup-close" onclick="closeAuthPopup()">&times;</button>
+<body>
+  <div class="auth-container">
+    <h1>VibeXpert</h1>
+    <p class="subtitle">Connect With The Verse</p>
     
-    <div class="auth-container">
-      <div class="auth-box">
-        <h1>VibeXpert</h1>
-        <p>Connect With The Verse</p>
-        
-        <div id="message"></div>
+    <div id="apiStatus" class="api-status"></div>
+    <div id="message" class="message"></div>
 
-        <!-- LOGIN FORM -->
-        <form id="loginForm" onsubmit="login(event)">
-          <h2>Login</h2>
-          <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
-          <input type="password" id="loginPassword" placeholder="Password" required>
-          <button type="submit">Login</button>
-          <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
-          <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
-        </form>
+    <!-- LOGIN FORM -->
+    <form id="loginForm" class="active">
+      <h2>Login</h2>
+      <input type="text" id="loginEmail" placeholder="Email or Registration Number" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button type="submit">Login</button>
+      <p>Don't have an account? <a onclick="showSignup()">Sign Up</a></p>
+      <p><a onclick="showForgotPassword()">Forgot Password?</a></p>
+    </form>
 
-        <!-- FORGOT PASSWORD FORM -->
-        <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
-          <h2>Reset Password</h2>
-          
-          <div id="resetEmailSection">
-            <p style="color:#888; font-size:14px; margin-bottom:15px;">
-              Enter your email address and we'll send you a verification code.
-            </p>
-            <input type="email" id="resetEmail" placeholder="Enter your email" required>
-            <button type="button" onclick="handleForgotPassword(event)">📧 Send Reset Code</button>
-          </div>
-          
-          <div id="resetCodeSection" style="display:none;">
-            <p style="color:#888; font-size:14px; margin-bottom:15px;">
-              📧 Check your email for the 6-digit verification code.
-            </p>
-            <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required style="margin-bottom:15px; font-size:20px; letter-spacing:5px; text-align:center; font-weight:bold;">
-            <input type="password" id="newPassword" placeholder="New Password" required minlength="6" style="margin-bottom:15px;">
-            <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required minlength="6" style="margin-bottom:15px;">
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button type="button" onclick="verifyResetCode(event)" style="flex:1; min-width:120px;">🔓 Reset Password</button>
-              <button type="button" onclick="resendResetCode()" style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;">📧 Resend Code</button>
-            </div>
-          </div>
-          
-          <p><a href="#" onclick="goLogin(event)">← Back to Login</a></p>
-        </form>
-
-        <!-- SIGNUP FORM -->
-        <form id="signupForm" onsubmit="signup(event)" style="display:none;">
-          <h2>Create Account</h2>
-          <input type="text" id="signupName" placeholder="Full Name" required>
-          <input type="email" id="signupEmail" placeholder="Email" required>
-          <input type="text" id="signupReg" placeholder="Registration Number" required>
-          
-          <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
-          <div style="display:flex; gap:15px; margin-bottom:15px;">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-              <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
-              👨 Male
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-              <input type="radio" name="gender" value="Female" style="cursor:pointer;">
-              👩 Female
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-              <input type="radio" name="gender" value="Other" style="cursor:pointer;">
-              🌈 Other
-            </label>
-          </div>
-
-          <input type="password" id="signupPass" placeholder="Password" required>
-          <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
-          
-          <button type="submit">Create Account</button>
-          <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN PAGE (Hidden until logged in) -->
-<div id="mainPage" class="main-page" style="display:none;">
-  
-  <!-- HEADER -->
-  <header class="header">
-    <div class="logo" onclick="goHome()">VibeXpert</div>
-    
-    <div class="live-counter">
-      <span class="live-badge">🔴 Live</span>
-      <span id="liveUsersCount">0 Active</span>
-    </div>
-    
-    <nav class="nav">
-      <a href="#" class="nav-link active" onclick="showPage('home', event)">Home</a>
-      <a href="#" class="nav-link" onclick="showPage('communities', event)">Communities</a>
-      <a href="#" class="nav-link" onclick="showPage('posts', event)">Posts</a>
-      <a href="#" class="nav-link" onclick="showPage('rewards', event)">Rewards</a>
-    </nav>
-
-    <div class="header-right">
-      <div class="search-container">
-        <input type="text" class="search-box" placeholder="Search users..." id="searchBox">
-        <div class="search-results" id="searchResults" style="display:none;"></div>
-      </div>
-      <span class="user-name" id="userName">Hi, User</span>
+    <!-- SIGNUP FORM -->
+    <form id="signupForm">
+      <h2>Create Account</h2>
+      <input type="text" id="signupName" placeholder="Full Name" required>
+      <input type="email" id="signupEmail" placeholder="College Email" required>
+      <input type="text" id="signupReg" placeholder="Registration Number" required>
       
-      <button class="options-btn" onclick="toggleOptionsMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="options-menu" id="optionsMenu" style="display:none;">
-        <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
-        <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
-        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
-        <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
-        <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
-        <hr>
-        <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+      <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
+      <div class="gender-container">
+        <label class="gender-label">
+          <input type="radio" name="gender" value="Male" required>
+          👨 Male
+        </label>
+        <label class="gender-label">
+          <input type="radio" name="gender" value="Female">
+          👩 Female
+        </label>
+        <label class="gender-label">
+          <input type="radio" name="gender" value="Other">
+          🌈 Other
+        </label>
       </div>
 
-      <button class="hamburger-btn" onclick="toggleHamburgerMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
-        <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
-        <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
-        <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-        <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
-        <hr>
-        <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
-        <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
-        <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
-        <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
-        <div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
-        <hr>
-        <div class="menu-item logout" onclick="logout()">🚪 Logout</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- CONTENT -->
-  <main class="content">
-    <!-- HOME -->
-    <section id="home" class="page active">
-      <div class="hero">
-        <h1>Welcome to VibeXpert</h1>
-        <p>Connect with students across 500+ universities!</p>
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <span class="stat-num" id="heroOnline">0</span>
-            <span class="stat-label">Online Now</span>
-          </div>
-          <div class="hero-stat">
-            <span class="stat-num" id="heroPostsToday">0</span>
-            <span class="stat-label">Posts Today</span>
-          </div>
-          <div class="hero-stat">
-            <span class="stat-num" id="heroChats">0</span>
-            <span class="stat-label">Active Chats</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="trending-section">
-        <h2 class="title">🔥 Trending Now</h2>
-        <div id="trendingContainer" class="trending-grid"></div>
-      </div>
-
-      <h2 class="title">500+ Active Universities</h2>
-      <div class="cards">
-        <div class="card" onclick="selectUniversity('nit')">
-          <div class="icon">🏛️</div>
-          <h3>NIT Colleges</h3>
-          <p>National Institutes of Technology</p>
-          <button>Explore</button>
-        </div>
-        <div class="card" onclick="selectUniversity('iit')">
-          <div class="icon">🏰</div>
-          <h3>IIT Colleges</h3>
-          <p>Indian Institutes of Technology</p>
-          <button>Explore</button>
-        </div>
-        <div class="card" onclick="selectUniversity('vit')">
-          <div class="icon">🎓</div>
-          <h3>VIT Colleges</h3>
-          <p>VIT Bhopal & Other Campuses</p>
-          <button>Explore</button>
-        </div>
-        <div class="card" onclick="selectUniversity('other')">
-          <div class="icon">🌟</div>
-          <h3>Other Universities</h3>
-          <p>Central & State Universities</p>
-          <button>Explore</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- COLLEGE LIST -->
-    <section id="collegeList" class="page" style="display:none;">
-      <div class="college-header">
-        <h2 id="collegeTitle">Colleges</h2>
-        <input type="text" id="searchCollege" placeholder="Search colleges..." onkeyup="searchColleges()">
-      </div>
-      <div id="collegeContainer" class="colleges"></div>
-      <div id="pagination" class="pagination"></div>
-      <button class="back-btn" onclick="backToUniversities()">← Back</button>
-    </section>
-
-    <!-- COMMUNITIES -->
-    <section id="communities" class="page" style="display:none;">
-      <h2 class="title">Join Communities</h2>
-      <div id="communitiesContainer"></div>
-      <div id="chatSection" style="display:none; margin-top:40px;">
-        <div class="chat-header">
-          <h3>Community Chat</h3>
-          <div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
-        </div>
-        <div class="chat-box">
-          <div class="chat-messages" id="chatMessages"></div>
-          <div class="chat-input-box">
-            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
-            <button class="send-btn" onclick="sendChatMessage()">Send</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- POSTS -->
-    <section id="posts" class="page" style="display:none;">
-      <h2 class="title">My Posts</h2>
+      <input type="password" id="signupPass" placeholder="Password (min 6 characters)" required minlength="6">
+      <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
       
-      <div class="enhanced-post-creator">
-        <textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
-        <div id="selectedAssets" class="selected-assets"></div>
-        <div id="photoPreviewContainer" class="media-preview"></div>
-        
-        <div id="postDestinationDisplay" class="post-destination-display">
-          📍 Posting to: <span id="currentDestination">My Profile</span>
-          <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
-        </div>
-        
-        <div class="post-actions-row">
-          <div class="post-features">
-            <button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
-            <button type="button" class="feature-btn" onclick="openCamera()">📷 Camera</button>
-            <button type="button" class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
-            <button type="button" class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
-          </div>
-          <button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
-        </div>
+      <button type="submit">Create Account</button>
+      <p>Already have an account? <a onclick="showLogin()">Login</a></p>
+    </form>
+
+    <!-- FORGOT PASSWORD FORM -->
+    <form id="forgotForm">
+      <h2>Reset Password</h2>
+      
+      <div id="emailSection">
+        <p style="color:#888; font-size:14px; margin-bottom:15px;">
+          Enter your email to receive a verification code.
+        </p>
+        <input type="email" id="resetEmail" placeholder="Your Email" required>
+        <button type="button" onclick="sendResetCode()">📧 Send Code</button>
       </div>
       
-      <div id="postsFeed" class="posts-feed"></div>
-    </section>
-
-    <!-- REWARDS -->
-    <section id="rewards" class="page" style="display:none;"></section>
-  </main>
-
-  <footer>
-    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
-  </footer>
-</div>
-
-<!-- MODALS -->
-<div id="verifyModal" class="modal" style="display:none;"></div>
-
-<div id="postDestinationModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
-    <h2>Where to Post?</h2>
-    <div class="destination-options">
-      <div class="destination-option" onclick="selectPostDestination('profile')">
-        <div class="destination-icon">👤</div>
-        <div class="destination-info">
-          <h3>My Profile</h3>
-          <p>Only visible on your personal profile</p>
-        </div>
+      <div id="codeSection" style="display:none;">
+        <p style="color:#888; font-size:14px; margin-bottom:15px;">
+          📧 Check your email for the 6-digit code.
+        </p>
+        <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" required>
+        <input type="password" id="newPassword" placeholder="New Password" required minlength="6">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+        <button type="button" onclick="verifyResetCode()">🔓 Reset Password</button>
+        <button type="button" onclick="resendCode()" style="background:rgba(79,116,163,0.2); margin-top:10px;">📧 Resend Code</button>
       </div>
-      <div class="destination-option" onclick="selectPostDestination('community')">
-        <div class="destination-icon">🌍</div>
-        <div class="destination-info">
-          <h3>Community Feed</h3>
-          <p>Share with your college community</p>
-        </div>
-      </div>
-    </div>
+      
+      <p><a onclick="showLogin()">← Back to Login</a></p>
+    </form>
   </div>
-</div>
 
-<div id="musicSelectorModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
-    <h2>Add Music to Your Post</h2>
-    <div id="musicSelector" class="music-selector"></div>
-  </div>
-</div>
+  <script>
+    // Configuration
+    const API_URL = 'https://vibexpert-backend-main.onrender.com';
+    const API_TIMEOUT = 30000; // 30 seconds
+    let apiOnline = false;
 
-<div id="stickerSelectorModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('stickerSelectorModal')">&times;</span>
-    <h2>Add Stickers</h2>
-    <div id="stickerSelector" class="sticker-selector"></div>
-  </div>
-</div>
+    // Check API status on load
+    async function checkAPIStatus() {
+      const status = document.getElementById('apiStatus');
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${API_URL}/api/health`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          apiOnline = true;
+          status.className = 'api-status online';
+          status.textContent = '✅ Server Connected';
+          setTimeout(() => status.style.display = 'none', 3000);
+        } else {
+          throw new Error('Server unavailable');
+        }
+      } catch (error) {
+        apiOnline = false;
+        status.className = 'api-status offline';
+        status.textContent = '⚠️ Server starting up... Please wait 30 seconds and try again';
+        console.error('API Status:', error);
+      }
+    }
 
-<div id="photoEditorModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('photoEditorModal')">&times;</span>
-    <h2>Edit Photo</h2>
-    <div class="photo-editor">
-      <div class="editor-preview">
-        <img id="editImage" src="" alt="Edit Preview">
-      </div>
-      <div class="editor-controls">
-        <div class="filter-buttons">
-          <button class="filter-btn" onclick="applyFilter('normal')">Normal</button>
-          <button class="filter-btn" onclick="applyFilter('vintage')">Vintage</button>
-          <button class="filter-btn" onclick="applyFilter('clarendon')">Clarendon</button>
-          <button class="filter-btn" onclick="applyFilter('moon')">Moon</button>
-          <button class="filter-btn" onclick="applyFilter('lark')">Lark</button>
-          <button class="filter-btn" onclick="applyFilter('reyes')">Reyes</button>
-        </div>
-        <div class="editor-actions">
-          <button class="btn-secondary" onclick="resetFilters()">Reset</button>
-          <button class="btn-primary" onclick="saveEditedPhoto()">Save Changes</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    // API Call with better error handling
+    async function apiCall(endpoint, method = 'GET', body = null) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+      
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal
+      };
+      
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+      
+      try {
+        console.log(`📡 ${method} ${endpoint}`);
+        const response = await fetch(`${API_URL}${endpoint}`, options);
+        clearTimeout(timeoutId);
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || data.message || 'Request failed');
+        }
+        
+        console.log(`✅ Success: ${endpoint}`);
+        return data;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error(`❌ ${endpoint}:`, error);
+        
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - server may be starting up. Please wait 30 seconds and try again.');
+        }
+        
+        if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION')) {
+          throw new Error('Connection failed - server may be starting up. Please wait 30 seconds and try again.');
+        }
+        
+        throw error;
+      }
+    }
 
-<div id="cropEditorModal" class="modal" style="display:none;">
-  <div class="modal-box" style="max-width: 800px;">
-    <span class="close" onclick="closeModal('cropEditorModal')">&times;</span>
-    <h2>✂️ Crop Photo</h2>
-    <div class="crop-container">
-      <div class="crop-preview">
-        <img id="cropImage" src="" alt="Crop preview">
-      </div>
-      <div class="crop-controls">
-        <div class="crop-aspect-ratios">
-          <h4>Aspect Ratio:</h4>
-          <div class="aspect-ratio-buttons">
-            <button class="aspect-ratio-btn active" data-ratio="free">Free</button>
-            <button class="aspect-ratio-btn" data-ratio="1">1:1</button>
-            <button class="aspect-ratio-btn" data-ratio="16/9">16:9</button>
-            <button class="aspect-ratio-btn" data-ratio="4/3">4:3</button>
-            <button class="aspect-ratio-btn" data-ratio="3/2">3:2</button>
-          </div>
-        </div>
-        <div class="crop-actions">
-          <button class="btn-secondary" onclick="rotateImage()">🔄 Rotate</button>
-          <button class="btn-secondary" onclick="resetCrop()">↩️ Reset</button>
-          <button class="btn-primary" onclick="applyCrop()">💾 Apply Crop</button>
-          <button class="btn-secondary" onclick="closeModal('cropEditorModal')">❌ Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    // Show message
+    function showMessage(text, type) {
+      const msgBox = document.getElementById('message');
+      const div = document.createElement('div');
+      div.className = `msg msg-${type}`;
+      div.textContent = text;
+      msgBox.innerHTML = '';
+      msgBox.appendChild(div);
+      setTimeout(() => div.remove(), 5000);
+    }
 
-<div id="contactModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('contactModal')">&times;</span>
-    <h2>Contact Us</h2>
-    <p>📧 Email: support@vibexpert.com</p>
-    <p>📱 Phone: +91-9347702626</p>
-    <p>💬 Live Chat: 24/7</p>
-  </div>
-</div>
+    // Form switching
+    function showLogin() {
+      document.querySelectorAll('form').forEach(f => f.classList.remove('active'));
+      document.getElementById('loginForm').classList.add('active');
+    }
 
-<div id="complaintModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('complaintModal')">&times;</span>
-    <h2>Submit Complaint</h2>
-    <textarea id="complaintText" placeholder="Describe your complaint..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
-    <button onclick="submitComplaint()">Submit Complaint</button>
-  </div>
-</div>
+    function showSignup() {
+      document.querySelectorAll('form').forEach(f => f.classList.remove('active'));
+      document.getElementById('signupForm').classList.add('active');
+    }
 
-<script src="vibemap.js"></script>
+    function showForgotPassword() {
+      document.querySelectorAll('form').forEach(f => f.classList.remove('active'));
+      document.getElementById('forgotForm').classList.add('active');
+      document.getElementById('emailSection').style.display = 'block';
+      document.getElementById('codeSection').style.display = 'none';
+    }
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      if (!email || !password) {
+        return showMessage('⚠️ Please fill all fields', 'error');
+      }
+      
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Logging in<span class="loading-spinner"></span>';
+        showMessage('🔐 Logging in...', 'success');
+        
+        const data = await apiCall('/api/login', 'POST', { email, password });
+        
+        showMessage('✅ Login successful! Redirecting...', 'success');
+        
+        // Store auth data
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect to main page after 1 second
+        setTimeout(() => {
+          window.location.href = 'index.html'; // Replace with your main page
+        }, 1000);
+        
+      } catch (error) {
+        showMessage('❌ Login failed: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Login';
+      }
+    });
+
+    // Signup
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const registrationNumber = document.getElementById('signupReg').value.trim();
+      const gender = document.querySelector('input[name="gender"]:checked')?.value;
+      const password = document.getElementById('signupPass').value;
+      const confirm = document.getElementById('signupConfirm').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      
+      if (!username || !email || !registrationNumber || !gender || !password || !confirm) {
+        return showMessage('⚠️ Please fill all fields', 'error');
+      }
+      
+      if (password !== confirm) {
+        return showMessage('⚠️ Passwords do not match', 'error');
+      }
+      
+      if (password.length < 6) {
+        return showMessage('⚠️ Password must be at least 6 characters', 'error');
+      }
+      
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Creating account<span class="loading-spinner"></span>';
+        showMessage('📝 Creating account...', 'success');
+        
+        await apiCall('/api/register', 'POST', {
+          username,
+          email,
+          password,
+          registrationNumber,
+          gender
+        });
+        
+        showMessage('🎉 Account created! Please check your email to verify.', 'success');
+        
+        // Reset form
+        document.getElementById('signupForm').reset();
+        
+        // Show login form after 3 seconds
+        setTimeout(showLogin, 3000);
+        
+      } catch (error) {
+        showMessage('❌ Signup failed: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Create Account';
+      }
+    });
+
+    // Send reset code
+    async function sendResetCode() {
+      const email = document.getElementById('resetEmail').value.trim();
+      const btn = event.target;
+      
+      if (!email) {
+        return showMessage('⚠️ Please enter your email', 'error');
+      }
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = 'Sending<span class="loading-spinner"></span>';
+        showMessage('📧 Sending verification code...', 'success');
+        
+        await apiCall('/api/forgot-password', 'POST', { email });
+        
+        showMessage('✅ Code sent! Check your email.', 'success');
+        document.getElementById('emailSection').style.display = 'none';
+        document.getElementById('codeSection').style.display = 'block';
+        
+      } catch (error) {
+        showMessage('❌ Failed: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '📧 Send Code';
+      }
+    }
+
+    // Verify reset code
+    async function verifyResetCode() {
+      const email = document.getElementById('resetEmail').value.trim();
+      const code = document.getElementById('resetCode').value.trim();
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const btn = event.target;
+      
+      if (!code || code.length !== 6) {
+        return showMessage('⚠️ Please enter the 6-digit code', 'error');
+      }
+      
+      if (!newPassword || !confirmPassword) {
+        return showMessage('⚠️ Please enter new password', 'error');
+      }
+      
+      if (newPassword !== confirmPassword) {
+        return showMessage('⚠️ Passwords do not match', 'error');
+      }
+      
+      if (newPassword.length < 6) {
+        return showMessage('⚠️ Password must be at least 6 characters', 'error');
+      }
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = 'Resetting<span class="loading-spinner"></span>';
+        showMessage('🔐 Resetting password...', 'success');
+        
+        await apiCall('/api/reset-password', 'POST', {
+          email,
+          code,
+          newPassword
+        });
+        
+        showMessage('✅ Password reset successful! You can now login.', 'success');
+        
+        // Reset form
+        document.getElementById('forgotForm').reset();
+        
+        // Show login form after 2 seconds
+        setTimeout(showLogin, 2000);
+        
+      } catch (error) {
+        showMessage('❌ Failed: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '🔓 Reset Password';
+      }
+    }
+
+    // Resend code
+    async function resendCode() {
+      const email = document.getElementById('resetEmail').value.trim();
+      const btn = event.target;
+      
+      try {
+        btn.disabled = true;
+        btn.innerHTML = 'Sending<span class="loading-spinner"></span>';
+        showMessage('📧 Resending code...', 'success');
+        
+        await apiCall('/api/forgot-password', 'POST', { email });
+        
+        showMessage('✅ Code resent! Check your email.', 'success');
+        btn.disabled = false;
+        btn.innerHTML = '📧 Resend Code';
+        
+      } catch (error) {
+        showMessage('❌ Failed: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '📧 Resend Code';
+      }
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('🚀 VibeXpert Auth initialized');
+      checkAPIStatus();
+      
+      // Check if already logged in
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        showMessage('✅ Already logged in. Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = 'index.html'; // Replace with your main page
+        }, 1000);
+      }
+    });
+  </script>
 </body>
 </html>
