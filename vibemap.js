@@ -1,3 +1,359 @@
+// ========================================
+// ABOUT US PAGE FUNCTIONALITY
+// Add this at the BEGINNING of vibemap.js
+// ========================================
+
+let hasScrolledToBottom = false;
+let scrollCheckEnabled = true;
+
+// Initialize About Us Page on load
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 VibeXpert initializing...');
+  
+  // Check if user is already logged in
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  
+  if (token && saved) {
+    // User is logged in - hide about page, show main page
+    const aboutPage = document.getElementById('aboutUsPage');
+    const mainPage = document.getElementById('mainPage');
+    if (aboutPage) aboutPage.style.display = 'none';
+    if (mainPage) mainPage.style.display = 'block';
+    
+    try {
+      currentUser = JSON.parse(saved);
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    // User not logged in - show about page
+    showAboutUsPage();
+  }
+  
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
+});
+
+function showAboutUsPage() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  // Initialize about page features
+  initScrollProgress();
+  initRevealOnScroll();
+  initStatsCounter();
+  initScrollDetection();
+}
+
+// Scroll Progress Bar
+function initScrollProgress() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  aboutPage.addEventListener('scroll', updateScrollProgress);
+  window.addEventListener('scroll', updateScrollProgress);
+}
+
+function updateScrollProgress() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  const scrollTop = aboutPage.scrollTop || window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = aboutPage.scrollHeight || document.documentElement.scrollHeight;
+  const clientHeight = aboutPage.clientHeight || window.innerHeight;
+  
+  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  
+  const progressFill = document.getElementById('scrollProgressFill');
+  if (progressFill) {
+    progressFill.style.width = scrolled + '%';
+  }
+  
+  // Check if scrolled to bottom
+  if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
+    hasScrolledToBottom = true;
+    showAuthPopup();
+  }
+}
+
+// Reveal on Scroll Animation
+function initRevealOnScroll() {
+  const revealElements = document.querySelectorAll('.reveal-on-scroll');
+  
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -50px 0px'
+  });
+  
+  revealElements.forEach(element => {
+    revealObserver.observe(element);
+  });
+}
+
+// Animated Stats Counter
+function initStatsCounter() {
+  const statNumbers = document.querySelectorAll('.stat-number');
+  let hasAnimated = false;
+  
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !hasAnimated) {
+        hasAnimated = true;
+        statNumbers.forEach(stat => {
+          const target = parseInt(stat.getAttribute('data-count'));
+          animateCounter(stat, 0, target, 2000);
+        });
+      }
+    });
+  }, {
+    threshold: 0.5
+  });
+  
+  const statsSection = document.querySelector('.stats-grid');
+  if (statsSection) {
+    statsObserver.observe(statsSection);
+  }
+}
+
+function animateCounter(element, start, end, duration) {
+  const range = end - start;
+  const increment = range / (duration / 16);
+  let current = start;
+  
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+    element.textContent = Math.floor(current).toLocaleString();
+  }, 16);
+}
+
+// Scroll Detection for Auth Popup
+function initScrollDetection() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  // Listen for scroll events
+  aboutPage.addEventListener('scroll', checkScrollPosition);
+  window.addEventListener('scroll', checkScrollPosition);
+}
+
+function checkScrollPosition() {
+  if (!scrollCheckEnabled || hasScrolledToBottom) return;
+  
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  const scrollTop = aboutPage.scrollTop || window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = aboutPage.scrollHeight || document.documentElement.scrollHeight;
+  const clientHeight = aboutPage.clientHeight || window.innerHeight;
+  
+  const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  
+  // Show auth popup when user reaches 95% of page
+  if (scrollPercentage >= 95) {
+    hasScrolledToBottom = true;
+    showAuthPopup();
+  }
+}
+
+// Show Auth Popup
+function showAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    scrollCheckEnabled = false; // Disable further scroll checks
+  }
+}
+
+// Close Auth Popup
+function closeAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    scrollCheckEnabled = true; // Re-enable scroll checks
+    hasScrolledToBottom = false; // Reset flag
+  }
+}
+
+// Override existing login function to hide about page after successful login
+const originalLogin = typeof login !== 'undefined' ? login : null;
+
+async function login(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value;
+  if(!email || !password) return showMessage('Fill all fields', 'error');
+  
+  try {
+    showMessage('Logging in...', 'success');
+    const data = await apiCall('/api/login', 'POST', { email, password });
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    showMessage('✅ Login successful!', 'success');
+    
+    setTimeout(() => {
+      // Hide about page and auth popup
+      const aboutPage = document.getElementById('aboutUsPage');
+      const authPopup = document.getElementById('authPopup');
+      const mainPage = document.getElementById('mainPage');
+      
+      if (aboutPage) aboutPage.style.display = 'none';
+      if (authPopup) authPopup.style.display = 'none';
+      if (mainPage) mainPage.style.display = 'block';
+      
+      document.body.style.overflow = 'auto';
+      
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      const form = document.getElementById('loginForm');
+      if (form) form.reset();
+      loadPosts();
+      if (currentUser.college) initializeSocket();
+    }, 800);
+  } catch(error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
+}
+
+// Override existing logout function to show about page
+const originalLogout = typeof logout !== 'undefined' ? logout : null;
+
+function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  currentUser = null;
+  localStorage.clear();
+  
+  // Show about page instead of login page
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  showMessage('👋 Logged out', 'success');
+  
+  // Reset scroll detection
+  hasScrolledToBottom = false;
+  scrollCheckEnabled = true;
+  
+  // Scroll to top of about page
+  window.scrollTo(0, 0);
+  if (aboutPage) aboutPage.scrollTo(0, 0);
+}
+
+// Override signup to handle about page
+async function signup(e) {
+  e.preventDefault();
+  const username = document.getElementById('signupName')?.value.trim();
+  const email = document.getElementById('signupEmail')?.value.trim();
+  const registrationNumber = document.getElementById('signupReg')?.value.trim();
+  const password = document.getElementById('signupPass')?.value;
+  const confirm = document.getElementById('signupConfirm')?.value;
+  
+  if(!username || !email || !registrationNumber || !password || !confirm) {
+    return showMessage('Fill all fields', 'error');
+  }
+  if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
+  
+  try {
+    showMessage('Creating account...', 'success');
+    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
+    showMessage('🎉 Account created! Check email', 'success');
+    const form = document.getElementById('signupForm');
+    if (form) form.reset();
+    setTimeout(() => goLogin(null), 2000);
+  } catch(error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+// Helper function to check if user is on about page
+function isOnAboutPage() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  return aboutPage && aboutPage.style.display !== 'none';
+}
+
+// Add smooth scroll for anchor links
+document.addEventListener('click', function(e) {
+  if (e.target.tagName === 'A' && e.target.getAttribute('href')?.startsWith('#')) {
+    e.preventDefault();
+    const targetId = e.target.getAttribute('href').substring(1);
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+});
+
+// Prevent popup close when clicking inside auth box
+document.addEventListener('click', function(e) {
+  const authPopup = document.getElementById('authPopup');
+  const authBox = document.querySelector('.auth-box');
+  
+  if (authPopup && authPopup.style.display === 'flex') {
+    if (authBox && authBox.contains(e.target)) {
+      e.stopPropagation();
+    }
+  }
+});
+
+console.log('✅ About Us page functionality loaded');
+
+// ========================================
+// CONTINUE WITH ORIGINAL VIBEMAP.JS CODE
+// ========================================
+
+// All your existing VibeXpert code continues here...
+// (The rest of the original vibemap.js file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // VIBEXPERT - COMPLETE FIXED VERSION WITH ALL FEATURES
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
@@ -1935,3 +2291,4 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
+
