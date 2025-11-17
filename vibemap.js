@@ -139,7 +139,7 @@ function initStatsCounter() {
 
 function animateCounter(element, start, end, duration) {
   const range = end - start;
-  const increment = range / (duration / 16);
+  const increment = range / (duration / 30);
   let current = start;
   
   const timer = setInterval(() => {
@@ -175,7 +175,7 @@ function checkScrollPosition() {
   const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
   
   // Show auth popup when user reaches 95% of page
-  if (scrollPercentage >= 95) {
+  if (scrollPercentage >= 97) {
     hasScrolledToBottom = true;
     showAuthPopup();
   }
@@ -2291,4 +2291,5 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
+
 
