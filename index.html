@@ -458,9 +458,28 @@
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to main page after 1 second
+        // Hide auth page and show main page
         setTimeout(() => {
-          window.location.href = 'index.html'; // Replace with your main page
+          document.querySelector('.auth-container').style.display = 'none';
+          
+          // Check if main page exists in DOM
+          const mainPage = document.getElementById('mainPage');
+          const aboutPage = document.getElementById('aboutUsPage');
+          
+          if (mainPage) {
+            mainPage.style.display = 'block';
+            // Initialize main app
+            if (typeof initMainApp === 'function') {
+              initMainApp();
+            }
+          } else if (aboutPage) {
+            aboutPage.style.display = 'none';
+            // Reload to show main page
+            window.location.reload();
+          } else {
+            // If no main page in DOM, redirect
+            window.location.href = '/';
+          }
         }, 1000);
         
       } catch (error) {
@@ -629,11 +648,38 @@
       
       // Check if already logged in
       const token = localStorage.getItem('authToken');
-      if (token) {
-        showMessage('✅ Already logged in. Redirecting...', 'success');
-        setTimeout(() => {
-          window.location.href = 'index.html'; // Replace with your main page
-        }, 1000);
+      const user = localStorage.getItem('user');
+      
+      if (token && user) {
+        showMessage('✅ Already logged in. Loading...', 'success');
+        
+        // Check if we're in the full app
+        const mainPage = document.getElementById('mainPage');
+        const aboutPage = document.getElementById('aboutUsPage');
+        
+        if (mainPage) {
+          // We're in the full app, hide auth and show main
+          document.querySelector('.auth-container').style.display = 'none';
+          aboutPage.style.display = 'none';
+          mainPage.style.display = 'block';
+          
+          // Update user info
+          try {
+            const currentUser = JSON.parse(user);
+            const userName = document.getElementById('userName');
+            if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+            
+            // Initialize socket if user has college
+            if (currentUser.college && typeof initializeSocket === 'function') {
+              initializeSocket();
+            }
+          } catch (e) {
+            console.error('Parse user error:', e);
+          }
+        } else {
+          // We're on standalone auth page, reload to get to main app
+          setTimeout(() => window.location.reload(), 1000);
+        }
       }
     });
   </script>
