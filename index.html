@@ -673,6 +673,31 @@
   </div>
 </div>
 
+<!-- EMERGENCY FIX SCRIPT - Add this right before vibemap.js -->
+<script>
+// Define critical functions before main script loads
+window.scrollToLogin = function() {
+  const aboutPage = document.getElementById('aboutPage');
+  const loginPage = document.getElementById('loginPage');
+  if (aboutPage) aboutPage.style.display = 'none';
+  if (loginPage) {
+    loginPage.style.display = 'flex';
+    loginPage.style.animation = 'fadeIn 0.5s ease';
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Auto-show login if user clicks anywhere after 2 seconds
+setTimeout(function() {
+  const aboutPage = document.getElementById('aboutPage');
+  if (aboutPage && aboutPage.style.display !== 'none') {
+    aboutPage.addEventListener('click', function() {
+      window.scrollToLogin();
+    });
+  }
+}, 2000);
+</script>
+
 <script src="vibemap.js"></script>
 </body>
 </html>
