@@ -24,20 +24,100 @@ let searchTimeout = null;
 let currentCommentPostId = null;
 let hasScrolledToBottom = false;
 
-// Make functions globally available
+// ==================== MAKE ALL FUNCTIONS GLOBALLY AVAILABLE ====================
+// This ensures onclick handlers in HTML work properly
+
 window.scrollToLogin = function() {
   showLoginModal();
 };
 
-window.login = login;
-window.signup = signup;
-window.goLogin = goLogin;
-window.goSignup = goSignup;
-window.goForgotPassword = goForgotPassword;
-window.handleForgotPassword = handleForgotPassword;
-window.verifyResetCode = verifyResetCode;
+// Auth functions
+window.login = async function(e) { await login(e); };
+window.signup = async function(e) { await signup(e); };
+window.goLogin = function(e) { goLogin(e); };
+window.goSignup = function(e) { goSignup(e); };
+window.goForgotPassword = function(e) { goForgotPassword(e); };
+window.handleForgotPassword = async function(e) { await handleForgotPassword(e); };
+window.verifyResetCode = async function(e) { await verifyResetCode(e); };
+window.logout = function() { logout(); };
 
-// ... rest of your code
+// Navigation
+window.showPage = function(name, e) { showPage(name, e); };
+window.goHome = function() { goHome(); };
+
+// Posts
+window.createPost = async function() { await createPost(); };
+window.deletePost = async function(id) { await deletePost(id); };
+window.toggleLike = async function(id) { await toggleLike(id); };
+window.openCommentModal = function(id) { openCommentModal(id); };
+window.closeCommentModal = function() { closeCommentModal(); };
+window.submitComment = async function(id) { await submitComment(id); };
+window.deleteComment = async function(cid, pid) { await deleteComment(cid, pid); };
+window.sharePost = function(id, content, author) { sharePost(id, content, author); };
+window.closeShareModal = function() { closeShareModal(); };
+window.shareVia = async function(platform, url, text) { await shareVia(platform, url, text); };
+
+// Media
+window.openPhotoGallery = function() { openPhotoGallery(); };
+window.openCamera = function() { openCamera(); };
+window.removePhoto = function(index) { removePhoto(index); };
+
+// Music & Stickers
+window.openMusicSelector = function() { openMusicSelector(); };
+window.previewMusic = function(url, id) { previewMusic(url, id); };
+window.selectMusic = function(id) { selectMusic(id); };
+window.closeMusicSelector = function() { closeMusicSelector(); };
+window.removeMusic = function() { removeMusic(); };
+window.openStickerSelector = function() { openStickerSelector(); };
+window.addSticker = function(emoji, name) { addSticker(emoji, name); };
+window.removeStickers = function() { removeStickers(); };
+window.showPostDestinationModal = function() { showPostDestinationModal(); };
+window.selectPostDestination = function(dest) { selectPostDestination(dest); };
+
+// College
+window.selectUniversity = function(type) { selectUniversity(type); };
+window.searchColleges = function() { searchColleges(); };
+window.backToUniversities = function() { backToUniversities(); };
+window.openVerify = function(name, email) { openVerify(name, email); };
+window.requestVerificationCode = async function() { await requestVerificationCode(); };
+window.verifyCollegeCode = async function() { await verifyCollegeCode(); };
+
+// Communities
+window.openCommunitySection = function() { openCommunitySection(); };
+window.sendChatMessage = async function() { await sendChatMessage(); };
+window.handleChatKeypress = function(e) { handleChatKeypress(e); };
+window.editMessage = async function(id, content) { await editMessage(id, content); };
+window.deleteMessage = async function(id) { await deleteMessage(id); };
+window.reactToMessage = async function(id, emoji) { await reactToMessage(id, emoji); };
+
+// Profile
+window.showUserProfile = async function(id) { await showUserProfile(id); };
+window.showProfilePage = function() { showProfilePage(); };
+window.uploadProfilePic = async function() { await uploadProfilePic(); };
+window.toggleEditProfile = function() { toggleEditProfile(); };
+
+// Modals
+window.showModal = function(id) { showModal(id); };
+window.closeModal = function(id) { closeModal(id); };
+window.showComplaintModal = function() { showComplaintModal(); };
+window.showContactModal = function() { showContactModal(); };
+window.showFeedbackModal = function() { showFeedbackModal(); };
+window.submitFeedback = async function() { await submitFeedback(); };
+window.submitComplaint = function() { submitComplaint(); };
+window.toggleTheme = function() { toggleTheme(); };
+
+// Menu
+window.toggleOptionsMenu = function() { toggleOptionsMenu(); };
+window.toggleHamburgerMenu = function() { toggleHamburgerMenu(); };
+
+// Celebration
+window.closeCelebrationModal = function() { closeCelebrationModal(); };
+window.shareAchievement = function(count) { shareAchievement(count); };
+
+// Rewards
+window.completeTask = function(id) { completeTask(id); };
+
+// ==================== END GLOBAL FUNCTIONS ====================
 
 // Rewards System Data
 const rewardsData = {
@@ -2008,4 +2088,3 @@ function showContactModal() {
   const modal = document.getElementById('contactModal');
   if (modal) modal.style.display = 'flex';
   const hamburger = document.getElementById('hamburgerMenu');
-
