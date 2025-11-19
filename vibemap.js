@@ -23,6 +23,496 @@ let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let hasScrolledToBottom = false;
+let scrollCheckEnabled = true;
+let scrollProgressIndicator = null;
+
+
+
+// Initialize About Us Page on load
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 VibeXpert initializing...');
+  
+  // Check if user is already logged in
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  
+  if (token && saved) {
+    // User is logged in - hide about page, show main page
+    document.body.classList.add('logged-in');
+    const aboutPage = document.getElementById('aboutUsPage');
+    const mainPage = document.getElementById('mainPage');
+    if (aboutPage) aboutPage.style.display = 'none';
+    if (mainPage) mainPage.style.display = 'block';
+    
+    try {
+      currentUser = JSON.parse(saved);
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    // User not logged in - show about page
+    showAboutUsPage();
+  }
+  
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
+});
+
+function showAboutUsPage() {
+  document.body.classList.remove('logged-in');
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  // Initialize about page features
+  initScrollProgress();
+  initRevealOnScroll();
+  initStatsCounter();
+  initScrollDetection();
+  createScrollProgressIndicator();
+}
+
+// Create scroll progress indicator
+function createScrollProgressIndicator() {
+  if (scrollProgressIndicator) return;
+  
+  scrollProgressIndicator = document.createElement('div');
+  scrollProgressIndicator.className = 'scroll-progress-indicator';
+  scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
+  document.body.appendChild(scrollProgressIndicator);
+}
+
+// Scroll Progress Bar
+function initScrollProgress() {
+  window.addEventListener('scroll', updateScrollProgress);
+}
+
+function updateScrollProgress() {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  
+  // Update progress bar
+  const progressFill = document.getElementById('scrollProgressFill');
+  if (progressFill) {
+    progressFill.style.width = scrolled + '%';
+  }
+  
+  // Update scroll indicator
+  const scrollPercent = document.getElementById('scrollPercent');
+  if (scrollPercent) {
+    scrollPercent.textContent = Math.round(scrolled) + '%';
+  }
+  
+  // Show/hide indicator based on scroll
+  if (scrollProgressIndicator) {
+    if (scrolled > 10 && scrolled < 95) {
+      scrollProgressIndicator.classList.add('show');
+    } else {
+      scrollProgressIndicator.classList.remove('show');
+    }
+  }
+  
+  // Check if scrolled to bottom (95% threshold)
+  if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
+    hasScrolledToBottom = true;
+    scrollCheckEnabled = false;
+    showAuthPopupAutomatic();
+  }
+}
+
+// Reveal on Scroll Animation
+function initRevealOnScroll() {
+  const revealElements = document.querySelectorAll('.reveal-on-scroll');
+  
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -50px 0px'
+  });
+  
+  revealElements.forEach(element => {
+    revealObserver.observe(element);
+  });
+}
+
+// Animated Stats Counter
+function initStatsCounter() {
+  const statNumbers = document.querySelectorAll('.stat-number');
+  let hasAnimated = false;
+  
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !hasAnimated) {
+        hasAnimated = true;
+        statNumbers.forEach(stat => {
+          const target = parseInt(stat.getAttribute('data-count'));
+          animateCounter(stat, 0, target, 2000);
+        });
+      }
+    });
+  }, {
+    threshold: 0.5
+  });
+  
+  const statsSection = document.querySelector('.stats-grid');
+  if (statsSection) {
+    statsObserver.observe(statsSection);
+  }
+}
+
+function animateCounter(element, start, end, duration) {
+  const range = end - start;
+  const increment = range / (duration / 30);
+  let current = start;
+  
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+    element.textContent = Math.floor(current).toLocaleString();
+  }, 16);
+}
+
+// Scroll Detection for Auth Popup
+function initScrollDetection() {
+  window.addEventListener('scroll', checkScrollPosition);
+}
+
+function checkScrollPosition() {
+  if (!scrollCheckEnabled || hasScrolledToBottom) return;
+  
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  
+  // Show auth popup when user reaches 95% of page
+  if (scrollPercentage >= 95) {
+    hasScrolledToBottom = true;
+    scrollCheckEnabled = false;
+    showAuthPopupAutomatic();
+  }
+}
+
+// Show Auth Popup Automatically
+function showAuthPopupAutomatic() {
+  console.log('🎉 User reached bottom - showing auth popup');
+  showAuthPopup();
+  
+  // Confetti effect (optional)
+  createConfetti();
+}
+
+// Show Auth Popup (can be triggered manually or automatically)
+function showAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.classList.add('show');
+    authPopup.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Hide scroll indicator
+    if (scrollProgressIndicator) {
+      scrollProgressIndicator.classList.remove('show');
+    }
+    
+    // Add a subtle animation
+    setTimeout(() => {
+      const authContent = authPopup.querySelector('.auth-popup-content');
+      if (authContent) {
+        authContent.style.animation = 'popupSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      }
+    }, 50);
+  }
+}
+
+// Close Auth Popup
+function closeAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.classList.remove('show');
+    authPopup.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    
+    // Reset scroll detection after a delay
+    setTimeout(() => {
+      scrollCheckEnabled = true;
+      hasScrolledToBottom = false;
+    }, 1000);
+  }
+}
+
+// Confetti effect for celebration
+function createConfetti() {
+  const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.cssText = `
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      left: ${Math.random() * 100}%;
+      top: -10px;
+      opacity: ${Math.random()};
+      transform: rotate(${Math.random() * 360}deg);
+      animation: confettiFall ${2 + Math.random() * 3}s linear forwards;
+      z-index: 25000;
+      pointer-events: none;
+    `;
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 5000);
+  }
+}
+
+// Override existing login function
+async function login(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value;
+  if(!email || !password) return showMessage('Fill all fields', 'error');
+  
+  try {
+    showMessage('Logging in...', 'success');
+    const data = await apiCall('/api/login', 'POST', { email, password });
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    showMessage('✅ Login successful!', 'success');
+    
+    setTimeout(() => {
+      // Hide about page and auth popup
+      document.body.classList.add('logged-in');
+      const aboutPage = document.getElementById('aboutUsPage');
+      const authPopup = document.getElementById('authPopup');
+      const mainPage = document.getElementById('mainPage');
+      
+      if (aboutPage) aboutPage.style.display = 'none';
+      if (authPopup) {
+        authPopup.classList.remove('show');
+        authPopup.style.display = 'none';
+      }
+      if (mainPage) mainPage.style.display = 'block';
+      
+      document.body.style.overflow = 'auto';
+      
+      // Remove scroll indicator
+      if (scrollProgressIndicator) {
+        scrollProgressIndicator.remove();
+        scrollProgressIndicator = null;
+      }
+      
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      const form = document.getElementById('loginForm');
+      if (form) form.reset();
+      loadPosts();
+      if (currentUser.college) initializeSocket();
+    }, 800);
+  } catch(error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
+}
+
+// Override existing logout function
+function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  currentUser = null;
+  localStorage.clear();
+  
+  // Show about page instead of login page
+  document.body.classList.remove('logged-in');
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  showMessage('👋 Logged out', 'success');
+  
+  // Reset scroll detection
+  hasScrolledToBottom = false;
+  scrollCheckEnabled = true;
+  
+  // Recreate scroll indicator
+  createScrollProgressIndicator();
+  
+  // Scroll to top of page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Override signup to handle about page
+async function signup(e) {
+  e.preventDefault();
+  const username = document.getElementById('signupName')?.value.trim();
+  const email = document.getElementById('signupEmail')?.value.trim();
+  const registrationNumber = document.getElementById('signupReg')?.value.trim();
+  const password = document.getElementById('signupPass')?.value;
+  const confirm = document.getElementById('signupConfirm')?.value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  
+  if(!username || !email || !registrationNumber || !password || !confirm) {
+    return showMessage('Fill all fields', 'error');
+  }
+  if(!gender) {
+    return showMessage('Please select gender', 'error');
+  }
+  if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
+  if(password.length < 6) return showMessage('Password min 6 characters', 'error');
+  
+  try {
+    showMessage('Creating account...', 'success');
+    await apiCall('/api/register', 'POST', { 
+      username, 
+      email, 
+      password, 
+      registrationNumber,
+      gender 
+    });
+    showMessage('🎉 Account created! Check email', 'success');
+    const form = document.getElementById('signupForm');
+    if (form) form.reset();
+    setTimeout(() => goLogin(null), 2000);
+  } catch(error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
+// Prevent popup close when clicking inside auth box
+document.addEventListener('click', function(e) {
+  const authPopup = document.getElementById('authPopup');
+  const authBox = document.querySelector('.auth-box');
+  const authOverlay = document.querySelector('.auth-popup-overlay');
+  
+  if (authPopup && authPopup.classList.contains('show')) {
+    // Close if clicking overlay
+    if (e.target === authOverlay) {
+      closeAuthPopup();
+    }
+    // Don't close if clicking inside auth box
+    if (authBox && authBox.contains(e.target)) {
+      e.stopPropagation();
+    }
+  }
+});
+
+// Add smooth scroll for CTA buttons
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('cta-button') || 
+      e.target.closest('.cta-button')) {
+    e.preventDefault();
+    showAuthPopup();
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Rewards System Data
 const rewardsData = {
   dailyTasks: [
@@ -1935,3 +2425,4 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
+
