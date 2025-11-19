@@ -1,4 +1,4 @@
-// VIBEXPERT - COMPLETE FIXED VERSION WITH ALL FEATURES + ABOUT PAGE
+// VIBEXPERT - COMPLETE FIXED VERSION WITH ALL FEATURES
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
@@ -22,102 +22,6 @@ let currentCropIndex = -1;
 let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
-let hasScrolledToBottom = false;
-
-// ==================== MAKE ALL FUNCTIONS GLOBALLY AVAILABLE ====================
-// This ensures onclick handlers in HTML work properly
-
-window.scrollToLogin = function() {
-  showLoginModal();
-};
-
-// Auth functions
-window.login = async function(e) { await login(e); };
-window.signup = async function(e) { await signup(e); };
-window.goLogin = function(e) { goLogin(e); };
-window.goSignup = function(e) { goSignup(e); };
-window.goForgotPassword = function(e) { goForgotPassword(e); };
-window.handleForgotPassword = async function(e) { await handleForgotPassword(e); };
-window.verifyResetCode = async function(e) { await verifyResetCode(e); };
-window.logout = function() { logout(); };
-
-// Navigation
-window.showPage = function(name, e) { showPage(name, e); };
-window.goHome = function() { goHome(); };
-
-// Posts
-window.createPost = async function() { await createPost(); };
-window.deletePost = async function(id) { await deletePost(id); };
-window.toggleLike = async function(id) { await toggleLike(id); };
-window.openCommentModal = function(id) { openCommentModal(id); };
-window.closeCommentModal = function() { closeCommentModal(); };
-window.submitComment = async function(id) { await submitComment(id); };
-window.deleteComment = async function(cid, pid) { await deleteComment(cid, pid); };
-window.sharePost = function(id, content, author) { sharePost(id, content, author); };
-window.closeShareModal = function() { closeShareModal(); };
-window.shareVia = async function(platform, url, text) { await shareVia(platform, url, text); };
-
-// Media
-window.openPhotoGallery = function() { openPhotoGallery(); };
-window.openCamera = function() { openCamera(); };
-window.removePhoto = function(index) { removePhoto(index); };
-
-// Music & Stickers
-window.openMusicSelector = function() { openMusicSelector(); };
-window.previewMusic = function(url, id) { previewMusic(url, id); };
-window.selectMusic = function(id) { selectMusic(id); };
-window.closeMusicSelector = function() { closeMusicSelector(); };
-window.removeMusic = function() { removeMusic(); };
-window.openStickerSelector = function() { openStickerSelector(); };
-window.addSticker = function(emoji, name) { addSticker(emoji, name); };
-window.removeStickers = function() { removeStickers(); };
-window.showPostDestinationModal = function() { showPostDestinationModal(); };
-window.selectPostDestination = function(dest) { selectPostDestination(dest); };
-
-// College
-window.selectUniversity = function(type) { selectUniversity(type); };
-window.searchColleges = function() { searchColleges(); };
-window.backToUniversities = function() { backToUniversities(); };
-window.openVerify = function(name, email) { openVerify(name, email); };
-window.requestVerificationCode = async function() { await requestVerificationCode(); };
-window.verifyCollegeCode = async function() { await verifyCollegeCode(); };
-
-// Communities
-window.openCommunitySection = function() { openCommunitySection(); };
-window.sendChatMessage = async function() { await sendChatMessage(); };
-window.handleChatKeypress = function(e) { handleChatKeypress(e); };
-window.editMessage = async function(id, content) { await editMessage(id, content); };
-window.deleteMessage = async function(id) { await deleteMessage(id); };
-window.reactToMessage = async function(id, emoji) { await reactToMessage(id, emoji); };
-
-// Profile
-window.showUserProfile = async function(id) { await showUserProfile(id); };
-window.showProfilePage = function() { showProfilePage(); };
-window.uploadProfilePic = async function() { await uploadProfilePic(); };
-window.toggleEditProfile = function() { toggleEditProfile(); };
-
-// Modals
-window.showModal = function(id) { showModal(id); };
-window.closeModal = function(id) { closeModal(id); };
-window.showComplaintModal = function() { showComplaintModal(); };
-window.showContactModal = function() { showContactModal(); };
-window.showFeedbackModal = function() { showFeedbackModal(); };
-window.submitFeedback = async function() { await submitFeedback(); };
-window.submitComplaint = function() { submitComplaint(); };
-window.toggleTheme = function() { toggleTheme(); };
-
-// Menu
-window.toggleOptionsMenu = function() { toggleOptionsMenu(); };
-window.toggleHamburgerMenu = function() { toggleHamburgerMenu(); };
-
-// Celebration
-window.closeCelebrationModal = function() { closeCelebrationModal(); };
-window.shareAchievement = function(count) { shareAchievement(count); };
-
-// Rewards
-window.completeTask = function(id) { completeTask(id); };
-
-// ==================== END GLOBAL FUNCTIONS ====================
 
 // Rewards System Data
 const rewardsData = {
@@ -213,100 +117,11 @@ const colleges = {
   ]
 };
 
-// ==================== SCROLL TO LOGIN FUNCTIONALITY ====================
-
-function setupScrollListener() {
-  const aboutPage = document.getElementById('aboutPage');
-  if (!aboutPage) return;
-
-  let ticking = false;
-
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      window.requestAnimationFrame(function() {
-        checkScrollPosition();
-        ticking = false;
-      });
-      ticking = true;
-    }
-  });
-}
-
-function checkScrollPosition() {
-  if (hasScrolledToBottom) return;
-
-  const aboutPage = document.getElementById('aboutPage');
-  if (!aboutPage || aboutPage.style.display === 'none') return;
-
-  const scrollPosition = window.scrollY + window.innerHeight;
-  const pageHeight = document.documentElement.scrollHeight;
-  const scrollPercentage = (scrollPosition / pageHeight) * 100;
-
-  if (scrollPercentage >= 95) {
-    hasScrolledToBottom = true;
-    showLoginModal();
-  }
-}
-
-function showLoginModal() {
-  const aboutPage = document.getElementById('aboutPage');
-  const loginPage = document.getElementById('loginPage');
-  
-  if (aboutPage) aboutPage.style.display = 'none';
-  if (loginPage) {
-    loginPage.style.display = 'flex';
-    loginPage.style.animation = 'fadeIn 0.5s ease';
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToLogin() {
-  showLoginModal();
-}
-
-function showAboutPage() {
-  const aboutPage = document.getElementById('aboutPage');
-  const loginPage = document.getElementById('loginPage');
-  const mainPage = document.getElementById('mainPage');
-  
-  if (aboutPage) aboutPage.style.display = 'block';
-  if (loginPage) loginPage.style.display = 'none';
-  if (mainPage) mainPage.style.display = 'none';
-  
-  hasScrolledToBottom = false;
-}
-
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 VibeXpert initializing...');
-  
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  
-  if(token && saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      const aboutPage = document.getElementById('aboutPage');
-      if (aboutPage) aboutPage.style.display = 'none';
-      showMainPage();
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      if (currentUser.college) {
-        updateLiveNotif(`Connected to ${currentUser.college}`);
-        initializeSocket();
-      }
-    } catch(e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
-      showAboutPage();
-    }
-  } else {
-    showAboutPage();
-  }
-  
+  checkAuthStatus();
   setupEventListeners();
-  setupScrollListener();
   initializeMusicPlayer();
   updateLiveStats();
   setInterval(updateLiveStats, 5000);
@@ -393,12 +208,32 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   }
 }
 
+function checkAuthStatus() {
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  if(token && saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      showMainPage();
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showLoginPage();
+    }
+  } else {
+    showLoginPage();
+  }
+}
+
 function showLoginPage() {
   const loginPage = document.getElementById('loginPage');
   const mainPage = document.getElementById('mainPage');
-  const aboutPage = document.getElementById('aboutPage');
-  
-  if (aboutPage) aboutPage.style.display = 'none';
   if (loginPage) loginPage.style.display = 'flex';
   if (mainPage) mainPage.style.display = 'none';
 }
@@ -406,9 +241,6 @@ function showLoginPage() {
 function showMainPage() {
   const loginPage = document.getElementById('loginPage');
   const mainPage = document.getElementById('mainPage');
-  const aboutPage = document.getElementById('aboutPage');
-  
-  if (aboutPage) aboutPage.style.display = 'none';
   if (loginPage) loginPage.style.display = 'none';
   if (mainPage) mainPage.style.display = 'block';
 }
@@ -548,10 +380,9 @@ function logout() {
   }
   currentUser = null;
   localStorage.clear();
-  hasScrolledToBottom = false;
-  showAboutPage();
+  showLoginPage();
   showMessage('👋 Logged out', 'success');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  goLogin(null);
 }
 
 // NAVIGATION
@@ -1348,6 +1179,17 @@ function completeTask(taskId) {
   showMessage('🎉 Task completed! +10 points', 'success');
 }
 
+function purchaseReward(rewardId, cost) {
+  const userPoints = currentUser?.rewardPoints || 0;
+  if (userPoints < cost) {
+    showMessage(`⚠️ Need ${cost - userPoints} more points`, 'error');
+    return;
+  }
+  if (confirm(`Purchase for ${cost} points?`)) {
+    showMessage('🎁 Reward unlocked!', 'success');
+  }
+}
+
 // COLLEGE
 function selectUniversity(type) {
   currentType = type;
@@ -1815,120 +1657,6 @@ function showProfilePage() {
   if (options) options.style.display = 'none';
 }
 
-function showFeedbackModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Feedback</h2>
-      <p style="color:#888;margin-bottom:20px;">We'd love to hear from you!</p>
-      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
-      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%;min-height:120px;padding:12px;background:rgba(20,30,50,0.6);border:1px solid rgba(79,116,163,0.3);border-radius:10px;color:white;font-family:inherit;resize:vertical;"></textarea>
-      <button onclick="submitFeedback()" style="width:100%;margin-top:15px;">📤 Send</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  const hamburger = document.getElementById('hamburgerMenu');
-  const options = document.getElementById('optionsMenu');
-  if (hamburger) hamburger.style.display = 'none';
-  if (options) options.style.display = 'none';
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
-  try {
-    await apiCall('/api/feedback', 'POST', { subject, message });
-    showMessage('✅ Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch(error) {
-    showMessage('❌ Failed', 'error');
-  }
-}
-
-function submitComplaint() {
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (text) {
-    showMessage('✅ Submitted!', 'success');
-    const input = document.getElementById('complaintText');
-    if (input) input.value = '';
-    closeModal('complaintModal');
-  } else {
-    showMessage('⚠️ Enter details', 'error');
-  }
-}
-
-function toggleTheme() {
-  const body = document.body;
-  if (body.classList.contains('dark-theme')) {
-    body.classList.remove('dark-theme');
-    body.classList.add('light-theme');
-  } else {
-    body.classList.remove('light-theme');
-    body.classList.add('dark-theme');
-  }
-  showMessage('🎨 Theme changed!', 'success');
-  const hamburger = document.getElementById('hamburgerMenu');
-  const options = document.getElementById('optionsMenu');
-  if (hamburger) hamburger.style.display = 'none';
-  if (options) options.style.display = 'none';
-}
-
-function loadTrending() {
-  const container = document.getElementById('trendingContainer');
-  if (!container) return;
-  const trending = [
-    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
-    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
-    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
-  ];
-  let html = '';
-  trending.forEach(item => {
-    html += `
-      <div class="trending-card">
-        <div class="trending-card-header">
-          <div class="trending-title">${item.title}</div>
-          <div class="trending-badge">${item.badge}</div>
-        </div>
-        <div class="trending-text">${item.text}</div>
-        <div class="trending-footer">
-          <div class="trending-engagement">
-            <div class="engagement-item">❤️ ${item.likes}</div>
-            <div class="engagement-item">💬 ${item.comments}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  container.innerHTML = html;
-}
-
-async function loadUserProfilePosts(userId) {
-  const container = document.getElementById('userProfilePosts');
-  if (!container) return;
-  try {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
-    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
-    if (!data.posts || data.posts.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
-      return;
-    }
-    container.innerHTML = renderPosts(data.posts);
-  } catch(error) {
-    console.error('❌ Load user posts:', error);
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
-  }
-}
-
-function showFullLeaderboard() {
-  showMessage('📊 Full leaderboard coming soon!', 'success');
-}
-
-console.log('✅ VibeXpert script loaded successfully');
-
 function showProfileModal(user) {
   const isOwnProfile = currentUser && user.id === currentUser.id;
   const modal = document.createElement('div');
@@ -2088,3 +1816,122 @@ function showContactModal() {
   const modal = document.getElementById('contactModal');
   if (modal) modal.style.display = 'flex';
   const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
+}
+
+function showFeedbackModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Feedback</h2>
+      <p style="color:#888;margin-bottom:20px;">We'd love to hear from you!</p>
+      <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
+      <textarea id="feedbackMessage" placeholder="Your feedback..." style="width:100%;min-height:120px;padding:12px;background:rgba(20,30,50,0.6);border:1px solid rgba(79,116,163,0.3);border-radius:10px;color:white;font-family:inherit;resize:vertical;"></textarea>
+      <button onclick="submitFeedback()" style="width:100%;margin-top:15px;">📤 Send</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
+  try {
+    await apiCall('/api/feedback', 'POST', { subject, message });
+    showMessage('✅ Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch(error) {
+    showMessage('❌ Failed', 'error');
+  }
+}
+
+function submitComplaint() {
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (text) {
+    showMessage('✅ Submitted!', 'success');
+    const input = document.getElementById('complaintText');
+    if (input) input.value = '';
+    closeModal('complaintModal');
+  } else {
+    showMessage('⚠️ Enter details', 'error');
+  }
+}
+
+function toggleTheme() {
+  const body = document.body;
+  if (body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+  }
+  showMessage('🎨 Theme changed!', 'success');
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
+}
+
+function loadTrending() {
+  const container = document.getElementById('trendingContainer');
+  if (!container) return;
+  const trending = [
+    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
+    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
+    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
+  ];
+  let html = '';
+  trending.forEach(item => {
+    html += `
+      <div class="trending-card">
+        <div class="trending-card-header">
+          <div class="trending-title">${item.title}</div>
+          <div class="trending-badge">${item.badge}</div>
+        </div>
+        <div class="trending-text">${item.text}</div>
+        <div class="trending-footer">
+          <div class="trending-engagement">
+            <div class="engagement-item">❤️ ${item.likes}</div>
+            <div class="engagement-item">💬 ${item.comments}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  try {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
+      return;
+    }
+    container.innerHTML = renderPosts(data.posts);
+  } catch(error) {
+    console.error('❌ Load user posts:', error);
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
+  }
+}
+
+// ADDITIONAL HELPERS
+function showFullLeaderboard() {
+  showMessage('📊 Full leaderboard coming soon!', 'success');
+}
+
+console.log('✅ VibeXpert script loaded successfully');
