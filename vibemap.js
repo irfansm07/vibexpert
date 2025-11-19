@@ -24,9 +24,6 @@ let searchTimeout = null;
 let currentCommentPostId = null;
 
 
-
-
-
 // ========================================
 // ABOUT US PAGE FUNCTIONALITY
 // Add this at the BEGINNING of vibemap.js
@@ -258,11 +255,6 @@ console.log('✅ About Us page functionality loaded');
 
 // All your existing VibeXpert code continues here...
 // (The rest of the original vibemap.js file)
-
-
-
-
-
 
 
 // Rewards System Data
@@ -2177,4 +2169,3 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
-
