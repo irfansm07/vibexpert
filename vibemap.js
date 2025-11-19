@@ -23,6 +23,248 @@ let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
 
+
+
+
+
+// ========================================
+// ABOUT US PAGE FUNCTIONALITY
+// Add this at the BEGINNING of vibemap.js
+// ========================================
+
+// Removed: let hasScrolledToBottom = false;
+// Removed: let scrollCheckEnabled = true;
+
+// Initialize About Us Page on load
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 VibeXpert initializing...');
+  
+  // Check if user is already logged in
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  
+  if (token && saved) {
+    // User is logged in - hide about page, show main page
+    const aboutPage = document.getElementById('aboutUsPage');
+    const mainPage = document.getElementById('mainPage');
+    if (aboutPage) aboutPage.style.display = 'none';
+    if (mainPage) mainPage.style.display = 'block';
+    
+    try {
+      currentUser = JSON.parse(saved);
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    // User not logged in - show about page
+    showAboutUsPage();
+  }
+  
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
+});
+
+function showAboutUsPage() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  // Initialize about page features
+  initScrollProgress();
+  initRevealOnScroll();
+  initStatsCounter();
+  // Removed: initScrollDetection();
+}
+
+// Scroll Progress Bar
+function initScrollProgress() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  aboutPage.addEventListener('scroll', updateScrollProgress);
+  window.addEventListener('scroll', updateScrollProgress);
+}
+
+function updateScrollProgress() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  if (!aboutPage) return;
+  
+  const scrollTop = aboutPage.scrollTop || window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = aboutPage.scrollHeight || document.documentElement.scrollHeight;
+  const clientHeight = aboutPage.clientHeight || window.innerHeight;
+  
+  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  
+  const progressFill = document.getElementById('scrollProgressFill');
+  if (progressFill) {
+    progressFill.style.width = scrolled + '%';
+  }
+  
+  // Removed: Scroll check logic
+}
+
+// Reveal on Scroll Animation
+function initRevealOnScroll() {
+  // ... (unchanged)
+}
+
+// Animated Stats Counter
+function initStatsCounter() {
+  // ... (unchanged)
+}
+
+function animateCounter(element, start, end, duration) {
+  // ... (unchanged)
+}
+
+// Removed: Scroll Detection for Auth Popup (initScrollDetection and checkScrollPosition)
+
+// Show Auth Popup - (Triggered by CTA Button)
+function showAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    // Removed: scrollCheckEnabled = false;
+  }
+}
+
+// Close Auth Popup
+function closeAuthPopup() {
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    // Removed: scrollCheckEnabled = true;
+    // Removed: hasScrolledToBottom = false;
+  }
+}
+
+// Override existing login function to hide about page after successful login
+const originalLogin = typeof login !== 'undefined' ? login : null;
+
+async function login(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value;
+  if(!email || !password) return showMessage('Fill all fields', 'error');
+  
+  try {
+    showMessage('Logging in...', 'success');
+    const data = await apiCall('/api/login', 'POST', { email, password });
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    showMessage('✅ Login successful!', 'success');
+    
+    setTimeout(() => {
+      // Hide about page and auth popup
+      const aboutPage = document.getElementById('aboutUsPage');
+      const authPopup = document.getElementById('authPopup');
+      const mainPage = document.getElementById('mainPage');
+      
+      if (aboutPage) aboutPage.style.display = 'none'; // Hides About Us
+      if (authPopup) authPopup.style.display = 'none';
+      if (mainPage) mainPage.style.display = 'block'; // Shows Main Page
+      
+      document.body.style.overflow = 'auto';
+      
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      const form = document.getElementById('loginForm');
+      if (form) form.reset();
+      loadPosts();
+      if (currentUser.college) initializeSocket();
+    }, 800);
+  } catch(error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
+}
+
+// Override existing logout function to show about page
+const originalLogout = typeof logout !== 'undefined' ? logout : null;
+
+function logout() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  currentUser = null;
+  localStorage.clear();
+  
+  // Show about page instead of login page
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block'; // Shows About Us Page
+  if (mainPage) mainPage.style.display = 'none';
+  
+  showMessage('👋 Logged out', 'success');
+  
+  // Reset scroll detection - Removed flags
+  
+  // Scroll to top of about page
+  window.scrollTo(0, 0);
+  if (aboutPage) aboutPage.scrollTo(0, 0);
+}
+
+// Override signup to handle about page
+async function signup(e) {
+  // ... (unchanged)
+}
+
+// Helper function to check if user is on about page
+function isOnAboutPage() {
+  const aboutPage = document.getElementById('aboutUsPage');
+  return aboutPage && aboutPage.style.display !== 'none';
+}
+
+// Add smooth scroll for anchor links
+document.addEventListener('click', function(e) {
+  // ... (unchanged)
+});
+
+// Prevent popup close when clicking inside auth box
+document.addEventListener('click', function(e) {
+  const authPopup = document.getElementById('authPopup');
+  const authBox = document.querySelector('.auth-box');
+  
+  if (authPopup && authPopup.style.display === 'flex') {
+    if (authBox && authBox.contains(e.target)) {
+      e.stopPropagation();
+    }
+  }
+});
+
+console.log('✅ About Us page functionality loaded');
+
+// ========================================
+// CONTINUE WITH ORIGINAL VIBEMAP.JS CODE
+// ========================================
+
+// All your existing VibeXpert code continues here...
+// (The rest of the original vibemap.js file)
+
+
+
+
+
+
+
 // Rewards System Data
 const rewardsData = {
   dailyTasks: [
@@ -1935,3 +2177,4 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
+
