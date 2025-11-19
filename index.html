@@ -686,4 +686,22 @@
 <div id="contactModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('contactModal')">&times;</span>
-    <h2>Contact Us
+    <h2>Contact Us</h2>
+    <p>📧 Email: support@vibexpert.com</p>
+    <p>📱 Phone: +91-9347702626</p>
+    <p>💬 Live Chat: 24/7</p>
+  </div>
+</div>
+
+<div id="complaintModal" class="modal" style="display:none;">
+  <div class="modal-box">
+    <span class="close" onclick="closeModal('complaintModal')">&times;</span>
+    <h2>Submit Complaint</h2>
+    <textarea id="complaintText" placeholder="Describe your complaint..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
+    <button onclick="submitComplaint()">Submit Complaint</button>
+  </div>
+</div>
+
+<script src="vibemap.js"></script>
+</body>
+</html>
