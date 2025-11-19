@@ -24,239 +24,376 @@ let searchTimeout = null;
 let currentCommentPostId = null;
 
 
+
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+// Helper function to get token
+function getToken() {
+    return localStorage.getItem('authToken');
+}
+
+// Helper function for API calls (assuming this is defined later in the original file)
+async function apiCall(endpoint, method, body = null) {
+    const token = getToken();
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const config = {
+        method: method,
+        headers: headers,
+    };
+
+    if (body) {
+        config.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(endpoint, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || 'API call failed');
+    }
+
+    return data;
+}
+
+// Function to show messages (assuming this is defined later)
+function showMessage(msg, type = 'info') {
+    const msgElement = document.getElementById('toastMessage');
+    const toast = document.getElementById('toast');
+    if (msgElement && toast) {
+        msgElement.textContent = msg;
+        toast.className = 'toast show ' + type;
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
+}
+
+// Function to open/close modals
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
 // ========================================
-// ABOUT US PAGE FUNCTIONALITY
-// Add this at the BEGINNING of vibemap.js
+// CORE PAGE FLOW LOGIC (About Us -> Login -> Main)
 // ========================================
 
-// Removed: let hasScrolledToBottom = false;
-// Removed: let scrollCheckEnabled = true;
+// 1. Show Auth Popup - (Triggered by CTA Button)
+function showAuthPopup() {
+    const authPopup = document.getElementById('authPopup');
+    if (authPopup) {
+        authPopup.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
 
-// Initialize About Us Page on load
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 VibeXpert initializing...');
-  
-  // Check if user is already logged in
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  
-  if (token && saved) {
-    // User is logged in - hide about page, show main page
+// 2. Close Auth Popup
+function closeAuthPopup() {
+    const authPopup = document.getElementById('authPopup');
+    if (authPopup) {
+        authPopup.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Re-enable scrolling
+    }
+}
+
+// 3. Logic to SHOW the About Us page
+function showAboutUsPage() {
     const aboutPage = document.getElementById('aboutUsPage');
     const mainPage = document.getElementById('mainPage');
-    if (aboutPage) aboutPage.style.display = 'none';
-    if (mainPage) mainPage.style.display = 'block';
+    if (aboutPage) aboutPage.style.display = 'block';
+    if (mainPage) mainPage.style.display = 'none';
     
-    try {
-      currentUser = JSON.parse(saved);
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      if (currentUser.college) {
-        updateLiveNotif(`Connected to ${currentUser.college}`);
-        initializeSocket();
-      }
-    } catch(e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
-      showAboutUsPage();
+    // Initialize about page features (defined later)
+    initScrollProgress();
+    initRevealOnScroll();
+    initStatsCounter();
+    
+    // Ensure we are at the top of the About Us page
+    window.scrollTo(0, 0);
+    if (aboutPage) aboutPage.scrollTo(0, 0);
+}
+
+// 4. Initialization on Document Load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 VibeXpert initializing...');
+    
+    // Check if user is already logged in
+    const token = getToken();
+    const saved = localStorage.getItem('user');
+    
+    if (token && saved) {
+        // User is logged in - proceed to Main Page
+        const aboutPage = document.getElementById('aboutUsPage');
+        const mainPage = document.getElementById('mainPage');
+        if (aboutPage) aboutPage.style.display = 'none';
+        if (mainPage) mainPage.style.display = 'block';
+        
+        try {
+            currentUser = JSON.parse(saved);
+            const userName = document.getElementById('userName');
+            if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+            if (currentUser.college) {
+                updateLiveNotif(`Connected to ${currentUser.college}`);
+                initializeSocket(); // Call this only if needed
+            }
+            loadPosts(); // Load content for the main page
+        } catch(e) {
+            console.error('Parse error during initialization:', e);
+            localStorage.clear();
+            showAboutUsPage(); // Fallback to About Us
+        }
+    } else {
+        // User not logged in - start on About Us Page
+        showAboutUsPage();
     }
-  } else {
-    // User not logged in - show about page
-    showAboutUsPage();
-  }
-  
-  setupEventListeners();
-  initializeMusicPlayer();
-  updateLiveStats();
-  setInterval(updateLiveStats, 5000);
-  initializeSearchBar();
-  loadTrending();
-  console.log('✅ Initialized');
+    
+    // Continue with other initialization functions
+    setupEventListeners();
+    initializeMusicPlayer();
+    updateLiveStats();
+    setInterval(updateLiveStats, 5000);
+    initializeSearchBar();
+    loadTrending();
+    console.log('✅ Initialized');
 });
 
-function showAboutUsPage() {
-  const aboutPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  if (aboutPage) aboutPage.style.display = 'block';
-  if (mainPage) mainPage.style.display = 'none';
-  
-  // Initialize about page features
-  initScrollProgress();
-  initRevealOnScroll();
-  initStatsCounter();
-  // Removed: initScrollDetection();
+// 5. Modified Login Function to handle page transition
+async function login(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail')?.value.trim();
+    const password = document.getElementById('loginPassword')?.value;
+    if(!email || !password) return showMessage('Fill all fields', 'error');
+    
+    try {
+        showMessage('Logging in...', 'success');
+        // Assuming apiCall and the backend handle the authentication and return token/user
+        const data = await apiCall('/api/login', 'POST', { email, password });
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        currentUser = data.user;
+        
+        setTimeout(() => {
+            // TRANSITION TO MAIN PAGE
+            const aboutPage = document.getElementById('aboutUsPage');
+            const authPopup = document.getElementById('authPopup');
+            const mainPage = document.getElementById('mainPage');
+            
+            if (aboutPage) aboutPage.style.display = 'none'; // Hides About Us
+            if (authPopup) authPopup.style.display = 'none'; // Hides Login Modal
+            if (mainPage) mainPage.style.display = 'block'; // Shows Main Page
+            
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            const userName = document.getElementById('userName');
+            if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+            const form = document.getElementById('loginForm');
+            if (form) form.reset();
+            loadPosts(); // Load content for the main page
+            if (currentUser.college) initializeSocket();
+            showMessage('✅ Welcome back!', 'success');
+        }, 500);
+    } catch(error) {
+        showMessage('❌ Login failed: ' + (error.message || 'Check your credentials.'), 'error');
+    }
 }
+
+// 6. Modified Logout Function to handle page transition back to About Us
+function logout() {
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
+    currentUser = null;
+    localStorage.clear();
+    
+    // TRANSITION TO ABOUT US PAGE
+    const mainPage = document.getElementById('mainPage');
+    if (mainPage) mainPage.style.display = 'none';
+    
+    showAboutUsPage(); // Call function to show About Us page
+    
+    showMessage('👋 Logged out', 'success');
+}
+
+// 7. Signup Function (Ensure it uses the same page transition logic)
+async function signup(e) {
+    e.preventDefault();
+    const username = document.getElementById('signupUsername')?.value.trim();
+    const email = document.getElementById('signupEmail')?.value.trim();
+    const password = document.getElementById('signupPassword')?.value;
+    const college = document.getElementById('signupCollege')?.value.trim();
+    if(!username || !email || !password || !college) return showMessage('Fill all fields', 'error');
+    
+    try {
+        showMessage('Registering...', 'success');
+        const data = await apiCall('/api/signup', 'POST', { username, email, password, college });
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        currentUser = data.user;
+        
+        setTimeout(() => {
+            // TRANSITION TO MAIN PAGE
+            const aboutPage = document.getElementById('aboutUsPage');
+            const authPopup = document.getElementById('authPopup');
+            const mainPage = document.getElementById('mainPage');
+            
+            if (aboutPage) aboutPage.style.display = 'none'; // Hides About Us
+            if (authPopup) authPopup.style.display = 'none'; // Hides Login Modal
+            if (mainPage) mainPage.style.display = 'block'; // Shows Main Page
+            
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            const userName = document.getElementById('userName');
+            if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+            const form = document.getElementById('signupForm');
+            if (form) form.reset();
+            loadPosts();
+            if (currentUser.college) initializeSocket();
+            showMessage('🎉 Welcome to VibeXpert!', 'success');
+        }, 500);
+    } catch(error) {
+        showMessage('❌ Signup failed: ' + error.message, 'error');
+    }
+}
+
+
+// ========================================
+// ABOUT US PAGE IMPLEMENTATION DETAILS
+// ========================================
 
 // Scroll Progress Bar
 function initScrollProgress() {
-  const aboutPage = document.getElementById('aboutUsPage');
-  if (!aboutPage) return;
-  
-  aboutPage.addEventListener('scroll', updateScrollProgress);
-  window.addEventListener('scroll', updateScrollProgress);
+    const aboutPage = document.getElementById('aboutUsPage');
+    if (!aboutPage) return;
+    
+    // Note: We listen on aboutPage itself since it's an overflow div
+    aboutPage.addEventListener('scroll', updateScrollProgress);
+    // Fallback for window if aboutPage is not full-height overflow container
+    window.addEventListener('scroll', updateScrollProgress); 
 }
 
 function updateScrollProgress() {
-  const aboutPage = document.getElementById('aboutUsPage');
-  if (!aboutPage) return;
-  
-  const scrollTop = aboutPage.scrollTop || window.pageYOffset || document.documentElement.scrollTop;
-  const scrollHeight = aboutPage.scrollHeight || document.documentElement.scrollHeight;
-  const clientHeight = aboutPage.clientHeight || window.innerHeight;
-  
-  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
-  
-  const progressFill = document.getElementById('scrollProgressFill');
-  if (progressFill) {
-    progressFill.style.width = scrolled + '%';
-  }
-  
-  // Removed: Scroll check logic
+    const aboutPage = document.getElementById('aboutUsPage');
+    if (!aboutPage) return;
+    
+    // Use the aboutPage for scrolling if it's the main container with overflow
+    const scrollTop = aboutPage.scrollTop || window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = aboutPage.scrollHeight || document.documentElement.scrollHeight;
+    const clientHeight = aboutPage.clientHeight || window.innerHeight;
+    
+    // Calculate scroll percentage
+    const totalScrollableHeight = scrollHeight - clientHeight;
+    if (totalScrollableHeight <= 0) return; // Prevent division by zero if content is smaller than viewport
+    
+    const scrolled = (scrollTop / totalScrollableHeight) * 100;
+    
+    const progressFill = document.getElementById('scrollProgressFill');
+    if (progressFill) {
+        progressFill.style.width = scrolled + '%';
+    }
 }
 
 // Reveal on Scroll Animation
 function initRevealOnScroll() {
-  // ... (unchanged)
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, {
+        root: document.getElementById('aboutUsPage'), // Observe inside the aboutPage container
+        threshold: 0.1 
+    });
+    
+    revealElements.forEach(el => observer.observe(el));
 }
 
 // Animated Stats Counter
 function initStatsCounter() {
-  // ... (unchanged)
+    const statCounters = document.querySelectorAll('.stat-number');
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.dataset.animated) {
+                const target = parseInt(entry.target.getAttribute('data-target'));
+                animateCounter(entry.target, 0, target, 2000);
+                entry.target.dataset.animated = 'true'; // Mark as animated
+                // observer.unobserve(entry.target); // Optional: stop observing after animation
+            }
+        });
+    }, {
+        root: document.getElementById('aboutUsPage'), // Observe inside the aboutPage container
+        threshold: 0.5 
+    });
+
+    statCounters.forEach(counter => observer.observe(counter));
 }
 
 function animateCounter(element, start, end, duration) {
-  // ... (unchanged)
+    let startTime = null;
+
+    function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        element.textContent = value.toLocaleString();
+
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            element.textContent = end.toLocaleString();
+        }
+    }
+
+    window.requestAnimationFrame(step);
 }
 
-// Removed: Scroll Detection for Auth Popup (initScrollDetection and checkScrollPosition)
-
-// Show Auth Popup - (Triggered by CTA Button)
-function showAuthPopup() {
-  const authPopup = document.getElementById('authPopup');
-  if (authPopup) {
-    authPopup.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    // Removed: scrollCheckEnabled = false;
-  }
-}
-
-// Close Auth Popup
-function closeAuthPopup() {
-  const authPopup = document.getElementById('authPopup');
-  if (authPopup) {
-    authPopup.style.display = 'none';
-    document.body.style.overflow = 'auto'; // Re-enable scrolling
-    // Removed: scrollCheckEnabled = true;
-    // Removed: hasScrolledToBottom = false;
-  }
-}
-
-// Override existing login function to hide about page after successful login
-const originalLogin = typeof login !== 'undefined' ? login : null;
-
-async function login(e) {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail')?.value.trim();
-  const password = document.getElementById('loginPassword')?.value;
-  if(!email || !password) return showMessage('Fill all fields', 'error');
-  
-  try {
-    showMessage('Logging in...', 'success');
-    const data = await apiCall('/api/login', 'POST', { email, password });
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    currentUser = data.user;
-    showMessage('✅ Login successful!', 'success');
-    
-    setTimeout(() => {
-      // Hide about page and auth popup
-      const aboutPage = document.getElementById('aboutUsPage');
-      const authPopup = document.getElementById('authPopup');
-      const mainPage = document.getElementById('mainPage');
-      
-      if (aboutPage) aboutPage.style.display = 'none'; // Hides About Us
-      if (authPopup) authPopup.style.display = 'none';
-      if (mainPage) mainPage.style.display = 'block'; // Shows Main Page
-      
-      document.body.style.overflow = 'auto';
-      
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      const form = document.getElementById('loginForm');
-      if (form) form.reset();
-      loadPosts();
-      if (currentUser.college) initializeSocket();
-    }, 800);
-  } catch(error) {
-    showMessage('❌ Login failed: ' + error.message, 'error');
-  }
-}
-
-// Override existing logout function to show about page
-const originalLogout = typeof logout !== 'undefined' ? logout : null;
-
-function logout() {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
-  currentUser = null;
-  localStorage.clear();
-  
-  // Show about page instead of login page
-  const aboutPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  
-  if (aboutPage) aboutPage.style.display = 'block'; // Shows About Us Page
-  if (mainPage) mainPage.style.display = 'none';
-  
-  showMessage('👋 Logged out', 'success');
-  
-  // Reset scroll detection - Removed flags
-  
-  // Scroll to top of about page
-  window.scrollTo(0, 0);
-  if (aboutPage) aboutPage.scrollTo(0, 0);
-}
-
-// Override signup to handle about page
-async function signup(e) {
-  // ... (unchanged)
-}
-
-// Helper function to check if user is on about page
-function isOnAboutPage() {
-  const aboutPage = document.getElementById('aboutUsPage');
-  return aboutPage && aboutPage.style.display !== 'none';
-}
-
-// Add smooth scroll for anchor links
+// Add smooth scroll for anchor links within about us page
 document.addEventListener('click', function(e) {
-  // ... (unchanged)
+    const aboutPage = document.getElementById('aboutUsPage');
+    if (aboutPage && aboutPage.style.display === 'block') {
+        const target = e.target.closest('a[href^="#"]');
+        if (target) {
+            const id = target.getAttribute('href').substring(1);
+            const element = document.getElementById(id);
+            if (element) {
+                e.preventDefault();
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
 });
 
 // Prevent popup close when clicking inside auth box
 document.addEventListener('click', function(e) {
-  const authPopup = document.getElementById('authPopup');
-  const authBox = document.querySelector('.auth-box');
-  
-  if (authPopup && authPopup.style.display === 'flex') {
-    if (authBox && authBox.contains(e.target)) {
-      e.stopPropagation();
+    const authPopup = document.getElementById('authPopup');
+    const authBox = document.querySelector('.auth-box');
+    
+    if (authPopup && authPopup.style.display === 'flex') {
+        if (authBox && authBox.contains(e.target)) {
+            e.stopPropagation();
+        }
     }
-  }
 });
-
-console.log('✅ About Us page functionality loaded');
-
-// ========================================
-// CONTINUE WITH ORIGINAL VIBEMAP.JS CODE
-// ========================================
-
-// All your existing VibeXpert code continues here...
-// (The rest of the original vibemap.js file)
-
-
 // Rewards System Data
 const rewardsData = {
   dailyTasks: [
@@ -2169,3 +2306,4 @@ function showFullLeaderboard() {
 }
 
 console.log('✅ VibeXpert script loaded successfully');
+
