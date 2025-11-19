@@ -24,6 +24,21 @@ let searchTimeout = null;
 let currentCommentPostId = null;
 let hasScrolledToBottom = false;
 
+// Make functions globally available
+window.scrollToLogin = function() {
+  showLoginModal();
+};
+
+window.login = login;
+window.signup = signup;
+window.goLogin = goLogin;
+window.goSignup = goSignup;
+window.goForgotPassword = goForgotPassword;
+window.handleForgotPassword = handleForgotPassword;
+window.verifyResetCode = verifyResetCode;
+
+// ... rest of your code
+
 // Rewards System Data
 const rewardsData = {
   dailyTasks: [
@@ -1993,3 +2008,4 @@ function showContactModal() {
   const modal = document.getElementById('contactModal');
   if (modal) modal.style.display = 'flex';
   const hamburger = document.getElementById('hamburgerMenu');
+
