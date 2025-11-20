@@ -1,7 +1,11 @@
-// VIBEXPERT - COMPLETE FIXED VERSION WITH ALL FEATURES
+// ========================================
+// VIBEXPERT - COMPLETE ENHANCED VERSION
+// All Features: About Us → Login → Main App
+// ========================================
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
+// Global Variables
 let currentUser = null;
 let currentType = null;
 let currentPage = 1;
@@ -22,33 +26,108 @@ let currentCropIndex = -1;
 let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let hasScrolledToBottom = false;
 let scrollCheckEnabled = true;
 let scrollProgressIndicator = null;
 
+// Rewards System Data
+const rewardsData = {
+  dailyTasks: [
+    { id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
+    { id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
+    { id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
+    { id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
+  ],
+  achievements: [
+    { id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
+    { id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
+    { id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
+    { id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
+  ],
+  exclusiveRewards: [
+    { id: 'theme', title: 'Premium Themes', desc: 'Exclusive themes', cost: 500, icon: '🎨', category: 'cosmetic' },
+    { id: 'frame', title: 'Golden Frame', desc: 'Profile border', cost: 300, icon: '🖼️', category: 'cosmetic' },
+    { id: 'badge', title: 'Custom Badge', desc: 'Your own badge', cost: 800, icon: '🏆', category: 'premium' },
+    { id: 'adfree', title: 'Ad-Free 30 Days', desc: 'No distractions', cost: 1000, icon: '🚀', category: 'utility' },
+    { id: 'early', title: 'Early Access', desc: 'New features first', cost: 600, icon: '⚡', category: 'premium' },
+    { id: 'boost', title: 'Post Boost 5x', desc: 'Boost 5 posts', cost: 400, icon: '📢', category: 'utility' }
+  ],
+  leaderboard: [
+    { rank: 1, name: 'TechMaster', points: 5420, avatar: '👨‍💻', trend: 'up' },
+    { rank: 2, name: 'VibeQueen', points: 4890, avatar: '👸', trend: 'up' },
+    { rank: 3, name: 'CodeNinja', points: 4250, avatar: '🥷', trend: 'down' },
+    { rank: 4, name: 'StudyBuddy', points: 3870, avatar: '📚', trend: 'up' },
+    { rank: 5, name: 'MusicLover', points: 3420, avatar: '🎵', trend: 'same' }
+  ]
+};
 
+const musicLibrary = [
+  { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
+  { id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
+  { id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
+  { id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
+  { id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
+  { id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
+];
 
-// Initialize About Us Page on load
+const stickerLibrary = {
+  emotions: [
+    { id: 'happy', emoji: '😊', name: 'Happy' },
+    { id: 'laugh', emoji: '😂', name: 'Laugh' },
+    { id: 'love', emoji: '❤️', name: 'Love' },
+    { id: 'cool', emoji: '😎', name: 'Cool' },
+    { id: 'fire', emoji: '🔥', name: 'Fire' },
+    { id: 'star', emoji: '⭐', name: 'Star' }
+  ],
+  animals: [
+    { id: 'cat', emoji: '🐱', name: 'Cat' },
+    { id: 'dog', emoji: '🐶', name: 'Dog' },
+    { id: 'panda', emoji: '🐼', name: 'Panda' },
+    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
+    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
+  ],
+  objects: [
+    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+    { id: 'gift', emoji: '🎁', name: 'Gift' },
+    { id: 'camera', emoji: '📷', name: 'Camera' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'book', emoji: '📚', name: 'Book' },
+    { id: 'computer', emoji: '💻', name: 'Computer' }
+  ]
+};
+
+const colleges = {
+  nit: [
+    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
+    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
+    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
+    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}
+  ],
+  iit: [
+    {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
+    {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
+    {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
+    {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
+    {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'}
+  ],
+  vit: [
+    {name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
+    {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
+    {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'}
+  ],
+  other: [
+    {name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
+    {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
+    {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'}
+  ]
+};
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 VibeXpert initializing...');
   
@@ -90,6 +169,10 @@ document.addEventListener('DOMContentLoaded', function() {
   loadTrending();
   console.log('✅ Initialized');
 });
+
+// ========================================
+// ABOUT US PAGE FUNCTIONALITY
+// ========================================
 
 function showAboutUsPage() {
   document.body.classList.remove('logged-in');
@@ -243,25 +326,21 @@ function checkScrollPosition() {
 function showAuthPopupAutomatic() {
   console.log('🎉 User reached bottom - showing auth popup');
   showAuthPopup();
-  
-  // Confetti effect (optional)
   createConfetti();
 }
 
-// Show Auth Popup (can be triggered manually or automatically)
+// Show Auth Popup
 function showAuthPopup() {
   const authPopup = document.getElementById('authPopup');
   if (authPopup) {
     authPopup.classList.add('show');
     authPopup.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    document.body.style.overflow = 'hidden';
     
-    // Hide scroll indicator
     if (scrollProgressIndicator) {
       scrollProgressIndicator.classList.remove('show');
     }
     
-    // Add a subtle animation
     setTimeout(() => {
       const authContent = authPopup.querySelector('.auth-popup-content');
       if (authContent) {
@@ -277,9 +356,8 @@ function closeAuthPopup() {
   if (authPopup) {
     authPopup.classList.remove('show');
     authPopup.style.display = 'none';
-    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    document.body.style.overflow = 'auto';
     
-    // Reset scroll detection after a delay
     setTimeout(() => {
       scrollCheckEnabled = true;
       hasScrolledToBottom = false;
@@ -287,7 +365,7 @@ function closeAuthPopup() {
   }
 }
 
-// Confetti effect for celebration
+// Confetti effect
 function createConfetti() {
   const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
   for (let i = 0; i < 50; i++) {
@@ -311,314 +389,9 @@ function createConfetti() {
   }
 }
 
-// Override existing login function
-async function login(e) {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail')?.value.trim();
-  const password = document.getElementById('loginPassword')?.value;
-  if(!email || !password) return showMessage('Fill all fields', 'error');
-  
-  try {
-    showMessage('Logging in...', 'success');
-    const data = await apiCall('/api/login', 'POST', { email, password });
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    currentUser = data.user;
-    showMessage('✅ Login successful!', 'success');
-    
-    setTimeout(() => {
-      // Hide about page and auth popup
-      document.body.classList.add('logged-in');
-      const aboutPage = document.getElementById('aboutUsPage');
-      const authPopup = document.getElementById('authPopup');
-      const mainPage = document.getElementById('mainPage');
-      
-      if (aboutPage) aboutPage.style.display = 'none';
-      if (authPopup) {
-        authPopup.classList.remove('show');
-        authPopup.style.display = 'none';
-      }
-      if (mainPage) mainPage.style.display = 'block';
-      
-      document.body.style.overflow = 'auto';
-      
-      // Remove scroll indicator
-      if (scrollProgressIndicator) {
-        scrollProgressIndicator.remove();
-        scrollProgressIndicator = null;
-      }
-      
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      const form = document.getElementById('loginForm');
-      if (form) form.reset();
-      loadPosts();
-      if (currentUser.college) initializeSocket();
-    }, 800);
-  } catch(error) {
-    showMessage('❌ Login failed: ' + error.message, 'error');
-  }
-}
-
-// Override existing logout function
-function logout() {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
-  }
-  currentUser = null;
-  localStorage.clear();
-  
-  // Show about page instead of login page
-  document.body.classList.remove('logged-in');
-  const aboutPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  
-  if (aboutPage) aboutPage.style.display = 'block';
-  if (mainPage) mainPage.style.display = 'none';
-  
-  showMessage('👋 Logged out', 'success');
-  
-  // Reset scroll detection
-  hasScrolledToBottom = false;
-  scrollCheckEnabled = true;
-  
-  // Recreate scroll indicator
-  createScrollProgressIndicator();
-  
-  // Scroll to top of page
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Override signup to handle about page
-async function signup(e) {
-  e.preventDefault();
-  const username = document.getElementById('signupName')?.value.trim();
-  const email = document.getElementById('signupEmail')?.value.trim();
-  const registrationNumber = document.getElementById('signupReg')?.value.trim();
-  const password = document.getElementById('signupPass')?.value;
-  const confirm = document.getElementById('signupConfirm')?.value;
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
-  
-  if(!username || !email || !registrationNumber || !password || !confirm) {
-    return showMessage('Fill all fields', 'error');
-  }
-  if(!gender) {
-    return showMessage('Please select gender', 'error');
-  }
-  if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
-  if(password.length < 6) return showMessage('Password min 6 characters', 'error');
-  
-  try {
-    showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { 
-      username, 
-      email, 
-      password, 
-      registrationNumber,
-      gender 
-    });
-    showMessage('🎉 Account created! Check email', 'success');
-    const form = document.getElementById('signupForm');
-    if (form) form.reset();
-    setTimeout(() => goLogin(null), 2000);
-  } catch(error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-// Prevent popup close when clicking inside auth box
-document.addEventListener('click', function(e) {
-  const authPopup = document.getElementById('authPopup');
-  const authBox = document.querySelector('.auth-box');
-  const authOverlay = document.querySelector('.auth-popup-overlay');
-  
-  if (authPopup && authPopup.classList.contains('show')) {
-    // Close if clicking overlay
-    if (e.target === authOverlay) {
-      closeAuthPopup();
-    }
-    // Don't close if clicking inside auth box
-    if (authBox && authBox.contains(e.target)) {
-      e.stopPropagation();
-    }
-  }
-});
-
-// Add smooth scroll for CTA buttons
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('cta-button') || 
-      e.target.closest('.cta-button')) {
-    e.preventDefault();
-    showAuthPopup();
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Rewards System Data
-const rewardsData = {
-  dailyTasks: [
-    { id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
-    { id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
-    { id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
-    { id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
-  ],
-  achievements: [
-    { id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
-    { id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
-    { id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
-    { id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
-  ],
-  exclusiveRewards: [
-    { id: 'theme', title: 'Premium Themes', desc: 'Exclusive themes', cost: 500, icon: '🎨', category: 'cosmetic' },
-    { id: 'frame', title: 'Golden Frame', desc: 'Profile border', cost: 300, icon: '🖼️', category: 'cosmetic' },
-    { id: 'badge', title: 'Custom Badge', desc: 'Your own badge', cost: 800, icon: '🏆', category: 'premium' },
-    { id: 'adfree', title: 'Ad-Free 30 Days', desc: 'No distractions', cost: 1000, icon: '🚀', category: 'utility' },
-    { id: 'early', title: 'Early Access', desc: 'New features first', cost: 600, icon: '⚡', category: 'premium' },
-    { id: 'boost', title: 'Post Boost 5x', desc: 'Boost 5 posts', cost: 400, icon: '📢', category: 'utility' }
-  ],
-  leaderboard: [
-    { rank: 1, name: 'TechMaster', points: 5420, avatar: '👨‍💻', trend: 'up' },
-    { rank: 2, name: 'VibeQueen', points: 4890, avatar: '👸', trend: 'up' },
-    { rank: 3, name: 'CodeNinja', points: 4250, avatar: '🥷', trend: 'down' },
-    { rank: 4, name: 'StudyBuddy', points: 3870, avatar: '📚', trend: 'up' },
-    { rank: 5, name: 'MusicLover', points: 3420, avatar: '🎵', trend: 'same' }
-  ]
-};
-
-const musicLibrary = [
-  { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
-  { id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
-  { id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
-  { id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
-  { id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
-  { id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
-];
-
-const stickerLibrary = {
-  emotions: [
-    { id: 'happy', emoji: '😊', name: 'Happy' },
-    { id: 'laugh', emoji: '😂', name: 'Laugh' },
-    { id: 'love', emoji: '❤️', name: 'Love' },
-    { id: 'cool', emoji: '😎', name: 'Cool' },
-    { id: 'fire', emoji: '🔥', name: 'Fire' },
-    { id: 'star', emoji: '⭐', name: 'Star' }
-  ],
-  animals: [
-    { id: 'cat', emoji: '🐱', name: 'Cat' },
-    { id: 'dog', emoji: '🐶', name: 'Dog' },
-    { id: 'panda', emoji: '🐼', name: 'Panda' },
-    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
-    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
-    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
-  ],
-  objects: [
-    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
-    { id: 'gift', emoji: '🎁', name: 'Gift' },
-    { id: 'camera', emoji: '📷', name: 'Camera' },
-    { id: 'music', emoji: '🎵', name: 'Music' },
-    { id: 'book', emoji: '📚', name: 'Book' },
-    { id: 'computer', emoji: '💻', name: 'Computer' }
-  ]
-};
-
-const colleges = {
-  nit: [
-    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
-    {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-    {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
-    {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}
-  ],
-  iit: [
-    {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
-    {name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
-    {name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
-    {name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
-    {name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'}
-  ],
-  vit: [
-    {name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
-    {name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
-    {name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'}
-  ],
-  other: [
-    {name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
-    {name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
-    {name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'}
-  ]
-};
-
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 VibeXpert initializing...');
-  checkAuthStatus();
-  setupEventListeners();
-  initializeMusicPlayer();
-  updateLiveStats();
-  setInterval(updateLiveStats, 5000);
-  initializeSearchBar();
-  loadTrending();
-  console.log('✅ Initialized');
-});
+// ========================================
+// EVENT LISTENERS SETUP
+// ========================================
 
 function setupEventListeners() {
   const addMusicBtn = document.getElementById('addMusicBtn');
@@ -639,6 +412,26 @@ function setupEventListeners() {
     if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
       hamburgerMenu.style.display = 'none';
     }
+    
+    // Auth popup overlay click
+    const authPopup = document.getElementById('authPopup');
+    const authBox = document.querySelector('.auth-box');
+    const authOverlay = document.querySelector('.auth-popup-overlay');
+    
+    if (authPopup && authPopup.classList.contains('show')) {
+      if (e.target === authOverlay) {
+        closeAuthPopup();
+      }
+      if (authBox && authBox.contains(e.target)) {
+        e.stopPropagation();
+      }
+    }
+    
+    // CTA button clicks
+    if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
+      e.preventDefault();
+      showAuthPopup();
+    }
   });
 }
 
@@ -652,7 +445,10 @@ function initializeMusicPlayer() {
   });
 }
 
-// AUTH
+// ========================================
+// AUTHENTICATION
+// ========================================
+
 function getToken() {
   return localStorage.getItem('authToken');
 }
@@ -698,43 +494,6 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   }
 }
 
-function checkAuthStatus() {
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  if(token && saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      showMainPage();
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      if (currentUser.college) {
-        updateLiveNotif(`Connected to ${currentUser.college}`);
-        initializeSocket();
-      }
-    } catch(e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
-      showLoginPage();
-    }
-  } else {
-    showLoginPage();
-  }
-}
-
-function showLoginPage() {
-  const loginPage = document.getElementById('loginPage');
-  const mainPage = document.getElementById('mainPage');
-  if (loginPage) loginPage.style.display = 'flex';
-  if (mainPage) mainPage.style.display = 'none';
-}
-
-function showMainPage() {
-  const loginPage = document.getElementById('loginPage');
-  const mainPage = document.getElementById('mainPage');
-  if (loginPage) loginPage.style.display = 'none';
-  if (mainPage) mainPage.style.display = 'block';
-}
-
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail')?.value.trim();
@@ -748,8 +507,27 @@ async function login(e) {
     localStorage.setItem('user', JSON.stringify(data.user));
     currentUser = data.user;
     showMessage('✅ Login successful!', 'success');
+    
     setTimeout(() => {
-      showMainPage();
+      document.body.classList.add('logged-in');
+      const aboutPage = document.getElementById('aboutUsPage');
+      const authPopup = document.getElementById('authPopup');
+      const mainPage = document.getElementById('mainPage');
+      
+      if (aboutPage) aboutPage.style.display = 'none';
+      if (authPopup) {
+        authPopup.classList.remove('show');
+        authPopup.style.display = 'none';
+      }
+      if (mainPage) mainPage.style.display = 'block';
+      
+      document.body.style.overflow = 'auto';
+      
+      if (scrollProgressIndicator) {
+        scrollProgressIndicator.remove();
+        scrollProgressIndicator = null;
+      }
+      
       const userName = document.getElementById('userName');
       if (userName) userName.textContent = 'Hi, ' + currentUser.username;
       const form = document.getElementById('loginForm');
@@ -769,15 +547,26 @@ async function signup(e) {
   const registrationNumber = document.getElementById('signupReg')?.value.trim();
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
   
   if(!username || !email || !registrationNumber || !password || !confirm) {
     return showMessage('Fill all fields', 'error');
   }
+  if(!gender) {
+    return showMessage('Please select gender', 'error');
+  }
   if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
+  if(password.length < 6) return showMessage('Password min 6 characters', 'error');
   
   try {
     showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
+    await apiCall('/api/register', 'POST', { 
+      username, 
+      email, 
+      password, 
+      registrationNumber,
+      gender 
+    });
     showMessage('🎉 Account created! Check email', 'success');
     const form = document.getElementById('signupForm');
     if (form) form.reset();
@@ -819,8 +608,10 @@ function goForgotPassword(e) {
 
 async function handleForgotPassword(e) {
   e.preventDefault();
-  const email = document.getElementById('resetEmail')?.value.trim();
-  if(!email) return showMessage('Enter email', 'error');
+  const emailInput = document.getElementById('resetEmail');
+  if (!emailInput) return;
+  const email = emailInput.value.trim();
+  if (!email) return showMessage('⚠️ Enter email', 'error');
   
   try {
     showMessage('📧 Sending code...', 'success');
@@ -848,7 +639,7 @@ async function verifyResetCode(e) {
   if(newPassword.length < 6) return showMessage('⚠️ Min 6 characters', 'error');
   
   try {
-    showMessage('🔍 Verifying...', 'success');
+    showMessage('🔐 Verifying...', 'success');
     await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
     showMessage('✅ Password reset! Login now', 'success');
     const form = document.getElementById('forgotPasswordForm');
@@ -863,6 +654,19 @@ async function verifyResetCode(e) {
   }
 }
 
+async function resendResetCode() {
+  const email = document.getElementById('resetEmail')?.value.trim();
+  if (!email) return showMessage('⚠️ Email required', 'error');
+  
+  try {
+    showMessage('📧 Resending...', 'success');
+    await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ New code sent!', 'success');
+  } catch(error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
+}
+
 function logout() {
   if (socket) {
     socket.disconnect();
@@ -870,12 +674,26 @@ function logout() {
   }
   currentUser = null;
   localStorage.clear();
-  showLoginPage();
+  
+  document.body.classList.remove('logged-in');
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
+  
   showMessage('👋 Logged out', 'success');
-  goLogin(null);
+  
+  hasScrolledToBottom = false;
+  scrollCheckEnabled = true;
+  createScrollProgressIndicator();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ========================================
 // NAVIGATION
+// ========================================
+
 function showPage(name, e) {
   if(e) e.preventDefault();
   document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
@@ -901,7 +719,10 @@ function goHome() {
   if (homeLink) homeLink.classList.add('active');
 }
 
-// POSTS
+// ========================================
+// POSTS SYSTEM
+// ========================================
+
 async function createPost() {
   const postText = document.getElementById('postText')?.value.trim();
   console.log('🚀 Creating post');
@@ -1003,7 +824,7 @@ function renderPosts(posts) {
     const media = post.media || [];
     const time = new Date(post.created_at || post.timestamp).toLocaleString();
     const isOwn = currentUser && authorId === currentUser.id;
-    const postedTo = post.posted_to === 'community' ? '🌍 Community' : '👤 Profile';
+    const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
     const music = post.music || null;
     const stickers = post.stickers || [];
     const likeCount = post.like_count || 0;
@@ -1079,7 +900,10 @@ async function deletePost(postId) {
   }
 }
 
-// LIKE
+// ========================================
+// LIKE/COMMENT/SHARE FUNCTIONALITY
+// ========================================
+
 async function toggleLike(postId) {
   if (!currentUser) return showMessage('⚠️ Login to like', 'error');
   try {
@@ -1105,7 +929,6 @@ async function toggleLike(postId) {
   }
 }
 
-// COMMENT
 function openCommentModal(postId) {
   if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
   currentCommentPostId = postId;
@@ -1214,7 +1037,6 @@ async function deleteComment(commentId, postId) {
   }
 }
 
-// SHARE
 function sharePost(postId, postContent = '', author = '') {
   const shareModal = document.createElement('div');
   shareModal.className = 'modal';
@@ -1299,7 +1121,10 @@ async function shareVia(platform, url, text = '') {
   }
 }
 
-// MEDIA
+// ========================================
+// MEDIA HANDLING
+// ========================================
+
 function openPhotoGallery() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1310,7 +1135,7 @@ function openPhotoGallery() {
 }
 
 function openCamera() {
-  if (navigator.mediaDevices?.getUserMedia) {
+  if (navigator.mediaDevices?.getUserCamera) {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(() => {
         showMessage('📷 Camera ready', 'success');
@@ -1433,7 +1258,10 @@ function removePhoto(index) {
   showMessage('🗑️ Removed', 'success');
 }
 
+// ========================================
 // MUSIC & STICKERS
+// ========================================
+
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
   const selector = document.getElementById('musicSelector');
@@ -1575,7 +1403,10 @@ function selectPostDestination(destination) {
   showMessage(`📍 Post to ${displayText}`, 'success');
 }
 
-// CELEBRATION
+// ========================================
+// POST CELEBRATION MODAL
+// ========================================
+
 function showPostCelebrationModal(postCount) {
   const milestone = getMilestoneForPost(postCount);
   const modal = document.createElement('div');
@@ -1632,7 +1463,10 @@ function shareAchievement(postCount) {
   }
 }
 
-// REWARDS
+// ========================================
+// REWARDS SYSTEM
+// ========================================
+
 function loadRewardsPage() {
   const container = document.getElementById('rewards');
   if (!container) return;
@@ -1680,7 +1514,10 @@ function purchaseReward(rewardId, cost) {
   }
 }
 
-// COLLEGE
+// ========================================
+// COLLEGE VERIFICATION
+// ========================================
+
 function selectUniversity(type) {
   currentType = type;
   currentPage = 1;
@@ -1797,7 +1634,7 @@ async function verifyCollegeCode() {
   const code = codeInput.value.trim();
   if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
   try {
-    showMessage('🔍 Verifying...', 'success');
+    showMessage('🔐 Verifying...', 'success');
     const data = await apiCall('/api/college/verify', 'POST', { code });
     showMessage('🎉 ' + data.message, 'success');
     currentUser.college = data.college;
@@ -1815,7 +1652,10 @@ async function verifyCollegeCode() {
   }
 }
 
-// COMMUNITIES
+// ========================================
+// COMMUNITIES & CHAT
+// ========================================
+
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   if (!container) return;
@@ -1889,12 +1729,6 @@ async function loadCommunityPosts() {
       postsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
     }
   }
-}
-
-function openCommunityChat() {
-  const chatSection = document.getElementById('chatSection');
-  if (chatSection) chatSection.style.display = 'block';
-  loadCommunityMessages();
 }
 
 async function loadCommunityMessages() {
@@ -2014,7 +1848,10 @@ async function reactToMessage(messageId, emoji = '❤️') {
   }
 }
 
-// SOCKET
+// ========================================
+// SOCKET.IO REAL-TIME
+// ========================================
+
 function initializeSocket() {
   if (socket) return;
   socket = io(API_URL);
@@ -2043,7 +1880,10 @@ function initializeSocket() {
   });
 }
 
+// ========================================
 // PROFILE & SEARCH
+// ========================================
+
 function initializeSearchBar() {
   const searchBox = document.getElementById('searchBox');
   const searchResults = document.getElementById('searchResults');
@@ -2215,7 +2055,27 @@ function toggleEditProfile() {
   showMessage('✏️ Edit feature coming soon!', 'success');
 }
 
-// UTILITIES
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  try {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
+      return;
+    }
+    container.innerHTML = renderPosts(data.posts);
+  } catch(error) {
+    console.error('❌ Load user posts:', error);
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
+  }
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
 function showModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.style.display = 'flex';
@@ -2402,27 +2262,14 @@ function loadTrending() {
   container.innerHTML = html;
 }
 
-async function loadUserProfilePosts(userId) {
-  const container = document.getElementById('userProfilePosts');
-  if (!container) return;
-  try {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
-    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
-    if (!data.posts || data.posts.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
-      return;
-    }
-    container.innerHTML = renderPosts(data.posts);
-  } catch(error) {
-    console.error('❌ Load user posts:', error);
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
-  }
-}
-
-// ADDITIONAL HELPERS
 function showFullLeaderboard() {
   showMessage('📊 Full leaderboard coming soon!', 'success');
 }
 
-console.log('✅ VibeXpert script loaded successfully');
+// ========================================
+// FINAL CONSOLE LOG
+// ========================================
 
+console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
+console.log('🎉 Features: About Us → Login → Main App');
+console.log('🚀 All functionality integrated successfully!');
