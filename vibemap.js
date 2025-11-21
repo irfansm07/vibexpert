@@ -103,7 +103,8 @@ const colleges = {
     {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
     {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
     {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}
+    {name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'},
+    
   ],
   iit: [
     {name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
@@ -2498,5 +2499,6 @@ async function handleReactionClick(messageId, emoji, pillEl, reactionBar) {
 console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
 console.log('🎉 Features: About Us → Login → Main App');
 console.log('🚀 All functionality integrated successfully!');
+
 
 
