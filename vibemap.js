@@ -1748,37 +1748,52 @@ async function loadCommunityMessages() {
   }
 }
 
-// ===== Replace existing appendMessageToChat(msg) with this implementation =====
+// Enhanced appendMessageToChat with reactions support
 function appendMessageToChat(msg) {
-  const messagesEl = document.getElementById('chatMessages');
+  // find the chat messages container (try multiple common IDs/classes)
+  const messagesEl = document.getElementById('chatMessages') || document.getElementById('chatMessagesArea') || document.querySelector('.chat-messages');
   if (!messagesEl) return;
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = msg.users?.username || 'User';
+  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
   const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
   const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
 
-  // create container
+  // prevent duplicate rendering
+  if (document.getElementById('msg-' + messageId)) return;
+
+  // wrapper
   const wrapper = document.createElement('div');
   wrapper.className = 'chat-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `msg-${messageId}`;
+  wrapper.style.position = 'relative';
 
-  // avatar (small square)
+  // avatar
   const avatar = document.createElement('div');
   avatar.className = 'avatar';
-  avatar.textContent = (msg.users && msg.users.username) ? msg.users.username.charAt(0).toUpperCase() : 'U';
+  avatar.textContent = sender.charAt(0).toUpperCase();
 
-  // message content
+  // body
   const body = document.createElement('div');
   body.className = 'message-body';
-  body.innerHTML = `<div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>`;
+  body.style.display = 'flex';
+  body.style.flexDirection = 'column';
 
-  // meta row (time + reactions)
+  // message text
+  const textDiv = document.createElement('div');
+  textDiv.className = 'message-text';
+  textDiv.innerHTML = escapeHtml(msg.text || msg.content || '');
+
+  // meta row
   const meta = document.createElement('div');
   meta.className = 'meta';
+  meta.style.display = 'flex';
+  meta.style.alignItems = 'center';
+  meta.style.gap = '8px';
+  meta.style.marginTop = '8px';
+
   const userLabel = document.createElement('div');
   userLabel.style.fontWeight = '700';
-  userLabel.style.marginRight = '8px';
   userLabel.textContent = sender;
 
   const timeSpan = document.createElement('div');
@@ -1788,48 +1803,75 @@ function appendMessageToChat(msg) {
   meta.appendChild(userLabel);
   meta.appendChild(timeSpan);
 
-  // reactions (if any)
-  if (msg.message_reactions && Array.isArray(msg.message_reactions) && msg.message_reactions.length > 0) {
-    const reactionsWrapper = document.createElement('div');
-    reactionsWrapper.style.marginLeft = '8px';
-    reactionsWrapper.style.display = 'inline-flex';
-    reactionsWrapper.style.gap = '6px';
-    // compute counts
-    const counts = {};
-    msg.message_reactions.forEach(r => counts[r.emoji] = (counts[r.emoji] || 0) + 1);
-    Object.keys(counts).forEach(e => {
-      const rEl = document.createElement('span');
-      rEl.textContent = `${e} ${counts[e]}`;
-      rEl.style.fontSize = '12px';
-      reactionsWrapper.appendChild(rEl);
+  // reaction bar
+  const reactionBar = document.createElement('div');
+  reactionBar.className = 'reaction-bar';
+
+  // default emoji set (extend as needed)
+  const emojiSet = ['❤️','👍','😂','🔥','🎉','😮'];
+
+  // compute existing counts and whether current user reacted
+  const counts = {};
+  const userReacted = {};
+  if (msg.message_reactions && Array.isArray(msg.message_reactions)) {
+    msg.message_reactions.forEach(r => {
+      counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+      if (r.user_id && currentUser && r.user_id === currentUser.id) userReacted[r.emoji] = true;
     });
-    meta.appendChild(reactionsWrapper);
   }
 
-  // Assemble (avatar + body + meta)
-  // For own messages place avatar on the right minimally; for others, show avatar left
+  // combine emojis to show (preserve existing reactions + common set)
+  const emojisToShow = Array.from(new Set([...emojiSet, ...Object.keys(counts)]));
+
+  emojisToShow.forEach(e => {
+    const pill = document.createElement('div');
+    pill.className = 'reaction-pill' + (userReacted[e] ? ' selected' : '');
+    pill.dataset.emoji = e;
+    // show count only when >0
+    const countText = (counts[e] && counts[e] > 0) ? counts[e] : '';
+    pill.innerHTML = `<span class="emoji">${e}</span><span class="reaction-count">${countText}</span>`;
+    pill.onclick = (ev) => { ev.stopPropagation(); handleReactionClick(messageId, e, pill, reactionBar); };
+    reactionBar.appendChild(pill);
+  });
+
+  // "Add" button to open picker
+  const addBtn = document.createElement('div');
+  addBtn.className = 'reaction-pill';
+  addBtn.style.padding = '6px';
+  addBtn.style.minWidth = '36px';
+  addBtn.style.justifyContent = 'center';
+  addBtn.style.fontWeight = '700';
+  addBtn.textContent = '✚';
+  addBtn.title = 'Add reaction';
+  addBtn.onclick = (ev) => { ev.stopPropagation(); showEmojiPicker(ev.currentTarget, messageId, reactionBar); };
+  reactionBar.appendChild(addBtn);
+
+  // assemble nodes
   if (isOwn) {
+    body.appendChild(textDiv);
     body.appendChild(meta);
+    body.appendChild(reactionBar);
     wrapper.appendChild(body);
-    // optional: show small avatar on the right
     const avatarRight = avatar.cloneNode(true);
     avatarRight.style.marginLeft = '8px';
     wrapper.appendChild(avatarRight);
   } else {
     wrapper.appendChild(avatar);
     wrapper.appendChild(body);
+    body.appendChild(textDiv);
     body.appendChild(meta);
+    body.appendChild(reactionBar);
   }
 
   messagesEl.appendChild(wrapper);
 
-  // Scroll to bottom smoothly
+  // smooth scroll to bottom
   messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
 
-  // small helper to escape HTML
+  // helper: escape HTML
   function escapeHtml(unsafe) {
     if (!unsafe) return '';
-    return unsafe
+    return String(unsafe)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -2324,6 +2366,131 @@ function showFullLeaderboard() {
   showMessage('📊 Full leaderboard coming soon!', 'success');
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// show emoji picker near target pill and send reaction when selected
+function showEmojiPicker(targetElement, messageId, reactionBar) {
+  // remove existing pickers
+  document.querySelectorAll('.emoji-picker').forEach(e => e.remove());
+  const picker = document.createElement('div');
+  picker.className = 'emoji-picker';
+  const emojis = ['❤️','👍','😂','🔥','🎉','😮','😢','👏','🤝','🙌'];
+  emojis.forEach(e => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = e;
+    b.onclick = (ev) => {
+      ev.stopPropagation();
+      handleReactionClick(messageId, e, null, reactionBar);
+      picker.remove();
+    };
+    picker.appendChild(b);
+  });
+  document.body.appendChild(picker);
+  // position: try to place above target, fallback to below
+  const rect = targetElement.getBoundingClientRect();
+  picker.style.left = Math.max(8, rect.left) + 'px';
+  picker.style.top = Math.max(8, rect.top - picker.offsetHeight - 8) + 'px';
+  // if off-screen top, place below
+  if (rect.top - picker.offsetHeight - 8 < 0) {
+    picker.style.top = (rect.bottom + 8) + 'px';
+  }
+  // close on outside click
+  setTimeout(() => {
+    const onDoc = (ev) => {
+      if (!picker.contains(ev.target)) {
+        picker.remove();
+        document.removeEventListener('click', onDoc);
+      }
+    };
+    document.addEventListener('click', onDoc);
+  }, 10);
+}
+
+// handle reaction click: toggle reaction for current user
+async function handleReactionClick(messageId, emoji, pillEl, reactionBar) {
+  try {
+    // optimistic UI update
+    let pill = pillEl;
+    if (!pill) {
+      pill = Array.from(reactionBar.querySelectorAll('.reaction-pill')).find(p => p.dataset.emoji === emoji);
+    }
+    if (!pill) {
+      pill = document.createElement('div');
+      pill.className = 'reaction-pill selected';
+      pill.dataset.emoji = emoji;
+      pill.innerHTML = `<span class="emoji">${emoji}</span><span class="reaction-count">1</span>`;
+      // insert before last addBtn
+      reactionBar.insertBefore(pill, reactionBar.lastChild);
+    } else {
+      const countSpan = pill.querySelector('.reaction-count');
+      let count = parseInt(countSpan.textContent) || 0;
+      if (pill.classList.contains('selected')) {
+        pill.classList.remove('selected');
+        count = Math.max(0, count - 1);
+      } else {
+        pill.classList.add('selected');
+        count = count + 1;
+      }
+      countSpan.textContent = count || '';
+    }
+
+    // send to server (try apiCall if present, else fetch)
+    const payload = { message_id: messageId, emoji: emoji };
+    if (typeof apiCall === 'function') {
+      // if apiCall expects FormData or JSON, your existing apiCall will handle it
+      await apiCall('/api/message/react', 'POST', payload);
+    } else if (window.fetch) {
+      await fetch('/api/message/react', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+  } catch (err) {
+    console.error('Reaction failed', err);
+    if (typeof showMessage === 'function') showMessage('Failed to send reaction', 'error');
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ========================================
 // FINAL CONSOLE LOG
 // ========================================
@@ -2331,4 +2498,5 @@ function showFullLeaderboard() {
 console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
 console.log('🎉 Features: About Us → Login → Main App');
 console.log('🚀 All functionality integrated successfully!');
+
 
