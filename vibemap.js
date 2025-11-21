@@ -1748,38 +1748,96 @@ async function loadCommunityMessages() {
   }
 }
 
+// ===== Replace existing appendMessageToChat(msg) with this implementation =====
 function appendMessageToChat(msg) {
   const messagesEl = document.getElementById('chatMessages');
   if (!messagesEl) return;
-  const isOwn = msg.sender_id === currentUser.id;
+  const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = msg.users?.username || 'User';
-  const messageTime = new Date(msg.timestamp);
-  const now = new Date();
-  const canEdit = isOwn && ((now - messageTime) / 1000 / 60) < 2;
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'}`;
-  messageDiv.id = `msg-${msg.id}`;
-  const reactions = msg.message_reactions || [];
-  const reactionCounts = {};
-  reactions.forEach(r => {
-    reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
-  });
-  messageDiv.innerHTML = `
-    ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
-    <div class="text">${msg.content}${msg.edited ? ' <span style="font-size:10px;color:#888;">(edited)</span>' : ''}</div>
-    ${Object.keys(reactionCounts).length > 0 ? `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">${Object.entries(reactionCounts).map(([emoji, count]) => `<span style="background:rgba(79,116,163,0.2);padding:2px 6px;border-radius:10px;font-size:12px;">${emoji} ${count}</span>`).join('')}</div>` : ''}
-    <div style="display:flex;gap:8px;margin-top:8px;font-size:11px;color:#888;">
-      <span onclick="reactToMessage('${msg.id}')" style="cursor:pointer;">❤️</span>
-      <span onclick="reactToMessage('${msg.id}','👍')" style="cursor:pointer;">👍</span>
-      <span onclick="reactToMessage('${msg.id}','😂')" style="cursor:pointer;">😂</span>
-      <span onclick="reactToMessage('${msg.id}','🔥')" style="cursor:pointer;">🔥</span>
-      ${canEdit ? `<span onclick="editMessage('${msg.id}','${msg.content.replace(/'/g, "\\'")}')" style="cursor:pointer;">✏️</span>` : ''}
-      ${isOwn ? `<span onclick="deleteMessage('${msg.id}')" style="cursor:pointer;">🗑️</span>` : ''}
-    </div>
-  `;
-  messagesEl.appendChild(messageDiv);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
+  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
+
+  // create container
+  const wrapper = document.createElement('div');
+  wrapper.className = 'chat-message ' + (isOwn ? 'own' : 'other');
+  wrapper.id = `msg-${messageId}`;
+
+  // avatar (small square)
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = (msg.users && msg.users.username) ? msg.users.username.charAt(0).toUpperCase() : 'U';
+
+  // message content
+  const body = document.createElement('div');
+  body.className = 'message-body';
+  body.innerHTML = `<div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>`;
+
+  // meta row (time + reactions)
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const userLabel = document.createElement('div');
+  userLabel.style.fontWeight = '700';
+  userLabel.style.marginRight = '8px';
+  userLabel.textContent = sender;
+
+  const timeSpan = document.createElement('div');
+  timeSpan.style.opacity = '0.8';
+  timeSpan.textContent = timeLabel;
+
+  meta.appendChild(userLabel);
+  meta.appendChild(timeSpan);
+
+  // reactions (if any)
+  if (msg.message_reactions && Array.isArray(msg.message_reactions) && msg.message_reactions.length > 0) {
+    const reactionsWrapper = document.createElement('div');
+    reactionsWrapper.style.marginLeft = '8px';
+    reactionsWrapper.style.display = 'inline-flex';
+    reactionsWrapper.style.gap = '6px';
+    // compute counts
+    const counts = {};
+    msg.message_reactions.forEach(r => counts[r.emoji] = (counts[r.emoji] || 0) + 1);
+    Object.keys(counts).forEach(e => {
+      const rEl = document.createElement('span');
+      rEl.textContent = `${e} ${counts[e]}`;
+      rEl.style.fontSize = '12px';
+      reactionsWrapper.appendChild(rEl);
+    });
+    meta.appendChild(reactionsWrapper);
+  }
+
+  // Assemble (avatar + body + meta)
+  // For own messages place avatar on the right minimally; for others, show avatar left
+  if (isOwn) {
+    body.appendChild(meta);
+    wrapper.appendChild(body);
+    // optional: show small avatar on the right
+    const avatarRight = avatar.cloneNode(true);
+    avatarRight.style.marginLeft = '8px';
+    wrapper.appendChild(avatarRight);
+  } else {
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(body);
+    body.appendChild(meta);
+  }
+
+  messagesEl.appendChild(wrapper);
+
+  // Scroll to bottom smoothly
+  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+
+  // small helper to escape HTML
+  function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 }
+
 
 function updateMessageInChat(msg) {
   const messageEl = document.getElementById(`msg-${msg.id}`);
@@ -2273,3 +2331,4 @@ function showFullLeaderboard() {
 console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
 console.log('🎉 Features: About Us → Login → Main App');
 console.log('🚀 All functionality integrated successfully!');
+
