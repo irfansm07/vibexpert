@@ -1,11 +1,8 @@
-// ========================================
-// VIBEXPERT - COMPLETE ENHANCED VERSION
-// All Features: About Us → Login → Main App
-// ========================================
+// VIBEXPERT - COMPLETE VERSION WITH ALL FEATURES + ABOUT US PAGE
+// Keep this as your vibemap.js file
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
-// Global Variables
 let currentUser = null;
 let currentType = null;
 let currentPage = 1;
@@ -26,9 +23,6 @@ let currentCropIndex = -1;
 let currentFilters = {};
 let searchTimeout = null;
 let currentCommentPostId = null;
-let hasScrolledToBottom = false;
-let scrollCheckEnabled = true;
-let scrollProgressIndicator = null;
 
 // Rewards System Data
 const rewardsData = {
@@ -124,43 +118,57 @@ const colleges = {
   ]
 };
 
-// ========================================
-// INITIALIZATION
-// ========================================
+// ==================== NEW: ABOUT PAGE NAVIGATION ====================
+
+function goToLogin() {
+  const aboutPage = document.getElementById('aboutPage');
+  const loginPage = document.getElementById('loginPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'none';
+  if (loginPage) loginPage.style.display = 'flex';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  goLogin(null);
+  window.scrollTo(0, 0);
+  console.log('📄 → Login page');
+}
+
+function goToAbout() {
+  const aboutPage = document.getElementById('aboutPage');
+  const loginPage = document.getElementById('loginPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (loginPage) loginPage.style.display = 'none';
+  if (mainPage) mainPage.style.display = 'none';
+  
+  window.scrollTo(0, 0);
+  console.log('📄 → About page');
+}
+
+function scrollToFeatures() {
+  const featuresSection = document.getElementById('features');
+  if (featuresSection) {
+    featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function showAboutPage() {
+  const aboutPage = document.getElementById('aboutPage');
+  const loginPage = document.getElementById('loginPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (loginPage) loginPage.style.display = 'none';
+  if (mainPage) mainPage.style.display = 'none';
+}
+
+// ==================== INITIALIZE ====================
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 VibeXpert initializing...');
-  
-  // Check if user is already logged in
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  
-  if (token && saved) {
-    // User is logged in - hide about page, show main page
-    document.body.classList.add('logged-in');
-    const aboutPage = document.getElementById('aboutUsPage');
-    const mainPage = document.getElementById('mainPage');
-    if (aboutPage) aboutPage.style.display = 'none';
-    if (mainPage) mainPage.style.display = 'block';
-    
-    try {
-      currentUser = JSON.parse(saved);
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-      if (currentUser.college) {
-        updateLiveNotif(`Connected to ${currentUser.college}`);
-        initializeSocket();
-      }
-    } catch(e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
-      showAboutUsPage();
-    }
-  } else {
-    // User not logged in - show about page
-    showAboutUsPage();
-  }
-  
+  checkInitialPage();
   setupEventListeners();
   initializeMusicPlayer();
   updateLiveStats();
@@ -170,228 +178,29 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ Initialized');
 });
 
-// ========================================
-// ABOUT US PAGE FUNCTIONALITY
-// ========================================
-
-function showAboutUsPage() {
-  document.body.classList.remove('logged-in');
-  const aboutPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  if (aboutPage) aboutPage.style.display = 'block';
-  if (mainPage) mainPage.style.display = 'none';
+function checkInitialPage() {
+  const token = getToken();
+  const savedUser = localStorage.getItem('user');
   
-  // Initialize about page features
-  initScrollProgress();
-  initRevealOnScroll();
-  initStatsCounter();
-  initScrollDetection();
-  createScrollProgressIndicator();
-}
-
-// Create scroll progress indicator
-function createScrollProgressIndicator() {
-  if (scrollProgressIndicator) return;
-  
-  scrollProgressIndicator = document.createElement('div');
-  scrollProgressIndicator.className = 'scroll-progress-indicator';
-  scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
-  document.body.appendChild(scrollProgressIndicator);
-}
-
-// Scroll Progress Bar
-function initScrollProgress() {
-  window.addEventListener('scroll', updateScrollProgress);
-}
-
-function updateScrollProgress() {
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const scrollHeight = document.documentElement.scrollHeight;
-  const clientHeight = window.innerHeight;
-  
-  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
-  
-  // Update progress bar
-  const progressFill = document.getElementById('scrollProgressFill');
-  if (progressFill) {
-    progressFill.style.width = scrolled + '%';
-  }
-  
-  // Update scroll indicator
-  const scrollPercent = document.getElementById('scrollPercent');
-  if (scrollPercent) {
-    scrollPercent.textContent = Math.round(scrolled) + '%';
-  }
-  
-  // Show/hide indicator based on scroll
-  if (scrollProgressIndicator) {
-    if (scrolled > 10 && scrolled < 95) {
-      scrollProgressIndicator.classList.add('show');
-    } else {
-      scrollProgressIndicator.classList.remove('show');
-    }
-  }
-  
-  // Check if scrolled to bottom (95% threshold)
-  if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
-    hasScrolledToBottom = true;
-    scrollCheckEnabled = false;
-    showAuthPopupAutomatic();
-  }
-}
-
-// Reveal on Scroll Animation
-function initRevealOnScroll() {
-  const revealElements = document.querySelectorAll('.reveal-on-scroll');
-  
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('revealed');
+  if (token && savedUser) {
+    try {
+      currentUser = JSON.parse(savedUser);
+      showMainPage();
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
       }
-    });
-  }, {
-    threshold: 0.15,
-    rootMargin: '0px 0px -50px 0px'
-  });
-  
-  revealElements.forEach(element => {
-    revealObserver.observe(element);
-  });
-}
-
-// Animated Stats Counter
-function initStatsCounter() {
-  const statNumbers = document.querySelectorAll('.stat-number');
-  let hasAnimated = false;
-  
-  const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !hasAnimated) {
-        hasAnimated = true;
-        statNumbers.forEach(stat => {
-          const target = parseInt(stat.getAttribute('data-count'));
-          animateCounter(stat, 0, target, 2000);
-        });
-      }
-    });
-  }, {
-    threshold: 0.5
-  });
-  
-  const statsSection = document.querySelector('.stats-grid');
-  if (statsSection) {
-    statsObserver.observe(statsSection);
-  }
-}
-
-function animateCounter(element, start, end, duration) {
-  const range = end - start;
-  const increment = range / (duration / 30);
-  let current = start;
-  
-  const timer = setInterval(() => {
-    current += increment;
-    if (current >= end) {
-      current = end;
-      clearInterval(timer);
+    } catch (e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutPage();
     }
-    element.textContent = Math.floor(current).toLocaleString();
-  }, 16);
-}
-
-// Scroll Detection for Auth Popup
-function initScrollDetection() {
-  window.addEventListener('scroll', checkScrollPosition);
-}
-
-function checkScrollPosition() {
-  if (!scrollCheckEnabled || hasScrolledToBottom) return;
-  
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const scrollHeight = document.documentElement.scrollHeight;
-  const clientHeight = window.innerHeight;
-  
-  const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
-  
-  // Show auth popup when user reaches 95% of page
-  if (scrollPercentage >= 95) {
-    hasScrolledToBottom = true;
-    scrollCheckEnabled = false;
-    showAuthPopupAutomatic();
+  } else {
+    showAboutPage();
   }
 }
-
-// Show Auth Popup Automatically
-function showAuthPopupAutomatic() {
-  console.log('🎉 User reached bottom - showing auth popup');
-  showAuthPopup();
-  createConfetti();
-}
-
-// Show Auth Popup
-function showAuthPopup() {
-  const authPopup = document.getElementById('authPopup');
-  if (authPopup) {
-    authPopup.classList.add('show');
-    authPopup.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    if (scrollProgressIndicator) {
-      scrollProgressIndicator.classList.remove('show');
-    }
-    
-    setTimeout(() => {
-      const authContent = authPopup.querySelector('.auth-popup-content');
-      if (authContent) {
-        authContent.style.animation = 'popupSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      }
-    }, 50);
-  }
-}
-
-// Close Auth Popup
-function closeAuthPopup() {
-  const authPopup = document.getElementById('authPopup');
-  if (authPopup) {
-    authPopup.classList.remove('show');
-    authPopup.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    
-    setTimeout(() => {
-      scrollCheckEnabled = true;
-      hasScrolledToBottom = false;
-    }, 1000);
-  }
-}
-
-// Confetti effect
-function createConfetti() {
-  const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
-  for (let i = 0; i < 50; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'confetti';
-    confetti.style.cssText = `
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      background: ${colors[Math.floor(Math.random() * colors.length)]};
-      left: ${Math.random() * 100}%;
-      top: -10px;
-      opacity: ${Math.random()};
-      transform: rotate(${Math.random() * 360}deg);
-      animation: confettiFall ${2 + Math.random() * 3}s linear forwards;
-      z-index: 25000;
-      pointer-events: none;
-    `;
-    document.body.appendChild(confetti);
-    setTimeout(() => confetti.remove(), 5000);
-  }
-}
-
-// ========================================
-// EVENT LISTENERS SETUP
-// ========================================
 
 function setupEventListeners() {
   const addMusicBtn = document.getElementById('addMusicBtn');
@@ -412,26 +221,6 @@ function setupEventListeners() {
     if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
       hamburgerMenu.style.display = 'none';
     }
-    
-    // Auth popup overlay click
-    const authPopup = document.getElementById('authPopup');
-    const authBox = document.querySelector('.auth-box');
-    const authOverlay = document.querySelector('.auth-popup-overlay');
-    
-    if (authPopup && authPopup.classList.contains('show')) {
-      if (e.target === authOverlay) {
-        closeAuthPopup();
-      }
-      if (authBox && authBox.contains(e.target)) {
-        e.stopPropagation();
-      }
-    }
-    
-    // CTA button clicks
-    if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
-      e.preventDefault();
-      showAuthPopup();
-    }
   });
 }
 
@@ -445,9 +234,7 @@ function initializeMusicPlayer() {
   });
 }
 
-// ========================================
-// AUTHENTICATION
-// ========================================
+// ==================== AUTH ====================
 
 function getToken() {
   return localStorage.getItem('authToken');
@@ -494,6 +281,29 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   }
 }
 
+function showLoginPage() {
+  goToLogin();
+}
+
+function showMainPage() {
+  const aboutPage = document.getElementById('aboutPage');
+  const loginPage = document.getElementById('loginPage');
+  const mainPage = document.getElementById('mainPage');
+  
+  if (aboutPage) aboutPage.style.display = 'none';
+  if (loginPage) loginPage.style.display = 'none';
+  if (mainPage) mainPage.style.display = 'block';
+  
+  const userName = document.getElementById('userName');
+  if (userName && currentUser) userName.textContent = 'Hi, ' + currentUser.username;
+  
+  loadPosts();
+  if (currentUser && currentUser.college) {
+    updateLiveNotif(`Connected to ${currentUser.college}`);
+    initializeSocket();
+  }
+}
+
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail')?.value.trim();
@@ -507,33 +317,10 @@ async function login(e) {
     localStorage.setItem('user', JSON.stringify(data.user));
     currentUser = data.user;
     showMessage('✅ Login successful!', 'success');
-    
     setTimeout(() => {
-      document.body.classList.add('logged-in');
-      const aboutPage = document.getElementById('aboutUsPage');
-      const authPopup = document.getElementById('authPopup');
-      const mainPage = document.getElementById('mainPage');
-      
-      if (aboutPage) aboutPage.style.display = 'none';
-      if (authPopup) {
-        authPopup.classList.remove('show');
-        authPopup.style.display = 'none';
-      }
-      if (mainPage) mainPage.style.display = 'block';
-      
-      document.body.style.overflow = 'auto';
-      
-      if (scrollProgressIndicator) {
-        scrollProgressIndicator.remove();
-        scrollProgressIndicator = null;
-      }
-      
-      const userName = document.getElementById('userName');
-      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      showMainPage();
       const form = document.getElementById('loginForm');
       if (form) form.reset();
-      loadPosts();
-      if (currentUser.college) initializeSocket();
     }, 800);
   } catch(error) {
     showMessage('❌ Login failed: ' + error.message, 'error');
@@ -547,26 +334,15 @@ async function signup(e) {
   const registrationNumber = document.getElementById('signupReg')?.value.trim();
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
   
   if(!username || !email || !registrationNumber || !password || !confirm) {
     return showMessage('Fill all fields', 'error');
   }
-  if(!gender) {
-    return showMessage('Please select gender', 'error');
-  }
   if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
-  if(password.length < 6) return showMessage('Password min 6 characters', 'error');
   
   try {
     showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { 
-      username, 
-      email, 
-      password, 
-      registrationNumber,
-      gender 
-    });
+    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber });
     showMessage('🎉 Account created! Check email', 'success');
     const form = document.getElementById('signupForm');
     if (form) form.reset();
@@ -608,10 +384,8 @@ function goForgotPassword(e) {
 
 async function handleForgotPassword(e) {
   e.preventDefault();
-  const emailInput = document.getElementById('resetEmail');
-  if (!emailInput) return;
-  const email = emailInput.value.trim();
-  if (!email) return showMessage('⚠️ Enter email', 'error');
+  const email = document.getElementById('resetEmail')?.value.trim();
+  if(!email) return showMessage('⚠️ Enter email', 'error');
   
   try {
     showMessage('📧 Sending code...', 'success');
@@ -639,7 +413,7 @@ async function verifyResetCode(e) {
   if(newPassword.length < 6) return showMessage('⚠️ Min 6 characters', 'error');
   
   try {
-    showMessage('🔐 Verifying...', 'success');
+    showMessage('🔍 Verifying...', 'success');
     await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
     showMessage('✅ Password reset! Login now', 'success');
     const form = document.getElementById('forgotPasswordForm');
@@ -654,19 +428,6 @@ async function verifyResetCode(e) {
   }
 }
 
-async function resendResetCode() {
-  const email = document.getElementById('resetEmail')?.value.trim();
-  if (!email) return showMessage('⚠️ Email required', 'error');
-  
-  try {
-    showMessage('📧 Resending...', 'success');
-    await apiCall('/api/forgot-password', 'POST', { email });
-    showMessage('✅ New code sent!', 'success');
-  } catch(error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
 function logout() {
   if (socket) {
     socket.disconnect();
@@ -674,25 +435,11 @@ function logout() {
   }
   currentUser = null;
   localStorage.clear();
-  
-  document.body.classList.remove('logged-in');
-  const aboutPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  
-  if (aboutPage) aboutPage.style.display = 'block';
-  if (mainPage) mainPage.style.display = 'none';
-  
+  showAboutPage();
   showMessage('👋 Logged out', 'success');
-  
-  hasScrolledToBottom = false;
-  scrollCheckEnabled = true;
-  createScrollProgressIndicator();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========================================
-// NAVIGATION
-// ========================================
+// ==================== NAVIGATION ====================
 
 function showPage(name, e) {
   if(e) e.preventDefault();
@@ -719,9 +466,7 @@ function goHome() {
   if (homeLink) homeLink.classList.add('active');
 }
 
-// ========================================
-// POSTS SYSTEM
-// ========================================
+// ==================== POSTS ====================
 
 async function createPost() {
   const postText = document.getElementById('postText')?.value.trim();
@@ -824,7 +569,7 @@ function renderPosts(posts) {
     const media = post.media || [];
     const time = new Date(post.created_at || post.timestamp).toLocaleString();
     const isOwn = currentUser && authorId === currentUser.id;
-    const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
+    const postedTo = post.posted_to === 'community' ? '🌍 Community' : '👤 Profile';
     const music = post.music || null;
     const stickers = post.stickers || [];
     const likeCount = post.like_count || 0;
@@ -900,9 +645,7 @@ async function deletePost(postId) {
   }
 }
 
-// ========================================
-// LIKE/COMMENT/SHARE FUNCTIONALITY
-// ========================================
+// ==================== LIKE ====================
 
 async function toggleLike(postId) {
   if (!currentUser) return showMessage('⚠️ Login to like', 'error');
@@ -928,6 +671,8 @@ async function toggleLike(postId) {
     if (likeBtn) likeBtn.disabled = false;
   }
 }
+
+// ==================== COMMENT ====================
 
 function openCommentModal(postId) {
   if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
@@ -1037,6 +782,8 @@ async function deleteComment(commentId, postId) {
   }
 }
 
+// ==================== SHARE ====================
+
 function sharePost(postId, postContent = '', author = '') {
   const shareModal = document.createElement('div');
   shareModal.className = 'modal';
@@ -1121,9 +868,7 @@ async function shareVia(platform, url, text = '') {
   }
 }
 
-// ========================================
-// MEDIA HANDLING
-// ========================================
+// ==================== MEDIA ====================
 
 function openPhotoGallery() {
   const input = document.createElement('input');
@@ -1135,7 +880,7 @@ function openPhotoGallery() {
 }
 
 function openCamera() {
-  if (navigator.mediaDevices?.getUserCamera) {
+  if (navigator.mediaDevices?.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(() => {
         showMessage('📷 Camera ready', 'success');
@@ -1258,9 +1003,7 @@ function removePhoto(index) {
   showMessage('🗑️ Removed', 'success');
 }
 
-// ========================================
-// MUSIC & STICKERS
-// ========================================
+// ==================== MUSIC & STICKERS ====================
 
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
@@ -1403,9 +1146,7 @@ function selectPostDestination(destination) {
   showMessage(`📍 Post to ${displayText}`, 'success');
 }
 
-// ========================================
-// POST CELEBRATION MODAL
-// ========================================
+// ==================== CELEBRATION ====================
 
 function showPostCelebrationModal(postCount) {
   const milestone = getMilestoneForPost(postCount);
@@ -1463,9 +1204,7 @@ function shareAchievement(postCount) {
   }
 }
 
-// ========================================
-// REWARDS SYSTEM
-// ========================================
+// ==================== REWARDS ====================
 
 function loadRewardsPage() {
   const container = document.getElementById('rewards');
@@ -1514,9 +1253,7 @@ function purchaseReward(rewardId, cost) {
   }
 }
 
-// ========================================
-// COLLEGE VERIFICATION
-// ========================================
+// ==================== COLLEGE ====================
 
 function selectUniversity(type) {
   currentType = type;
@@ -1634,7 +1371,7 @@ async function verifyCollegeCode() {
   const code = codeInput.value.trim();
   if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
   try {
-    showMessage('🔐 Verifying...', 'success');
+    showMessage('🔍 Verifying...', 'success');
     const data = await apiCall('/api/college/verify', 'POST', { code });
     showMessage('🎉 ' + data.message, 'success');
     currentUser.college = data.college;
@@ -1652,9 +1389,7 @@ async function verifyCollegeCode() {
   }
 }
 
-// ========================================
-// COMMUNITIES & CHAT
-// ========================================
+// ==================== COMMUNITIES ====================
 
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
@@ -1677,267 +1412,12 @@ function loadCommunities() {
   `;
 }
 
-
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
-function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitComplaint() {
-  const category = document.getElementById('complaintCategory')?.value || 'other';
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
-  try {
-    showMessage('📤 Sending complaint...', 'success');
-    if (typeof apiCall === 'function') {
-      await apiCall('/api/complaint', 'POST', { category, text });
-    } else if (window.fetch) {
-      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
-    }
-    showMessage('✅ Complaint submitted. Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to submit', 'error');
-  }
-}
-
-function showFeedbackModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>💬 Feedback</h2>
-      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
-      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
-      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="file" id="feedbackAttachment" accept="image/*" />
-        <small style="color:#888;">Optional screenshot</small>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  const fileInput = document.getElementById('feedbackAttachment');
-  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
-  try {
-    showMessage('📤 Sending feedback...', 'success');
-    if (typeof apiCall === 'function') {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await apiCall('/api/feedback', 'POST', form);
-    } else if (window.fetch) {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await fetch('/api/feedback', { method:'POST', body: form });
-    }
-    showMessage('✅ Thank you for the feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
 function openCommunitySection() {
   const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+  if (chatSection) chatSection.style.display = 'block';
+  loadCommunityPosts();
+  loadCommunityMessages();
 }
-
-
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
-function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitComplaint() {
-  const category = document.getElementById('complaintCategory')?.value || 'other';
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
-  try {
-    showMessage('📤 Sending complaint...', 'success');
-    if (typeof apiCall === 'function') {
-      await apiCall('/api/complaint', 'POST', { category, text });
-    } else if (window.fetch) {
-      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
-    }
-    showMessage('✅ Complaint submitted. Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to submit', 'error');
-  }
-}
-
-function showFeedbackModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>💬 Feedback</h2>
-      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
-      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
-      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="file" id="feedbackAttachment" accept="image/*" />
-        <small style="color:#888;">Optional screenshot</small>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  const fileInput = document.getElementById('feedbackAttachment');
-  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
-  try {
-    showMessage('📤 Sending feedback...', 'success');
-    if (typeof apiCall === 'function') {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await apiCall('/api/feedback', 'POST', form);
-    } else if (window.fetch) {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await fetch('/api/feedback', { method:'POST', body: form });
-    }
-    showMessage('✅ Thank you for the feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function openCommunitySection() {
-  const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
-}
-
-function showCommunityTab(tab) {
-  const postsContainer = document.getElementById('communityPostsContainer');
-  const chatBox = document.querySelector('.chat-box');
-  if (tab === 'posts') {
-    if (postsContainer) postsContainer.style.display = 'flex';
-    if (chatBox) chatBox.style.display = 'none';
-    document.getElementById('tabPosts')?.classList.add('active');
-    document.getElementById('tabChat')?.classList.remove('active');
-  } else {
-    if (postsContainer) postsContainer.style.display = 'none';
-    if (chatBox) chatBox.style.display = 'flex';
-    document.getElementById('tabChat')?.classList.add('active');
-    document.getElementById('tabPosts')?.classList.remove('active');
-  }
-}
-/* ===== End UI/UX helper functions ===== */
-
-/* ===== End UI/UX helper functions ===== */
-
 
 async function loadCommunityPosts() {
   let container = document.getElementById('communityPostsContainer');
@@ -1984,6 +1464,12 @@ async function loadCommunityPosts() {
       postsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
     }
   }
+}
+
+function openCommunityChat() {
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) chatSection.style.display = 'block';
+  loadCommunityMessages();
 }
 
 async function loadCommunityMessages() {
@@ -2103,9 +1589,7 @@ async function reactToMessage(messageId, emoji = '❤️') {
   }
 }
 
-// ========================================
-// SOCKET.IO REAL-TIME
-// ========================================
+// ==================== SOCKET ====================
 
 function initializeSocket() {
   if (socket) return;
@@ -2135,9 +1619,7 @@ function initializeSocket() {
   });
 }
 
-// ========================================
-// PROFILE & SEARCH
-// ========================================
+// ==================== PROFILE & SEARCH ====================
 
 function initializeSearchBar() {
   const searchBox = document.getElementById('searchBox');
@@ -2310,26 +1792,7 @@ function toggleEditProfile() {
   showMessage('✏️ Edit feature coming soon!', 'success');
 }
 
-async function loadUserProfilePosts(userId) {
-  const container = document.getElementById('userProfilePosts');
-  if (!container) return;
-  try {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
-    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
-    if (!data.posts || data.posts.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
-      return;
-    }
-    container.innerHTML = renderPosts(data.posts);
-  } catch(error) {
-    console.error('❌ Load user posts:', error);
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
-  }
-}
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
+// ==================== UTILITIES ====================
 
 function showModal(modalId) {
   const modal = document.getElementById(modalId);
@@ -2408,489 +1871,14 @@ function toggleHamburgerMenu() {
   }
 }
 
-
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
 function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
+  const modal = document.getElementById('complaintModal');
+  if (modal) modal.style.display = 'flex';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
-
-async 
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
-function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitComplaint() {
-  const category = document.getElementById('complaintCategory')?.value || 'other';
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
-  try {
-    showMessage('📤 Sending complaint...', 'success');
-    if (typeof apiCall === 'function') {
-      await apiCall('/api/complaint', 'POST', { category, text });
-    } else if (window.fetch) {
-      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
-    }
-    showMessage('✅ Complaint submitted. Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to submit', 'error');
-  }
-}
-
-
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
-function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitComplaint() {
-  const category = document.getElementById('complaintCategory')?.value || 'other';
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
-  try {
-    showMessage('📤 Sending complaint...', 'success');
-    if (typeof apiCall === 'function') {
-      await apiCall('/api/complaint', 'POST', { category, text });
-    } else if (window.fetch) {
-      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
-    }
-    showMessage('✅ Complaint submitted. Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to submit', 'error');
-  }
-}
-
-function showFeedbackModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>💬 Feedback</h2>
-      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
-      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
-      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="file" id="feedbackAttachment" accept="image/*" />
-        <small style="color:#888;">Optional screenshot</small>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async 
-/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
-function showComplaintModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>📢 Lodge a Complaint</h2>
-      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
-      <select id="complaintCategory">
-        <option value="content">Inappropriate content</option>
-        <option value="abuse">Abuse/Harassment</option>
-        <option value="bug">Bug report</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitComplaint() {
-  const category = document.getElementById('complaintCategory')?.value || 'other';
-  const text = document.getElementById('complaintText')?.value.trim();
-  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
-  try {
-    showMessage('📤 Sending complaint...', 'success');
-    if (typeof apiCall === 'function') {
-      await apiCall('/api/complaint', 'POST', { category, text });
-    } else if (window.fetch) {
-      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
-    }
-    showMessage('✅ Complaint submitted. Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to submit', 'error');
-  }
-}
-
-function showFeedbackModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>💬 Feedback</h2>
-      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
-      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
-      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="file" id="feedbackAttachment" accept="image/*" />
-        <small style="color:#888;">Optional screenshot</small>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  const fileInput = document.getElementById('feedbackAttachment');
-  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
-  try {
-    showMessage('📤 Sending feedback...', 'success');
-    if (typeof apiCall === 'function') {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await apiCall('/api/feedback', 'POST', form);
-    } else if (window.fetch) {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await fetch('/api/feedback', { method:'POST', body: form });
-    }
-    showMessage('✅ Thank you for the feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function openCommunitySection() {
-  const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
-}
-
-function showCommunityTab(tab) {
-  const postsContainer = document.getElementById('communityPostsContainer');
-  const chatBox = document.querySelector('.chat-box');
-  if (tab === 'posts') {
-    if (postsContainer) postsContainer.style.display = 'flex';
-    if (chatBox) chatBox.style.display = 'none';
-    document.getElementById('tabPosts')?.classList.add('active');
-    document.getElementById('tabChat')?.classList.remove('active');
-  } else {
-    if (postsContainer) postsContainer.style.display = 'none';
-    if (chatBox) chatBox.style.display = 'flex';
-    document.getElementById('tabChat')?.classList.add('active');
-    document.getElementById('tabPosts')?.classList.remove('active');
-  }
-}
-/* ===== End UI/UX helper functions ===== */
-
-
-function openCommunitySection() {
-  const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
-}
-
-function showCommunityTab(tab) {
-  const postsContainer = document.getElementById('communityPostsContainer');
-  const chatBox = document.querySelector('.chat-box');
-  if (tab === 'posts') {
-    if (postsContainer) postsContainer.style.display = 'flex';
-    if (chatBox) chatBox.style.display = 'none';
-    document.getElementById('tabPosts')?.classList.add('active');
-    document.getElementById('tabChat')?.classList.remove('active');
-  } else {
-    if (postsContainer) postsContainer.style.display = 'none';
-    if (chatBox) chatBox.style.display = 'flex';
-    document.getElementById('tabChat')?.classList.add('active');
-    document.getElementById('tabPosts')?.classList.remove('active');
-  }
-}
-/* ===== End UI/UX helper functions ===== */
-
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  const fileInput = document.getElementById('feedbackAttachment');
-  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
-  try {
-    showMessage('📤 Sending feedback...', 'success');
-    if (typeof apiCall === 'function') {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await apiCall('/api/feedback', 'POST', form);
-    } else if (window.fetch) {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await fetch('/api/feedback', { method:'POST', body: form });
-    }
-    showMessage('✅ Thank you for the feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function openCommunitySection() {
-  const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
-}
-
-function showCommunityTab(tab) {
-  const postsContainer = document.getElementById('communityPostsContainer');
-  const chatBox = document.querySelector('.chat-box');
-  if (tab === 'posts') {
-    if (postsContainer) postsContainer.style.display = 'flex';
-    if (chatBox) chatBox.style.display = 'none';
-    document.getElementById('tabPosts')?.classList.add('active');
-    document.getElementById('tabChat')?.classList.remove('active');
-  } else {
-    if (postsContainer) postsContainer.style.display = 'none';
-    if (chatBox) chatBox.style.display = 'flex';
-    document.getElementById('tabChat')?.classList.add('active');
-    document.getElementById('tabPosts')?.classList.remove('active');
-  }
-}
-/* ===== End UI/UX helper functions ===== */
-
-
-function showFeedbackModal() {
-  document.querySelectorAll('.modal').forEach(m => m.remove());
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box form-modal">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>💬 Feedback</h2>
-      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
-      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
-      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-        <input type="file" id="feedbackAttachment" accept="image/*" />
-        <small style="color:#888;">Optional screenshot</small>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
-        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-async function submitFeedback() {
-  const subject = document.getElementById('feedbackSubject')?.value.trim();
-  const message = document.getElementById('feedbackMessage')?.value.trim();
-  const fileInput = document.getElementById('feedbackAttachment');
-  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
-  try {
-    showMessage('📤 Sending feedback...', 'success');
-    if (typeof apiCall === 'function') {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await apiCall('/api/feedback', 'POST', form);
-    } else if (window.fetch) {
-      const form = new FormData();
-      form.append('subject', subject);
-      form.append('message', message);
-      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
-      await fetch('/api/feedback', { method:'POST', body: form });
-    }
-    showMessage('✅ Thank you for the feedback!', 'success');
-    document.querySelector('.modal')?.remove();
-  } catch (err) {
-    console.error(err);
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function openCommunitySection() {
-  const chatSection = document.getElementById('chatSection');
-  if (!chatSection) return;
-  chatSection.style.display = 'grid';
-  if (!document.getElementById('communityTabs')) {
-    const tabs = document.createElement('div');
-    tabs.id = 'communityTabs';
-    tabs.style.display = 'flex';
-    tabs.style.gap = '8px';
-    tabs.style.marginBottom = '12px';
-    tabs.innerHTML = `
-      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
-      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
-    `;
-    chatSection.insertBefore(tabs, chatSection.firstChild);
-  }
-  showCommunityTab('posts');
-  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
-  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
-}
-
-function showCommunityTab(tab) {
-  const postsContainer = document.getElementById('communityPostsContainer');
-  const chatBox = document.querySelector('.chat-box');
-  if (tab === 'posts') {
-    if (postsContainer) postsContainer.style.display = 'flex';
-    if (chatBox) chatBox.style.display = 'none';
-    document.getElementById('tabPosts')?.classList.add('active');
-    document.getElementById('tabChat')?.classList.remove('active');
-  } else {
-    if (postsContainer) postsContainer.style.display = 'none';
-    if (chatBox) chatBox.style.display = 'flex';
-    document.getElementById('tabChat')?.classList.add('active');
-    document.getElementById('tabPosts')?.classList.remove('active');
-  }
-}
-/* ===== End UI/UX helper functions ===== */
-
 
 function showContactModal() {
   const modal = document.getElementById('contactModal');
@@ -2992,14 +1980,27 @@ function loadTrending() {
   container.innerHTML = html;
 }
 
+async function loadUserProfilePosts(userId) {
+  const container = document.getElementById('userProfilePosts');
+  if (!container) return;
+  try {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading posts...</div>';
+    const data = await apiCall(`/api/posts/user/${userId}`, 'GET');
+    if (!data.posts || data.posts.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📝 No posts yet</div>';
+      return;
+    }
+    container.innerHTML = renderPosts(data.posts);
+  } catch(error) {
+    console.error('❌ Load user posts:', error);
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load posts</div>';
+  }
+}
+
 function showFullLeaderboard() {
   showMessage('📊 Full leaderboard coming soon!', 'success');
 }
 
-// ========================================
-// FINAL CONSOLE LOG
-// ========================================
 
-console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
-console.log('🎉 Features: About Us → Login → Main App');
-console.log('🚀 All functionality integrated successfully!');
+
+console.log('✅ VibeXpert Enhanced - Complete with ALL features loaded successfully!');
