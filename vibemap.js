@@ -1677,12 +1677,267 @@ function loadCommunities() {
   `;
 }
 
+
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
+function showComplaintModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('complaintCategory')?.value || 'other';
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
+  try {
+    showMessage('📤 Sending complaint...', 'success');
+    if (typeof apiCall === 'function') {
+      await apiCall('/api/complaint', 'POST', { category, text });
+    } else if (window.fetch) {
+      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
+    }
+    showMessage('✅ Complaint submitted. Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to submit', 'error');
+  }
+}
+
+function showFeedbackModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>💬 Feedback</h2>
+      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
+      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
+      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="file" id="feedbackAttachment" accept="image/*" />
+        <small style="color:#888;">Optional screenshot</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  const fileInput = document.getElementById('feedbackAttachment');
+  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
+  try {
+    showMessage('📤 Sending feedback...', 'success');
+    if (typeof apiCall === 'function') {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await apiCall('/api/feedback', 'POST', form);
+    } else if (window.fetch) {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await fetch('/api/feedback', { method:'POST', body: form });
+    }
+    showMessage('✅ Thank you for the feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
 function openCommunitySection() {
   const chatSection = document.getElementById('chatSection');
-  if (chatSection) chatSection.style.display = 'block';
-  loadCommunityPosts();
-  loadCommunityMessages();
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
 }
+
+
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
+function showComplaintModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('complaintCategory')?.value || 'other';
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
+  try {
+    showMessage('📤 Sending complaint...', 'success');
+    if (typeof apiCall === 'function') {
+      await apiCall('/api/complaint', 'POST', { category, text });
+    } else if (window.fetch) {
+      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
+    }
+    showMessage('✅ Complaint submitted. Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to submit', 'error');
+  }
+}
+
+function showFeedbackModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>💬 Feedback</h2>
+      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
+      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
+      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="file" id="feedbackAttachment" accept="image/*" />
+        <small style="color:#888;">Optional screenshot</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  const fileInput = document.getElementById('feedbackAttachment');
+  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
+  try {
+    showMessage('📤 Sending feedback...', 'success');
+    if (typeof apiCall === 'function') {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await apiCall('/api/feedback', 'POST', form);
+    } else if (window.fetch) {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await fetch('/api/feedback', { method:'POST', body: form });
+    }
+    showMessage('✅ Thank you for the feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
+function openCommunitySection() {
+  const chatSection = document.getElementById('chatSection');
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+}
+
+function showCommunityTab(tab) {
+  const postsContainer = document.getElementById('communityPostsContainer');
+  const chatBox = document.querySelector('.chat-box');
+  if (tab === 'posts') {
+    if (postsContainer) postsContainer.style.display = 'flex';
+    if (chatBox) chatBox.style.display = 'none';
+    document.getElementById('tabPosts')?.classList.add('active');
+    document.getElementById('tabChat')?.classList.remove('active');
+  } else {
+    if (postsContainer) postsContainer.style.display = 'none';
+    if (chatBox) chatBox.style.display = 'flex';
+    document.getElementById('tabChat')?.classList.add('active');
+    document.getElementById('tabPosts')?.classList.remove('active');
+  }
+}
+/* ===== End UI/UX helper functions ===== */
+
+/* ===== End UI/UX helper functions ===== */
+
 
 async function loadCommunityPosts() {
   let container = document.getElementById('communityPostsContainer');
@@ -2153,14 +2408,489 @@ function toggleHamburgerMenu() {
   }
 }
 
+
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
 function showComplaintModal() {
-  const modal = document.getElementById('complaintModal');
-  if (modal) modal.style.display = 'flex';
-  const hamburger = document.getElementById('hamburgerMenu');
-  const options = document.getElementById('optionsMenu');
-  if (hamburger) hamburger.style.display = 'none';
-  if (options) options.style.display = 'none';
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
+
+async 
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
+function showComplaintModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('complaintCategory')?.value || 'other';
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
+  try {
+    showMessage('📤 Sending complaint...', 'success');
+    if (typeof apiCall === 'function') {
+      await apiCall('/api/complaint', 'POST', { category, text });
+    } else if (window.fetch) {
+      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
+    }
+    showMessage('✅ Complaint submitted. Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to submit', 'error');
+  }
+}
+
+
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
+function showComplaintModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('complaintCategory')?.value || 'other';
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
+  try {
+    showMessage('📤 Sending complaint...', 'success');
+    if (typeof apiCall === 'function') {
+      await apiCall('/api/complaint', 'POST', { category, text });
+    } else if (window.fetch) {
+      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
+    }
+    showMessage('✅ Complaint submitted. Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to submit', 'error');
+  }
+}
+
+function showFeedbackModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>💬 Feedback</h2>
+      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
+      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
+      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="file" id="feedbackAttachment" accept="image/*" />
+        <small style="color:#888;">Optional screenshot</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async 
+/* ===== UI/UX helper functions (final implementations replacing older ones) ===== */
+function showComplaintModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>📢 Lodge a Complaint</h2>
+      <p style="color:#888;margin-bottom:6px;">Tell us what's wrong — we'll review it quickly.</p>
+      <select id="complaintCategory">
+        <option value="content">Inappropriate content</option>
+        <option value="abuse">Abuse/Harassment</option>
+        <option value="bug">Bug report</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="complaintText" placeholder="Describe the issue in detail (include links or screenshots if any)." style="min-height:140px"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitComplaint()">Submit</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('complaintCategory')?.value || 'other';
+  const text = document.getElementById('complaintText')?.value.trim();
+  if (!text) return showMessage('⚠️ Please describe the issue', 'error');
+  try {
+    showMessage('📤 Sending complaint...', 'success');
+    if (typeof apiCall === 'function') {
+      await apiCall('/api/complaint', 'POST', { category, text });
+    } else if (window.fetch) {
+      await fetch('/api/complaint', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({category,text}) });
+    }
+    showMessage('✅ Complaint submitted. Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to submit', 'error');
+  }
+}
+
+function showFeedbackModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>💬 Feedback</h2>
+      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
+      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
+      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="file" id="feedbackAttachment" accept="image/*" />
+        <small style="color:#888;">Optional screenshot</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  const fileInput = document.getElementById('feedbackAttachment');
+  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
+  try {
+    showMessage('📤 Sending feedback...', 'success');
+    if (typeof apiCall === 'function') {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await apiCall('/api/feedback', 'POST', form);
+    } else if (window.fetch) {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await fetch('/api/feedback', { method:'POST', body: form });
+    }
+    showMessage('✅ Thank you for the feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
+function openCommunitySection() {
+  const chatSection = document.getElementById('chatSection');
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+}
+
+function showCommunityTab(tab) {
+  const postsContainer = document.getElementById('communityPostsContainer');
+  const chatBox = document.querySelector('.chat-box');
+  if (tab === 'posts') {
+    if (postsContainer) postsContainer.style.display = 'flex';
+    if (chatBox) chatBox.style.display = 'none';
+    document.getElementById('tabPosts')?.classList.add('active');
+    document.getElementById('tabChat')?.classList.remove('active');
+  } else {
+    if (postsContainer) postsContainer.style.display = 'none';
+    if (chatBox) chatBox.style.display = 'flex';
+    document.getElementById('tabChat')?.classList.add('active');
+    document.getElementById('tabPosts')?.classList.remove('active');
+  }
+}
+/* ===== End UI/UX helper functions ===== */
+
+
+function openCommunitySection() {
+  const chatSection = document.getElementById('chatSection');
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+}
+
+function showCommunityTab(tab) {
+  const postsContainer = document.getElementById('communityPostsContainer');
+  const chatBox = document.querySelector('.chat-box');
+  if (tab === 'posts') {
+    if (postsContainer) postsContainer.style.display = 'flex';
+    if (chatBox) chatBox.style.display = 'none';
+    document.getElementById('tabPosts')?.classList.add('active');
+    document.getElementById('tabChat')?.classList.remove('active');
+  } else {
+    if (postsContainer) postsContainer.style.display = 'none';
+    if (chatBox) chatBox.style.display = 'flex';
+    document.getElementById('tabChat')?.classList.add('active');
+    document.getElementById('tabPosts')?.classList.remove('active');
+  }
+}
+/* ===== End UI/UX helper functions ===== */
+
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  const fileInput = document.getElementById('feedbackAttachment');
+  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
+  try {
+    showMessage('📤 Sending feedback...', 'success');
+    if (typeof apiCall === 'function') {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await apiCall('/api/feedback', 'POST', form);
+    } else if (window.fetch) {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await fetch('/api/feedback', { method:'POST', body: form });
+    }
+    showMessage('✅ Thank you for the feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
+function openCommunitySection() {
+  const chatSection = document.getElementById('chatSection');
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+}
+
+function showCommunityTab(tab) {
+  const postsContainer = document.getElementById('communityPostsContainer');
+  const chatBox = document.querySelector('.chat-box');
+  if (tab === 'posts') {
+    if (postsContainer) postsContainer.style.display = 'flex';
+    if (chatBox) chatBox.style.display = 'none';
+    document.getElementById('tabPosts')?.classList.add('active');
+    document.getElementById('tabChat')?.classList.remove('active');
+  } else {
+    if (postsContainer) postsContainer.style.display = 'none';
+    if (chatBox) chatBox.style.display = 'flex';
+    document.getElementById('tabChat')?.classList.add('active');
+    document.getElementById('tabPosts')?.classList.remove('active');
+  }
+}
+/* ===== End UI/UX helper functions ===== */
+
+
+function showFeedbackModal() {
+  document.querySelectorAll('.modal').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box form-modal">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>💬 Feedback</h2>
+      <p style="color:#888;margin-bottom:6px;">We read every feedback — help us improve.</p>
+      <input id="feedbackSubject" placeholder="Subject (eg. UI suggestion)" />
+      <textarea id="feedbackMessage" placeholder="Your feedback" style="min-height:120px"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="file" id="feedbackAttachment" accept="image/*" />
+        <small style="color:#888;">Optional screenshot</small>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+        <button class="btn-primary" onclick="submitFeedback()">Send Feedback</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitFeedback() {
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
+  const fileInput = document.getElementById('feedbackAttachment');
+  if (!subject || !message) return showMessage('⚠️ Fill subject and message', 'error');
+  try {
+    showMessage('📤 Sending feedback...', 'success');
+    if (typeof apiCall === 'function') {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await apiCall('/api/feedback', 'POST', form);
+    } else if (window.fetch) {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      if (fileInput && fileInput.files && fileInput.files[0]) form.append('attachment', fileInput.files[0]);
+      await fetch('/api/feedback', { method:'POST', body: form });
+    }
+    showMessage('✅ Thank you for the feedback!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (err) {
+    console.error(err);
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
+function openCommunitySection() {
+  const chatSection = document.getElementById('chatSection');
+  if (!chatSection) return;
+  chatSection.style.display = 'grid';
+  if (!document.getElementById('communityTabs')) {
+    const tabs = document.createElement('div');
+    tabs.id = 'communityTabs';
+    tabs.style.display = 'flex';
+    tabs.style.gap = '8px';
+    tabs.style.marginBottom = '12px';
+    tabs.innerHTML = `
+      <button class="btn-secondary" id="tabPosts" onclick="showCommunityTab('posts')">Posts</button>
+      <button class="btn-secondary" id="tabChat" onclick="showCommunityTab('chat')">Chat</button>
+    `;
+    chatSection.insertBefore(tabs, chatSection.firstChild);
+  }
+  showCommunityTab('posts');
+  if (typeof loadCommunityPosts === 'function') loadCommunityPosts();
+  if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+}
+
+function showCommunityTab(tab) {
+  const postsContainer = document.getElementById('communityPostsContainer');
+  const chatBox = document.querySelector('.chat-box');
+  if (tab === 'posts') {
+    if (postsContainer) postsContainer.style.display = 'flex';
+    if (chatBox) chatBox.style.display = 'none';
+    document.getElementById('tabPosts')?.classList.add('active');
+    document.getElementById('tabChat')?.classList.remove('active');
+  } else {
+    if (postsContainer) postsContainer.style.display = 'none';
+    if (chatBox) chatBox.style.display = 'flex';
+    document.getElementById('tabChat')?.classList.add('active');
+    document.getElementById('tabPosts')?.classList.remove('active');
+  }
+}
+/* ===== End UI/UX helper functions ===== */
+
 
 function showContactModal() {
   const modal = document.getElementById('contactModal');
