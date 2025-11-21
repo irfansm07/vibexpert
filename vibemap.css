@@ -2909,3 +2909,77 @@ body.light-theme .auth-box form label {
   #chatSection { grid-template-columns: 1fr; }
   .chat-box { min-height: 420px; }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== Reactions UI ===== */
+.reaction-bar {
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  margin-left:6px;
+}
+.reaction-pill {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 8px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.03);
+  cursor:pointer;
+  font-size:13px;
+  user-select:none;
+  transition:transform .08s ease, background .12s ease;
+}
+.reaction-pill:hover { transform:translateY(-3px); background: rgba(255,255,255,0.035); }
+.reaction-count { font-weight:700; margin-left:4px; color:#fff; font-size:12px; opacity:0.95; }
+.emoji-picker {
+  position:absolute;
+  display:flex;
+  gap:6px;
+  padding:8px;
+  background: linear-gradient(180deg, rgba(10,12,20,0.95), rgba(22,26,36,0.98));
+  border-radius:12px;
+  border:1px solid rgba(79,116,163,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  z-index:10000;
+}
+.emoji-picker button {
+  padding:6px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+  background:transparent;
+  font-size:18px;
+}
+.emoji-picker button:hover { transform:scale(1.12); }
+
+/* reaction selected highlight */
+.reaction-pill.selected {
+  background: linear-gradient(135deg,#4f74a3,#8da4d3);
+  color: white;
+  border: none;
+}
+
+/* make sure reaction bar doesn't break layout on very small screens */
+@media (max-width:520px) {
+  .reaction-bar { gap:6px; }
+  .reaction-pill { padding:6px 6px; font-size:12px; }
+}
