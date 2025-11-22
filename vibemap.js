@@ -96,7 +96,7 @@ const stickerLibrary = {
 
 const colleges = {
   nit: [
-    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
+    {name: 'NIT Bhopal', email: '@gmail.com', location: 'Bhopal'},
     {name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
     {name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
     {name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
@@ -2905,3 +2905,4 @@ function showPostCelebrationModal(postCount) {
 
 console.log('%c🎉 VibeXpert Enhanced Chat Ready! 🎉', 'color: #4f74a3; font-size: 20px; font-weight: bold;');
 console.log('%cFeatures: Real-time chat, Reactions, Typing indicators, Message actions', 'color: #8da4d3; font-size: 14px;');
+
