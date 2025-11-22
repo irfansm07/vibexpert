@@ -2491,6 +2491,869 @@ async function handleReactionClick(messageId, emoji, pillEl, reactionBar) {
 
 
 
+/* ==========================================
+   ENHANCED MESSAGING FEATURES
+   Add these functions to your vibemap.js file
+   ========================================== */
+
+// Enhanced Message Features
+let replyingToMessage = null;
+let typingUsers = new Set();
+let typingTimeout = null;
+let lastTypingEmit = 0;
+let messageQueue = [];
+let isLoadingMessages = false;
+let hasMoreMessages = true;
+let currentMessagePage = 1;
+
+// Emoji Picker Data
+const emojiCategories = {
+  'Smileys': ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳'],
+  'Gestures': ['👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋', '🤝', '👏', '🙌', '👐', '🤲', '🤜', '🤛', '✊', '👊', '🤚'],
+  'Hearts': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
+  'Objects': ['🔥', '⭐', '✨', '💫', '🌟', '💥', '💯', '✅', '❌', '⚡', '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '🎯', '🎪'],
+  'Nature': ['🌸', '🌺', '🌻', '🌷', '🌹', '🌼', '💐', '🌿', '☘️', '🍀', '🌱', '🌲', '🌳', '🌴', '🌵', '🌾', '🌊', '🌈', '🌤️', '⛅'],
+  'Food': ['🍕', '🍔', '🍟', '🌭', '🍿', '🧈', '🍞', '🥐', '🥨', '🥯', '🥞', '🧇', '🧀', '🍖', '🍗', '🥩', '🥓', '🍔', '🍟', '🍕']
+};
+
+// GIF Search Data (Sample - you can integrate with Tenor/Giphy API)
+const popularGifs = [
+  { id: 1, url: 'https://media.giphy.com/media/3oz8xIsloV7zOmt81G/giphy.gif', tags: ['hello', 'hi', 'wave'] },
+  { id: 2, url: 'https://media.giphy.com/media/g9582DNuQppxC/giphy.gif', tags: ['happy', 'celebration', 'yes'] },
+  { id: 3, url: 'https://media.giphy.com/media/26gsspfbt1HfVQ9va/giphy.gif', tags: ['love', 'heart'] },
+  { id: 4, url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif', tags: ['laugh', 'funny', 'lol'] },
+  { id: 5, url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif', tags: ['dance', 'party'] }
+];
+
+// Initialize Enhanced Chat Features
+function initializeEnhancedChat() {
+  setupChatInputEnhancements();
+  setupMessageActions();
+  setupInfiniteScroll();
+  setupTypingIndicator();
+  setupEmojiPicker();
+  setupGifPicker();
+  setupFileUpload();
+  setupVoiceRecording();
+  console.log('✨ Enhanced messaging features initialized');
+}
+
+// Enhanced Chat Input
+function setupChatInputEnhancements() {
+  const chatInput = document.getElementById('chatInput');
+  if (!chatInput) return;
+
+  // Create enhanced input container
+  const inputContainer = chatInput.parentElement;
+  const enhancedToolbar = document.createElement('div');
+  enhancedToolbar.className = 'chat-enhanced-toolbar';
+  enhancedToolbar.innerHTML = `
+    <button class="chat-tool-btn" onclick="openEmojiPicker()" title="Emoji">
+      😊
+    </button>
+    <button class="chat-tool-btn" onclick="openGifPicker()" title="GIF">
+      GIF
+    </button>
+    <button class="chat-tool-btn" onclick="openFileUploader()" title="Attach File">
+      📎
+    </button>
+    <button class="chat-tool-btn" onclick="toggleVoiceRecorder()" title="Voice Message">
+      🎤
+    </button>
+    <button class="chat-tool-btn" onclick="openMessageScheduler()" title="Schedule">
+      ⏰
+    </button>
+  `;
+  
+  inputContainer.insertBefore(enhancedToolbar, chatInput);
+
+  // Show replying indicator when replying
+  if (replyingToMessage) {
+    showReplyingIndicator();
+  }
+
+  // Typing indicator
+  chatInput.addEventListener('input', handleTypingIndicator);
+  
+  // Enhanced enter key handling
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendEnhancedMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  chatInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+  });
+}
+
+// Enhanced Message Send
+async function sendEnhancedMessage() {
+  const chatInput = document.getElementById('chatInput');
+  const content = chatInput?.value.trim();
+  
+  if (!content && messageQueue.length === 0) return;
+  
+  try {
+    const messageData = {
+      content,
+      replyTo: replyingToMessage?.id || null,
+      attachments: messageQueue.length > 0 ? messageQueue : null,
+      timestamp: Date.now()
+    };
+
+    // Optimistic UI update
+    addMessageToUI({
+      id: 'temp-' + Date.now(),
+      content,
+      sender_id: currentUser.id,
+      users: currentUser,
+      timestamp: new Date(),
+      status: 'sending',
+      replyTo: replyingToMessage
+    });
+
+    // Send to server
+    await apiCall('/api/community/messages', 'POST', messageData);
+    
+    // Clear input
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    replyingToMessage = null;
+    messageQueue = [];
+    hideReplyingIndicator();
+    clearAttachmentPreview();
+    
+    // Play send sound
+    playMessageSound('send');
+    
+  } catch(error) {
+    showMessage('❌ Failed to send', 'error');
+    console.error('Send error:', error);
+  }
+}
+
+// Message Actions
+function setupMessageActions() {
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.message-action-btn')) {
+      const action = e.target.closest('.message-action-btn').dataset.action;
+      const messageId = e.target.closest('.chat-message').id.replace('msg-', '');
+      handleMessageAction(action, messageId);
+    }
+  });
+}
+
+function handleMessageAction(action, messageId) {
+  const message = findMessageById(messageId);
+  if (!message) return;
+
+  switch(action) {
+    case 'reply':
+      replyToMessage(message);
+      break;
+    case 'forward':
+      forwardMessage(message);
+      break;
+    case 'copy':
+      copyMessageText(message);
+      break;
+    case 'pin':
+      pinMessage(messageId);
+      break;
+    case 'star':
+      starMessage(messageId);
+      break;
+    case 'report':
+      reportMessage(messageId);
+      break;
+  }
+}
+
+// Reply to Message
+function replyToMessage(message) {
+  replyingToMessage = message;
+  showReplyingIndicator();
+  document.getElementById('chatInput')?.focus();
+}
+
+function showReplyingIndicator() {
+  if (!replyingToMessage) return;
+  
+  let indicator = document.querySelector('.replying-indicator');
+  if (!indicator) {
+    const inputBox = document.querySelector('.chat-input-box');
+    indicator = document.createElement('div');
+    indicator.className = 'replying-indicator';
+    inputBox.insertBefore(indicator, inputBox.firstChild);
+  }
+  
+  indicator.innerHTML = `
+    <div class="replying-content">
+      <div class="replying-icon">↩️</div>
+      <div class="replying-info">
+        <div class="replying-label">Replying to @${replyingToMessage.users?.username || 'User'}</div>
+        <div class="replying-text">${replyingToMessage.content.substring(0, 50)}${replyingToMessage.content.length > 50 ? '...' : ''}</div>
+      </div>
+      <button class="replying-cancel" onclick="cancelReply()">✕</button>
+    </div>
+  `;
+}
+
+function hideReplyingIndicator() {
+  const indicator = document.querySelector('.replying-indicator');
+  if (indicator) indicator.remove();
+}
+
+function cancelReply() {
+  replyingToMessage = null;
+  hideReplyingIndicator();
+}
+
+// Forward Message
+function forwardMessage(message) {
+  const modal = document.createElement('div');
+  modal.className = 'modal forward-modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width: 500px;">
+      <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+      <h2>📤 Forward Message</h2>
+      <div class="forward-preview">
+        <p>${message.content}</p>
+      </div>
+      <div class="forward-options">
+        <button onclick="forwardToChannel('general')" class="forward-btn">
+          💬 General Channel
+        </button>
+        <button onclick="forwardToChannel('announcements')" class="forward-btn">
+          📢 Announcements
+        </button>
+        <button onclick="shareExternal('${message.id}')" class="forward-btn">
+          🔗 Share Link
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Copy Message
+function copyMessageText(message) {
+  navigator.clipboard.writeText(message.content).then(() => {
+    showMessage('📋 Copied!', 'success');
+  });
+}
+
+// Pin Message
+async function pinMessage(messageId) {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/pin`, 'POST');
+    showMessage('📌 Message pinned!', 'success');
+    // Update UI to show pinned indicator
+  } catch(error) {
+    showMessage('❌ Failed to pin', 'error');
+  }
+}
+
+// Star Message
+async function starMessage(messageId) {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/star`, 'POST');
+    showMessage('⭐ Starred!', 'success');
+  } catch(error) {
+    showMessage('❌ Failed to star', 'error');
+  }
+}
+
+// Report Message
+function reportMessage(messageId) {
+  if (confirm('Report this message?')) {
+    apiCall(`/api/community/messages/${messageId}/report`, 'POST')
+      .then(() => showMessage('✅ Reported', 'success'))
+      .catch(() => showMessage('❌ Failed', 'error'));
+  }
+}
+
+// Typing Indicator
+function handleTypingIndicator() {
+  const now = Date.now();
+  if (now - lastTypingEmit > 2000 && socket) {
+    socket.emit('typing', { userId: currentUser.id, username: currentUser.username });
+    lastTypingEmit = now;
+  }
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    if (socket) socket.emit('stop_typing', { userId: currentUser.id });
+  }, 3000);
+}
+
+function showTypingIndicator(username) {
+  typingUsers.add(username);
+  updateTypingDisplay();
+}
+
+function hideTypingIndicator(username) {
+  typingUsers.delete(username);
+  updateTypingDisplay();
+}
+
+function updateTypingDisplay() {
+  let container = document.querySelector('.typing-indicators-container');
+  if (!container) {
+    const messagesBox = document.querySelector('.chat-messages');
+    container = document.createElement('div');
+    container.className = 'typing-indicators-container';
+    messagesBox.appendChild(container);
+  }
+
+  if (typingUsers.size === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const usersList = Array.from(typingUsers);
+  let text = '';
+  if (usersList.length === 1) {
+    text = `${usersList[0]} is typing`;
+  } else if (usersList.length === 2) {
+    text = `${usersList[0]} and ${usersList[1]} are typing`;
+  } else {
+    text = `${usersList.length} people are typing`;
+  }
+
+  container.innerHTML = `
+    <div class="typing-indicator">
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="typing-text">${text}</span>
+    </div>
+  `;
+}
+
+// Emoji Picker
+function openEmojiPicker() {
+  let picker = document.querySelector('.emoji-picker-popup');
+  
+  if (picker) {
+    picker.remove();
+    return;
+  }
+
+  picker = document.createElement('div');
+  picker.className = 'emoji-picker-popup';
+  
+  let categoriesHTML = '<div class="emoji-categories">';
+  for (const [category, emojis] of Object.entries(emojiCategories)) {
+    categoriesHTML += `
+      <div class="emoji-category">
+        <div class="emoji-category-title">${category}</div>
+        <div class="emoji-grid">
+          ${emojis.map(emoji => `<span class="emoji-item" onclick="insertEmoji('${emoji}')">${emoji}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+  categoriesHTML += '</div>';
+  
+  picker.innerHTML = `
+    <div class="emoji-picker-header">
+      <input type="text" placeholder="Search emojis..." class="emoji-search" onkeyup="searchEmojis(this.value)">
+      <button onclick="this.closest('.emoji-picker-popup').remove()">✕</button>
+    </div>
+    ${categoriesHTML}
+  `;
+  
+  document.body.appendChild(picker);
+  
+  // Position near input
+  const chatInputBox = document.querySelector('.chat-input-box');
+  const rect = chatInputBox.getBoundingClientRect();
+  picker.style.bottom = window.innerHeight - rect.top + 10 + 'px';
+  picker.style.left = rect.left + 'px';
+}
+
+function insertEmoji(emoji) {
+  const chatInput = document.getElementById('chatInput');
+  if (!chatInput) return;
+  
+  const start = chatInput.selectionStart;
+  const end = chatInput.selectionEnd;
+  const text = chatInput.value;
+  
+  chatInput.value = text.substring(0, start) + emoji + text.substring(end);
+  chatInput.selectionStart = chatInput.selectionEnd = start + emoji.length;
+  chatInput.focus();
+}
+
+function searchEmojis(query) {
+  const allEmojis = Object.values(emojiCategories).flat();
+  const filtered = allEmojis.filter(emoji => {
+    // Simple search - you can enhance this
+    return true;
+  });
+  // Update display with filtered emojis
+}
+
+// GIF Picker
+function openGifPicker() {
+  let picker = document.querySelector('.gif-picker-popup');
+  
+  if (picker) {
+    picker.remove();
+    return;
+  }
+
+  picker = document.createElement('div');
+  picker.className = 'gif-picker-popup';
+  
+  picker.innerHTML = `
+    <div class="gif-picker-header">
+      <input type="text" placeholder="Search GIFs..." class="gif-search" onkeyup="searchGifs(this.value)">
+      <button onclick="this.closest('.gif-picker-popup').remove()">✕</button>
+    </div>
+    <div class="gif-grid">
+      ${popularGifs.map(gif => `
+        <div class="gif-item" onclick="sendGif('${gif.url}')">
+          <img src="${gif.url}" alt="GIF">
+        </div>
+      `).join('')}
+    </div>
+    <div class="gif-footer">Powered by GIPHY</div>
+  `;
+  
+  document.body.appendChild(picker);
+  
+  // Position
+  const chatInputBox = document.querySelector('.chat-input-box');
+  const rect = chatInputBox.getBoundingClientRect();
+  picker.style.bottom = window.innerHeight - rect.top + 10 + 'px';
+  picker.style.left = rect.left + 'px';
+}
+
+function sendGif(gifUrl) {
+  const chatInput = document.getElementById('chatInput');
+  chatInput.value = `[GIF: ${gifUrl}]`;
+  document.querySelector('.gif-picker-popup')?.remove();
+  sendEnhancedMessage();
+}
+
+function searchGifs(query) {
+  // Integrate with Tenor/Giphy API here
+  console.log('Searching GIFs for:', query);
+}
+
+// File Upload
+function openFileUploader() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx';
+  input.onchange = (e) => handleFileSelection(e.target.files);
+  input.click();
+}
+
+function handleFileSelection(files) {
+  Array.from(files).forEach(file => {
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      showMessage('⚠️ File too large (max 10MB)', 'error');
+      return;
+    }
+    
+    messageQueue.push({
+      type: 'file',
+      file: file,
+      name: file.name,
+      size: file.size
+    });
+  });
+  
+  showAttachmentPreview();
+}
+
+function showAttachmentPreview() {
+  let preview = document.querySelector('.attachment-preview');
+  if (!preview) {
+    const inputBox = document.querySelector('.chat-input-box');
+    preview = document.createElement('div');
+    preview.className = 'attachment-preview';
+    inputBox.insertBefore(preview, inputBox.firstChild);
+  }
+  
+  preview.innerHTML = messageQueue.map((item, index) => `
+    <div class="attachment-item">
+      <span class="attachment-icon">📎</span>
+      <span class="attachment-name">${item.name}</span>
+      <button class="attachment-remove" onclick="removeAttachment(${index})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeAttachment(index) {
+  messageQueue.splice(index, 1);
+  if (messageQueue.length === 0) {
+    clearAttachmentPreview();
+  } else {
+    showAttachmentPreview();
+  }
+}
+
+function clearAttachmentPreview() {
+  document.querySelector('.attachment-preview')?.remove();
+}
+
+// Voice Recording
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+function toggleVoiceRecorder() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      audioChunks = [];
+      handleVoiceMessage(audioBlob);
+    };
+    
+    mediaRecorder.start();
+    isRecording = true;
+    showRecordingIndicator();
+    showMessage('🎤 Recording...', 'success');
+    
+  } catch(error) {
+    showMessage('❌ Microphone access denied', 'error');
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    hideRecordingIndicator();
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+  }
+}
+
+function showRecordingIndicator() {
+  const indicator = document.createElement('div');
+  indicator.className = 'recording-indicator';
+  indicator.innerHTML = `
+    <div class="recording-pulse"></div>
+    <span>Recording... Click to stop</span>
+  `;
+  indicator.onclick = stopRecording;
+  document.querySelector('.chat-input-box').appendChild(indicator);
+}
+
+function hideRecordingIndicator() {
+  document.querySelector('.recording-indicator')?.remove();
+}
+
+function handleVoiceMessage(audioBlob) {
+  messageQueue.push({
+    type: 'audio',
+    file: audioBlob,
+    name: 'voice-message.wav',
+    duration: '00:00'
+  });
+  showAttachmentPreview();
+}
+
+// Message Scheduler
+function openMessageScheduler() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width: 450px;">
+      <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+      <h2>⏰ Schedule Message</h2>
+      <textarea id="scheduledMessage" placeholder="Type your message..." style="width:100%; min-height:100px; padding:12px; border-radius:10px; margin:15px 0;"></textarea>
+      <div style="margin:15px 0;">
+        <label style="display:block; margin-bottom:8px; color:#4f74a3; font-weight:600;">Select Date & Time:</label>
+        <input type="datetime-local" id="scheduleTime" style="width:100%; padding:12px; border-radius:10px;">
+      </div>
+      <button onclick="scheduleMessage()" style="width:100%;">⏰ Schedule</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function scheduleMessage() {
+  const message = document.getElementById('scheduledMessage').value;
+  const time = document.getElementById('scheduleTime').value;
+  
+  if (!message || !time) {
+    showMessage('⚠️ Fill all fields', 'error');
+    return;
+  }
+  
+  // Store scheduled message
+  const scheduled = {
+    message,
+    time: new Date(time),
+    status: 'pending'
+  };
+  
+  // You can store this in localStorage or send to backend
+  showMessage('✅ Message scheduled!', 'success');
+  document.querySelector('.modal').remove();
+}
+
+// Infinite Scroll for Messages
+function setupInfiniteScroll() {
+  const messagesBox = document.querySelector('.chat-messages');
+  if (!messagesBox) return;
+  
+  messagesBox.addEventListener('scroll', () => {
+    if (messagesBox.scrollTop === 0 && !isLoadingMessages && hasMoreMessages) {
+      loadMoreMessages();
+    }
+  });
+}
+
+async function loadMoreMessages() {
+  if (isLoadingMessages) return;
+  
+  isLoadingMessages = true;
+  showLoadingIndicator();
+  
+  try {
+    currentMessagePage++;
+    const data = await apiCall(`/api/community/messages?page=${currentMessagePage}`, 'GET');
+    
+    if (data.messages && data.messages.length > 0) {
+      prependMessages(data.messages);
+    } else {
+      hasMoreMessages = false;
+    }
+  } catch(error) {
+    console.error('Load more messages:', error);
+  } finally {
+    isLoadingMessages = false;
+    hideLoadingIndicator();
+  }
+}
+
+function prependMessages(messages) {
+  const messagesBox = document.querySelector('.chat-messages');
+  const scrollHeight = messagesBox.scrollHeight;
+  
+  messages.reverse().forEach(msg => {
+    // Prepend to top
+    const messageElement = createMessageElement(msg);
+    messagesBox.insertBefore(messageElement, messagesBox.firstChild);
+  });
+  
+  // Maintain scroll position
+  messagesBox.scrollTop = messagesBox.scrollHeight - scrollHeight;
+}
+
+function showLoadingIndicator() {
+  const indicator = document.createElement('div');
+  indicator.className = 'loading-messages-indicator';
+  indicator.innerHTML = '⏳ Loading messages...';
+  document.querySelector('.chat-messages').insertBefore(
+    indicator, 
+    document.querySelector('.chat-messages').firstChild
+  );
+}
+
+function hideLoadingIndicator() {
+  document.querySelector('.loading-messages-indicator')?.remove();
+}
+
+// Message Sounds
+function playMessageSound(type) {
+  const sounds = {
+    send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
+    receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav',
+    notification: 'https://assets.mixkit.co/active_storage/sfx/2358/2358.wav'
+  };
+  
+  const audio = new Audio(sounds[type]);
+  audio.volume = 0.3;
+  audio.play().catch(() => {});
+}
+
+// Enhanced Message Display
+function addMessageToUI(message) {
+  const messagesBox = document.querySelector('.chat-messages');
+  const messageElement = createEnhancedMessageElement(message);
+  messagesBox.appendChild(messageElement);
+  messagesBox.scrollTop = messagesBox.scrollHeight;
+  
+  // Animate entrance
+  setTimeout(() => messageElement.classList.add('visible'), 10);
+  
+  // Play sound for received messages
+  if (message.sender_id !== currentUser.id) {
+    playMessageSound('receive');
+  }
+}
+
+function createEnhancedMessageElement(message) {
+  const div = document.createElement('div');
+  div.className = `chat-message ${message.sender_id === currentUser.id ? 'own' : 'other'}`;
+  div.id = `msg-${message.id}`;
+  
+  const isOwn = message.sender_id === currentUser.id;
+  const sender = message.users?.username || 'User';
+  const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  let replyHTML = '';
+  if (message.replyTo) {
+    replyHTML = `
+      <div class="message-reply-preview" onclick="scrollToMessage('${message.replyTo.id}')">
+        <div class="reply-indicator"></div>
+        <div class="reply-content">
+          <div class="reply-author">@${message.replyTo.users?.username || 'User'}</div>
+          <div class="reply-text">${message.replyTo.content.substring(0, 50)}</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  div.innerHTML = `
+    ${!isOwn ? `<div class="sender">@${sender}</div>` : ''}
+    ${replyHTML}
+    <div class="text">
+      ${message.content}
+      ${message.status === 'sending' ? '<span class="message-status">⏳</span>' : ''}
+      ${message.status === 'sent' ? '<span class="message-status">✓</span>' : ''}
+      ${message.status === 'read' ? '<span class="message-status">✓✓</span>' : ''}
+    </div>
+    <div class="message-footer">
+      <span class="message-time">${time}</span>
+      <div class="message-actions">
+        <button class="message-action-btn" data-action="reply" title="Reply">↩️</button>
+        ${isOwn ? '<button class="message-action-btn" data-action="edit" title="Edit">✏️</button>' : ''}
+        <button class="message-action-btn" data-action="forward" title="Forward">➡️</button>
+        <button class="message-action-btn" data-action="star" title="Star">⭐</button>
+        <button class="message-action-btn" data-action="copy" title="Copy">📋</button>
+        ${isOwn ? '<button class="message-action-btn" data-action="delete" title="Delete">🗑️</button>' : '<button class="message-action-btn" data-action="report" title="Report">⚠️</button>'}
+      </div>
+    </div>
+  `;
+  
+  return div;
+}
+
+// Utility Functions
+function findMessageById(id) {
+  // This would fetch from your message store/state
+  return null;
+}
+
+function scrollToMessage(messageId) {
+  const element = document.getElementById(`msg-${messageId}`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.classList.add('highlight');
+    setTimeout(() => element.classList.remove('highlight'), 2000);
+  }
+}
+
+// Initialize when chat section is opened
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize enhanced features when community chat is opened
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.target.id === 'chatSection' && mutation.target.style.display !== 'none') {
+        initializeEnhancedChat();
+        observer.disconnect();
+      }
+    });
+  });
+  
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) {
+    observer.observe(chatSection, { attributes: true, attributeFilter: ['style'] });
+  }
+});
+
+// Socket.io listeners for enhanced features
+if (typeof io !== 'undefined') {
+  socket?.on('user_typing', (data) => {
+    if (data.userId !== currentUser?.id) {
+      showTypingIndicator(data.username);
+    }
+  });
+  
+  socket?.on('user_stop_typing', (data) => {
+    hideTypingIndicator(data.username);
+  });
+  
+  socket?.on('message_read', (data) => {
+    updateMessageStatus(data.messageId, 'read');
+  });
+  
+  socket?.on('message_delivered', (data) => {
+    updateMessageStatus(data.messageId, 'sent');
+  });
+}
+
+function updateMessageStatus(messageId, status) {
+  const messageElement = document.getElementById(`msg-${messageId}`);
+  if (!messageElement) return;
+  
+  const statusElement = messageElement.querySelector('.message-status');
+  if (statusElement) {
+    statusElement.textContent = status === 'sent' ? '✓' : status === 'read' ? '✓✓' : '⏳';
+  }
+}
+
+// Export functions for use in main app
+window.enhancedMessaging = {
+  initializeEnhancedChat,
+  sendEnhancedMessage,
+  replyToMessage,
+  forwardMessage,
+  openEmojiPicker,
+  openGifPicker,
+  openFileUploader,
+  toggleVoiceRecorder,
+  openMessageScheduler
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ========================================
 // FINAL CONSOLE LOG
@@ -2499,6 +3362,7 @@ async function handleReactionClick(messageId, emoji, pillEl, reactionBar) {
 console.log('✅ VibeXpert - Complete Enhanced Version Loaded');
 console.log('🎉 Features: About Us → Login → Main App');
 console.log('🚀 All functionality integrated successfully!');
+
 
 
 
