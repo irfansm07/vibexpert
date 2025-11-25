@@ -2,15 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="description" content="VibeXpert is the ultimate social platform for verified college students in India. Connect with peers from IITs, NITs, VITs, and more to share posts, chat, and earn rewards." />
   <meta name="google-adsense-account" content="ca-pub-2362238474761949">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VibeXpert - Connect With Your College</title>
-
-  <!-- Pre-connect for CDNs -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://cdn.socket.io"> 
-
   <link rel="stylesheet" href="vibemap.css" />
 </head>
 <body class="dark-theme">
@@ -43,9 +37,6 @@
       <div class="about-logo-large">VibeXpert</div>
       <h1 class="about-hero-title">Connect. Share. Vibe.</h1>
       <p class="about-hero-subtitle">The Ultimate Social Platform for College Students</p>
-      <button class="cta-button" onclick="showAuthPopup()" aria-haspopup="dialog" style="padding: 15px 35px; margin-top: 15px; font-size: 18px;">
-        Get Started Now →
-      </button>
       <div class="about-scroll-indicator">
         <span>Scroll to Explore</span>
         <div class="scroll-arrow">↓</div>
@@ -228,9 +219,6 @@
           <div class="stat-number" data-count="100000">0</div>
           <div class="stat-label">Messages Sent</div>
         </div>
-        <button class="cta-button" onclick="showAuthPopup()" aria-haspopup="dialog" style="grid-column: 1 / -1; margin-top: 20px;">
-          Get Started Now →
-        </button>
       </div>
     </div>
   </section>
@@ -315,7 +303,7 @@
           <span>✅ Verified Communities</span>
           <span>✅ Rich Features</span>
         </div>
-        <button class="cta-button" onclick="showAuthPopup()" aria-haspopup="dialog">
+        <button class="cta-button" onclick="showAuthPopup()">
           Get Started Now →
         </button>
         <p class="cta-note">🔒 Your college email keeps you safe</p>
@@ -411,23 +399,21 @@
           <input type="email" id="signupEmail" placeholder="Email" required>
           <input type="text" id="signupReg" placeholder="Registration Number" required>
           
-          <fieldset style="border:none; padding:0; margin:0 0 15px 0;">
-            <legend style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px; padding:0;">Gender</legend>
-            <div style="display:flex; gap:15px;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
-                👨 Male
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Female" style="cursor:pointer;">
-                👩 Female
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Other" style="cursor:pointer;">
-                🌈 Other
-              </label>
-            </div>
-          </fieldset>
+          <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
+          <div style="display:flex; gap:15px; margin-bottom:15px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+              <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
+              👨 Male
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+              <input type="radio" name="gender" value="Female" style="cursor:pointer;">
+              👩 Female
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
+              <input type="radio" name="gender" value="Other" style="cursor:pointer;">
+              🌈 Other
+            </label>
+          </div>
 
           <input type="password" id="signupPass" placeholder="Password" required>
           <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
@@ -454,7 +440,7 @@
       <span id="liveUsersCount">0 Active</span>
     </div>
     
-    <nav class="nav" aria-label="Main Navigation">
+    <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
       <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
@@ -575,33 +561,20 @@
       <button class="back-btn" onclick="backToUniversities()">← Back</button>
     </section>
 
-    <!-- COMMUNITIES (Now hosts the single chat view if joined) -->
+    <!-- COMMUNITIES -->
     <section id="communities" class="page" style="display:none;">
-      <div id="communitiesContainer">
-        <!-- Non-joined state content will load here -->
-      </div>
-      
+      <h2 class="title">Join Communities</h2>
+      <div id="communitiesContainer"></div>
       <div id="chatSection" style="display:none; margin-top:40px;">
         <div class="chat-header">
-          <h3>Community Chat - <span id="currentCommunityName"></span></h3>
+          <h3>Community Chat</h3>
           <div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
         </div>
         <div class="chat-box">
-          <div class="chat-messages" id="chatMessages">
-            <div style="text-align:center;padding:20px;color:#888;">Scroll down for new messages...</div>
-          </div>
-          <div class="chat-input-area">
-            <div id="replyingIndicator" class="replying-indicator" style="display:none;"></div>
-            <div id="typingIndicatorsContainer" class="typing-indicators-container"></div>
-            <div class="chat-input-box">
-              <!-- Attachment/Emoji Toolbar -->
-              <button class="chat-tool-btn" onclick="openMediaAttachment()">📎</button>
-              <button class="chat-tool-btn" onclick="openEmojiPicker(event)">😊</button>
-              <button class="chat-tool-btn" onclick="openGifPicker()">GIF</button>
-
-              <textarea id="chatInput" placeholder="Type a message..." rows="1" oninput="handleTypingIndicator()" onkeypress="handleChatKeypress(event)"></textarea>
-              <button class="send-btn" onclick="sendEnhancedMessage()">Send</button>
-            </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-box">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
+            <button class="send-btn" onclick="sendChatMessage()">Send</button>
           </div>
         </div>
       </div>
@@ -647,19 +620,6 @@
 <!-- MODALS -->
 <div id="verifyModal" class="modal" style="display:none;"></div>
 
-<!-- NEW: EDIT MESSAGE/POST MODAL -->
-<div id="editMessageModal" class="modal" style="display:none;">
-  <div class="modal-box">
-    <span class="close" onclick="closeModal('editMessageModal')">&times;</span>
-    <h2>✏️ Edit Content</h2>
-    <p id="editTypeLabel" style="color:#888;font-size:14px;margin-bottom:15px;">Editing Message...</p>
-    <textarea id="editContentInput" placeholder="Edit your content here..." 
-      style="width:100%; min-height:150px; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); 
-      border-radius:10px; font-family:inherit; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
-    <button onclick="saveEditedContent()">💾 Save Changes</button>
-  </div>
-</div>
-
 <div id="postDestinationModal" class="modal" style="display:none;">
   <div class="modal-box">
     <span class="close" onclick="closeModal('postDestinationModal')">&times;</span>
@@ -688,7 +648,6 @@
     <span class="close" onclick="closeModal('musicSelectorModal')">&times;</span>
     <h2>Add Music to Your Post</h2>
     <div id="musicSelector" class="music-selector"></div>
-    <button onclick="selectMusic(null)" style="margin-top:15px; background:rgba(239, 68, 68, 0.2); color:#ff6b6b; border: 1px solid #ff6b6b;">❌ Remove Music</button>
   </div>
 </div>
 
@@ -761,7 +720,7 @@
     <span class="close" onclick="closeModal('contactModal')">&times;</span>
     <h2>Contact Us</h2>
     <p>📧 Email: support@vibexpert.com</p>
-    <p>📱 Phone: +91-9347702626</p>
+    <p>📱 Phone: +91-8523015813</p>
     <p>💬 Live Chat: 24/7</p>
   </div>
 </div>
@@ -777,4 +736,4 @@
 
 <script src="vibemap.js"></script>
 </body>
-</html>
+</html> 
