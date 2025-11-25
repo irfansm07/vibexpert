@@ -58,6 +58,7 @@
       <h2 class="about-section-title">What is VibeXpert?</h2>
       <div class="about-grid">
         <div class="about-card reveal-on-scroll">
+          <div class="about-card-icon">🌍</div>
           <div class="about-card-icon">🌐</div>
           <h3>500+ Universities</h3>
           <p>Connect with students from IITs, NITs, VITs, and universities across India</p>
@@ -85,7 +86,7 @@
   <section class="about-section about-features-section">
     <div class="about-container">
       <h2 class="about-section-title">Powerful Features</h2>
-      
+
       <div class="feature-showcase reveal-on-scroll">
         <div class="feature-showcase-image">
           <div class="feature-mockup">
@@ -118,6 +119,7 @@
             <li>🎵 Attach music from our library</li>
             <li>🎨 Decorate with fun stickers</li>
             <li>✂️ Crop and edit your media</li>
+            <li>🌍 Share to profile or community</li>
             <li>🌐 Share to profile or community</li>
           </ul>
         </div>
@@ -346,12 +348,12 @@
   <div class="auth-popup-overlay" onclick="closeAuthPopup()"></div>
   <div class="auth-popup-content">
     <button class="auth-popup-close" onclick="closeAuthPopup()">&times;</button>
-    
+
     <div class="auth-container">
       <div class="auth-box">
         <h1>VibeXpert</h1>
         <p>Connect With The Verse</p>
-        
+
         <div id="message"></div>
 
         <!-- LOGIN FORM -->
@@ -367,7 +369,7 @@
         <!-- FORGOT PASSWORD FORM -->
         <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
           <h2>Reset Password</h2>
-          
+
           <div id="resetEmailSection">
             <p style="color:#888; font-size:14px; margin-bottom:15px;">
               Enter your email address and we'll send you a verification code.
@@ -375,7 +377,7 @@
             <input type="email" id="resetEmail" placeholder="Enter your email" required>
             <button type="button" onclick="handleForgotPassword(event)">📧 Send Reset Code</button>
           </div>
-          
+
           <div id="resetCodeSection" style="display:none;">
             <p style="color:#888; font-size:14px; margin-bottom:15px;">
               📧 Check your email for the 6-digit verification code.
@@ -384,11 +386,12 @@
             <input type="password" id="newPassword" placeholder="New Password" required minlength="6" style="margin-bottom:15px;">
             <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required minlength="6" style="margin-bottom:15px;">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" onclick="verifyResetCode(event)" style="flex:1; min-width:120px;">🔓 Reset Password</button>
               <button type="button" onclick="verifyResetCode(event)" style="flex:1; min-width:120px;">🔐 Reset Password</button>
               <button type="button" onclick="resendResetCode()" style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;">📧 Resend Code</button>
             </div>
           </div>
-          
+
           <p><a href="#" onclick="goLogin(event)">← Back to Login</a></p>
         </form>
 
@@ -398,7 +401,7 @@
           <input type="text" id="signupName" placeholder="Full Name" required>
           <input type="email" id="signupEmail" placeholder="Email" required>
           <input type="text" id="signupReg" placeholder="Registration Number" required>
-          
+
           <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
           <div style="display:flex; gap:15px; margin-bottom:15px;">
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
@@ -417,7 +420,7 @@
 
           <input type="password" id="signupPass" placeholder="Password" required>
           <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
-          
+
           <button type="submit">Create Account</button>
           <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
         </form>
@@ -430,16 +433,16 @@
      MAIN PAGE (ENHANCED UI/UX)
      ======================================== -->
 <div id="mainPage" class="main-page" style="display:none;">
-  
+
   <!-- HEADER -->
   <header class="header">
     <div class="logo" onclick="goHome()">VibeXpert</div>
-    
+
     <div class="live-counter">
       <span class="live-badge">🔴 Live</span>
       <span id="liveUsersCount">0 Active</span>
     </div>
-    
+
     <nav class="nav">
       <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
       <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
@@ -453,7 +456,7 @@
         <div class="search-results" id="searchResults" style="display:none;"></div>
       </div>
       <span class="user-name" id="userName">Hi, User</span>
-      
+
       <button class="options-btn" onclick="toggleOptionsMenu()">
         <span></span>
         <span></span>
@@ -583,17 +586,17 @@
     <!-- POSTS -->
     <section id="posts" class="page" style="display:none;">
       <h2 class="title">My Posts</h2>
-      
+
       <div class="enhanced-post-creator">
         <textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
         <div id="selectedAssets" class="selected-assets"></div>
         <div id="photoPreviewContainer" class="media-preview"></div>
-        
+
         <div id="postDestinationDisplay" class="post-destination-display">
           📍 Posting to: <span id="currentDestination">My Profile</span>
           <button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
         </div>
-        
+
         <div class="post-actions-row">
           <div class="post-features">
             <button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
@@ -604,7 +607,7 @@
           <button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
         </div>
       </div>
-      
+
       <div id="postsFeed" class="posts-feed"></div>
     </section>
 
@@ -633,6 +636,7 @@
         </div>
       </div>
       <div class="destination-option" onclick="selectPostDestination('community')">
+        <div class="destination-icon">🌍</div>
         <div class="destination-icon">🌐</div>
         <div class="destination-info">
           <h3>Community Feed</h3>
