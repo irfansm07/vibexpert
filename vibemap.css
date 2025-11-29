@@ -5880,4 +5880,152 @@ body.light-theme .emoji-picker {
   from { transform: translateY(-100%); }
   to { transform: translateY(0); }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* === COMMUNITY CHAT FINAL TWEAKS (WHATSAPP-LIKE, SAME THEME) === */
+
+#chatSection {
+  margin-top: 30px;
+}
+
+/* Background behind messages – subtle pattern */
+#chatMessages {
+  background: radial-gradient(circle at top, rgba(79,116,163,0.12), transparent 55%),
+              radial-gradient(circle at bottom, rgba(10,15,30,0.85), #050816);
+}
+
+/* Day separators (Today, Yesterday) */
+.chat-day-separator {
+  align-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(79, 116, 163, 0.18);
+  border: 1px solid rgba(79, 116, 163, 0.4);
+  font-size: 11px;
+  color: #cbd5f5;
+  margin: 8px 0;
+}
+
+body.light-theme .chat-day-separator {
+  background: rgba(79, 116, 163, 0.08);
+  color: #4f74a3;
+}
+
+/* Wrap each message row so avatar + bubble align like WhatsApp */
+.chat-message-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-message.own .chat-message-row {
+  flex-direction: row-reverse;
+}
+
+/* Avatar circles */
+.message-avatar {
+  flex-shrink: 0;
+}
+
+/* Override bubble radius to feel like WhatsApp */
+.chat-message .message-text {
+  max-width: 100%;
+  border-radius: 18px 18px 18px 4px;
+}
+
+.chat-message.own .message-text {
+  border-radius: 18px 18px 4px 18px;
+}
+
+/* Small time + ticks at bottom right inside the bubble */
+.message-meta-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 6px;
+}
+
+.message-time-inline {
+  color: #e5e7eb;
+}
+
+body.light-theme .message-time-inline {
+  color: #475569;
+}
+
+/* Ticks */
+.message-status-icon {
+  font-size: 13px;
+}
+
+.message-status-icon.sending {
+  opacity: 0.6;
+}
+
+.message-status-icon.sent {
+  color: #cbd5f5;
+}
+
+.message-status-icon.read {
+  color: #22c55e;
+}
+
+/* Reaction bar under a message (only when there are reactions) */
+.reaction-bar {
+  margin-top: 4px;
+}
+
+/* Typing indicator: push slightly into messages area */
+#typingIndicators {
+  margin-top: 0;
+  padding: 10px 30px 15px;
+}
+
+/* On very small screens, reduce paddings so it feels like WhatsApp mobile */
+@media (max-width: 480px) {
+  #chatSection {
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  #chatSection .chat-box {
+    border-radius: 0 0 0 0;
+  }
+
+  #chatMessages {
+    padding: 18px 10px;
+  }
+}
+
+      
     
