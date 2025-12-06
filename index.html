@@ -565,20 +565,221 @@ Enter your email address and we'll send you a verification code.
 <section id="communities" class="page" style="display:none;">
 <h2 class="title">Join Communities</h2>
 <div id="communitiesContainer"></div>
+<!-- ========================================
+     ENHANCED COMMUNITY CHAT SECTION
+     Replace the existing chat section with this
+     ======================================== -->
+
 <div id="chatSection" style="display:none; margin-top:40px;">
-<div class="chat-header">
-<h3>Community Chat</h3>
-<div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
+  <!-- Chat Header - WhatsApp Style -->
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-community-avatar">💬</div>
+      <div class="chat-header-info">
+        <h3 id="chatCommunityName">Community Chat</h3>
+        <p><span id="chatOnlineCount">0</span> members online</p>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="chat-header-btn" onclick="searchMessages()" title="Search">🔍</button>
+      <button class="chat-header-btn" onclick="toggleChatOptions()" title="Options">⋮</button>
+    </div>
+  </div>
+  
+  <!-- Chat Box Container -->
+  <div class="chat-box">
+    <!-- Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages will be dynamically added here -->
+      <div style="text-align:center;padding:20px;color:#8696a0;">
+        <p>No messages yet</p>
+        <p style="font-size:12px;margin-top:10px;">Start the conversation! 💬</p>
+      </div>
+    </div>
+    
+    <!-- Typing Indicators Container -->
+    <div class="typing-indicators-container" id="typingIndicatorsContainer"></div>
+    
+    <!-- Chat Input Box -->
+    <div class="chat-input-box">
+      <!-- Left Actions -->
+      <div class="chat-input-actions-left">
+        <button class="chat-input-btn" onclick="showEmojiPicker()" title="Emoji">😊</button>
+        <button class="chat-input-btn" onclick="showAttachmentOptions()" title="Attach">📎</button>
+      </div>
+      
+      <!-- Input Wrapper -->
+      <div class="chat-input-wrapper">
+        <textarea 
+          id="chatInput" 
+          placeholder="Type a message" 
+          rows="1"
+          maxlength="5000"
+        ></textarea>
+      </div>
+      
+      <!-- Send Button -->
+      <button class="send-btn" onclick="handleSendAction()" title="Send/Record">
+        <span id="sendIcon">➤</span>
+      </button>
+    </div>
+  </div>
 </div>
-<div class="chat-box">
-<div class="chat-messages" id="chatMessages"></div>
-<div class="chat-input-box">
-<input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
-<button class="send-btn" onclick="sendChatMessage()">Send</button>
-</div>
-</div>
-</div>
-</section>
+
+<!-- Message Context Menu (Hidden by default, shown on right-click) -->
+<div id="messageContextMenu" style="display:none;"></div>
+
+<!-- Quick Reactions Popup (Hidden by default) -->
+<div id="quickReactionsPopup" style="display:none;"></div>
+
+<!-- Emoji Picker Popup (Created dynamically) -->
+
+<!-- Media Viewer Modal (Created dynamically) -->
+
+<!-- Voice Recording Interface (Created dynamically) -->
+
+<!-- Script to Initialize Enhanced Chat -->
+<script>
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('📱 Enhanced Chat DOM Ready');
+  
+  // Initialize chat when user joins community
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target === chatSection && 
+            chatSection.style.display !== 'none' && 
+            !chatSection.dataset.chatInitialized) {
+          chatSection.dataset.chatInitialized = 'true';
+          console.log('🎉 Initializing Enhanced Chat...');
+          
+          // Small delay to ensure all scripts are loaded
+          setTimeout(() => {
+            if (typeof initializeEnhancedChat === 'function') {
+              initializeEnhancedChat();
+              loadCommunityMessages();
+            } else {
+              console.error('❌ initializeEnhancedChat function not found');
+            }
+          }, 100);
+        }
+      });
+    });
+    
+    observer.observe(chatSection, { 
+      attributes: true, 
+      attributeFilter: ['style'] 
+    });
+  }
+  
+  // Set community name when chat opens
+  if (currentUser && currentUser.college) {
+    const communityName = document.getElementById('chatCommunityName');
+    if (communityName) {
+      communityName.textContent = currentUser.college + ' Community';
+    }
+  }
+});
+
+// Helper function to open community chat
+function openEnhancedChat() {
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) {
+    chatSection.style.display = 'block';
+    
+    // Scroll to chat section
+    chatSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Load messages if not already loaded
+    if (!chatSection.dataset.messagesLoaded) {
+      chatSection.dataset.messagesLoaded = 'true';
+      loadCommunityMessages();
+    }
+  }
+}
+
+// Function to load community messages
+async function loadCommunityMessages() {
+  const messagesEl = document.getElementById('chatMessages');
+  if (!messagesEl) return;
+  
+  try {
+    messagesEl.innerHTML = '<div class="loading-messages"><div class="loading-spinner"></div><p>Loading messages...</p></div>';
+    
+    const data = await apiCall('/api/community/messages', 'GET');
+    
+    messagesEl.innerHTML = '';
+    
+    if (!data.messages || data.messages.length === 0) {
+      messagesEl.innerHTML = `
+        <div style="text-align:center;padding:40px;color:#8696a0;">
+          <div style="font-size:48px;margin-bottom:15px;">💬</div>
+          <p>No messages yet</p>
+          <p style="font-size:12px;margin-top:10px;">Start the conversation!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Reverse to show oldest first
+    data.messages.reverse().forEach(msg => {
+      if (typeof addMessageToUI === 'function') {
+        addMessageToUI(msg);
+      }
+    });
+    
+    // Scroll to bottom
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    
+  } catch(error) {
+    console.error('❌ Load messages error:', error);
+    messagesEl.innerHTML = `
+      <div style="text-align:center;padding:40px;color:#ff6b6b;">
+        <p>Failed to load messages</p>
+        <button onclick="loadCommunityMessages()" style="margin-top:15px;padding:10px 20px;background:#00a884;color:white;border:none;border-radius:8px;cursor:pointer;">
+          Retry
+        </button>
+      </div>
+    `;
+  }
+}
+
+// Enhanced Socket Listener for New Messages
+if (typeof setupEnhancedSocketListeners === 'function') {
+  setupEnhancedSocketListeners();
+}
+</script>
+
+<!-- Additional Styles for Loading State -->
+<style>
+.loading-messages {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8696a0;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 168, 132, 0.2);
+  border-top-color: #00a884;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-messages p {
+  font-size: 14px;
+  font-weight: 500;
+}
+</style>
 
 <!-- POSTS -->
 <section id="posts" class="page" style="display:none;">
