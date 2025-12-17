@@ -2906,3 +2906,379 @@ document.body.appendChild(modal);
 
 console.log('%c🎉 VibeXpert Enhanced Chat Ready! 🎉', 'color: #4f74a3; font-size: 20px; font-weight: bold;');
 console.log('%cFeatures: Real-time chat, Reactions, Typing indicators, Message actions', 'color: #8da4d3; font-size: 14px;');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// FIXED VIBEXPERT FRONTEND - LOGIN & PASSWORD RESET FIXES
+
+// ==================== FIXED API CALL FUNCTION ====================
+async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  const options = { 
+    method, 
+    headers: {},
+    signal: controller.signal 
+  };
+  
+  const token = getToken();
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  if (body && !(body instanceof FormData)) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  } else if (body instanceof FormData) {
+    options.body = body;
+  }
+  
+  try {
+    console.log(`📡 API Call: ${method} ${endpoint}`);
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    clearTimeout(timeoutId);
+    
+    console.log(`📥 Response status: ${response.status}`);
+    
+    // Try to parse JSON response
+    let data;
+    try {
+      const text = await response.text();
+      data = text ? JSON.parse(text) : {};
+    } catch (parseError) {
+      console.error('❌ Failed to parse response:', parseError);
+      data = { error: 'Invalid server response' };
+    }
+    
+    if (!response.ok) {
+      const errorMessage = data.error || data.message || `Request failed with status ${response.status}`;
+      console.error('❌ API Error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    console.log('✅ API Success:', data);
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.error('⏱️ Request timeout');
+      if (retries > 0) {
+        console.log(`🔄 Retrying... (${retries} attempts left)`);
+        await new Promise(r => setTimeout(r, 1000));
+        return apiCall(endpoint, method, body, retries - 1);
+      }
+      throw new Error('Request timed out. Please check your connection.');
+    }
+    
+    if (retries > 0 && error.message.includes('network')) {
+      console.log(`🔄 Network error, retrying... (${retries} attempts left)`);
+      await new Promise(r => setTimeout(r, 1000));
+      return apiCall(endpoint, method, body, retries - 1);
+    }
+    
+    throw error;
+  }
+}
+
+// ==================== FIXED LOGIN FUNCTION ====================
+async function login(e) {
+  e.preventDefault();
+  
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value;
+  
+  console.log('🔐 Login attempt for:', email);
+  
+  if (!email || !password) {
+    showMessage('⚠️ Please enter both email and password', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('🔄 Logging in...', 'success');
+    
+    const data = await apiCall('/api/login', 'POST', { 
+      email: email, 
+      password: password 
+    });
+    
+    if (!data.success || !data.token) {
+      throw new Error('Invalid response from server');
+    }
+    
+    console.log('✅ Login successful!');
+    
+    // Store token and user data
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    
+    showMessage('✅ Login successful!', 'success');
+    
+    // Transition to main app
+    setTimeout(() => {
+      document.body.classList.add('logged-in');
+      
+      const aboutPage = document.getElementById('aboutUsPage');
+      const authPopup = document.getElementById('authPopup');
+      const mainPage = document.getElementById('mainPage');
+      
+      if (aboutPage) aboutPage.style.display = 'none';
+      if (authPopup) {
+        authPopup.classList.remove('show');
+        authPopup.style.display = 'none';
+      }
+      if (mainPage) mainPage.style.display = 'block';
+      
+      document.body.style.overflow = 'auto';
+      
+      if (scrollProgressIndicator) {
+        scrollProgressIndicator.remove();
+        scrollProgressIndicator = null;
+      }
+      
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      
+      const form = document.getElementById('loginForm');
+      if (form) form.reset();
+      
+      loadPosts();
+      
+      if (currentUser.college) {
+        initializeSocket();
+      }
+    }, 800);
+  } catch (error) {
+    console.error('❌ Login failed:', error);
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
+}
+
+// ==================== FIXED FORGOT PASSWORD FUNCTION ====================
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  
+  const emailInput = document.getElementById('resetEmail');
+  const email = emailInput?.value.trim();
+  
+  console.log('🔑 Password reset request for:', email);
+  
+  if (!email) {
+    showMessage('⚠️ Please enter your email address', 'error');
+    return;
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showMessage('⚠️ Please enter a valid email address', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('📧 Sending verification code...', 'success');
+    
+    const data = await apiCall('/api/forgot-password', 'POST', { email });
+    
+    console.log('✅ Reset code request successful');
+    
+    if (data.devCode) {
+      // Development mode - show code in UI
+      showMessage(`✅ Development Mode: Your code is ${data.devCode}`, 'success');
+      console.log('🔢 Development code:', data.devCode);
+    } else {
+      showMessage('✅ Verification code sent! Check your email.', 'success');
+    }
+    
+    // Show code input section
+    const emailSection = document.getElementById('resetEmailSection');
+    const codeSection = document.getElementById('resetCodeSection');
+    
+    if (emailSection) emailSection.style.display = 'none';
+    if (codeSection) codeSection.style.display = 'block';
+    
+  } catch (error) {
+    console.error('❌ Forgot password failed:', error);
+    showMessage('❌ Failed to send code: ' + error.message, 'error');
+  }
+}
+
+// ==================== FIXED VERIFY RESET CODE FUNCTION ====================
+async function verifyResetCode(e) {
+  e.preventDefault();
+  
+  const email = document.getElementById('resetEmail')?.value.trim();
+  const code = document.getElementById('resetCode')?.value.trim();
+  const newPassword = document.getElementById('newPassword')?.value;
+  const confirmPassword = document.getElementById('confirmNewPassword')?.value;
+  
+  console.log('🔄 Verifying reset code');
+  
+  // Validation
+  if (!code || code.length !== 6) {
+    showMessage('⚠️ Please enter the 6-digit code', 'error');
+    return;
+  }
+  
+  if (!newPassword || !confirmPassword) {
+    showMessage('⚠️ Please enter and confirm your new password', 'error');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    showMessage('⚠️ Passwords do not match', 'error');
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    showMessage('⚠️ Password must be at least 6 characters', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('🔐 Resetting password...', 'success');
+    
+    const data = await apiCall('/api/reset-password', 'POST', { 
+      email, 
+      code, 
+      newPassword 
+    });
+    
+    console.log('✅ Password reset successful');
+    
+    showMessage('✅ Password reset successful! Please login.', 'success');
+    
+    // Reset form
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    if (forgotForm) forgotForm.reset();
+    
+    const emailSection = document.getElementById('resetEmailSection');
+    const codeSection = document.getElementById('resetCodeSection');
+    
+    if (emailSection) emailSection.style.display = 'block';
+    if (codeSection) codeSection.style.display = 'none';
+    
+    // Go back to login
+    setTimeout(() => goLogin(null), 2000);
+    
+  } catch (error) {
+    console.error('❌ Password reset failed:', error);
+    showMessage('❌ Reset failed: ' + error.message, 'error');
+  }
+}
+
+// ==================== RESEND RESET CODE ====================
+async function resendResetCode() {
+  const email = document.getElementById('resetEmail')?.value.trim();
+  
+  if (!email) {
+    showMessage('⚠️ Email address required', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('📧 Resending code...', 'success');
+    
+    const data = await apiCall('/api/forgot-password', 'POST', { email });
+    
+    if (data.devCode) {
+      showMessage(`✅ Development Mode: New code is ${data.devCode}`, 'success');
+      console.log('🔢 Development code:', data.devCode);
+    } else {
+      showMessage('✅ New code sent! Check your email.', 'success');
+    }
+  } catch (error) {
+    console.error('❌ Resend failed:', error);
+    showMessage('❌ Failed to resend: ' + error.message, 'error');
+  }
+}
+
+// ==================== IMPROVED MESSAGE DISPLAY ====================
+function showMessage(text, type) {
+  const box = document.getElementById('message');
+  
+  if (!box) {
+    console.log('Message:', text);
+    return;
+  }
+  
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
+  
+  // Clear previous messages
+  box.innerHTML = '';
+  box.appendChild(div);
+  
+  // Auto-hide success messages after 4 seconds
+  if (type === 'success') {
+    setTimeout(() => {
+      if (div.parentNode) {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 300);
+      }
+    }, 4000);
+  }
+}
+
+// ==================== EXPORT FUNCTIONS ====================
+// Make sure these are available globally
+window.login = login;
+window.handleForgotPassword = handleForgotPassword;
+window.verifyResetCode = verifyResetCode;
+window.resendResetCode = resendResetCode;
+window.apiCall = apiCall;
+
+console.log('✅ Fixed auth functions loaded');
+
