@@ -6003,3 +6003,503 @@ body.light-theme .emoji-picker {
 }
 }
 }
+/* ==========================================
+   REWARDS ROADMAP 
+   ========================================== */
+
+.rewards-roadmap-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.roadmap-title {
+  text-align: center;
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B6B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 60px;
+}
+
+
+/* milestone-level, progress-info, requirements, rewards, status */
+/* ⬇ EXACTLY SAME AS YOUR ORIGINAL — NO CHANGES ⬇ */
+
+.milestone-level { position:absolute; left:calc(35% + 50px); width:calc(65% - 90px); background:rgba(15,25,45,0.95); border-radius:20px; padding:30px; border:3px solid; box-shadow:0 15px 40px rgba(0,0,0,0.4); backdrop-filter:blur(10px); transition:all 0.5s ease; }
+.milestone-level:hover { transform:translateX(10px) scale(1.02); }
+
+.milestone-level.gold { top:80px; border-color:#FFD700; }
+.milestone-level.silver { top:480px; border-color:#C0C0C0; }
+.milestone-level.bronze { top:880px; border-color:#CD7F32; }
+.milestone-level.wood { top:1280px; border-color:#8B4513; }
+
+/* status */
+.level-status.locked { background:rgba(255,107,107,0.2); color:#ff6b6b; }
+.level-status.in-progress { background:rgba(255,215,0,0.2); color:#FFD700; }
+.level-status.completed { background:rgba(34,197,94,0.2); color:#22c55e; }
+/* ==========================================
+   FIREWORKS CANVAS
+   ========================================== */
+#fireworksCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+/* ==========================================
+   REWARDS ROADMAP - ENHANCED
+   ========================================== */
+.rewards-roadmap-container {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.roadmap-title {
+  text-align: center;
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B6B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 60px;
+  animation: titlePulse 3s ease-in-out infinite;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.roadmap-wrapper {
+  position: relative;
+  min-height: 1750px;
+
+  background: linear-gradient(180deg, rgba(15,25,45,0.95), rgba(25,35,60,0.95));
+  border-radius: 30px;
+  padding: 40px;
+  border: 2px solid rgba(79,116,163,0.3);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* VERTICAL PATH - MOVED TO LEFT */
+.roadmap-path {
+  position: absolute;
+  left: 35%;
+  top: 80px;
+  bottom: 80px;
+  width: 8px;
+  background: linear-gradient(180deg, #8B4513 0%, #CD7F32 33%, #C0C0C0 66%, #FFD700 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(255,215,0,0.5);
+  animation: pathGlow 3s ease-in-out infinite;
+}
+
+@keyframes pathGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+  50% { box-shadow: 0 0 40px rgba(255,215,0,0.8); }
+}
+
+/* CHARACTER */
+.roadmap-character {
+  position: absolute;
+  left: calc(35% - 30px);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f74a3, #8da4d3);
+  border: 4px solid #FFD700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  transition: top 2s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 10px 30px rgba(255,215,0,0.6);
+  z-index: 100;
+  animation: characterBounce 2s ease-in-out infinite;
+}
+
+@keyframes characterBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* PROGRESS INFO - ON LEFT SIDE */
+.progress-info {
+  position: absolute;
+  left: 40px;
+  top: 80px;
+  background: linear-gradient(135deg, rgba(79,116,163,0.25), rgba(141,164,211,0.15));
+  border: 2px solid rgba(79,116,163,0.4);
+  border-radius: 20px;
+  padding: 30px;
+  width: 280px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+  animation: infoFloat 3s ease-in-out infinite;
+  z-index: 10;
+}
+
+@keyframes infoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.progress-info h3 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-info p {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+#progressTasks {
+  background: rgba(15,25,45,0.5);
+  padding: 15px;
+  border-radius: 12px;
+  margin: 15px 0;
+}
+
+#progressTasks > div > div {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(79,116,163,0.2);
+  color: #d0d0d0;
+  font-size: 14px;
+}
+
+#progressTasks > div > div:last-child {
+  border-bottom: none;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: rgba(79,116,163,0.2);
+  border-radius: 10px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f74a3, #8da4d3);
+  transition: width 1s ease;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(79,116,163,0.6);
+}
+
+.progress-percentage {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #4f74a3;
+}
+
+/* MILESTONE LEVELS */
+.milestone-level {
+  position: absolute;
+  left: calc(35% + 50px);  
+  width: calc(60% - 90px);  
+  background: linear-gradient(135deg, rgba(15,25,45,0.98), rgba(25,35,60,0.95));
+  border-radius: 20px;
+  padding: 25px;
+  border: 3px solid;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+  backdrop-filter: blur(15px);
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+  animation: milestoneAppear 0.8s ease;
+  z-index: 20;
+}
+
+@keyframes milestoneAppear {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.milestone-level:hover {
+  transform: translateX(10px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.milestone-level.wood { 
+  top: 80px; 
+  border-color: #8B4513;
+  animation-delay: 0s;
+}
+
+.milestone-level.bronze { 
+  top: 460px;  /* ← ADJUSTED SPACING (was 440px) */
+  border-color: #CD7F32;
+  animation-delay: 0.2s;
+}
+
+.milestone-level.silver { 
+  top: 840px;  /* ← ADJUSTED SPACING (was 800px) */
+  border-color: #C0C0C0;
+  animation-delay: 0.4s;
+}
+
+.milestone-level.gold { 
+  top: 1220px;  /* ← ADJUSTED SPACING (was 1160px) */
+  border-color: #FFD700;
+  animation-delay: 0.6s;
+}
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.level-header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.level-header > div:first-child > div:first-child {
+  font-size: 48px;
+  animation: iconSpin 4s ease-in-out infinite;
+}
+
+@keyframes iconSpin {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.level-header h3 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.level-header p {
+  color: #888;
+  font-size: 13px;
+  margin: 5px 0 0 0;
+}
+
+.level-status {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.level-status.locked {
+  background: rgba(255,107,107,0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255,107,107,0.4);
+}
+
+.level-status.in-progress {
+  background: rgba(255,215,0,0.2);
+  color: #FFD700;
+  border: 1px solid rgba(255,215,0,0.4);
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+  50% { box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+}
+
+.level-status.completed {
+  background: rgba(34,197,94,0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,0.4);
+}
+
+/* LEVEL CONTENT */
+.level-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.requirements, .rewards {
+  background: rgba(79,116,163,0.08);
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid rgba(79,116,163,0.2);
+}
+
+.requirements h4, .rewards h4 {
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.requirements ul, .rewards ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirements li, .rewards li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(79,116,163,0.15);
+  color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.requirements li:hover, .rewards li:hover {
+  padding-left: 5px;
+  color: #4f74a3;
+}
+
+.requirements li:last-child, .rewards li:last-child {
+  border-bottom: none;
+}
+
+.requirements li span:first-child,
+.rewards li span:first-child {
+  font-size: 20px;
+}
+
+/* LEVEL COLORS */
+.wood .level-header h3 { color: #8B4513; }
+.wood .requirements h4, .wood .rewards h4 { color: #8B4513; }
+
+.bronze .level-header h3 { color: #CD7F32; }
+.bronze .requirements h4, .bronze .rewards h4 { color: #CD7F32; }
+
+.silver .level-header h3 { color: #C0C0C0; }
+.silver .requirements h4, .silver .rewards h4 { color: #C0C0C0; }
+
+.gold .level-header h3 { color: #FFD700; }
+.gold .requirements h4, .gold .rewards h4 { color: #FFD700; }
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .roadmap-wrapper {
+    min-height: 1800px;  /* ← INCREASED FOR MOBILE */
+  }
+  
+  .progress-info {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    margin-bottom: 30px;
+    z-index: 5;
+  }
+  
+  .roadmap-path {
+    left: 30px;  /* ← BACK TO LEFT ON MOBILE */
+  }
+  
+  .roadmap-character {
+    left: -2px;  /* ← ALIGN WITH MOBILE PATH */
+  }
+  
+  .milestone-level {
+    left: 80px;  /* ← RIGHT OF PATH ON MOBILE */
+    width: calc(100% - 100px);
+    z-index: 10;
+  }
+  
+  .level-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .roadmap-title {
+    font-size: 36px;
+  }
+  
+  .roadmap-wrapper {
+    padding: 20px;
+    min-height: 1900px;  /* ← INCREASED */
+  }
+  
+  .milestone-level {
+    padding: 20px;
+  }
+  
+  .level-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .level-header h3 {
+    font-size: 20px;
+  }
+  
+  .level-header > div:first-child > div:first-child {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .roadmap-title {
+    font-size: 28px;
+  }
+  
+  .milestone-level {
+    left: 60px;
+    width: calc(100% - 70px);
+  }
+  
+  .roadmap-wrapper {
+    min-height: 2000px;  /* ← INCREASED */
+  }
+}
+  
+  .milestone-level {
+    padding: 20px;
+  }
+  
+  .level-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .level-header h3 {
+    font-size: 20px;
+  }
+  
+  .level-header > div:first-child > div:first-child {
+    font-size: 40px;
+  }
+
+
+@media (max-width: 480px) {
+  .roadmap-title {
+    font-size: 28px;
+  }
+  
+  .milestone-level {
+    left: 20px;
+    width: calc(100% - 90px);
+  }
+}
