@@ -400,6 +400,11 @@ const data = await apiCall('/api/login', 'POST', { email, password });
 localStorage.setItem('authToken', data.token);
 localStorage.setItem('user', JSON.stringify(data.user));
 currentUser = data.user;
+currentUser.postCount = currentUser.postCount || 0;
+currentUser.commentCount = currentUser.commentCount || 0;
+currentUser.likeCount = currentUser.likeCount || 0;
+currentUser.daysActive = currentUser.daysActive || 1;
+currentUser.currentLevel = currentUser.currentLevel || 'wood';
 showMessage('✅ Login successful!', 'success');
 setTimeout(() => {
 document.body.classList.add('logged-in');
@@ -1684,7 +1689,7 @@ if (data.success) {
 const msg = selectedPostDestination === 'profile' ? 
 '✅ Posted to profile!' : '✅ Shared to community!';
 showMessage(msg, 'success');
-
+checkAndUpdateRewards('post');
 const postCount = data.postCount || 1;
 setTimeout(() => showPostCelebrationModal(postCount), 800);
 
@@ -1885,6 +1890,10 @@ if (likeBtn) likeBtn.disabled = true;
 const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
 
 if (data.success) {
+  
+  if (data.liked) {
+    checkAndUpdateRewards('like');
+  }
 if (likeBtn) {
 likeBtn.innerHTML = data.liked ? '❤️ Liked' : '❤️ Like';
 if (data.liked) likeBtn.classList.add('liked');
@@ -2005,6 +2014,7 @@ const data = await apiCall(`/api/posts/${postId}/comments`, 'POST', { content })
 
 if (data.success) {
 showMessage('✅ Comment posted!', 'success');
+checkAndUpdateRewards('comment');
 input.value = '';
 loadComments(postId);
 
@@ -2776,79 +2786,10 @@ container.innerHTML = html;
 }
 
 function loadRewardsPage() {
-const container = document.getElementById('rewards');
-if (!container) return;
-
-const userPoints = currentUser?.rewardPoints || 0;
-
-let html = `
-   <div style="text-align:center;margin-bottom:40px;">
-     <h2 style="font-size:36px;color:#4f74a3;">🎁 Rewards</h2>
-     <div style="margin:30px auto;padding:30px;background:linear-gradient(135deg,rgba(79,116,163,0.2),rgba(141,164,211,0.2));
-       border:2px solid #4f74a3;border-radius:20px;max-width:400px;">
-       <div style="font-size:48px;font-weight:800;color:#4f74a3;">${userPoints}</div>
-       <div style="font-size:14px;color:#888;">YOUR POINTS</div>
-     </div>
-   </div>
-   
-   <div style="margin-bottom:50px;">
-     <h3 style="color:#4f74a3;font-size:24px;margin-bottom:20px;">📋 Daily Tasks</h3>
-     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;">
- `;
-
-rewardsData.dailyTasks.forEach(task => {
-html += `
-     <div class="reward-task-card ${task.completed ? 'completed' : ''}" onclick="completeTask('${task.id}')">
-       <div style="font-size:48px;margin-bottom:15px;">${task.icon}</div>
-       <h4 style="color:#4f74a3;font-size:18px;margin-bottom:8px;">${task.title}</h4>
-       <p style="color:#888;font-size:14px;margin-bottom:15px;">${task.desc}</p>
-       <div style="display:flex;justify-content:space-between;">
-         <span style="background:linear-gradient(135deg,#4f74a3,#8da4d3);color:white;
-           padding:6px 16px;border-radius:20px;font-weight:600;font-size:13px;">+${task.reward} pts</span>
-         ${task.completed ? 
-           '<span style="color:#22c55e;">✓ Done</span>' : 
-           '<span style="color:#888;">Click to complete</span>'
-         }
-       </div>
-     </div>
-   `;
-});
-
-html += `
-     </div>
-   </div>
-   
-   <div>
-     <h3 style="color:#4f74a3;font-size:24px;margin-bottom:20px;">🏆 Achievements</h3>
-     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
- `;
-
-rewardsData.achievements.forEach(achievement => {
-const progress = Math.min(100, (achievement.progress / achievement.target) * 100);
-
-html += `
-     <div class="achievement-card">
-       <div style="font-size:56px;margin-bottom:15px;">${achievement.icon}</div>
-       <h4 style="color:#4f74a3;font-size:20px;margin-bottom:8px;">${achievement.title}</h4>
-       <p style="color:#888;font-size:14px;margin-bottom:15px;">${achievement.desc}</p>
-       <div class="progress-bar" style="background:rgba(79,116,163,0.2);height:8px;border-radius:10px;overflow:hidden;margin-bottom:10px;">
-         <div style="background:linear-gradient(135deg,#4f74a3,#8da4d3);height:100%;width:${progress}%;
-           transition:width 0.5s ease;"></div>
-       </div>
-       <div style="display:flex;justify-content:space-between;font-size:13px;">
-         <span style="color:#888;">${achievement.progress} / ${achievement.target}</span>
-         <span style="color:#4f74a3;font-weight:600;">+${achievement.reward} pts</span>
-       </div>
-     </div>
-   `;
-});
-
-html += `
-     </div>
-   </div>
- `;
-
-container.innerHTML = html;
+  console.log('📊 Loading Rewards Page');
+  
+  // Just update the roadmap UI - that's it!
+  setTimeout(() => updateRoadmapUI(), 100);
 }
 
 function completeTask(taskId) {
@@ -2899,10 +2840,390 @@ modal.innerHTML = `
 
 document.body.appendChild(modal);
 }
+// ========================================
+// REWARDS ROADMAP SYSTEM
+// ========================================
 
+const roadmapLevels = {
+  wood: {
+    name: 'Wood League',
+    color: '#8B4513',
+    icon: '🪵',
+    position: 80,
+    requirements: { posts: 5, comments: 10, likes: 20, days_active: 3 },
+    rewards: ['Wood Badge', '50 Points', 'Basic Avatar Frame']
+  },
+  bronze: {
+    name: 'Bronze League',
+    color: '#CD7F32',
+    icon: '🥉',
+    position: 480,
+    requirements: { posts: 15, comments: 30, likes: 50, days_active: 7 },
+    rewards: ['Bronze Badge', '150 Points', 'Bronze Avatar Frame']
+  },
+  silver: {
+    name: 'Silver League',
+    color: '#C0C0C0',
+    icon: '🥈',
+    position: 880,
+    requirements: { posts: 50, comments: 100, likes: 200, days_active: 15 },
+    rewards: ['Silver Badge', '500 Points', 'Silver Avatar Frame']
+  },
+  gold: {
+    name: 'Gold League',
+    color: '#FFD700',
+    icon: '🥇',
+    position: 1280,
+    requirements: { posts: 100, comments: 250, likes: 500, days_active: 30 },
+    rewards: ['Gold Badge', '1000 Points', 'Gold Avatar Frame', 'VIP Status']
+  }
+};
+
+function updateRoadmapUI() {
+  if (!currentUser) return;
+  
+  const userStats = {
+    posts: currentUser.postCount || 0,
+    comments: currentUser.commentCount || 0,
+    likes: currentUser.likeCount || 0,
+    days_active: currentUser.daysActive || 1
+  };
+  
+  const currentLevel = calculateUserLevel(userStats);
+  const nextLevel = getNextLevel(currentLevel);
+  
+  updateCharacterPosition(currentLevel);  // ✅ Make sure this line is here
+  updateProgressInfo(currentLevel, nextLevel, userStats);
+  updateMilestoneStatuses(userStats);
+}
+
+function calculateUserLevel(stats) {
+  const levels = ['wood', 'bronze', 'silver', 'gold'];
+  for (let i = levels.length - 1; i >= 0; i--) {
+    const level = levels[i];
+    const reqs = roadmapLevels[level].requirements;
+    if (stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
+        stats.likes >= reqs.likes && stats.days_active >= reqs.days_active) {
+      return level;
+    }
+  }
+  return 'wood';
+}
+
+function getNextLevel(currentLevel) {
+  const levels = ['wood', 'bronze', 'silver', 'gold'];
+  const idx = levels.indexOf(currentLevel);
+  return idx < levels.length - 1 ? levels[idx + 1] : null;
+}
+
+function updateCharacterPosition(level) {
+  const char = document.getElementById('roadmapCharacter');
+  if (char) {
+    char.style.top = roadmapLevels[level].position + 'px';
+    char.textContent = roadmapLevels[level].icon;
+  }
+}
+
+function updateProgressInfo(currentLevel, nextLevel, stats) {
+  const nameEl = document.getElementById('currentLevelName');
+  const descEl = document.getElementById('progressDescription');
+  const tasksEl = document.getElementById('progressTasks');
+  const barEl = document.getElementById('progressBarFill');
+  const percentEl = document.getElementById('progressPercentage');
+  
+  if (nameEl) nameEl.textContent = roadmapLevels[currentLevel].name;
+  
+  if (nextLevel) {
+    const reqs = roadmapLevels[nextLevel].requirements;
+    const progress = ((stats.posts/reqs.posts + stats.comments/reqs.comments + 
+                      stats.likes/reqs.likes + stats.days_active/reqs.days_active) / 4) * 100;
+    
+    if (descEl) descEl.textContent = `Progress to ${roadmapLevels[nextLevel].name}`;
+    if (tasksEl) tasksEl.innerHTML = `
+      <div style="margin-top: 15px;">
+        <div>📝 Posts: ${stats.posts}/${reqs.posts}</div>
+        <div>💬 Comments: ${stats.comments}/${reqs.comments}</div>
+        <div>❤️ Likes: ${stats.likes}/${reqs.likes}</div>
+        <div>📅 Days Active: ${stats.days_active}/${reqs.days_active}</div>
+      </div>`;
+    if (barEl) barEl.style.width = Math.min(100, progress) + '%';
+    if (percentEl) percentEl.textContent = Math.round(progress) + '%';
+  } else {
+    if (descEl) descEl.textContent = '🏆 Maximum Level!';
+    if (tasksEl) tasksEl.innerHTML = '<div style="margin-top:15px;color:#FFD700;">Highest level achieved! 🎉</div>';
+    if (barEl) barEl.style.width = '100%';
+    if (percentEl) percentEl.textContent = '100%';
+  }
+}
+
+function updateMilestoneStatuses(stats) {
+  Object.keys(roadmapLevels).forEach(level => {
+    const card = document.querySelector(`.milestone-level.${level}`);
+    if (!card) return;
+    
+    const reqs = roadmapLevels[level].requirements;
+    const completed = stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
+                     stats.likes >= reqs.likes && stats.days_active >= reqs.days_active;
+    
+    const badge = card.querySelector('.level-status');
+    if (badge) {
+      if (completed) {
+        badge.className = 'level-status completed';
+        badge.textContent = '✅ Completed';
+      } else {
+        const current = calculateUserLevel(stats);
+        const next = getNextLevel(current);
+        if (level === next) {
+          badge.className = 'level-status in-progress';
+          badge.textContent = '🎯 In Progress';
+        } else {
+          badge.className = 'level-status locked';
+          badge.textContent = '🔒 Locked';
+        }
+      }
+    }
+  });
+}
+
+function checkAndUpdateRewards(action) {
+  if (!currentUser) return;
+  
+  switch(action) {
+    case 'post': currentUser.postCount = (currentUser.postCount || 0) + 1; break;
+    case 'comment': currentUser.commentCount = (currentUser.commentCount || 0) + 1; break;
+    case 'like': currentUser.likeCount = (currentUser.likeCount || 0) + 1; break;
+  }
+  
+  localStorage.setItem('user', JSON.stringify(currentUser));
+  updateRoadmapUI();
+  checkLevelUp();
+}
+
+function checkLevelUp() {
+  const stats = {
+    posts: currentUser.postCount || 0,
+    comments: currentUser.commentCount || 0,
+    likes: currentUser.likeCount || 0,
+    days_active: currentUser.daysActive || 1
+  };
+  
+  const current = calculateUserLevel(stats);
+  const previous = currentUser.currentLevel || 'wood';
+  
+  if (current !== previous) {
+    currentUser.currentLevel = current;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    showLevelUpCelebration(current);
+  }
+}
+
+function showLevelUpCelebration(level) {
+  const data = roadmapLevels[level];
+  const modal = document.createElement('div');
+  modal.className = 'modal celebration-modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="celebration-modal-content">
+      <div class="celebration-emoji">${data.icon}</div>
+      <h2 class="celebration-title" style="color:${data.color}">Level Up!</h2>
+      <p class="celebration-message">You've reached ${data.name}!</p>
+      <div class="celebration-stats" style="background:linear-gradient(135deg,${data.color}33,${data.color}22);">
+        <div class="celebration-count">${data.name}</div>
+        <div class="celebration-label">New Rank</div>
+      </div>
+      <div class="celebration-quote">
+        <strong>Rewards:</strong><br>${data.rewards.join(' • ')}
+      </div>
+      <button class="celebration-button" style="background:linear-gradient(135deg,${data.color},${data.color}cc);" 
+        onclick="this.closest('.modal').remove()">Awesome! 🎉</button>
+    </div>`;
+  document.body.appendChild(modal);
+  createConfetti();
+}
+
+window.updateRoadmapUI = updateRoadmapUI;
+window.checkAndUpdateRewards = checkAndUpdateRewards;
 // ========================================
 // CONSOLE LOG - INITIALIZATION COMPLETE
 // ========================================
 
 console.log('%c🎉 VibeXpert Enhanced Chat Ready! 🎉', 'color: #4f74a3; font-size: 20px; font-weight: bold;');
 console.log('%cFeatures: Real-time chat, Reactions, Typing indicators, Message actions', 'color: #8da4d3; font-size: 14px;');
+
+// ==========================================
+// FIREWORKS ANIMATION - BIGGER & FASTER
+// ==========================================
+
+function initFireworks() {
+  const canvas = document.getElementById('fireworksCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+  
+  class Particle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.color = color;
+      this.velocity = {
+        x: (Math.random() - 0.5) * 12,  // FASTER (was 8)
+        y: (Math.random() - 0.5) * 12   // FASTER (was 8)
+      };
+      this.alpha = 1;
+      this.decay = Math.random() * 0.018 + 0.018;  // SLOWER FADE (was 0.015)
+      this.size = Math.random() * 1 + 2;  // BIGGER (was 3 + 2)
+    }
+    
+    update() {
+      this.velocity.x *= 0.98;
+      this.velocity.y *= 0.98;
+      this.velocity.y += 0.1;
+      this.x += this.velocity.x;
+      this.y += this.velocity.y;
+      this.alpha -= this.decay;
+    }
+    
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+  
+  let particles = [];
+  // MORE COLORFUL (12 colors instead of 6)
+  const colors = [
+    '#FFD700', '#FFA500', '#FF6B6B', '#FF1493', 
+    '#00FF00', '#00FFFF', '#FF00FF', '#4f74a3', 
+    '#8da4d3', '#C0C0C0', '#FF4500', '#7FFF00'
+  ];
+  
+  function createFirework(x, y) {
+    const particleCount = 60;  // MORE PARTICLES (was 30)
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle(x, y, color));
+    }
+  }
+  
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles = particles.filter(particle => {
+      particle.update();
+      particle.draw();
+      return particle.alpha > 0;
+    });
+    
+    requestAnimationFrame(animate);
+  }
+  
+  // MORE FREQUENT FIREWORKS (800ms instead of 2000ms)
+  setInterval(() => {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height * 0.5;
+    createFirework(x, y);
+  }, 800);
+  
+  animate();
+}
+
+// ==========================================
+// REWARDS PROGRESS UPDATE
+// ==========================================
+
+function updateRewardsProgress() {
+  if (!currentUser) return;
+  
+  const userStats = {
+    activeHours: currentUser.activeHours || 0,
+    weeksActive: currentUser.weeksActive || 0,
+    alternativeHours: currentUser.alternativeHours || 0,
+    posts: currentUser.postCount || 0,
+    views: currentUser.viewCount || 0,
+    likes: currentUser.likeCount || 0,
+    followers: currentUser.followerCount || 0
+  };
+  
+  const woodProgress = Math.min(100, (userStats.activeHours / 20) * 100);
+  const altWoodProgress = Math.min(100, (userStats.alternativeHours / 50) * 100);
+  const progress = Math.max(woodProgress, altWoodProgress);
+  
+  const progressBar = document.getElementById('progressBarFill');
+  const progressPercent = document.getElementById('progressPercentage');
+  
+  if (progressBar) progressBar.style.width = progress + '%';
+  if (progressPercent) progressPercent.textContent = Math.round(progress) + '%';
+  
+  const tasksEl = document.getElementById('progressTasks');
+  if (tasksEl) {
+    tasksEl.innerHTML = `
+      <div style="margin-top: 15px;">
+        <div style="color: ${userStats.activeHours >= 20 ? '#22c55e' : '#888'};">
+          ⏱️ Active Hours: ${userStats.activeHours}/20 per week
+        </div>
+        <div style="color: ${userStats.weeksActive >= 4 ? '#22c55e' : '#888'};">
+          📅 Weeks: ${userStats.weeksActive}/4
+        </div>
+        <div style="color: ${userStats.alternativeHours >= 50 ? '#22c55e' : '#888'};">
+          🔥 Alternative: ${userStats.alternativeHours}/50 hours in 10 days
+        </div>
+      </div>
+    `;
+  }
+}
+
+function updateRewardsCharacterPosition(level) {
+  const positions = {
+    wood: 80,
+    bronze: 480,
+    silver: 880,
+    gold: 1280
+  };
+   
+   const emojis = {
+    wood: '🚶‍♂️',    // Walking man
+    bronze: '🏃‍♂️',   // Running man
+    silver: '🤸‍♂️',   // Gymnast
+    gold: '👑'       // Crown/King
+  };
+  
+  const char = document.getElementById('roadmapCharacter');
+  if (char) {
+    char.style.top = (positions[level] || 80) + 'px';
+    char.textContent = emojis[level] || '🚶‍♂️';
+  }
+}
+
+// Initialize when rewards page loads
+document.addEventListener('DOMContentLoaded', () => {
+  initFireworks();
+  
+  const rewardsPage = document.getElementById('rewards');
+  if (rewardsPage) {
+    const observer = new MutationObserver(() => {
+      if (rewardsPage.style.display !== 'none') {
+        updateRewardsProgress();
+        updateRewardsCharacterPosition('wood');
+      }
+    });
+    
+    observer.observe(rewardsPage, { 
+      attributes: true, 
+      attributeFilter: ['style'] 
+    });
+  }
+});
