@@ -617,7 +617,209 @@ Enter your email address and we'll send you a verification code.
 </section>
 
 <!-- REWARDS -->
-<section id="rewards" class="page" style="display:none;"></section>
+
+<section id="rewards" class="page" style="display:none;">
+  
+  <!-- Fireworks Canvas -->
+  <canvas id="fireworksCanvas"></canvas>
+
+  <!-- Rewards Roadmap Container -->
+  <div class="rewards-roadmap-container" id="rewardsRoadmapSection">
+    <h1 class="roadmap-title">🏆 Your Journey to Success</h1>
+
+    <div class="roadmap-wrapper">
+      <!-- Vertical Path Line -->
+      <div class="roadmap-path"></div>
+
+    
+     <!-- Character/Avatar that moves along path -->
+<div class="roadmap-character" id="roadmapCharacter"></div>
+
+      <!-- Current Progress Info Box -->
+      <div class="progress-info" id="progressInfo">
+        <h3>
+          <span>🎯</span>
+          <span id="currentLevelName">Wood League</span>
+        </h3>
+        <p id="progressDescription">Keep going to unlock new levels!</p>
+        
+        <div id="progressTasks">
+          <div style="margin-top: 15px; color: #888;">
+            <div>⏱️ Active Hours: 0/20 per week</div>
+            <div>📅 Weeks: 0/4</div>
+            <div>🔥 Alternative: 0/50 hours in 10 days</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+        </div>
+
+        <div class="progress-percentage" id="progressPercentage">0%</div>
+      </div>
+
+      <!-- WOOD LEAGUE -->
+      <div class="milestone-level wood">
+        <div class="level-header">
+          <div>
+            <div>🪵</div>
+            <div>
+              <h3>Wood League</h3>
+              <p>Beginner Level</p>
+            </div>
+          </div>
+          <div class="level-status in-progress">🎯 In Progress</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>⏱️</span><span>Be active 20 hours/week for a month</span></li>
+              <li><span>🔥</span><span>OR be active 50 hours over 10 days</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>✅</span><span>Verification Badge</span></li>
+              <li><span>🏅</span><span>Trusted Member Status</span></li>
+              <li><span>🔓</span><span>Access to exclusive features</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRONZE LEAGUE -->
+      <div class="milestone-level bronze">
+        <div class="level-header">
+          <div>
+            <div>🥉</div>
+            <div>
+              <h3>Bronze League</h3>
+              <p>Content Creator</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>📝</span><span>Post 150 posts</span></li>
+              <li><span>👁️</span><span>Reach 1,000 total views</span></li>
+              <li><span>❤️</span><span>OR get 10,000 likes</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>📢</span><span>Eligible for Official Posts</span></li>
+              <li><span>🥉</span><span>Bronze Creator Badge</span></li>
+              <li><span>📊</span><span>Advanced Analytics</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SILVER LEAGUE -->
+      <div class="milestone-level silver">
+        <div class="level-header">
+          <div>
+            <div>🥈</div>
+            <div>
+              <h3>Silver League</h3>
+              <p>Influencer Tier</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>👥</span><span>Exceed 5,000 followers</span></li>
+              <li><span>📈</span><span>Maintain engagement rate</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>📣</span><span>Able to Advertise</span></li>
+              <li><span>🥈</span><span>Silver Influencer Badge</span></li>
+              <li><span>💼</span><span>Brand Partnership Access</span></li>
+              <li><span>🎨</span><span>Custom Profile Themes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOLD LEAGUE -->
+      <div class="milestone-level gold">
+        <div class="level-header">
+          <div>
+            <div>🥇</div>
+            <div>
+              <h3>Gold League</h3>
+              <p>Elite Monetization</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>📝</span><span>Upload 1 post daily for 3 days</span></li>
+              <li><span>🎥</span><span>Upload 1 vlog for 3 days</span></li>
+              <li><span>📊</span><span>Maintain quality content</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>💰</span><span>Earn Money from Content</span></li>
+              <li><span>📈</span><span>Paid by views & likes</span></li>
+              <li><span>🥇</span><span>Gold Elite Badge</span></li>
+              <li><span>👑</span><span>VIP Creator Status</span></li>
+              <li><span>🌟</span><span>Featured on Homepage</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  // Initialize roadmap when rewards page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Call updateRoadmapUI when rewards page becomes visible
+    const rewardsPage = document.getElementById('rewards');
+    if (rewardsPage) {
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.target.style.display !== 'none') {
+            updateRoadmapUI();
+          }
+        });
+      });
+      
+      observer.observe(rewardsPage, { 
+        attributes: true, 
+        attributeFilter: ['style'] 
+      });
+    }
+  });
+</script>
 </main>
 
 <footer>
