@@ -3227,3 +3227,517 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// PROFILE AVATAR UPDATE
+// ==========================================
+
+function updateProfileAvatar() {
+  if (!currentUser) return;
+  
+  const avatarImg = document.getElementById('profileAvatarImg');
+  const avatarInitial = document.getElementById('profileAvatarInitial');
+  const userName = document.getElementById('userName');
+  
+  if (userName) {
+    userName.textContent = currentUser.username || 'User';
+  }
+  
+  if (currentUser.profile_pic && avatarImg && avatarInitial) {
+    avatarImg.src = currentUser.profile_pic;
+    avatarImg.style.display = 'block';
+    avatarInitial.style.display = 'none';
+  } else if (avatarInitial) {
+    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
+    avatarInitial.textContent = initial;
+  }
+}
+
+// Call this after login
+document.addEventListener('DOMContentLoaded', function() {
+  if (currentUser) {
+    updateProfileAvatar();
+  }
+});
+
+// ==========================================
+// SEARCH BAR IN MENU FUNCTIONALITY
+// ==========================================
+
+function initializeMenuSearch() {
+  const menuSearchBox = document.getElementById('searchBox');
+  const mobileSearchBox = document.getElementById('mobileSearchBox');
+  
+  if (menuSearchBox) {
+    menuSearchBox.addEventListener('input', (e) => {
+      handleMenuSearch(e.target.value, 'searchResults');
+    });
+  }
+  
+  if (mobileSearchBox) {
+    mobileSearchBox.addEventListener('input', (e) => {
+      handleMenuSearch(e.target.value, 'mobileSearchResults');
+    });
+  }
+}
+
+function handleMenuSearch(query, resultsId) {
+  const searchResults = document.getElementById(resultsId);
+  
+  if (searchTimeout) clearTimeout(searchTimeout);
+  
+  if (query.length < 2) {
+    if (searchResults) searchResults.style.display = 'none';
+    return;
+  }
+  
+  if (searchResults) {
+    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
+    searchResults.style.display = 'block';
+  }
+  
+  searchTimeout = setTimeout(() => performUserSearch(query), 600);
+}
+
+// Initialize menu search on load
+document.addEventListener('DOMContentLoaded', function() {
+  initializeMenuSearch();
+});
+
+// ==========================================
+// REALVIBE FUNCTIONALITY
+// ==========================================
+
+let realVibeMediaFile = null;
+let realVibeMediaType = null;
+
+function openRealVibeCreator() {
+  const modal = document.getElementById('realVibeCreatorModal');
+  if (modal) modal.style.display = 'flex';
+  
+  // Reset form
+  clearRealVibePreview();
+  const caption = document.getElementById('realVibeCaption');
+  if (caption) caption.value = '';
+  updateCaptionCounter();
+  
+  // Disable publish button
+  const publishBtn = document.getElementById('publishRealVibeBtn');
+  if (publishBtn) publishBtn.disabled = true;
+}
+
+function captureRealVibePhoto() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleRealVibeFile(file, 'image');
+  };
+  
+  input.click();
+}
+
+function uploadRealVibeMedia() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const type = file.type.startsWith('video/') ? 'video' : 'image';
+      handleRealVibeFile(file, type);
+    }
+  };
+  
+  input.click();
+}
+
+function captureRealVibeVideo() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'video/*';
+  input.capture = 'environment';
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleRealVibeFile(file, 'video');
+  };
+  
+  input.click();
+}
+
+function handleRealVibeFile(file, type) {
+  if (file.size > 50 * 1024 * 1024) {
+    showMessage('⚠️ File too large (max 50MB)', 'error');
+    return;
+  }
+  
+  realVibeMediaFile = file;
+  realVibeMediaType = type;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const previewArea = document.getElementById('realVibePreviewArea');
+    const previewImg = document.getElementById('realVibePreviewImg');
+    const previewVideo = document.getElementById('realVibePreviewVideo');
+    
+    if (type === 'image') {
+      previewImg.src = e.target.result;
+      previewImg.style.display = 'block';
+      previewVideo.style.display = 'none';
+    } else {
+      previewVideo.src = e.target.result;
+      previewVideo.style.display = 'block';
+      previewImg.style.display = 'none';
+    }
+    
+    if (previewArea) previewArea.style.display = 'block';
+    
+    // Enable publish button
+    const publishBtn = document.getElementById('publishRealVibeBtn');
+    if (publishBtn) publishBtn.disabled = false;
+  };
+  
+  reader.readAsDataURL(file);
+}
+
+function clearRealVibePreview() {
+  realVibeMediaFile = null;
+  realVibeMediaType = null;
+  
+  const previewArea = document.getElementById('realVibePreviewArea');
+  const previewImg = document.getElementById('realVibePreviewImg');
+  const previewVideo = document.getElementById('realVibePreviewVideo');
+  
+  if (previewImg) {
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+  }
+  if (previewVideo) {
+    previewVideo.src = '';
+    previewVideo.style.display = 'none';
+  }
+  if (previewArea) previewArea.style.display = 'none';
+  
+  // Disable publish button
+  const publishBtn = document.getElementById('publishRealVibeBtn');
+  if (publishBtn) publishBtn.disabled = true;
+}
+
+async function publishRealVibe() {
+  if (!realVibeMediaFile) {
+    showMessage('⚠️ Please add media first', 'error');
+    return;
+  }
+  
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('✨ Publishing RealVibe...', 'success');
+    
+    const caption = document.getElementById('realVibeCaption')?.value.trim();
+    const visibility = document.querySelector('input[name="realVibeVisibility"]:checked')?.value || 'public';
+    
+    const formData = new FormData();
+    formData.append('media', realVibeMediaFile);
+    formData.append('caption', caption);
+    formData.append('visibility', visibility);
+    formData.append('type', realVibeMediaType);
+    
+    // For now, simulate success (replace with actual API call)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    showMessage('🎉 RealVibe published successfully!', 'success');
+    closeModal('realVibeCreatorModal');
+    
+    // Reload RealVibes
+    loadRealVibes();
+    
+  } catch (error) {
+    console.error('Publish RealVibe error:', error);
+    showMessage('❌ Failed to publish RealVibe', 'error');
+  }
+}
+
+function updateCaptionCounter() {
+  const caption = document.getElementById('realVibeCaption');
+  const counter = document.getElementById('captionCount');
+  
+  if (caption && counter) {
+    counter.textContent = caption.value.length;
+  }
+}
+
+// Add caption counter listener
+document.addEventListener('DOMContentLoaded', function() {
+  const caption = document.getElementById('realVibeCaption');
+  if (caption) {
+    caption.addEventListener('input', updateCaptionCounter);
+  }
+});
+
+async function loadRealVibes() {
+  const storiesGrid = document.getElementById('realVibeStoriesGrid');
+  const yourGrid = document.getElementById('yourRealVibesGrid');
+  
+  // For now, show empty state (replace with actual API call)
+  if (storiesGrid) {
+    storiesGrid.innerHTML = `
+      <div class="no-realvibes">
+        <div class="no-realvibes-icon">✨</div>
+        <h4>No RealVibes Yet</h4>
+        <p>Be the first to share your authentic moment!</p>
+        <button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
+      </div>
+    `;
+  }
+  
+  if (yourGrid) {
+    yourGrid.innerHTML = '<div class="no-your-realvibes"><p>You haven\'t created any RealVibes yet</p></div>';
+  }
+}
+
+function viewRealVibe(realVibeId) {
+  const modal = document.getElementById('realVibeViewerModal');
+  if (modal) modal.style.display = 'flex';
+  
+  // Load and display RealVibe (implement with actual data)
+  // For now, just show modal structure
+}
+
+function viewPreviousRealVibe() {
+  // Navigate to previous RealVibe
+  console.log('Previous RealVibe');
+}
+
+function viewNextRealVibe() {
+  // Navigate to next RealVibe
+  console.log('Next RealVibe');
+}
+
+function reactToRealVibe() {
+  showMessage('❤️ Reacted!', 'success');
+}
+
+function replyToRealVibe() {
+  showMessage('💬 Reply feature coming soon!', 'success');
+}
+
+function shareRealVibe() {
+  showMessage('🔄 Share feature coming soon!', 'success');
+}
+
+// Load RealVibes when page is shown
+document.addEventListener('DOMContentLoaded', function() {
+  const realVibePage = document.getElementById('realvibe');
+  if (realVibePage) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.target.style.display !== 'none') {
+          loadRealVibes();
+        }
+      });
+    });
+    
+    observer.observe(realVibePage, { 
+      attributes: true, 
+      attributeFilter: ['style'] 
+    });
+  }
+});
+// ==========================================
+// SUBSCRIPTION SYSTEM
+// ==========================================
+
+function openSubscriptionPopup() {
+  const popup = document.getElementById('subscriptionPopup');
+  if (popup) {
+    popup.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeSubscriptionPopup() {
+  const popup = document.getElementById('subscriptionPopup');
+  if (popup) {
+    popup.classList.remove('show');
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function viewAllPlans() {
+  closeSubscriptionPopup();
+  showPage('subscriptionPlans');
+  
+  // Update nav
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function selectPlan(planType) {
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    closeSubscriptionPopup();
+    showAuthPopup();
+    return;
+  }
+  
+  // Plan details
+  const plans = {
+    noble: {
+      name: 'Noble',
+      firstTimePrice: 9,
+      regularPrice: 79,
+      posters: 5,
+      videos: 1,
+      days: 15
+    },
+    royal: {
+      name: 'Royal',
+      firstTimePrice: 15,
+      regularPrice: 99,
+      posters: 5,
+      videos: 3,
+      days: 23
+    }
+  };
+  
+  const plan = plans[planType];
+  
+  if (!plan) {
+    showMessage('❌ Invalid plan', 'error');
+    return;
+  }
+  
+  // Check if first time subscriber
+  const isFirstTime = !currentUser.hasSubscribed;
+  const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
+  
+  // Confirmation
+  const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
+    `Price: ₹${price}\n` +
+    `Posters: ${plan.posters}\n` +
+    `Videos: ${plan.videos}\n` +
+    `Duration: ${plan.days} days\n\n` +
+    (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
+  
+  if (!confirm(confirmMsg)) return;
+  
+  try {
+    showMessage('💳 Processing payment...', 'success');
+    
+    // Simulate payment processing (replace with actual payment gateway)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Here you would integrate with actual payment gateway
+    // For now, we'll simulate success
+    
+    // Update user subscription
+    currentUser.subscription = {
+      plan: planType,
+      startDate: new Date(),
+      endDate: new Date(Date.now() + plan.days * 24 * 60 * 60 * 1000),
+      posters: plan.posters,
+      videos: plan.videos,
+      postersUsed: 0,
+      videosUsed: 0
+    };
+    
+    currentUser.hasSubscribed = true;
+    currentUser.isPremium = true;
+    
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    
+    closeSubscriptionPopup();
+    
+    showMessage('🎉 Subscription successful!', 'success');
+    
+    // Show success modal
+    showSubscriptionSuccessModal(plan);
+    
+  } catch (error) {
+    console.error('Subscription error:', error);
+    showMessage('❌ Payment failed. Please try again.', 'error');
+  }
+}
+
+function showSubscriptionSuccessModal(plan) {
+  const modal = document.createElement('div');
+  modal.className = 'modal celebration-modal';
+  modal.style.display = 'flex';
+  
+  modal.innerHTML = `
+    <div class="celebration-modal-content">
+      <div class="celebration-emoji">👑</div>
+      <h2 class="celebration-title" style="color:#FFD700;">Welcome to ${plan.name}!</h2>
+      <p class="celebration-message">You can now advertise your content</p>
+      
+      <div class="celebration-stats" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.2));">
+        <div class="celebration-count">${plan.posters} Posters + ${plan.videos} Video${plan.videos > 1 ? 's' : ''}</div>
+        <div class="celebration-label">Available Now</div>
+      </div>
+      
+      <div class="celebration-quote">
+        <strong>Duration:</strong> ${plan.days} days<br>
+        Your ads will appear in Community & RealVibes sections
+      </div>
+      
+      <button class="celebration-button" style="background:linear-gradient(135deg,#FFD700,#FFA500);" 
+        onclick="this.closest('.modal').remove(); showPage('posts');">
+        Start Creating Ads 🚀
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  createConfetti();
+}
+
+// Check subscription status
+function checkSubscriptionStatus() {
+  if (!currentUser || !currentUser.subscription) return null;
+  
+  const now = new Date();
+  const endDate = new Date(currentUser.subscription.endDate);
+  
+  if (now > endDate) {
+    // Subscription expired
+    currentUser.isPremium = false;
+    currentUser.subscription = null;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    return null;
+  }
+  
+  return currentUser.subscription;
+}
+
+// Display premium badge if user is subscribed
+function updatePremiumBadge() {
+  const userName = document.getElementById('userName');
+  if (!userName) return;
+  
+  const subscription = checkSubscriptionStatus();
+  
+  if (subscription) {
+    const planEmoji = subscription.plan === 'royal' ? '👑' : '🥈';
+    userName.innerHTML = `${planEmoji} Hi, ${currentUser.username}`;
+  } else {
+    userName.textContent = 'Hi, ' + currentUser.username;
+  }
+}
+
+// Call this after login
+document.addEventListener('DOMContentLoaded', function() {
+  if (currentUser) {
+    updatePremiumBadge();
+  }
+});
+console.log('✨ RealVibe features initialized!');
