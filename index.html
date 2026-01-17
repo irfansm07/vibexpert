@@ -345,9 +345,7 @@ Get Started Now →
 </footer>
 </div>
 
-<!-- ========================================
-    AUTH POPUP MODAL (Keep as is - not changing)
-    ======================================== -->
+
 <div id="authPopup" class="auth-popup" style="display:none;">
 <div class="auth-popup-overlay" onclick="closeAuthPopup()"></div>
 <div class="auth-popup-content">
@@ -451,25 +449,36 @@ Enter your email address and we'll send you a verification code.
 <nav class="nav">
 <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
 <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
+<a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
 <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
 <a href="#" class="nav-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
 </nav>
 
 <div class="header-right">
-<div class="search-container">
-<input type="text" class="search-box" placeholder="Search users..." id="searchBox">
-<div class="search-results" id="searchResults" style="display:none;"></div>
+<!-- Profile Avatar Circle -->
+<div class="profile-avatar-container" onclick="showProfilePage()">
+<div class="profile-avatar" id="profileAvatar">
+<img id="profileAvatarImg" src="" alt="" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+<span id="profileAvatarInitial">👤</span>
 </div>
-<span class="user-name" id="userName">Hi, User</span>
+<div class="profile-greeting">
+<span class="greeting-hi"></span>
+<span class="greeting-name" id="userName">User</span>
+</div>
+</div>
 
 <button class="options-btn" onclick="toggleOptionsMenu()">
 <span></span>
 <span></span>
 <span></span>
 </button>
-
 <div class="options-menu" id="optionsMenu" style="display:none;">
-<div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
+<!-- Search Bar -->
+<div class="menu-search-container">
+<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="searchBox">
+<div class="search-results" id="searchResults" style="display:none;"></div>
+</div>
+<hr>
 <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
 <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
 <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
@@ -485,8 +494,15 @@ Enter your email address and we'll send you a verification code.
 </button>
 
 <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
+<!-- Search Bar -->
+<div class="menu-search-container">
+<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="mobileSearchBox">
+<div class="search-results" id="mobileSearchResults" style="display:none;"></div>
+</div>
+<hr>
 <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
 <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
+<div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
 <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
 <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
 <hr>
@@ -500,7 +516,34 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 </header>
+<!-- PREMIUM CROWN BUTTON -->
+<button class="premium-crown-btn" onclick="openSubscriptionPopup()" title="Get Premium">
+  <span>👑</span>
+</button>
 
+<!-- SUBSCRIPTION POPUP -->
+<div id="subscriptionPopup" class="subscription-popup">
+  <div class="subscription-content">
+    <button class="subscription-close" onclick="closeSubscriptionPopup()">&times;</button>
+    
+    <div class="subscription-header">
+      <div class="subscription-icon">👑</div>
+      <h2 class="subscription-title">Unlock Premium Power!</h2>
+      <p class="subscription-subtitle">Advertise your content in Community & RealVibes</p>
+    </div>
+    
+    <div class="first-time-badge">🎉 First Time Offer!</div>
+    
+    <div class="first-price">₹9</div>
+    <div class="price-label">Special introductory price</div>
+    
+    <button class="subscribe-now-btn" onclick="selectPlan('noble')">
+      Subscribe Now ✨
+    </button>
+    
+    <a class="view-plans-link" onclick="viewAllPlans()">View All Plans →</a>
+  </div>
+</div>
 <!-- CONTENT -->
 <main class="content">
 <!-- HOME -->
@@ -587,6 +630,172 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 </section>
+
+<!-- REALVIBE SECTION -->
+<section id="realvibe" class="page" style="display:none;">
+<div class="realvibe-header">
+<div class="realvibe-title-section">
+<h1 class="realvibe-title">✨ RealVibe</h1>
+<p class="realvibe-subtitle">Share authentic moments that disappear in 24 hours</p>
+</div>
+<button class="create-realvibe-btn" onclick="openRealVibeCreator()">
+<span class="btn-icon">➕</span>
+<span class="btn-text">Create RealVibe</span>
+</button>
+</div>
+
+<!-- Stories/RealVibes Container -->
+<div class="realvibe-stories-container">
+<h3 class="section-subtitle">📖 Today's RealVibes</h3>
+<div class="realvibe-stories-grid" id="realVibeStoriesGrid">
+<!-- Stories will be dynamically loaded here -->
+<div class="no-realvibes">
+<div class="no-realvibes-icon">✨</div>
+<h4>No RealVibes Yet</h4>
+<p>Be the first to share your authentic moment!</p>
+<button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
+</div>
+</div>
+</div>
+
+<!-- Your RealVibes -->
+<div class="your-realvibes-section">
+<h3 class="section-subtitle">🎬 Your RealVibes</h3>
+<div class="your-realvibes-grid" id="yourRealVibesGrid">
+<div class="no-your-realvibes">
+<p>You haven't created any RealVibes yet</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- RealVibe Creator Modal -->
+<div id="realVibeCreatorModal" class="modal" style="display:none;">
+<div class="modal-box realvibe-modal">
+<span class="close" onclick="closeModal('realVibeCreatorModal')">&times;</span>
+<h2>✨ Create RealVibe</h2>
+<p class="realvibe-modal-subtitle">Share a moment that disappears in 24 hours</p>
+
+<div class="realvibe-creator-content">
+<!-- Camera/Upload Options -->
+<div class="realvibe-upload-options">
+<button class="upload-option" onclick="captureRealVibePhoto()">
+<span class="option-icon">📷</span>
+<span class="option-text">Take Photo</span>
+</button>
+<button class="upload-option" onclick="uploadRealVibeMedia()">
+<span class="option-icon">🖼️</span>
+<span class="option-text">Upload Media</span>
+</button>
+<button class="upload-option" onclick="captureRealVibeVideo()">
+<span class="option-icon">🎥</span>
+<span class="option-text">Record Video</span>
+</button>
+</div>
+
+<!-- Preview Area -->
+<div class="realvibe-preview-area" id="realVibePreviewArea" style="display:none;">
+<div class="preview-container">
+<img id="realVibePreviewImg" src="" alt="Preview" style="display:none;">
+<video id="realVibePreviewVideo" controls style="display:none;"></video>
+</div>
+<button class="remove-preview-btn" onclick="clearRealVibePreview()">✕ Remove</button>
+</div>
+
+<!-- Caption Input -->
+<div class="realvibe-caption-section">
+<textarea id="realVibeCaption" placeholder="Add a caption... (optional)" maxlength="200"></textarea>
+<div class="caption-counter"><span id="captionCount">0</span>/200</div>
+</div>
+
+<!-- Visibility Options -->
+<div class="realvibe-visibility">
+<h4>👁️ Visibility</h4>
+<div class="visibility-options">
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="public" checked>
+<span class="option-label">
+<span class="option-emoji">🌐</span>
+<span>Everyone</span>
+</span>
+</label>
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="community">
+<span class="option-label">
+<span class="option-emoji">🎓</span>
+<span>My College</span>
+</span>
+</label>
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="friends">
+<span class="option-label">
+<span class="option-emoji">👥</span>
+<span>Friends Only</span>
+</span>
+</label>
+</div>
+</div>
+
+<!-- Action Buttons -->
+<div class="realvibe-actions">
+<button class="btn-secondary" onclick="closeModal('realVibeCreatorModal')">Cancel</button>
+<button class="btn-primary" onclick="publishRealVibe()" id="publishRealVibeBtn" disabled>
+<span>✨ Publish RealVibe</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- RealVibe Viewer Modal -->
+<div id="realVibeViewerModal" class="modal realvibe-viewer-modal" style="display:none;">
+<div class="realvibe-viewer-container">
+<button class="viewer-close" onclick="closeModal('realVibeViewerModal')">✕</button>
+<button class="viewer-prev" onclick="viewPreviousRealVibe()">‹</button>
+<button class="viewer-next" onclick="viewNextRealVibe()">›</button>
+
+<div class="realvibe-viewer-content">
+<!-- Header -->
+<div class="viewer-header">
+<div class="viewer-author">
+<div class="author-avatar">👤</div>
+<div class="author-info">
+<div class="author-name" id="viewerAuthorName">Username</div>
+<div class="author-time" id="viewerTime">2h ago</div>
+</div>
+</div>
+<div class="viewer-progress-bar">
+<div class="progress-fill" id="viewerProgressFill"></div>
+</div>
+</div>
+
+<!-- Media Content -->
+<div class="viewer-media">
+<img id="viewerMediaImg" src="" alt="" style="display:none;">
+<video id="viewerMediaVideo" playsinline style="display:none;"></video>
+</div>
+
+<!-- Caption -->
+<div class="viewer-caption" id="viewerCaption"></div>
+
+<!-- Actions -->
+<div class="viewer-actions">
+<button class="viewer-action-btn" onclick="reactToRealVibe()">
+<span id="reactionIcon">❤️</span>
+<span id="reactionCount">0</span>
+</button>
+<button class="viewer-action-btn" onclick="replyToRealVibe()">
+<span>💬</span>
+<span>Reply</span>
+</button>
+<button class="viewer-action-btn" onclick="shareRealVibe()">
+<span>🔄</span>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
 
 <!-- POSTS -->
 <section id="posts" class="page" style="display:none;">
@@ -798,7 +1007,95 @@ Enter your email address and we'll send you a verification code.
     </div>
   </div>
 </section>
-
+<!-- SUBSCRIPTION PLANS PAGE -->
+<section id="subscriptionPlans" class="page" style="display:none;">
+  <div class="subscription-plans-page">
+    <div class="plans-header">
+      <h1 class="plans-title">Choose Your Plan</h1>
+      <p class="plans-subtitle">Advertise your content and reach thousands of students!</p>
+    </div>
+    
+    <div class="plans-grid">
+      <!-- NORMAL PLAN -->
+      <div class="plan-card normal">
+        <div class="plan-icon">📱</div>
+        <h3 class="plan-name">Normal</h3>
+        
+        <div class="plan-price-section">
+          <div class="plan-price">FREE</div>
+          <div class="plan-duration">Current plan</div>
+        </div>
+        
+        <ul class="plan-features">
+          <li>Create unlimited posts</li>
+          <li>Share unlimited vibes</li>
+          <li>Join communities</li>
+          <li>Chat with students</li>
+          <li>No advertising allowed</li>
+        </ul>
+        
+        <button class="plan-select-btn" disabled>Current Plan</button>
+      </div>
+      
+      <!-- NOBLE PLAN -->
+      <div class="plan-card noble">
+        <div class="plan-badge recommended">Recommended</div>
+        <div class="plan-icon">🥈</div>
+        <h3 class="plan-name">Noble</h3>
+        
+        <div class="plan-price-section">
+          <div class="plan-original-price">₹79</div>
+          <div class="plan-price">₹9</div>
+          <div class="plan-duration">First time only • Then ₹79</div>
+        </div>
+        
+        <ul class="plan-features">
+          <li>Everything in Normal</li>
+          <li>5 Advertisement Posters</li>
+          <li>1 Advertisement Video</li>
+          <li>15 Days advertising</li>
+          <li>Show in Community Feed</li>
+          <li>Show in RealVibes</li>
+        </ul>
+        
+        <button class="plan-select-btn" onclick="selectPlan('noble')">
+          Select Noble Plan
+        </button>
+      </div>
+      
+      <!-- ROYAL PLAN -->
+      <div class="plan-card royal">
+        <div class="plan-badge popular">Most Popular</div>
+        <div class="plan-icon">👑</div>
+        <h3 class="plan-name">Royal</h3>
+        
+        <div class="plan-price-section">
+          <div class="plan-original-price">₹99</div>
+          <div class="plan-price">₹15</div>
+          <div class="plan-duration">First time only • Then ₹99</div>
+        </div>
+        
+        <ul class="plan-features">
+          <li>Everything in Noble</li>
+          <li>5 Advertisement Posters</li>
+          <li>3 Advertisement Videos</li>
+          <li>23 Days advertising</li>
+          <li>Priority in Community Feed</li>
+          <li>Priority in RealVibes</li>
+          <li>Premium badge on profile</li>
+        </ul>
+        
+        <button class="plan-select-btn" onclick="selectPlan('royal')">
+          Select Royal Plan
+        </button>
+      </div>
+    </div>
+    
+    <div style="text-align:center; margin-top:40px;">
+      <button class="back-btn" onclick="showPage('home')">← Back to Home</button>
+    </div>
+  </div>
+</section>
 <script>
   // Initialize roadmap when rewards page loads
   document.addEventListener('DOMContentLoaded', function() {
