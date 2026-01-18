@@ -3582,6 +3582,14 @@ function viewAllPlans() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+
+
+
+
+
+
+
+
 async function selectPlan(planType) {
   if (!currentUser) {
     showMessage('⚠️ Please login first', 'error');
@@ -3621,26 +3629,118 @@ async function selectPlan(planType) {
   const isFirstTime = !currentUser.hasSubscribed;
   const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
   
-  // Confirmation
-  const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
-    `Price: ₹${price}\n` +
-    `Posters: ${plan.posters}\n` +
-    `Videos: ${plan.videos}\n` +
-    `Duration: ${plan.days} days\n\n` +
-    (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
+  // Close subscription popup
+  closeSubscriptionPopup();
   
-  if (!confirm(confirmMsg)) return;
+  // Show processing message
+  showMessage('💳 Preparing payment...', 'success');
   
   try {
-    showMessage('💳 Processing payment...', 'success');
+    // Create order on backend
+    const orderData = await apiCall('/api/payment/create-order', 'POST', {
+      amount: price,
+      planType: planType,
+      isFirstTime: isFirstTime
+    });
     
-    // Simulate payment processing (replace with actual payment gateway)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (!orderData.success) {
+      throw new Error('Failed to create payment order');
+    }
     
-    // Here you would integrate with actual payment gateway
-    // For now, we'll simulate success
+    console.log('✅ Payment order created:', orderData.orderId);
     
-    // Update user subscription
+    // Initialize Razorpay
+    const options = {
+      key: orderData.razorpayKeyId, // Will be sent from backend
+      amount: price * 100, // Razorpay accepts amount in paise
+      currency: 'INR',
+      name: 'VibeXpert',
+      description: `${plan.name} Plan Subscription`,
+      image: '/assets/logo.png', // Your logo (optional)
+      order_id: orderData.orderId,
+      
+      // User details (prefill)
+      prefill: {
+        name: currentUser.username,
+        email: currentUser.email,
+        contact: currentUser.phone || ''
+      },
+      
+      // Theme
+      theme: {
+        color: '#4f74a3'
+      },
+      
+      // Payment success handler
+      handler: function(response) {
+        handlePaymentSuccess(response, planType, plan);
+      },
+      
+      // Payment modal closed
+      modal: {
+        ondismiss: function() {
+          showMessage('❌ Payment cancelled', 'error');
+        },
+        escape: true,
+        backdropclose: false
+      },
+      
+      // Notes
+      notes: {
+        userId: currentUser.id,
+        username: currentUser.username,
+        planType: planType
+      },
+      
+      // Retry options
+      retry: {
+        enabled: true,
+        max_count: 3
+      }
+    };
+    
+    // Check if Razorpay is loaded
+    if (typeof Razorpay === 'undefined') {
+      throw new Error('Razorpay SDK not loaded. Please refresh the page.');
+    }
+    
+    const razorpay = new Razorpay(options);
+    
+    // Handle payment failures
+    razorpay.on('payment.failed', function(response) {
+      handlePaymentFailure(response);
+    });
+    
+    // Open Razorpay checkout
+    razorpay.open();
+    
+  } catch (error) {
+    console.error('❌ Payment initialization error:', error);
+    showMessage('❌ Failed to initialize payment: ' + error.message, 'error');
+  }
+}
+
+// Handle successful payment
+async function handlePaymentSuccess(response, planType, plan) {
+  try {
+    console.log('✅ Payment successful:', response.razorpay_payment_id);
+    showMessage('✅ Payment successful! Verifying...', 'success');
+    
+    // Verify payment on backend
+    const verification = await apiCall('/api/payment/verify', 'POST', {
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+      planType: planType
+    });
+    
+    if (!verification.success) {
+      throw new Error('Payment verification failed');
+    }
+    
+    console.log('✅ Payment verified successfully');
+    
+    // Update user subscription locally
     currentUser.subscription = {
       plan: planType,
       startDate: new Date(),
@@ -3648,26 +3748,68 @@ async function selectPlan(planType) {
       posters: plan.posters,
       videos: plan.videos,
       postersUsed: 0,
-      videosUsed: 0
+      videosUsed: 0,
+      paymentId: response.razorpay_payment_id
     };
     
     currentUser.hasSubscribed = true;
     currentUser.isPremium = true;
+    currentUser.subscriptionPlan = planType;
     
     localStorage.setItem('user', JSON.stringify(currentUser));
     
-    closeSubscriptionPopup();
-    
-    showMessage('🎉 Subscription successful!', 'success');
+    showMessage('🎉 Subscription activated successfully!', 'success');
+    updatePremiumBadge();
     
     // Show success modal
-    showSubscriptionSuccessModal(plan);
+    setTimeout(() => showSubscriptionSuccessModal(plan), 500);
     
   } catch (error) {
-    console.error('Subscription error:', error);
-    showMessage('❌ Payment failed. Please try again.', 'error');
+    console.error('❌ Payment verification error:', error);
+    showMessage('❌ Payment verification failed. Please contact support with Payment ID: ' + response.razorpay_payment_id, 'error');
   }
 }
+
+// Handle payment failure
+function handlePaymentFailure(response) {
+  console.error('❌ Payment failed:', response.error);
+  
+  const errorMessages = {
+    'BAD_REQUEST_ERROR': 'Invalid payment details',
+    'GATEWAY_ERROR': 'Payment gateway error. Please try again.',
+    'NETWORK_ERROR': 'Network connection failed. Check your internet.',
+    'SERVER_ERROR': 'Server error occurred. Please try again later.'
+  };
+  
+  const errorCode = response.error?.code || 'UNKNOWN_ERROR';
+  const errorMsg = errorMessages[errorCode] || 'Payment failed';
+  
+  const errorDescription = response.error?.description || '';
+  
+  showMessage(`❌ ${errorMsg}${errorDescription ? ': ' + errorDescription : ''}`, 'error');
+  
+  // Show retry option
+  setTimeout(() => {
+    if (confirm('Payment failed. Would you like to try again?')) {
+      openSubscriptionPopup();
+    }
+  }, 2000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function showSubscriptionSuccessModal(plan) {
   const modal = document.createElement('div');
@@ -3741,3 +3883,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 console.log('✨ RealVibe features initialized!');
+
