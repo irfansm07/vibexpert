@@ -127,44 +127,66 @@ other: [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 VibeXpert initializing...');
-
-const token = getToken();
-const saved = localStorage.getItem('user');
-
-if (token && saved) {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (mainPage) mainPage.style.display = 'block';
-
-try {
-currentUser = JSON.parse(saved);
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-if (currentUser.college) {
-updateLiveNotif(`Connected to ${currentUser.college}`);
-initializeSocket();
-}
-} catch(e) {
-console.error('Parse error:', e);
-localStorage.clear();
-showAboutUsPage();
-}
-} else {
-showAboutUsPage();
-}
-
-setupEventListeners();
-initializeMusicPlayer();
-updateLiveStats();
-setInterval(updateLiveStats, 5000);
-initializeSearchBar();
-loadTrending();
-console.log('✅ Initialized');
+  console.log('🚀 VibeXpert initializing...');
+  
+  const token = getToken();
+  const saved = localStorage.getItem('user');
+  
+  if (token && saved) {
+    // Verify token is still valid
+    verifyTokenValidity().then(isValid => {
+      if (isValid) {
+        document.body.classList.add('logged-in');
+        const aboutPage = document.getElementById('aboutUsPage');
+        const mainPage = document.getElementById('mainPage');
+        if (aboutPage) aboutPage.style.display = 'none';
+        if (mainPage) mainPage.style.display = 'block';
+        
+        try {
+          currentUser = JSON.parse(saved);
+          const userName = document.getElementById('userName');
+          if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+          updateProfileAvatar();
+          if (currentUser.college) {
+            updateLiveNotif(`Connected to ${currentUser.college}`);
+            initializeSocket();
+          }
+        } catch(e) {
+          console.error('Parse error:', e);
+          localStorage.clear();
+          showAboutUsPage();
+        }
+      } else {
+        // Token invalid - logout
+        console.warn('⚠️ Token validation failed - logging out');
+        localStorage.clear();
+        showAboutUsPage();
+      }
+    });
+  } else {
+    showAboutUsPage();
+  }
+  
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
 });
 
+// Add this helper function
+async function verifyTokenValidity() {
+  try {
+    // Make a simple authenticated request to verify token
+    const data = await apiCall('/api/subscription/status', 'GET');
+    return data.success !== false;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return false;
+  }
+}
 // ========================================
 // ABOUT US PAGE FUNCTIONALITY
 // ========================================
@@ -3927,5 +3949,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 console.log('✨ RealVibe features initialized!');
+
 
 
