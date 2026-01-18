@@ -362,31 +362,75 @@ return localStorage.getItem('authToken');
 }
 
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000);
-const options = { method, headers: {}, signal: controller.signal };
-const token = getToken();
-if (token) options.headers['Authorization'] = `Bearer ${token}`;
-if (body && !(body instanceof FormData)) {
-options.headers['Content-Type'] = 'application/json';
-options.body = JSON.stringify(body);
-} else if (body instanceof FormData) {
-options.body = body;
-}
-try {
-const response = await fetch(`${API_URL}${endpoint}`, options);
-clearTimeout(timeoutId);
-const data = await response.json();
-if (!response.ok) throw new Error(data.error || 'Request failed');
-return data;
-} catch (error) {
-clearTimeout(timeoutId);
-if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
-await new Promise(r => setTimeout(r, 1000));
-return apiCall(endpoint, method, body, retries - 1);
-}
-throw error;
-}
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  const options = { 
+    method, 
+    headers: {
+      'Accept': 'application/json'
+    }, 
+    signal: controller.signal 
+  };
+  
+  const token = getToken();
+  
+  // ✅ ALWAYS add Authorization header if token exists
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  if (body && !(body instanceof FormData)) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  } else if (body instanceof FormData) {
+    // ❌ DO NOT set Content-Type for FormData - browser sets it automatically
+    options.body = body;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    clearTimeout(timeoutId);
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Server returned non-JSON response');
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Handle 401/403 - token expired
+      if (response.status === 401 || response.status === 403) {
+        console.error('❌ Token expired or invalid');
+        
+        // Optional: Auto-logout on token expiry
+        if (endpoint !== '/api/login' && endpoint !== '/api/register') {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          showMessage('⚠️ Session expired. Please login again.', 'error');
+          setTimeout(() => {
+            logout();
+          }, 2000);
+        }
+      }
+      
+      throw new Error(data.error || `Request failed with status ${response.status}`);
+    }
+    
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
+      console.log(`⚠️ Retrying... (${retries} attempts left)`);
+      await new Promise(r => setTimeout(r, 1000));
+      return apiCall(endpoint, method, body, retries - 1);
+    }
+    
+    throw error;
+  }
 }
 
 async function login(e) {
@@ -3883,4 +3927,5 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 console.log('✨ RealVibe features initialized!');
+
 
