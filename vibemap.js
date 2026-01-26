@@ -35,7 +35,6 @@ let typingUsers = new Set();
 let typingTimeout = null;
 let lastTypingEmit = 0;
 let messageReactions = new Map();
-let isLoadingMessages = false;
 let hasMoreMessages = true;
 let currentMessagePage = 1;
 let lastMessageTime = Date.now();
@@ -127,66 +126,44 @@ other: [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 VibeXpert initializing...');
-  
-  const token = getToken();
-  const saved = localStorage.getItem('user');
-  
-  if (token && saved) {
-    // Verify token is still valid
-    verifyTokenValidity().then(isValid => {
-      if (isValid) {
-        document.body.classList.add('logged-in');
-        const aboutPage = document.getElementById('aboutUsPage');
-        const mainPage = document.getElementById('mainPage');
-        if (aboutPage) aboutPage.style.display = 'none';
-        if (mainPage) mainPage.style.display = 'block';
-        
-        try {
-          currentUser = JSON.parse(saved);
-          const userName = document.getElementById('userName');
-          if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-          updateProfileAvatar();
-          if (currentUser.college) {
-            updateLiveNotif(`Connected to ${currentUser.college}`);
-            initializeSocket();
-          }
-        } catch(e) {
-          console.error('Parse error:', e);
-          localStorage.clear();
-          showAboutUsPage();
-        }
-      } else {
-        // Token invalid - logout
-        console.warn('⚠️ Token validation failed - logging out');
-        localStorage.clear();
-        showAboutUsPage();
-      }
-    });
-  } else {
-    showAboutUsPage();
-  }
-  
-  setupEventListeners();
-  initializeMusicPlayer();
-  updateLiveStats();
-  setInterval(updateLiveStats, 5000);
-  initializeSearchBar();
-  loadTrending();
-  console.log('✅ Initialized');
+console.log('🚀 VibeXpert initializing...');
+
+const token = getToken();
+const saved = localStorage.getItem('user');
+
+if (token && saved) {
+document.body.classList.add('logged-in');
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+if (aboutPage) aboutPage.style.display = 'none';
+if (mainPage) mainPage.style.display = 'block';
+
+try {
+currentUser = JSON.parse(saved);
+const userName = document.getElementById('userName');
+if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+if (currentUser.college) {
+updateLiveNotif(`Connected to ${currentUser.college}`);
+initializeSocket();
+}
+} catch(e) {
+console.error('Parse error:', e);
+localStorage.clear();
+showAboutUsPage();
+}
+} else {
+showAboutUsPage();
+}
+
+setupEventListeners();
+initializeMusicPlayer();
+updateLiveStats();
+setInterval(updateLiveStats, 5000);
+initializeSearchBar();
+loadTrending();
+console.log('✅ Initialized');
 });
 
-// Add this helper function
-async function verifyTokenValidity() {
-  try {
-    // Make a simple authenticated request to verify token
-    const data = await apiCall('/api/subscription/status', 'GET');
-    return data.success !== false;
-  } catch (error) {
-    console.error('Token verification failed:', error);
-    return false;
-  }
-}
 // ========================================
 // ABOUT US PAGE FUNCTIONALITY
 // ========================================
@@ -384,75 +361,31 @@ return localStorage.getItem('authToken');
 }
 
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-  
-  const options = { 
-    method, 
-    headers: {
-      'Accept': 'application/json'
-    }, 
-    signal: controller.signal 
-  };
-  
-  const token = getToken();
-  
-  // ✅ ALWAYS add Authorization header if token exists
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  if (body && !(body instanceof FormData)) {
-    options.headers['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(body);
-  } else if (body instanceof FormData) {
-    // ❌ DO NOT set Content-Type for FormData - browser sets it automatically
-    options.body = body;
-  }
-  
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, options);
-    clearTimeout(timeoutId);
-    
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Server returned non-JSON response');
-    }
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      // Handle 401/403 - token expired
-      if (response.status === 401 || response.status === 403) {
-        console.error('❌ Token expired or invalid');
-        
-        // Optional: Auto-logout on token expiry
-        if (endpoint !== '/api/login' && endpoint !== '/api/register') {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-          showMessage('⚠️ Session expired. Please login again.', 'error');
-          setTimeout(() => {
-            logout();
-          }, 2000);
-        }
-      }
-      
-      throw new Error(data.error || `Request failed with status ${response.status}`);
-    }
-    
-    return data;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    
-    if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
-      console.log(`⚠️ Retrying... (${retries} attempts left)`);
-      await new Promise(r => setTimeout(r, 1000));
-      return apiCall(endpoint, method, body, retries - 1);
-    }
-    
-    throw error;
-  }
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 30000);
+const options = { method, headers: {}, signal: controller.signal };
+const token = getToken();
+if (token) options.headers['Authorization'] = `Bearer ${token}`;
+if (body && !(body instanceof FormData)) {
+options.headers['Content-Type'] = 'application/json';
+options.body = JSON.stringify(body);
+} else if (body instanceof FormData) {
+options.body = body;
+}
+try {
+const response = await fetch(`${API_URL}${endpoint}`, options);
+clearTimeout(timeoutId);
+const data = await response.json();
+if (!response.ok) throw new Error(data.error || 'Request failed');
+return data;
+} catch (error) {
+clearTimeout(timeoutId);
+if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
+await new Promise(r => setTimeout(r, 1000));
+return apiCall(endpoint, method, body, retries - 1);
+}
+throw error;
+}
 }
 
 async function login(e) {
@@ -1163,8 +1096,70 @@ sendEnhancedMessage();
 }
 }
 
-async function sendChatMessage() {
-await sendEnhancedMessage();
+async function sendWhatsAppMessage() {
+  const input = document.getElementById('whatsappInput');
+  const content = input?.value.trim();
+  
+  if (!content) return;
+
+  try {
+    // Optimistic UI update
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      content,
+      sender_id: currentUser.id,
+      users: currentUser,
+      timestamp: new Date()
+    };
+    
+    appendWhatsAppMessage(tempMsg);
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Send to server
+    await apiCall('/api/community/messages', 'POST', { content });
+    
+    if (socket && currentUser.college) {
+      socket.emit('stop_typing', { 
+        collegeName: currentUser.college, 
+        username: currentUser.username 
+      });
+    }
+  } catch(error) {
+    showMessage('❌ Failed to send', 'error');
+  }
+}
+
+function handleWhatsAppKeypress(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendWhatsAppMessage();
+  }
+  
+  // Auto-resize textarea
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+}
+
+function showMessageOptions(messageId, isOwn) {
+  const options = [
+    { icon: '📋', label: 'Copy', action: () => copyMessage(messageId) },
+    { icon: '↪️', label: 'Reply', action: () => replyToMessage(messageId) },
+    { icon: '⭐', label: 'Star', action: () => starMessage(messageId) }
+  ];
+
+  if (isOwn) {
+    options.push({ icon: '🗑️', label: 'Delete', action: () => deleteWhatsAppMessage(messageId) });
+  }
+
+  showContextMenu(options);
+}
+
+function scrollToBottom() {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (messagesEl) {
+    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+  }
 }
 
 // ========================================
@@ -1172,106 +1167,627 @@ await sendEnhancedMessage();
 // ========================================
 
 function loadCommunities() {
-const container = document.getElementById('communitiesContainer');
-if (!container) return;
+  const container = document.getElementById('communitiesContainer');
+  if (!container) return;
 
-if (!currentUser || !currentUser.communityJoined) {
-container.innerHTML = `
-     <div class="community-guidance">
-       <p>🎓 Connect to college first!</p>
-       <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
-     </div>
-   `;
-return;
+  if (!currentUser || !currentUser.communityJoined) {
+    container.innerHTML = `
+      <div class="community-guidance">
+        <p>🎓 Connect to college first!</p>
+        <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
+      </div>
+    `;
+    return;
+  }
+
+  // WhatsApp-style complete layout
+  container.innerHTML = `
+    <div class="whatsapp-container">
+      <!-- Left Sidebar: Chats List -->
+      <div class="whatsapp-sidebar">
+        <div class="whatsapp-sidebar-header">
+          <div>
+            <h3>${currentUser.college}</h3>
+            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
+          </div>
+          <div class="sidebar-actions">
+          </div>
+        </div>
+        
+        <div class="whatsapp-search">
+          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
+        </div>
+        
+        <div class="whatsapp-chats-list" id="chatsList">
+          <!-- Community Group Chat -->
+          <div class="chat-item active" onclick="openCommunityChat()">
+            <div class="chat-avatar">
+              <div class="group-avatar">🎓</div>
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                <h4>${currentUser.college} Community</h4>
+                <span class="chat-time">Now</span>
+              </div>
+              <div class="chat-preview">
+                <span class="preview-text">Click to open group chat</span>
+                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Announcements Channel -->
+          <div class="chat-item" onclick="openAnnouncementsChannel()">
+            <div class="chat-avatar">
+              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                <h4>📢 Announcements</h4>
+                <span class="chat-time">"COMING SOON"</span>
+              </div>
+              <div class="chat-preview">
+                <span class="preview-text">Important college updates</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Study Groups -->
+          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
+            <div class="chat-avatar">
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                 </div>
+              <div class="chat-preview">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Main Chat Area -->
+      <div class="whatsapp-main" id="whatsappMain">
+        <div class="whatsapp-chat-header">
+          <div class="chat-header-info">
+            <div class="chat-avatar-large">🎓</div>
+            <div>
+              <h3>${currentUser.college} Community</h3>
+              <p class="chat-status">
+                <span class="online-dot"></span>
+                <span id="onlineCount">0</span> members online
+              </p>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
+            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
+          </div>
+        </div>
+
+        <div class="whatsapp-messages" id="whatsappMessages">
+          <div class="date-separator">
+            <span>Today</span>
+          </div>
+          <div style="text-align:center;padding:40px;color:#888;">
+          </div>
+        </div>
+
+        <div class="whatsapp-input-area">
+          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
+          <div class="input-wrapper">
+            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
+              onkeydown="handleWhatsAppKeypress(event)" 
+              oninput="handleTypingIndicator()"></textarea>
+          </div>
+          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
+            <span class="send-icon">➤</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Twitter-style Feed (Initially Hidden) -->
+      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
+        <div class="twitter-header">
+          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
+          <h3>Community Posts</h3>
+        </div>
+        <div class="twitter-feed" id="twitterFeed">
+          <div style="text-align:center;padding:40px;color:#888;">
+            <div style="font-size:48px;margin-bottom:15px;">📰</div>
+            <p>Loading posts...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Info Panel (Hidden) -->
+      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
+        <div class="info-panel-header">
+          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
+          <h3>Chat Info</h3>
+        </div>
+        <div class="info-panel-content">
+          <div class="info-section">
+            <div class="info-avatar">🎓</div>
+            <h2>${currentUser.college}</h2>
+            <p>College Community Group</p>
+          </div>
+          
+          <div class="info-section">
+            <h4>📊 Statistics</h4>
+            <div class="info-stats">
+              <div class="info-stat-item">
+                <span class="stat-value" id="totalMembers">0</span>
+                <span class="stat-label">Members</span>
+              </div>
+              <div class="info-stat-item">
+                <span class="stat-value" id="totalMessages">0</span>
+                <span class="stat-label">Messages</span>
+              </div>
+              <div class="info-stat-item">
+                <span class="stat-value" id="activeToday">0</span>
+                <span class="stat-label">Active Today</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h4>⚙️ Settings</h4>
+            <div class="info-option" onclick="toggleNotifications()">
+              <span>🔔 Notifications</span>
+              <span id="notifStatus">On</span>
+            </div>
+            <div class="info-option" onclick="muteChat()">
+              <span>🔇 Mute Chat</span>
+              <span>Off</span>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Initialize chat
+  setTimeout(() => {
+    loadWhatsAppMessages();
+    initWhatsAppFeatures();
+    loadTwitterFeed();
+  }, 100);
+}
+  
+// ==========================================
+// WHATSAPP MESSAGE FUNCTIONS
+// ==========================================
+
+async function loadWhatsAppMessages() {
+  try {
+    const data = await apiCall('/api/community/messages', 'GET');
+    const messagesEl = document.getElementById('whatsappMessages');
+    
+    if (!messagesEl) return;
+
+    // Keep date separator
+    const dateSeparator = messagesEl.querySelector('.date-separator');
+    messagesEl.innerHTML = '';
+    if (dateSeparator) messagesEl.appendChild(dateSeparator);
+
+    if (!data.messages || data.messages.length === 0) {
+      messagesEl.innerHTML += `
+        <div class="no-messages">
+          <div style="font-size:64px;margin-bottom:20px;">👋</div>
+          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
+          <p style="color:#888;">Say hi to your college community</p>
+        </div>
+      `;
+      return;
+    }
+
+    data.messages.reverse().forEach(msg => appendWhatsAppMessage(msg));
+    scrollToBottom();
+    
+    // Update stats
+    updateChatStats(data.messages.length);
+  } catch(error) {
+    console.error('', error);
+    const messagesEl = document.getElementById('whatsappMessages');
+    
+    }
+  }
+
+function appendWhatsAppMessage(msg) {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return;
+
+  const isOwn = msg.sender_id === (currentUser && currentUser.id);
+  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
+  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
+
+  // Check if message already exists
+  if (document.getElementById('wa-msg-' + messageId)) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
+  wrapper.id = `wa-msg-${messageId}`;
+
+  let messageHTML = '';
+  
+  // Add sender name for others
+  if (!isOwn) {
+    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
+  }
+
+  // Message bubble
+  messageHTML += `
+    <div class="message-bubble">
+      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      <div class="message-meta">
+        <span class="message-time">${timeLabel}</span>
+        ${isOwn ? '<span class="message-status">✓✓</span>' : ''}
+      </div>
+      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
+    </div>
+  `;
+
+  // Message actions (on long press / click)
+  messageHTML += `
+    <div class="message-actions-menu" id="actions-${messageId}" style="display:none;">
+      <button onclick="replyToMessage('${messageId}')">↩️ Reply</button>
+      <button onclick="copyMessageText('${messageId}')">📋 Copy</button>
+      <button onclick="forwardMessage('${messageId}')">↪️ Forward</button>
+      ${isOwn ? `<button onclick="deleteWhatsAppMessage('${messageId}')" style="color:#ff6b6b;">🗑️ Delete</button>` : ''}
+    </div>
+  `;
+
+  wrapper.innerHTML = messageHTML;
+  
+  // Add long press / right click for actions
+  wrapper.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showMessageActions(messageId);
+  });
+  
+  // Add long press for mobile
+  let pressTimer;
+  wrapper.addEventListener('touchstart', (e) => {
+    pressTimer = setTimeout(() => showMessageActions(messageId), 500);
+  });
+  wrapper.addEventListener('touchend', () => {
+    clearTimeout(pressTimer);
+  });
+
+  messagesEl.appendChild(wrapper);
+  scrollToBottom();
+
+  if (!isOwn) playMessageSound('receive');
 }
 
-container.innerHTML = `
-   <div class="community-card">
-     <h3>${currentUser.college} Community</h3>
-     <p>Share and chat with students</p>
-     <button onclick="openCommunitySection()">Open</button>
-   </div>
- `;
+async function sendWhatsAppMessage() {
+  const input = document.getElementById('whatsappInput');
+  const content = input?.value.trim();
+  
+  if (!content) {
+    showMessage('⚠️ Message cannot be empty', 'error');
+    input?.focus();
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  try {
+    // Optimistic UI update
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      content,
+      sender_id: currentUser.id,
+      users: currentUser,
+      timestamp: new Date(),
+      text: content
+    };
+    
+    appendWhatsAppMessage(tempMsg);
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Send to server
+    const response = await apiCall('/api/community/messages', 'POST', { content });
+    
+    if (response.success) {
+      playMessageSound('send');
+      
+      // Stop typing indicator
+      if (socket && currentUser.college) {
+        socket.emit('stop_typing', { 
+          collegeName: currentUser.college, 
+          username: currentUser.username 
+        });
+      }
+      
+      // Remove temp message and add real one
+      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
+      if (tempEl) tempEl.remove();
+      
+      if (response.message) {
+        appendWhatsAppMessage(response.message);
+      }
+    }
+  } catch(error) {
+    console.error('Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+  }
 }
 
-function openCommunitySection() {
-const chatSection = document.getElementById('chatSection');
-if (chatSection) chatSection.style.display = 'block';
-loadCommunityPosts();
-loadCommunityMessages();
+function handleWhatsAppKeypress(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendWhatsAppMessage();
+  }
+  
+  // Auto-resize textarea
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
 }
 
-async function loadCommunityPosts() {
-let container = document.getElementById('communityPostsContainer');
+function handleTypingIndicator() {
+  const now = Date.now();
+  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
+    socket.emit('typing', { 
+      collegeName: currentUser.college, 
+      username: currentUser.username 
+    });
+    lastTypingEmit = now;
+  }
 
-if (!container) {
-const chatSection = document.getElementById('chatSection');
-if (chatSection) {
-const postsDiv = document.createElement('div');
-postsDiv.innerHTML = `
-       <div style="margin-bottom:30px;">
-         <div class="chat-header">
-           <h3>📸 Community Posts</h3>
-           <p style="color:#888;font-size:13px;margin:5px 0 0 0;">Share with community</p>
-         </div>
-         <div id="communityPostsContainer" style="display:flex;flex-direction:column;gap:15px;margin-top:20px;">
-           <div style="text-align:center;padding:20px;color:#888;">⏳ Loading...</div>
-         </div>
-       </div>
-     `;
-chatSection.insertBefore(postsDiv, chatSection.firstChild);
-}
-}
-
-const postsContainer = document.getElementById('communityPostsContainer');
-if (!postsContainer) return;
-
-try {
-const data = await apiCall('/api/posts/community', 'GET');
-
-if (data.needsJoinCommunity) {
-postsContainer.innerHTML = `
-       <div style="text-align:center;padding:40px;">
-         <div style="font-size:48px;margin-bottom:20px;">🎓</div>
-         <h3 style="color:#4f74a3;">Join Community!</h3>
-         <p style="color:#888;">Connect to college first</p>
-       </div>
-     `;
-return;
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    if (socket && currentUser && currentUser.college) {
+      socket.emit('stop_typing', { 
+        collegeName: currentUser.college, 
+        username: currentUser.username 
+      });
+    }
+  }, 3000);
 }
 
-if (!data.posts || data.posts.length === 0) {
-postsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">📸 No posts yet</div>';
-return;
+function showMessageActions(messageId) {
+  // Hide all other action menus
+  document.querySelectorAll('.message-actions-menu').forEach(menu => {
+    menu.style.display = 'none';
+  });
+  
+  // Show this message's actions
+  const actionsMenu = document.getElementById(`actions-${messageId}`);
+  if (actionsMenu) {
+    actionsMenu.style.display = 'flex';
+    
+    // Hide after 5 seconds
+    setTimeout(() => {
+      actionsMenu.style.display = 'none';
+    }, 5000);
+  }
 }
 
-postsContainer.innerHTML = renderPosts(data.posts);
-} catch(error) {
-console.error('❌ Community posts:', error);
-if (postsContainer) {
-postsContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
-}
-}
+async function deleteWhatsAppMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+
+  try {
+    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    
+    const messageEl = document.getElementById(`wa-msg-${messageId}`);
+    if (messageEl) {
+      messageEl.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => messageEl.remove(), 300);
+    }
+    
+    showMessage('🗑️ Message deleted', 'success');
+  } catch(error) {
+    console.error('Delete error:', error);
+    showMessage('❌ Failed to delete', 'error');
+  }
 }
 
-async function loadCommunityMessages() {
-try {
-const data = await apiCall('/api/community/messages', 'GET');
-const messagesEl = document.getElementById('chatMessages');
+function copyMessageText(messageId) {
+  const messageEl = document.getElementById(`wa-msg-${messageId}`);
+  const text = messageEl?.querySelector('.message-text')?.textContent;
+  
+  if (!text) return;
 
-if (!messagesEl) return;
-
-if (!data.messages || data.messages.length === 0) {
-messagesEl.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No messages yet</div>';
-return;
+  navigator.clipboard.writeText(text).then(() => {
+    showMessage('📋 Message copied!', 'success');
+  }).catch(() => {
+    showMessage('❌ Failed to copy', 'error');
+  });
 }
 
-messagesEl.innerHTML = '';
-data.messages.reverse().forEach(msg => appendMessageToChat(msg));
-messagesEl.scrollTop = messagesEl.scrollHeight;
-} catch(error) {
-console.error('Load messages:', error);
+function replyToMessage(messageId) {
+  const messageEl = document.getElementById(`wa-msg-${messageId}`);
+  const text = messageEl?.querySelector('.message-text')?.textContent;
+  const sender = messageEl?.querySelector('.message-sender-name')?.textContent || 'You';
+  
+  if (!text) return;
+  
+  const input = document.getElementById('whatsappInput');
+  if (input) {
+    input.value = `@${sender}: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}\n\n`;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  
+  showMessage(`↩️ Replying to ${sender}`, 'success');
 }
+
+function forwardMessage(messageId) {
+  showMessage('↪️ Forward feature coming soon!', 'success');
+}
+
+function scrollToBottom() {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (messagesEl) {
+    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+  }
+}
+
+function updateChatStats(messageCount) {
+  const totalMessages = document.getElementById('totalMessages');
+  if (totalMessages) totalMessages.textContent = messageCount;
+}
+
+// ==========================================
+// EMOJI & STICKER PICKERS
+// ==========================================
+
+function openEmojiPicker() {
+  // Close any existing picker
+  const existing = document.getElementById('emojiPickerPopup');
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  const picker = document.createElement('div');
+  picker.id = 'emojiPickerPopup';
+  picker.className = 'emoji-picker-popup';
+  picker.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:5000;';
+
+  const emojis = [
+    { cat: 'Smileys', items: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋'] },
+    { cat: 'Gestures', items: ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐','🖖','👋','🤝','🙏'] },
+    { cat: 'Hearts', items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟'] },
+    { cat: 'Objects', items: ['🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'] }
+  ];
+
+  let html = `
+    <div class="emoji-picker-header">
+      <input type="text" class="emoji-search" placeholder="Search emoji..." oninput="searchEmojis(this.value)">
+      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div class="emoji-categories" id="emojiCategories">
+  `;
+
+  emojis.forEach(category => {
+    html += `
+      <div class="emoji-category">
+        <div class="emoji-category-title">${category.cat}</div>
+        <div class="emoji-grid">
+          ${category.items.map(emoji => `
+            <div class="emoji-item" onclick="insertEmoji('${emoji}')">${emoji}</div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  picker.innerHTML = html;
+  document.body.appendChild(picker);
+}
+
+function closeEmojiPicker() {
+  const picker = document.getElementById('emojiPickerPopup');
+  if (picker) picker.remove();
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('whatsappInput');
+  if (input) {
+    input.value += emoji;
+    input.focus();
+  }
+  closeEmojiPicker();
+}
+
+function searchEmojis(query) {
+  // Simple search implementation
+  const categories = document.querySelectorAll('.emoji-category');
+  categories.forEach(cat => {
+    const items = cat.querySelectorAll('.emoji-item');
+    let hasVisible = false;
+    items.forEach(item => {
+      // In real app, you'd have emoji names to search
+      item.style.display = 'flex';
+      hasVisible = true;
+    });
+    cat.style.display = hasVisible ? 'block' : 'none';
+  });
+}
+
+function openStickerPicker() {
+  showMessage('🎨 Sticker picker coming soon!', 'success');
+  
+  // Quick sticker selection
+  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚'];
+  const sticker = prompt('Quick sticker:\n' + stickers.join(' ') + '\n\nChoose one:');
+  
+  if (sticker && stickers.includes(sticker)) {
+    const input = document.getElementById('whatsappInput');
+    if (input) {
+      input.value += sticker;
+      input.focus();
+    }
+  }
+}
+
+function openAttachMenu() {
+  const menu = document.createElement('div');
+  menu.className = 'attach-menu-popup';
+  menu.style.cssText = 'position:fixed;bottom:80px;left:50px;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;z-index:5000;';
+  
+  menu.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;min-width:200px;">
+      <button onclick="attachPhoto()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
+        <span style="font-size:32px;">📷</span>
+        <span>Photo</span>
+      </button>
+      <button onclick="attachVideo()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
+        <span style="font-size:32px;">🎥</span>
+        <span>Video</span>
+      </button>
+      <button onclick="attachDocument()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
+        <span style="font-size:32px;">📄</span>
+        <span>Document</span>
+      </button>
+      <button onclick="menu.remove()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(239,68,68,0.2);border:2px solid rgba(239,68,68,0.3);border-radius:12px;cursor:pointer;color:#ff6b6b;font-weight:600;">
+        <span style="font-size:32px;">✕</span>
+        <span>Cancel</span>
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(menu);
+  
+  // Close on click outside
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target) && !e.target.closest('.icon-btn')) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    });
+  }, 100);
+}
+
+function attachPhoto() {
+  showMessage('📷 Photo attachment coming soon!', 'success');
+  document.querySelector('.attach-menu-popup')?.remove();
+}
+
+function attachVideo() {
+  showMessage('🎥 Video attachment coming soon!', 'success');
+  document.querySelector('.attach-menu-popup')?.remove();
+}
+
+function attachDocument() {
+  showMessage('📄 Document attachment coming soon!', 'success');
+  document.querySelector('.attach-menu-popup')?.remove();
 }
 
 // ========================================
@@ -1488,6 +2004,7 @@ const messageEl = document.getElementById(`msg-${id}`);
 if (messageEl) messageEl.remove();
 }
 
+
 // ========================================
 // PROFILE & SEARCH
 // ========================================
@@ -1591,18 +2108,8 @@ async function showUserProfile(userId) {
 hideSearchResults();
 const searchBox = document.getElementById('searchBox');
 if (searchBox) searchBox.value = '';
-
-try {
-showMessage('Loading profile...', 'success');
-const data = await apiCall(`/api/profile/${userId}`, 'GET');
-
-if (!data.success || !data.user) throw new Error('User not found');
-showProfileModal(data.user);
-} catch(error) {
-console.error('❌ Profile:', error);
-showMessage('❌ Failed to load', 'error');
 }
-}
+
 
 function showProfilePage() {
 if (!currentUser) return;
@@ -3648,14 +4155,6 @@ function viewAllPlans() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-
-
-
-
-
-
-
-
 async function selectPlan(planType) {
   if (!currentUser) {
     showMessage('⚠️ Please login first', 'error');
@@ -3695,118 +4194,26 @@ async function selectPlan(planType) {
   const isFirstTime = !currentUser.hasSubscribed;
   const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
   
-  // Close subscription popup
-  closeSubscriptionPopup();
+  // Confirmation
+  const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
+    `Price: ₹${price}\n` +
+    `Posters: ${plan.posters}\n` +
+    `Videos: ${plan.videos}\n` +
+    `Duration: ${plan.days} days\n\n` +
+    (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
   
-  // Show processing message
-  showMessage('💳 Preparing payment...', 'success');
+  if (!confirm(confirmMsg)) return;
   
   try {
-    // Create order on backend
-    const orderData = await apiCall('/api/payment/create-order', 'POST', {
-      amount: price,
-      planType: planType,
-      isFirstTime: isFirstTime
-    });
+    showMessage('💳 Processing payment...', 'success');
     
-    if (!orderData.success) {
-      throw new Error('Failed to create payment order');
-    }
+    // Simulate payment processing (replace with actual payment gateway)
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    console.log('✅ Payment order created:', orderData.orderId);
+    // Here you would integrate with actual payment gateway
+    // For now, we'll simulate success
     
-    // Initialize Razorpay
-    const options = {
-      key: orderData.razorpayKeyId, // Will be sent from backend
-      amount: price * 100, // Razorpay accepts amount in paise
-      currency: 'INR',
-      name: 'VibeXpert',
-      description: `${plan.name} Plan Subscription`,
-      image: '/assets/logo.png', // Your logo (optional)
-      order_id: orderData.orderId,
-      
-      // User details (prefill)
-      prefill: {
-        name: currentUser.username,
-        email: currentUser.email,
-        contact: currentUser.phone || ''
-      },
-      
-      // Theme
-      theme: {
-        color: '#4f74a3'
-      },
-      
-      // Payment success handler
-      handler: function(response) {
-        handlePaymentSuccess(response, planType, plan);
-      },
-      
-      // Payment modal closed
-      modal: {
-        ondismiss: function() {
-          showMessage('❌ Payment cancelled', 'error');
-        },
-        escape: true,
-        backdropclose: false
-      },
-      
-      // Notes
-      notes: {
-        userId: currentUser.id,
-        username: currentUser.username,
-        planType: planType
-      },
-      
-      // Retry options
-      retry: {
-        enabled: true,
-        max_count: 3
-      }
-    };
-    
-    // Check if Razorpay is loaded
-    if (typeof Razorpay === 'undefined') {
-      throw new Error('Razorpay SDK not loaded. Please refresh the page.');
-    }
-    
-    const razorpay = new Razorpay(options);
-    
-    // Handle payment failures
-    razorpay.on('payment.failed', function(response) {
-      handlePaymentFailure(response);
-    });
-    
-    // Open Razorpay checkout
-    razorpay.open();
-    
-  } catch (error) {
-    console.error('❌ Payment initialization error:', error);
-    showMessage('❌ Failed to initialize payment: ' + error.message, 'error');
-  }
-}
-
-// Handle successful payment
-async function handlePaymentSuccess(response, planType, plan) {
-  try {
-    console.log('✅ Payment successful:', response.razorpay_payment_id);
-    showMessage('✅ Payment successful! Verifying...', 'success');
-    
-    // Verify payment on backend
-    const verification = await apiCall('/api/payment/verify', 'POST', {
-      razorpay_order_id: response.razorpay_order_id,
-      razorpay_payment_id: response.razorpay_payment_id,
-      razorpay_signature: response.razorpay_signature,
-      planType: planType
-    });
-    
-    if (!verification.success) {
-      throw new Error('Payment verification failed');
-    }
-    
-    console.log('✅ Payment verified successfully');
-    
-    // Update user subscription locally
+    // Update user subscription
     currentUser.subscription = {
       plan: planType,
       startDate: new Date(),
@@ -3814,68 +4221,26 @@ async function handlePaymentSuccess(response, planType, plan) {
       posters: plan.posters,
       videos: plan.videos,
       postersUsed: 0,
-      videosUsed: 0,
-      paymentId: response.razorpay_payment_id
+      videosUsed: 0
     };
     
     currentUser.hasSubscribed = true;
     currentUser.isPremium = true;
-    currentUser.subscriptionPlan = planType;
     
     localStorage.setItem('user', JSON.stringify(currentUser));
     
-    showMessage('🎉 Subscription activated successfully!', 'success');
-    updatePremiumBadge();
+    closeSubscriptionPopup();
+    
+    showMessage('🎉 Subscription successful!', 'success');
     
     // Show success modal
-    setTimeout(() => showSubscriptionSuccessModal(plan), 500);
+    showSubscriptionSuccessModal(plan);
     
   } catch (error) {
-    console.error('❌ Payment verification error:', error);
-    showMessage('❌ Payment verification failed. Please contact support with Payment ID: ' + response.razorpay_payment_id, 'error');
+    console.error('Subscription error:', error);
+    showMessage('❌ Payment failed. Please try again.', 'error');
   }
 }
-
-// Handle payment failure
-function handlePaymentFailure(response) {
-  console.error('❌ Payment failed:', response.error);
-  
-  const errorMessages = {
-    'BAD_REQUEST_ERROR': 'Invalid payment details',
-    'GATEWAY_ERROR': 'Payment gateway error. Please try again.',
-    'NETWORK_ERROR': 'Network connection failed. Check your internet.',
-    'SERVER_ERROR': 'Server error occurred. Please try again later.'
-  };
-  
-  const errorCode = response.error?.code || 'UNKNOWN_ERROR';
-  const errorMsg = errorMessages[errorCode] || 'Payment failed';
-  
-  const errorDescription = response.error?.description || '';
-  
-  showMessage(`❌ ${errorMsg}${errorDescription ? ': ' + errorDescription : ''}`, 'error');
-  
-  // Show retry option
-  setTimeout(() => {
-    if (confirm('Payment failed. Would you like to try again?')) {
-      openSubscriptionPopup();
-    }
-  }, 2000);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function showSubscriptionSuccessModal(plan) {
   const modal = document.createElement('div');
@@ -3948,7 +4313,639 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePremiumBadge();
   }
 });
+
+// TWITTER-STYLE FEED FUNCTIONS
+// ==========================================
+
+function toggleTwitterFeed() {
+  const twitterPanel = document.getElementById('twitterFeedPanel');
+  const whatsappMain = document.getElementById('whatsappMain');
+  
+  if (!twitterPanel || !whatsappMain) return;
+
+  if (twitterPanel.style.display === 'none') {
+    // Show Twitter feed
+    twitterPanel.style.display = 'flex';
+    whatsappMain.style.display = 'none';
+    loadTwitterFeed();
+  } else {
+    // Show WhatsApp chat
+    twitterPanel.style.display = 'none';
+    whatsappMain.style.display = 'flex';
+  }
+}
+
+async function loadTwitterFeed() {
+  const feedEl = document.getElementById('twitterFeed');
+  if (!feedEl) return;
+
+  try {
+    feedEl.innerHTML = '<div class="loading-spinner">⏳ Loading posts...</div>';
+    
+    const data = await apiCall('/api/posts/community', 'GET');
+
+    if (!data.posts || data.posts.length === 0) {
+      feedEl.innerHTML = `
+        <div class="no-posts-state">
+          <div class="no-posts-icon">📸</div>
+          <h3>No posts yet</h3>
+          <p>Be the first to share something!</p>
+          <button class="create-post-btn" onclick="openCreatePostModal()">Create Post</button>
+        </div>
+      `;
+      return;
+    }
+
+    feedEl.innerHTML = renderTwitterPosts(data.posts);
+  } catch(error) {
+    console.error('Load feed:', error);
+    feedEl.innerHTML = '<div class="error-state">❌ Failed to load posts</div>';
+  }
+}
+
+function renderTwitterPosts(posts) {
+  let html = '';
+
+  posts.forEach(post => {
+    const author = post.users?.username || 'User';
+    const authorId = post.users?.id || '';
+    const content = post.content || '';
+    const media = post.media || [];
+    const time = formatTimeAgo(new Date(post.created_at || post.timestamp));
+    const isOwn = currentUser && authorId === currentUser.id;
+    const likeCount = post.like_count || 0;
+    const commentCount = post.comment_count || 0;
+    const shareCount = post.share_count || 0;
+    const isLiked = post.is_liked || false;
+
+    html += `
+      <div class="twitter-post" id="twitter-post-${post.id}">
+        <div class="twitter-post-header">
+          <div class="twitter-user-info" onclick="showUserProfile('${authorId}')">
+            <div class="twitter-avatar">
+              ${post.users?.profile_pic ? 
+                `<img src="${post.users.profile_pic}">` : 
+                '👤'
+              }
+            </div>
+            <div class="twitter-user-details">
+              <span class="twitter-username">@${author}</span>
+              <span class="twitter-time">· ${time}</span>
+            </div>
+          </div>
+          ${isOwn ? `<button class="twitter-delete-btn" onclick="deleteTwitterPost('${post.id}')">🗑️</button>` : ''}
+        </div>
+
+        <div class="twitter-post-content">
+          ${content ? `<p class="twitter-text">${content}</p>` : ''}
+          
+          ${media.length > 0 ? `
+            <div class="twitter-media ${media.length === 1 ? 'single' : 'grid'}">
+              ${media.slice(0, 4).map((m, idx) => {
+                if (m.type === 'image') {
+                  return `<img src="${m.url}" onclick="openMediaViewer('${post.id}', ${idx})">`;
+                } else if (m.type === 'video') {
+                  return `<video src="${m.url}" controls></video>`;
+                }
+                return '';
+              }).join('')}
+              ${media.length > 4 ? `<div class="media-overlay">+${media.length - 4}</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="twitter-post-actions">
+          <button class="twitter-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleTwitterLike('${post.id}')">
+            <span>${isLiked ? '❤️' : '🤍'}</span>
+            <span>${likeCount}</span>
+          </button>
+          <button class="twitter-action-btn" onclick="openTwitterComments('${post.id}')">
+            <span>💬</span>
+            <span>${commentCount}</span>
+          </button>
+          <button class="twitter-action-btn" onclick="shareTwitterPost('${post.id}')">
+            <span>🔄</span>
+            <span>${shareCount}</span>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  return html;
+}
+
+async function toggleTwitterLike(postId) {
+  if (!currentUser) return showMessage('⚠️ Login to like', 'error');
+
+  try {
+    const btn = document.querySelector(`#twitter-post-${postId} .twitter-action-btn.liked, #twitter-post-${postId} .twitter-action-btn:first-child`);
+    if (btn) btn.disabled = true;
+
+    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
+
+    if (data.success) {
+      const postEl = document.getElementById(`twitter-post-${postId}`);
+      if (postEl) {
+        const likeBtn = postEl.querySelector('.twitter-action-btn:first-child');
+        if (likeBtn) {
+          likeBtn.classList.toggle('liked', data.liked);
+          likeBtn.innerHTML = `
+            <span>${data.liked ? '❤️' : '🤍'}</span>
+            <span>${data.likeCount}</span>
+          `;
+          likeBtn.disabled = false;
+        }
+      }
+    }
+  } catch(error) {
+    showMessage('❌ Failed to like', 'error');
+  }
+}
+
+function openCreatePostModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:600px;">
+      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+      <h2>Create Post</h2>
+      
+      <textarea id="newPostContent" placeholder="What's happening?" 
+        style="width:100%;min-height:120px;padding:15px;background:rgba(20,30,50,0.6);
+        border:2px solid rgba(79,116,163,0.3);border-radius:12px;color:white;
+        font-family:inherit;resize:vertical;margin-bottom:15px;"></textarea>
+
+      <div id="newPostMediaPreview" style="display:none;margin-bottom:15px;"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button onclick="selectPostMedia()" 
+          style="background:rgba(79,116,163,0.2);color:#4f74a3;border:2px solid rgba(79,116,163,0.3);
+          padding:10px 20px;border-radius:10px;cursor:pointer;">
+          📷 Add Photo/Video
+        </button>
+        <button onclick="submitNewPost()" 
+          style="background:linear-gradient(135deg,#4f74a3,#8da4d3);color:white;border:none;
+          padding:12px 30px;border-radius:10px;font-weight:700;cursor:pointer;">
+          Post
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+let newPostMediaFiles = [];
+
+function selectPostMedia() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  input.multiple = true;
+  input.onchange = (e) => {
+    const files = Array.from(e.target.files);
+    newPostMediaFiles = files;
+    previewNewPostMedia(files);
+  };
+  input.click();
+}
+
+function previewNewPostMedia(files) {
+  const preview = document.getElementById('newPostMediaPreview');
+  if (!preview) return;
+
+  preview.style.display = 'grid';
+  preview.style.gridTemplateColumns = 'repeat(auto-fill,minmax(100px,1fr))';
+  preview.style.gap = '10px';
+  preview.innerHTML = '';
+
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;';
+      
+      if (file.type.startsWith('video/')) {
+        div.innerHTML = `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;"></video>`;
+      } else {
+        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+      
+      div.innerHTML += `<button onclick="removeNewPostMedia(${idx})" 
+        style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.7);color:white;
+        border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;">×</button>`;
+      
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeNewPostMedia(idx) {
+  newPostMediaFiles.splice(idx, 1);
+  previewNewPostMedia(newPostMediaFiles);
+  if (newPostMediaFiles.length === 0) {
+    document.getElementById('newPostMediaPreview').style.display = 'none';
+  }
+}
+
+async function submitNewPost() {
+  const content = document.getElementById('newPostContent')?.value.trim();
+  
+  if (!content && newPostMediaFiles.length === 0) {
+    return showMessage('⚠️ Add content or media', 'error');
+  }
+
+  try {
+    showMessage('📤 Creating post...', 'success');
+
+    const formData = new FormData();
+    formData.append('content', content);
+    formData.append('postTo', 'community');
+
+    newPostMediaFiles.forEach(file => {
+      formData.append('media', file);
+    });
+
+    await apiCall('/api/posts', 'POST', formData);
+    
+    showMessage('✅ Post created!', 'success');
+    document.querySelector('.modal').remove();
+    newPostMediaFiles = [];
+    loadTwitterFeed();
+  } catch(error) {
+    showMessage('❌ Failed to create post', 'error');
+  }
+}
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
+function formatTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
+  if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
+  return date.toLocaleDateString();
+}
+
+function initWhatsAppFeatures() {
+  // Setup typing indicator
+  const input = document.getElementById('whatsappInput');
+  if (input) {
+    let typingTimeout;
+    input.addEventListener('input', () => {
+      if (socket && currentUser && currentUser.college) {
+        socket.emit('typing', { 
+          collegeName: currentUser.college, 
+          username: currentUser.username 
+        });
+        
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          socket.emit('stop_typing', { 
+            collegeName: currentUser.college, 
+            username: currentUser.username 
+          });
+        }, 2000);
+      }
+    });
+  }
+}
+
+function searchChats() {
+  const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
+  const chatItems = document.querySelectorAll('.chat-item');
+  
+  chatItems.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(query) ? 'flex' : 'none';
+  });
+}
+
+function openChat(chatId) {
+  document.querySelectorAll('.chat-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event.currentTarget?.classList.add('active');
+}
+
+function refreshChats() {
+  loadWhatsAppMessages();
+  showMessage('🔄 Refreshed', 'success');
+}
+
+// Update socket listeners for WhatsApp
+if (socket) {
+  socket.on('new_message', (message) => {
+    appendWhatsAppMessage(message);
+    
+    // Show notification if not focused
+    if (document.hidden) {
+      const unreadBadge = document.getElementById('unreadCount');
+      if (unreadBadge) {
+        const count = parseInt(unreadBadge.textContent || '0') + 1;
+        unreadBadge.textContent = count;
+        unreadBadge.style.display = 'inline';
+      }
+    }
+  });
+  
+  socket.on('user_typing', (data) => {
+    if (data.username && currentUser && data.username !== currentUser.username) {
+      showTypingIndicator(data.username);
+    }
+  });
+  
+  socket.on('user_stop_typing', (data) => {
+    hideTypingIndicator(data.username);
+  });
+}
+
+function showTypingIndicator(username) {
+  let indicator = document.getElementById('typing-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'typing-indicator';
+    indicator.className = 'whatsapp-typing-indicator';
+    document.getElementById('whatsappMessages')?.appendChild(indicator);
+  }
+  indicator.innerHTML = `
+    <div class="typing-bubble">
+      <span>${username} is typing</span>
+      <div class="typing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
+  scrollToBottom();
+}
+
+function hideTypingIndicator(username) {
+  const indicator = document.getElementById('typing-indicator');
+  if (indicator) indicator.remove();
+}
+
+// ==========================================
+// ENHANCED PROFILE FUNCTIONS
+// ==========================================
+
+let profilePhotoActionsVisible = false;
+
+// Show enhanced profile modal
+function showEnhancedProfile() {
+  if (!currentUser) return;
+  
+  const modal = document.getElementById('enhancedProfileModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    loadEnhancedProfileData();
+  }
+}
+
+// Close enhanced profile
+function closeEnhancedProfile() {
+  const modal = document.getElementById('enhancedProfileModal');
+  if (modal) modal.style.display = 'none';
+  profilePhotoActionsVisible = false;
+}
+
+// Load profile data
+async function loadEnhancedProfileData() {
+  if (!currentUser) return;
+  
+  // Display name and username
+  const displayName = document.getElementById('profileDisplayName');
+  const username = document.getElementById('profileUsername');
+  
+  if (displayName) displayName.textContent = currentUser.username || 'User';
+  if (username) username.textContent = '@' + (currentUser.username || 'user');
+  
+  // College info
+  const collegeEl = document.getElementById('profileCollege');
+  if (collegeEl && currentUser.college) {
+    collegeEl.textContent = `🎓 ${currentUser.college}`;
+  }
+  
+  // Profile photo
+  updateProfilePhotoDisplay();
+  
+  // Bio
+  const bioText = document.getElementById('bioText');
+  if (bioText) {
+    if (currentUser.bio) {
+      bioText.textContent = currentUser.bio;
+      bioText.style.color = '#e0e0e0';
+    } else {
+      bioText.textContent = 'Click to add bio...';
+      bioText.style.color = '#888';
+    }
+  }
+  
+  // Cover photo
+  if (currentUser.coverPhoto) {
+    const cover = document.getElementById('profileCover');
+    if (cover) {
+      cover.style.backgroundImage = `url('${currentUser.coverPhoto}')`;
+      cover.style.backgroundSize = 'cover';
+      cover.style.backgroundPosition = 'center';
+    }
+  }
+  
+  // Stats
+  updateProfileStats();
+  
+  // Badges
+  updateProfileBadges();
+}
+
+// Update profile photo display
+function updateProfilePhotoDisplay() {
+  const photoImg = document.getElementById('profilePhotoImg');
+  const photoInitial = document.getElementById('profilePhotoInitial');
+  
+  if (currentUser.profile_pic && photoImg && photoInitial) {
+    photoImg.src = currentUser.profile_pic;
+    photoImg.style.display = 'block';
+    photoInitial.style.display = 'none';
+  } else if (photoInitial) {
+    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
+    photoInitial.textContent = initial;
+    photoInitial.style.display = 'block';
+    if (photoImg) photoImg.style.display = 'none';
+  }
+  
+  // Also update header avatar
+  const headerImg = document.getElementById('profileAvatarImg');
+  const headerInitial = document.getElementById('profileAvatarInitial');
+  
+  if (currentUser.profile_pic && headerImg && headerInitial) {
+    headerImg.src = currentUser.profile_pic;
+    headerImg.style.display = 'block';
+    headerInitial.style.display = 'none';
+  } else if (headerInitial) {
+    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
+    headerInitial.textContent = initial;
+  }
+}
+
+// Toggle photo actions
+function togglePhotoActions() {
+  const actions = document.getElementById('profilePhotoActions');
+  if (!actions) return;
+  
+  profilePhotoActionsVisible = !profilePhotoActionsVisible;
+  actions.style.display = profilePhotoActionsVisible ? 'flex' : 'none';
+}
+
+// Capture photo from camera
+function captureProfilePhoto() {
+  const input = document.getElementById('profilePhotoCameraInput');
+  if (input) input.click();
+}
+
+// Upload photo from gallery
+function uploadProfilePhoto() {
+  const input = document.getElementById('profilePhotoInput');
+  if (input) input.click();
+}
+
+// Handle photo upload
+async function handleProfilePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showMessage('⚠️ Photo too large (max 5MB)', 'error');
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showMessage('⚠️ Please select an image file', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('📤 Uploading photo...', 'success');
+    
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    
+    const data = await apiCall('/api/user/profile-photo', 'POST', formData);
+    
+    if (data.success && data.photoUrl) {
+      currentUser.profile_pic = data.photoUrl;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      updateProfilePhotoDisplay();
+      showMessage('✅ Photo updated!', 'success');
+      
+      // Hide actions
+      const actions = document.getElementById('profilePhotoActions');
+      if (actions) actions.style.display = 'none';
+      profilePhotoActionsVisible = false;
+    }
+  } catch (error) {
+    console.error('Photo upload error:', error);
+    showMessage('❌ Failed to upload photo', 'error');
+  }
+  
+  // Clear input
+  event.target.value = '';
+}
+
+// Remove profile photo
+async function removeProfilePhoto() {
+  if (!confirm('Remove profile photo?')) return;
+  
+  try {
+    showMessage('🗑️ Removing photo...', 'success');
+    
+    const data = await apiCall('/api/user/profile-photo', 'DELETE');
+    
+    if (data.success) {
+      currentUser.profile_pic = null;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      updateProfilePhotoDisplay();
+      showMessage('✅ Photo removed', 'success');
+      
+      // Hide actions
+      const actions = document.getElementById('profilePhotoActions');
+      if (actions) actions.style.display = 'none';
+      profilePhotoActionsVisible = false;
+    }
+  } catch (error) {
+    console.error('Photo remove error:', error);
+    showMessage('❌ Failed to remove photo', 'error');
+  }
+}
+
+// Edit cover photo
+function editCoverPhoto() {
+  const input = document.getElementById('coverPhotoInput');
+  if (input) input.click();
+}
+
+// Handle cover photo upload
+async function handleCoverPhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (file.size > 5 * 1024 * 1024) {
+    showMessage('⚠️ Photo too large (max 5MB)', 'error');
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    showMessage('⚠️ Please select an image file', 'error');
+    return;
+  }
+  
+  try {
+    showMessage('📤 Uploading cover...', 'success');
+    
+    const formData = new FormData();
+    formData.append('coverPhoto', file);
+    
+    const data = await apiCall('/api/user/cover-photo', 'POST', formData);
+    
+    if (data.success && data.photoUrl) {
+      currentUser.coverPhoto = data.photoUrl;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      const cover = document.getElementById('profileCover');
+      if (cover) {
+        cover.style.backgroundImage = `url('${data.photoUrl}')`;
+        cover.style.backgroundSize = 'cover';
+        cover.style.backgroundPosition = 'center';
+      }
+      
+      showMessage('✅ Cover updated!', 'success');
+    }
+  } catch (error) {
+    console.error('Cover upload error:', error);
+    showMessage('❌ Failed to upload cover', 'error');
+  }
+  
+  event.target.value = '';
+}
+
+// Edit bio
+function editBio() {
+  const bioDisplay = document.getElementById('bioDisplay');
+  const bioEdit = document.getElementById('bioEdit');
+  const bioInput = document.getElementById('bioInput');
+  const bioCount = document.getElementById('bioCount');
+  
+  if (!bioDisplay || !bioEdit || !bioInput) return;
+
+}
+  
 console.log('✨ RealVibe features initialized!');
-
-
-
