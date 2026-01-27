@@ -5,6 +5,154 @@
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
+// Emoji Picker Functions
+let currentEmojiCategory = 'emotions';
+let emojiPickerVisible = false;
+
+function toggleEmojiPicker() {
+  const emojiPicker = document.getElementById('emojiPicker');
+  emojiPickerVisible = !emojiPickerVisible;
+  
+  if (emojiPickerVisible) {
+    emojiPicker.style.display = 'block';
+    loadEmojiCategory(currentEmojiCategory);
+  } else {
+    emojiPicker.style.display = 'none';
+  }
+}
+
+function showEmojiCategory(category) {
+  currentEmojiCategory = category;
+  
+  // Update active category button
+  const categoryButtons = document.querySelectorAll('.emoji-category');
+  categoryButtons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  loadEmojiCategory(category);
+}
+
+function loadEmojiCategory(category) {
+  const emojiGrid = document.getElementById('emojiGrid');
+  if (!emojiGrid) return;
+  
+  const emojis = stickerLibrary[category] || [];
+  
+  emojiGrid.innerHTML = '';
+  emojis.forEach(emoji => {
+    const emojiButton = document.createElement('button');
+    emojiButton.className = 'emoji-item';
+    emojiButton.textContent = emoji.emoji;
+    emojiButton.title = emoji.name;
+    emojiButton.onclick = () => insertEmoji(emoji.emoji);
+    emojiGrid.appendChild(emojiButton);
+  });
+}
+
+function insertEmoji(emoji) {
+  const chatInput = document.getElementById('chatInput');
+  if (!chatInput) return;
+  
+  const currentValue = chatInput.value;
+  const cursorPosition = chatInput.selectionStart;
+  const newValue = currentValue.slice(0, cursorPosition) + emoji + currentValue.slice(cursorPosition);
+  
+  chatInput.value = newValue;
+  chatInput.focus();
+  
+  // Set cursor position after the inserted emoji
+  const newCursorPosition = cursorPosition + emoji.length;
+  chatInput.setSelectionRange(newCursorPosition, newCursorPosition);
+  
+  // Hide emoji picker after selection
+  toggleEmojiPicker();
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', function(event) {
+  const emojiPicker = document.getElementById('emojiPicker');
+  const emojiBtn = document.querySelector('.emoji-btn');
+  
+  if (emojiPickerVisible && 
+      !emojiPicker.contains(event.target) && 
+      !emojiBtn.contains(event.target)) {
+    emojiPicker.style.display = 'none';
+    emojiPickerVisible = false;
+  }
+});
+
+// Avatar Animation Functions
+function handleAvatarMove(event, avatarId) {
+  const avatar = document.getElementById(avatarId);
+  if (!avatar) return;
+  
+  const input = event.target;
+  const rect = input.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  // Calculate position relative to input
+  const maxX = rect.width - 40;
+  const maxY = rect.height - 40;
+  
+  // Constrain movement within input bounds
+  const constrainedX = Math.max(0, Math.min(x - 20, maxX));
+  const constrainedY = Math.max(0, Math.min(y - 20, maxY));
+  
+  // Apply smooth movement
+  avatar.style.transform = `translate(${constrainedX - maxX}px, ${constrainedY - 20}px) scale(1.1)`;
+  avatar.style.transition = 'transform 0.1s ease-out';
+}
+
+function resetAvatar(avatarId) {
+  const avatar = document.getElementById(avatarId);
+  if (!avatar) return;
+  
+  avatar.style.transform = 'translateY(-50%) scale(1)';
+  avatar.style.transition = 'transform 0.3s ease-out';
+}
+
+function handleInputChange(inputId) {
+  const input = document.getElementById(inputId);
+  const avatarId = inputId + 'Avatar';
+  const avatar = document.getElementById(avatarId);
+  
+  if (!avatar) return;
+  
+  const value = input.value.trim();
+  const minLength = input.type === 'email' ? 5 : 6;
+  
+  // Remove existing states
+  avatar.classList.remove('happy', 'excited');
+  
+  if (value.length >= minLength) {
+    // Check if email is valid or password is strong enough
+    if (input.type === 'email' && value.includes('@') && value.includes('.')) {
+      avatar.classList.add('excited');
+      avatar.textContent = '🎉';
+    } else if (input.type === 'password' && value.length >= 8) {
+      avatar.classList.add('excited');
+      avatar.textContent = '🔥';
+    } else if (value.length >= minLength) {
+      avatar.classList.add('happy');
+      if (input.type === 'email') {
+        avatar.textContent = '😊';
+      } else if (input.type === 'password') {
+        avatar.textContent = '😄';
+      }
+    }
+  } else {
+    // Reset to original emoji
+    if (inputId.includes('Email')) {
+      avatar.textContent = inputId.includes('login') ? '👁️' : '📧';
+    } else if (inputId.includes('Password')) {
+      avatar.textContent = inputId.includes('login') ? '🔒' : '🔐';
+    } else if (inputId.includes('Confirm')) {
+      avatar.textContent = '✅';
+    }
+  }
+}
+
 // Global Variables
 let currentUser = null;
 let currentType = null;
