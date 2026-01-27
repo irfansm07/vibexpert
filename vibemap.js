@@ -42,26 +42,40 @@ function loadEmojiCategory(category) {
   emojis.forEach(emoji => {
     const emojiButton = document.createElement('button');
     emojiButton.className = 'emoji-item';
+    if (emoji.type === 'gif') {
+      emojiButton.classList.add('gif');
+    } else if (emoji.type === 'sticker') {
+      emojiButton.classList.add('sticker');
+    }
     emojiButton.textContent = emoji.emoji;
     emojiButton.title = emoji.name;
-    emojiButton.onclick = () => insertEmoji(emoji.emoji);
+    emojiButton.onclick = () => insertEmoji(emoji.emoji, emoji.type);
     emojiGrid.appendChild(emojiButton);
   });
 }
 
-function insertEmoji(emoji) {
+function insertEmoji(emoji, type = 'emoji') {
   const chatInput = document.getElementById('chatInput');
   if (!chatInput) return;
   
   const currentValue = chatInput.value;
   const cursorPosition = chatInput.selectionStart;
-  const newValue = currentValue.slice(0, cursorPosition) + emoji + currentValue.slice(cursorPosition);
+  let insertText = emoji;
+  
+  // Add special formatting for GIFs and stickers
+  if (type === 'gif') {
+    insertText = `[GIF:${emoji}]`;
+  } else if (type === 'sticker') {
+    insertText = `[STICKER:${emoji}]`;
+  }
+  
+  const newValue = currentValue.slice(0, cursorPosition) + insertText + currentValue.slice(cursorPosition);
   
   chatInput.value = newValue;
   chatInput.focus();
   
   // Set cursor position after the inserted emoji
-  const newCursorPosition = cursorPosition + emoji.length;
+  const newCursorPosition = cursorPosition + insertText.length;
   chatInput.setSelectionRange(newCursorPosition, newCursorPosition);
   
   // Hide emoji picker after selection
