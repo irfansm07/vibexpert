@@ -6,9 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>VibeXpert - Connect With Your College</title>
 <link rel="stylesheet" href="vibemap.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
 </head>
 <body class="dark-theme">
 
@@ -29,9 +26,6 @@
     ABOUT US LANDING PAGE (Keep as is - not changing)
     ======================================== -->
 <div id="aboutUsPage" class="about-us-page">
-    <!-- ✅ ADD THIS VANTA BACKGROUND CONTAINER -->
-<div id="vanta-globe-bg" class="vanta-globe-background"></div>
-
 <!-- Scroll Progress Bar -->
 <div class="scroll-progress-bar">
 <div class="scroll-progress-fill" id="scrollProgressFill"></div>
@@ -345,7 +339,9 @@ Get Started Now →
 </footer>
 </div>
 
-
+<!-- ========================================
+    AUTH POPUP MODAL (Keep as is - not changing)
+    ======================================== -->
 <div id="authPopup" class="auth-popup" style="display:none;">
 <div class="auth-popup-overlay" onclick="closeAuthPopup()"></div>
 <div class="auth-popup-content">
@@ -361,8 +357,18 @@ Get Started Now →
 <!-- LOGIN FORM -->
 <form id="loginForm" onsubmit="login(event)">
 <h2>Login</h2>
-<input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
-<input type="password" id="loginPassword" placeholder="Password" required>
+<div class="input-with-avatar">
+<div class="avatar-container">
+<div class="input-avatar" id="loginEmailAvatar">👁️</div>
+</div>
+<input type="text" id="loginEmail" placeholder="Email or Reg Number" required oninput="handleInputChange('loginEmail')" onmousemove="handleAvatarMove(event, 'loginEmailAvatar')" onmouseleave="resetAvatar('loginEmailAvatar')">
+</div>
+<div class="input-with-avatar">
+<div class="avatar-container">
+<div class="input-avatar" id="loginPasswordAvatar">🔒</div>
+</div>
+<input type="password" id="loginPassword" placeholder="Password" required oninput="handleInputChange('loginPassword')" onmousemove="handleAvatarMove(event, 'loginPasswordAvatar')" onmouseleave="resetAvatar('loginPasswordAvatar')">
+</div>
 <button type="submit">Login</button>
 <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
 <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
@@ -400,7 +406,12 @@ Enter your email address and we'll send you a verification code.
 <form id="signupForm" onsubmit="signup(event)" style="display:none;">
 <h2>Create Account</h2>
 <input type="text" id="signupName" placeholder="Full Name" required>
-<input type="email" id="signupEmail" placeholder="Email" required>
+<div class="input-with-avatar">
+<div class="avatar-container">
+<div class="input-avatar" id="signupEmailAvatar">📧</div>
+</div>
+<input type="email" id="signupEmail" placeholder="Email" required oninput="handleInputChange('signupEmail')" onmousemove="handleAvatarMove(event, 'signupEmailAvatar')" onmouseleave="resetAvatar('signupEmailAvatar')">
+</div>
 <input type="text" id="signupReg" placeholder="Registration Number" required>
 
 <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
@@ -419,8 +430,18 @@ Enter your email address and we'll send you a verification code.
 </label>
 </div>
 
-<input type="password" id="signupPass" placeholder="Password" required>
-<input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+<div class="input-with-avatar">
+<div class="avatar-container">
+<div class="input-avatar" id="signupPassAvatar">🔐</div>
+</div>
+<input type="password" id="signupPass" placeholder="Password" required oninput="handleInputChange('signupPass')" onmousemove="handleAvatarMove(event, 'signupPassAvatar')" onmouseleave="resetAvatar('signupPassAvatar')">
+</div>
+<div class="input-with-avatar">
+<div class="avatar-container">
+<div class="input-avatar" id="signupConfirmAvatar">✅</div>
+</div>
+<input type="password" id="signupConfirm" placeholder="Confirm Password" required oninput="handleInputChange('signupConfirm')" onmousemove="handleAvatarMove(event, 'signupConfirmAvatar')" onmouseleave="resetAvatar('signupConfirmAvatar')">
+</div>
 
 <button type="submit">Create Account</button>
 <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
@@ -434,8 +455,6 @@ Enter your email address and we'll send you a verification code.
     MAIN PAGE (ENHANCED UI/UX)
     ======================================== -->
 <div id="mainPage" class="main-page" style="display:none;">
-<!-- ✅ NET BACKGROUND FOR MAIN PAGE -->
-<div id="vanta-net-bg" class="vanta-background"></div>
 
 <!-- HEADER -->
 <header class="header">
@@ -449,36 +468,25 @@ Enter your email address and we'll send you a verification code.
 <nav class="nav">
 <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
 <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
-<a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
 <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
 <a href="#" class="nav-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
 </nav>
 
 <div class="header-right">
-<!-- Profile Avatar Circle -->
-<div class="profile-avatar-container" onclick="showProfilePage()">
-<div class="profile-avatar" id="profileAvatar">
-<img id="profileAvatarImg" src="" alt="" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
-<span id="profileAvatarInitial">👤</span>
+<div class="search-container">
+<input type="text" class="search-box" placeholder="Search users..." id="searchBox">
+<div class="search-results" id="searchResults" style="display:none;"></div>
 </div>
-<div class="profile-greeting">
-<span class="greeting-hi"></span>
-<span class="greeting-name" id="userName">User</span>
-</div>
-</div>
+<span class="user-name" id="userName">Hi, User</span>
 
 <button class="options-btn" onclick="toggleOptionsMenu()">
 <span></span>
 <span></span>
 <span></span>
 </button>
+
 <div class="options-menu" id="optionsMenu" style="display:none;">
-<!-- Search Bar -->
-<div class="menu-search-container">
-<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="searchBox">
-<div class="search-results" id="searchResults" style="display:none;"></div>
-</div>
-<hr>
+<div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
 <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
 <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
 <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
@@ -494,15 +502,8 @@ Enter your email address and we'll send you a verification code.
 </button>
 
 <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
-<!-- Search Bar -->
-<div class="menu-search-container">
-<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="mobileSearchBox">
-<div class="search-results" id="mobileSearchResults" style="display:none;"></div>
-</div>
-<hr>
 <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
 <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
-<div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
 <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
 <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
 <hr>
@@ -516,34 +517,7 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 </header>
-<!-- PREMIUM CROWN BUTTON -->
-<button class="premium-crown-btn" onclick="openSubscriptionPopup()" title="Get Premium">
-  <span>👑</span>
-</button>
 
-<!-- SUBSCRIPTION POPUP -->
-<div id="subscriptionPopup" class="subscription-popup">
-  <div class="subscription-content">
-    <button class="subscription-close" onclick="closeSubscriptionPopup()">&times;</button>
-    
-    <div class="subscription-header">
-      <div class="subscription-icon">👑</div>
-      <h2 class="subscription-title">Unlock Premium Power!</h2>
-      <p class="subscription-subtitle">Advertise your content in Community & RealVibes</p>
-    </div>
-    
-    <div class="first-time-badge">🎉 First Time Offer!</div>
-    
-    <div class="first-price">₹9</div>
-    <div class="price-label">Special introductory price</div>
-    
-    <button class="subscribe-now-btn" onclick="selectPlan('noble')">
-      Subscribe Now ✨
-    </button>
-    
-    <a class="view-plans-link" onclick="viewAllPlans()">View All Plans →</a>
-  </div>
-</div>
 <!-- CONTENT -->
 <main class="content">
 <!-- HOME -->
@@ -624,178 +598,23 @@ Enter your email address and we'll send you a verification code.
 <div class="chat-box">
 <div class="chat-messages" id="chatMessages"></div>
 <div class="chat-input-box">
+<div class="chat-input-wrapper">
 <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
+<button class="emoji-btn" onclick="toggleEmojiPicker()" title="Add Emoji">😊</button>
+</div>
+<div id="emojiPicker" class="emoji-picker" style="display:none;">
+<div class="emoji-categories">
+<button class="emoji-category active" onclick="showEmojiCategory('emotions')">😊</button>
+<button class="emoji-category" onclick="showEmojiCategory('animals')">🐱</button>
+<button class="emoji-category" onclick="showEmojiCategory('objects')">🎈</button>
+</div>
+<div class="emoji-grid" id="emojiGrid"></div>
+</div>
 <button class="send-btn" onclick="sendChatMessage()">Send</button>
 </div>
 </div>
 </div>
 </section>
-
-<!-- REALVIBE SECTION -->
-<section id="realvibe" class="page" style="display:none;">
-<div class="realvibe-header">
-<div class="realvibe-title-section">
-<h1 class="realvibe-title">✨ RealVibe</h1>
-<p class="realvibe-subtitle">Share authentic moments that disappear in 24 hours</p>
-</div>
-<button class="create-realvibe-btn" onclick="openRealVibeCreator()">
-<span class="btn-icon">➕</span>
-<span class="btn-text">Create RealVibe</span>
-</button>
-</div>
-
-<!-- Stories/RealVibes Container -->
-<div class="realvibe-stories-container">
-<h3 class="section-subtitle">📖 Today's RealVibes</h3>
-<div class="realvibe-stories-grid" id="realVibeStoriesGrid">
-<!-- Stories will be dynamically loaded here -->
-<div class="no-realvibes">
-<div class="no-realvibes-icon">✨</div>
-<h4>No RealVibes Yet</h4>
-<p>Be the first to share your authentic moment!</p>
-<button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
-</div>
-</div>
-</div>
-
-<!-- Your RealVibes -->
-<div class="your-realvibes-section">
-<h3 class="section-subtitle">🎬 Your RealVibes</h3>
-<div class="your-realvibes-grid" id="yourRealVibesGrid">
-<div class="no-your-realvibes">
-<p>You haven't created any RealVibes yet</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- RealVibe Creator Modal -->
-<div id="realVibeCreatorModal" class="modal" style="display:none;">
-<div class="modal-box realvibe-modal">
-<span class="close" onclick="closeModal('realVibeCreatorModal')">&times;</span>
-<h2>✨ Create RealVibe</h2>
-<p class="realvibe-modal-subtitle">Share a moment that disappears in 24 hours</p>
-
-<div class="realvibe-creator-content">
-<!-- Camera/Upload Options -->
-<div class="realvibe-upload-options">
-<button class="upload-option" onclick="captureRealVibePhoto()">
-<span class="option-icon">📷</span>
-<span class="option-text">Take Photo</span>
-</button>
-<button class="upload-option" onclick="uploadRealVibeMedia()">
-<span class="option-icon">🖼️</span>
-<span class="option-text">Upload Media</span>
-</button>
-<button class="upload-option" onclick="captureRealVibeVideo()">
-<span class="option-icon">🎥</span>
-<span class="option-text">Record Video</span>
-</button>
-</div>
-
-<!-- Preview Area -->
-<div class="realvibe-preview-area" id="realVibePreviewArea" style="display:none;">
-<div class="preview-container">
-<img id="realVibePreviewImg" src="" alt="Preview" style="display:none;">
-<video id="realVibePreviewVideo" controls style="display:none;"></video>
-</div>
-<button class="remove-preview-btn" onclick="clearRealVibePreview()">✕ Remove</button>
-</div>
-
-<!-- Caption Input -->
-<div class="realvibe-caption-section">
-<textarea id="realVibeCaption" placeholder="Add a caption... (optional)" maxlength="200"></textarea>
-<div class="caption-counter"><span id="captionCount">0</span>/200</div>
-</div>
-
-<!-- Visibility Options -->
-<div class="realvibe-visibility">
-<h4>👁️ Visibility</h4>
-<div class="visibility-options">
-<label class="visibility-option">
-<input type="radio" name="realVibeVisibility" value="public" checked>
-<span class="option-label">
-<span class="option-emoji">🌐</span>
-<span>Everyone</span>
-</span>
-</label>
-<label class="visibility-option">
-<input type="radio" name="realVibeVisibility" value="community">
-<span class="option-label">
-<span class="option-emoji">🎓</span>
-<span>My College</span>
-</span>
-</label>
-<label class="visibility-option">
-<input type="radio" name="realVibeVisibility" value="friends">
-<span class="option-label">
-<span class="option-emoji">👥</span>
-<span>Friends Only</span>
-</span>
-</label>
-</div>
-</div>
-
-<!-- Action Buttons -->
-<div class="realvibe-actions">
-<button class="btn-secondary" onclick="closeModal('realVibeCreatorModal')">Cancel</button>
-<button class="btn-primary" onclick="publishRealVibe()" id="publishRealVibeBtn" disabled>
-<span>✨ Publish RealVibe</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-
-<!-- RealVibe Viewer Modal -->
-<div id="realVibeViewerModal" class="modal realvibe-viewer-modal" style="display:none;">
-<div class="realvibe-viewer-container">
-<button class="viewer-close" onclick="closeModal('realVibeViewerModal')">✕</button>
-<button class="viewer-prev" onclick="viewPreviousRealVibe()">‹</button>
-<button class="viewer-next" onclick="viewNextRealVibe()">›</button>
-
-<div class="realvibe-viewer-content">
-<!-- Header -->
-<div class="viewer-header">
-<div class="viewer-author">
-<div class="author-avatar">👤</div>
-<div class="author-info">
-<div class="author-name" id="viewerAuthorName">Username</div>
-<div class="author-time" id="viewerTime">2h ago</div>
-</div>
-</div>
-<div class="viewer-progress-bar">
-<div class="progress-fill" id="viewerProgressFill"></div>
-</div>
-</div>
-
-<!-- Media Content -->
-<div class="viewer-media">
-<img id="viewerMediaImg" src="" alt="" style="display:none;">
-<video id="viewerMediaVideo" playsinline style="display:none;"></video>
-</div>
-
-<!-- Caption -->
-<div class="viewer-caption" id="viewerCaption"></div>
-
-<!-- Actions -->
-<div class="viewer-actions">
-<button class="viewer-action-btn" onclick="reactToRealVibe()">
-<span id="reactionIcon">❤️</span>
-<span id="reactionCount">0</span>
-</button>
-<button class="viewer-action-btn" onclick="replyToRealVibe()">
-<span>💬</span>
-<span>Reply</span>
-</button>
-<button class="viewer-action-btn" onclick="shareRealVibe()">
-<span>🔄</span>
-<span>Share</span>
-</button>
-</div>
-</div>
-</div>
-</div>
 
 <!-- POSTS -->
 <section id="posts" class="page" style="display:none;">
@@ -826,297 +645,7 @@ Enter your email address and we'll send you a verification code.
 </section>
 
 <!-- REWARDS -->
-
-<section id="rewards" class="page" style="display:none;">
-  
-  <!-- Fireworks Canvas -->
-  <canvas id="fireworksCanvas"></canvas>
-
-  <!-- Rewards Roadmap Container -->
-  <div class="rewards-roadmap-container" id="rewardsRoadmapSection">
-    <h1 class="roadmap-title">🏆 Your Journey to Success</h1>
-
-    <div class="roadmap-wrapper">
-      <!-- Vertical Path Line -->
-      <div class="roadmap-path"></div>
-
-    
-     <!-- Character/Avatar that moves along path -->
-<div class="roadmap-character" id="roadmapCharacter"></div>
-
-      <!-- Current Progress Info Box -->
-      <div class="progress-info" id="progressInfo">
-        <h3>
-          <span>🎯</span>
-          <span id="currentLevelName">Wood League</span>
-        </h3>
-        <p id="progressDescription">Keep going to unlock new levels!</p>
-        
-        <div id="progressTasks">
-          <div style="margin-top: 15px; color: #888;">
-            <div>⏱️ Active Hours: 0/20 per week</div>
-            <div>📅 Weeks: 0/4</div>
-            <div>🔥 Alternative: 0/50 hours in 10 days</div>
-          </div>
-        </div>
-
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
-        </div>
-
-        <div class="progress-percentage" id="progressPercentage">0%</div>
-      </div>
-
-      <!-- WOOD LEAGUE -->
-      <div class="milestone-level wood">
-        <div class="level-header">
-          <div>
-            <div>🪵</div>
-            <div>
-              <h3>Wood League</h3>
-              <p>Beginner Level</p>
-            </div>
-          </div>
-          <div class="level-status in-progress">🎯 In Progress</div>
-        </div>
-
-        <div class="level-content">
-          <div class="requirements">
-            <h4>📋 Requirements</h4>
-            <ul>
-              <li><span>⏱️</span><span>Be active 20 hours/week for a month</span></li>
-              <li><span>🔥</span><span>OR be active 50 hours over 10 days</span></li>
-            </ul>
-          </div>
-
-          <div class="rewards">
-            <h4>🎁 Rewards</h4>
-            <ul>
-              <li><span>✅</span><span>Verification Badge</span></li>
-              <li><span>🏅</span><span>Trusted Member Status</span></li>
-              <li><span>🔓</span><span>Access to exclusive features</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- BRONZE LEAGUE -->
-      <div class="milestone-level bronze">
-        <div class="level-header">
-          <div>
-            <div>🥉</div>
-            <div>
-              <h3>Bronze League</h3>
-              <p>Content Creator</p>
-            </div>
-          </div>
-          <div class="level-status locked">🔒 Locked</div>
-        </div>
-
-        <div class="level-content">
-          <div class="requirements">
-            <h4>📋 Requirements</h4>
-            <ul>
-              <li><span>📝</span><span>Post 150 posts</span></li>
-              <li><span>👁️</span><span>Reach 1,000 total views</span></li>
-              <li><span>❤️</span><span>OR get 10,000 likes</span></li>
-            </ul>
-          </div>
-
-          <div class="rewards">
-            <h4>🎁 Rewards</h4>
-            <ul>
-              <li><span>📢</span><span>Eligible for Official Posts</span></li>
-              <li><span>🥉</span><span>Bronze Creator Badge</span></li>
-              <li><span>📊</span><span>Advanced Analytics</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- SILVER LEAGUE -->
-      <div class="milestone-level silver">
-        <div class="level-header">
-          <div>
-            <div>🥈</div>
-            <div>
-              <h3>Silver League</h3>
-              <p>Influencer Tier</p>
-            </div>
-          </div>
-          <div class="level-status locked">🔒 Locked</div>
-        </div>
-
-        <div class="level-content">
-          <div class="requirements">
-            <h4>📋 Requirements</h4>
-            <ul>
-              <li><span>👥</span><span>Exceed 5,000 followers</span></li>
-              <li><span>📈</span><span>Maintain engagement rate</span></li>
-            </ul>
-          </div>
-
-          <div class="rewards">
-            <h4>🎁 Rewards</h4>
-            <ul>
-              <li><span>📣</span><span>Able to Advertise</span></li>
-              <li><span>🥈</span><span>Silver Influencer Badge</span></li>
-              <li><span>💼</span><span>Brand Partnership Access</span></li>
-              <li><span>🎨</span><span>Custom Profile Themes</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- GOLD LEAGUE -->
-      <div class="milestone-level gold">
-        <div class="level-header">
-          <div>
-            <div>🥇</div>
-            <div>
-              <h3>Gold League</h3>
-              <p>Elite Monetization</p>
-            </div>
-          </div>
-          <div class="level-status locked">🔒 Locked</div>
-        </div>
-
-        <div class="level-content">
-          <div class="requirements">
-            <h4>📋 Requirements</h4>
-            <ul>
-              <li><span>📝</span><span>Upload 1 post daily for 3 days</span></li>
-              <li><span>🎥</span><span>Upload 1 vlog for 3 days</span></li>
-              <li><span>📊</span><span>Maintain quality content</span></li>
-            </ul>
-          </div>
-
-          <div class="rewards">
-            <h4>🎁 Rewards</h4>
-            <ul>
-              <li><span>💰</span><span>Earn Money from Content</span></li>
-              <li><span>📈</span><span>Paid by views & likes</span></li>
-              <li><span>🥇</span><span>Gold Elite Badge</span></li>
-              <li><span>👑</span><span>VIP Creator Status</span></li>
-              <li><span>🌟</span><span>Featured on Homepage</span></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-<!-- SUBSCRIPTION PLANS PAGE -->
-<section id="subscriptionPlans" class="page" style="display:none;">
-  <div class="subscription-plans-page">
-    <div class="plans-header">
-      <h1 class="plans-title">Choose Your Plan</h1>
-      <p class="plans-subtitle">Advertise your content and reach thousands of students!</p>
-    </div>
-    
-    <div class="plans-grid">
-      <!-- NORMAL PLAN -->
-      <div class="plan-card normal">
-        <div class="plan-icon">📱</div>
-        <h3 class="plan-name">Normal</h3>
-        
-        <div class="plan-price-section">
-          <div class="plan-price">FREE</div>
-          <div class="plan-duration">Current plan</div>
-        </div>
-        
-        <ul class="plan-features">
-          <li>Create unlimited posts</li>
-          <li>Share unlimited vibes</li>
-          <li>Join communities</li>
-          <li>Chat with students</li>
-          <li>No advertising allowed</li>
-        </ul>
-        
-        <button class="plan-select-btn" disabled>Current Plan</button>
-      </div>
-      
-      <!-- NOBLE PLAN -->
-      <div class="plan-card noble">
-        <div class="plan-badge recommended">Recommended</div>
-        <div class="plan-icon">🥈</div>
-        <h3 class="plan-name">Noble</h3>
-        
-        <div class="plan-price-section">
-          <div class="plan-original-price">₹79</div>
-          <div class="plan-price">₹9</div>
-          <div class="plan-duration">First time only • Then ₹79</div>
-        </div>
-        
-        <ul class="plan-features">
-          <li>Everything in Normal</li>
-          <li>5 Advertisement Posters</li>
-          <li>1 Advertisement Video</li>
-          <li>15 Days advertising</li>
-          <li>Show in Community Feed</li>
-          <li>Show in RealVibes</li>
-        </ul>
-        
-        <button class="plan-select-btn" onclick="selectPlan('noble')">
-          Select Noble Plan
-        </button>
-      </div>
-      
-      <!-- ROYAL PLAN -->
-      <div class="plan-card royal">
-        <div class="plan-badge popular">Most Popular</div>
-        <div class="plan-icon">👑</div>
-        <h3 class="plan-name">Royal</h3>
-        
-        <div class="plan-price-section">
-          <div class="plan-original-price">₹99</div>
-          <div class="plan-price">₹15</div>
-          <div class="plan-duration">First time only • Then ₹99</div>
-        </div>
-        
-        <ul class="plan-features">
-          <li>Everything in Noble</li>
-          <li>5 Advertisement Posters</li>
-          <li>3 Advertisement Videos</li>
-          <li>23 Days advertising</li>
-          <li>Priority in Community Feed</li>
-          <li>Priority in RealVibes</li>
-          <li>Premium badge on profile</li>
-        </ul>
-        
-        <button class="plan-select-btn" onclick="selectPlan('royal')">
-          Select Royal Plan
-        </button>
-      </div>
-    </div>
-    
-    <div style="text-align:center; margin-top:40px;">
-      <button class="back-btn" onclick="showPage('home')">← Back to Home</button>
-    </div>
-  </div>
-</section>
-<script>
-  // Initialize roadmap when rewards page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    // Call updateRoadmapUI when rewards page becomes visible
-    const rewardsPage = document.getElementById('rewards');
-    if (rewardsPage) {
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.target.style.display !== 'none') {
-            updateRoadmapUI();
-          }
-        });
-      });
-      
-      observer.observe(rewardsPage, { 
-        attributes: true, 
-        attributeFilter: ['style'] 
-      });
-    }
-  });
-</script>
+<section id="rewards" class="page" style="display:none;"></section>
 </main>
 
 <footer>
@@ -1243,92 +772,5 @@ Enter your email address and we'll send you a verification code.
 </div>
 
 <script src="vibemap.js"></script>
-
-<!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
-<script>
-// Global variables to store vanta instances
-let vantaGlobeEffect = null;
-let vantaNetEffect = null;
-
-// Initialize Globe Background for Landing Page
-function initGlobeBackground() {
-if (document.getElementById('vanta-globe-bg')) {
-    vantaGlobeEffect = VANTA.GLOBE({
-    el: "#vanta-globe-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.00,
-    minWidth: 200.00,
-    scale: 1.00,
-    scaleMobile: 1.00,
-      color: 0x4f74a3,         // Your primary blue
-      color2: 0x8da4d3,        // Your light blue
-    size: 1.20,
-         });
-    console.log('Globe background initialized');
-}
-}
-
-// Initialize NET Background for Main Page
-function initNetBackground() {
-if (document.getElementById('vanta-net-bg')) {
-    vantaNetEffect = VANTA.NET({
-    el: "#vanta-net-bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.00,
-    minWidth: 200.00,
-    scale: 1.00,
-    scaleMobile: 1.00,
-      color: 0x4f74a3,         // Match your theme
-            points: 25.00,            // Network points
-      maxDistance: 20.00,       // Connection distance
-      spacing: 25.00            // Space between points
-    });
-    console.log('NET background initialized'); }
-}
-
-// Destroy Globe Background
-function destroyGlobeBackground() {
-if (vantaGlobeEffect) {
-    vantaGlobeEffect.destroy();
-    vantaGlobeEffect = null;
-    console.log('Globe background destroyed');
-}
-}
-
-// Destroy NET Background
-function destroyNetBackground() {
-if (vantaNetEffect) {
-    vantaNetEffect.destroy();
-    vantaNetEffect = null;
-    console.log('NET background destroyed');
-}
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropriate background
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-
-if (aboutPage && aboutPage.style.display !== 'none') {
-    initGlobeBackground();
-}
-
-if (mainPage && mainPage.style.display !== 'none') {
-    initNetBackground();
-}
-});
-
-// Clean up on page unload
-window.addEventListener('beforeunload', () => {
-destroyGlobeBackground();
-destroyNetBackground();
-});
-</script>
-
 </body>
 </html>
