@@ -95,6 +95,170 @@ document.addEventListener('click', function(event) {
   }
 });
 
+// Voice Recording Functions
+let voiceRecorder = null;
+let voiceRecordingStartTime = null;
+let voiceRecordingTimer = null;
+let voiceRecordingStream = null;
+let voiceAudioChunks = [];
+let isVoiceRecording = false;
+
+function toggleVoiceRecording() {
+  if (isVoiceRecording) {
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+}
+
+async function startVoiceRecording() {
+  try {
+    // Request microphone access
+    voiceRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    voiceRecorder = new MediaRecorder(voiceRecordingStream);
+    voiceAudioChunks = [];
+    
+    voiceRecorder.ondataavailable = (event) => {
+      voiceAudioChunks.push(event.data);
+    };
+    
+    voiceRecorder.onstop = () => {
+      const audioBlob = new Blob(voiceAudioChunks, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create voice message element
+      const voiceMessage = {
+        type: 'voice',
+        url: audioUrl,
+        duration: Math.floor((Date.now() - voiceRecordingStartTime) / 1000),
+        timestamp: new Date().toISOString()
+      };
+      
+      // Send voice message
+      sendVoiceMessage(voiceMessage);
+    };
+    
+    // Start recording
+    voiceRecorder.start();
+    voiceRecordingStartTime = Date.now();
+    isVoiceRecording = true;
+    
+    // Update UI
+    const voiceBtn = document.querySelector('.voice-btn');
+    const voiceRecorderEl = document.getElementById('voiceRecorder');
+    const voiceTimer = document.querySelector('.voice-timer');
+    
+    voiceBtn.classList.add('recording');
+    voiceRecorderEl.style.display = 'block';
+    
+    // Start timer
+    voiceRecordingTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - voiceRecordingStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      voiceTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Voice recording error:', error);
+    showMessage('🎤 Microphone access denied', 'error');
+  }
+}
+
+function stopVoiceRecording() {
+  if (voiceRecorder && voiceRecorder.state !== 'inactive') {
+    voiceRecorder.stop();
+  }
+  
+  if (voiceRecordingStream) {
+    voiceRecordingStream.getTracks().forEach(track => track.stop());
+  }
+  
+  if (voiceRecordingTimer) {
+    clearInterval(voiceRecordingTimer);
+  }
+  
+  // Reset UI
+  const voiceBtn = document.querySelector('.voice-btn');
+  const voiceRecorderEl = document.getElementById('voiceRecorder');
+  const voiceTimer = document.querySelector('.voice-timer');
+  
+  voiceBtn.classList.remove('recording');
+  voiceRecorderEl.style.display = 'none';
+  voiceTimer.textContent = '00:00';
+  
+  isVoiceRecording = false;
+}
+
+function cancelVoiceRecording() {
+  stopVoiceRecording();
+  voiceAudioChunks = [];
+}
+
+function sendVoiceMessage(voiceMessage) {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+  
+  const messageEl = document.createElement('div');
+  messageEl.className = 'chat-message right';
+  
+  const durationMinutes = Math.floor(voiceMessage.duration / 60);
+  const durationSeconds = voiceMessage.duration % 60;
+  const durationText = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+  
+  messageEl.innerHTML = `
+    <div class="text">
+      <div class="voice-message-player">
+        <button class="voice-play-btn" onclick="playVoiceMessage('${voiceMessage.url}', this)">▶️</button>
+        <div class="voice-info">
+          <div class="voice-duration">🎤 Voice message • ${durationText}</div>
+          <div class="voice-waveform">
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+          </div>
+        </div>
+      </div>
+      <audio src="${voiceMessage.url}" style="display:none;"></audio>
+    </div>
+    <div class="message-time">${formatTime(new Date(voiceMessage.timestamp))}</div>
+  `;
+  
+  chatMessages.appendChild(messageEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Simulate sending to server
+  console.log('Voice message sent:', voiceMessage);
+}
+
+function playVoiceMessage(audioUrl, playBtn) {
+  const audioEl = playBtn.parentElement.nextElementSibling;
+  
+  if (audioEl.paused) {
+    // Stop any other playing audio
+    document.querySelectorAll('audio').forEach(audio => {
+      if (!audio.paused) {
+        audio.pause();
+        const otherBtn = audio.previousElementSibling.querySelector('.voice-play-btn');
+        if (otherBtn) otherBtn.textContent = '▶️';
+      }
+    });
+    
+    audioEl.play();
+    playBtn.textContent = '⏸️';
+    
+    audioEl.onended = () => {
+      playBtn.textContent = '▶️';
+    };
+  } else {
+    audioEl.pause();
+    playBtn.textContent = '▶️';
+  }
+}
+
 // Avatar Animation Functions
 function handleAvatarMove(event, avatarId) {
   const avatar = document.getElementById(avatarId);
@@ -288,42 +452,54 @@ other: [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 VibeXpert initializing...');
+  console.log('🚀 VibeXpert initializing...');
 
-const token = getToken();
-const saved = localStorage.getItem('user');
+  const token = getToken();
+  const saved = localStorage.getItem('user');
 
-if (token && saved) {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (mainPage) mainPage.style.display = 'block';
+  if (token && saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      
+      // Only show main page if user is properly authenticated
+      if (currentUser && currentUser.username) {
+        document.body.classList.add('logged-in');
+        const aboutPage = document.getElementById('aboutUsPage');
+        const mainPage = document.getElementById('mainPage');
+        const authPopup = document.getElementById('authPopup');
+        
+        // Hide login/about page and show main page
+        if (aboutPage) aboutPage.style.display = 'none';
+        if (mainPage) mainPage.style.display = 'block';
+        if (authPopup) authPopup.style.display = 'none';
+        
+        const userName = document.getElementById('userName');
+        if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+        
+        if (currentUser.college) {
+          updateLiveNotif(`Connected to ${currentUser.college}`);
+          initializeSocket();
+        }
+      } else {
+        // Invalid user data, show login
+        showAboutUsPage();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    showAboutUsPage();
+  }
 
-try {
-currentUser = JSON.parse(saved);
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-if (currentUser.college) {
-updateLiveNotif(`Connected to ${currentUser.college}`);
-initializeSocket();
-}
-} catch(e) {
-console.error('Parse error:', e);
-localStorage.clear();
-showAboutUsPage();
-}
-} else {
-showAboutUsPage();
-}
-
-setupEventListeners();
-initializeMusicPlayer();
-updateLiveStats();
-setInterval(updateLiveStats, 5000);
-initializeSearchBar();
-loadTrending();
-console.log('✅ Initialized');
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
 });
 
 // ========================================
@@ -4325,6 +4501,25 @@ async function selectPlan(planType) {
     return;
   }
   
+  // Animal Avatar States - Dancing Monkeys and Friends
+  const animalAvatars = {
+    email: {
+      idle: '🐵',
+      happy: '🕺',
+      excited: '💃'
+    },
+    password: {
+      idle: '🐒',
+      happy: '🦍',
+      excited: '🦧'
+    },
+    confirm: {
+      idle: '🐵',
+      happy: '🕺',
+      excited: '💃'
+    }
+  };
+
   // Plan details
   const plans = {
     noble: {
