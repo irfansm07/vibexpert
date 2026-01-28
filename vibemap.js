@@ -30,6 +30,13 @@ let hasScrolledToBottom = false;
 let scrollCheckEnabled = true;
 let scrollProgressIndicator = null;
 
+
+
+let chatMessages = [];
+let typingTimeout = null;
+let isLoadingMessages = false;
+let messageContainer = null;
+
 // ENHANCED CHAT VARIABLES
 let typingUsers = new Set();
 let typingTimeout = null;
@@ -4949,3 +4956,739 @@ function editBio() {
 }
   
 console.log('✨ RealVibe features initialized!');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// INITIALIZE CHAT WHEN SECTION OPENS
+// ==========================================
+
+function openCommunityChat() {
+  if (!currentUser) {
+    showMessage('Please login first', 'error');
+    return;
+  }
+
+  if (!currentUser.community_joined || !currentUser.college) {
+    showJoinCommunityModal();
+    return;
+  }
+
+  // Show chat section
+  document.querySelectorAll('.main-section').forEach(s => s.style.display = 'none');
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) {
+    chatSection.style.display = 'block';
+    initializeCommunityChat();
+  }
+}
+
+async function initializeCommunityChat() {
+  console.log('🚀 Initializing community chat...');
+
+  // Set up message container reference
+  messageContainer = document.getElementById('chatMessages');
+  if (!messageContainer) {
+    console.error('❌ Chat messages container not found!');
+    return;
+  }
+
+  // Initialize socket connection
+  initializeSocket();
+
+  // Load existing messages
+  await loadCommunityMessages();
+
+  // Set up input handlers
+  setupChatInput();
+
+  // Set up emoji picker
+  setupEmojiPicker();
+
+  console.log('✅ Community chat initialized');
+}
+
+// ==========================================
+// SOCKET.IO CONNECTION
+// ==========================================
+
+function initializeSocket() {
+  if (socket && socket.connected) {
+    console.log('✅ Socket already connected');
+    socket.emit('join_college', currentUser.college);
+    return;
+  }
+
+  const API_URL = 'https://vibexpert-backend-main.onrender.com';
+  
+  socket = io(API_URL, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 10
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Socket connected:', socket.id);
+    updateConnectionStatus(true);
+    
+    if (currentUser && currentUser.college) {
+      socket.emit('join_college', currentUser.college);
+      socket.emit('user_online', currentUser.id);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Socket disconnected');
+    updateConnectionStatus(false);
+  });
+
+  socket.on('reconnect', () => {
+    console.log('🔄 Socket reconnected');
+    updateConnectionStatus(true);
+    if (currentUser && currentUser.college) {
+      socket.emit('join_college', currentUser.college);
+      loadCommunityMessages();
+    }
+  });
+
+  socket.on('new_message', (message) => {
+    console.log('📨 New message received:', message);
+    addMessageToUI(message, false);
+  });
+
+  socket.on('message_deleted', ({ id }) => {
+    console.log('🗑️ Message deleted:', id);
+    removeMessageFromUI(id);
+  });
+
+  socket.on('online_count', (count) => {
+    updateOnlineCount(count);
+  });
+
+  socket.on('user_typing', ({ username }) => {
+    showTypingIndicator(username);
+  });
+
+  socket.on('user_stop_typing', ({ username }) => {
+    hideTypingIndicator(username);
+  });
+}
+
+function updateConnectionStatus(isConnected) {
+  const statusEl = document.getElementById('connectionStatus');
+  if (!statusEl) return;
+
+  if (isConnected) {
+    statusEl.innerHTML = '<span style="color:#51cf66;">● Connected</span>';
+  } else {
+    statusEl.innerHTML = '<span style="color:#ff6b6b;">● Disconnected</span>';
+  }
+}
+
+function updateOnlineCount(count) {
+  const countEl = document.getElementById('chatOnlineCount');
+  if (countEl) {
+    countEl.textContent = count || 0;
+  }
+}
+
+// ==========================================
+// LOAD MESSAGES FROM DATABASE
+// ==========================================
+
+async function loadCommunityMessages() {
+  if (isLoadingMessages) return;
+  isLoadingMessages = true;
+
+  try {
+    console.log('📥 Loading messages...');
+    
+    if (!messageContainer) {
+      messageContainer = document.getElementById('chatMessages');
+    }
+
+    // Show loading state
+    messageContainer.innerHTML = `
+      <div class="loading-messages-state">
+        <div class="spinner"></div>
+        <p>Loading messages...</p>
+      </div>
+    `;
+
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch('https://vibexpert-backend-main.onrender.com/api/community/messages', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    console.log('📦 Received data:', data);
+
+    if (!data.success) {
+      if (data.needsJoinCommunity) {
+        messageContainer.innerHTML = `
+          <div class="empty-chat-state">
+            <div class="empty-chat-icon">🏫</div>
+            <h3>Join Your College Community</h3>
+            <p>Connect with students from your college</p>
+            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
+          </div>
+        `;
+        return;
+      }
+    }
+
+    // Clear loading state
+    messageContainer.innerHTML = '';
+
+    if (!data.messages || data.messages.length === 0) {
+      messageContainer.innerHTML = `
+        <div class="empty-chat-state">
+          <div class="empty-chat-icon">👋</div>
+          <h3>No Messages Yet</h3>
+          <p>Be the first to start the conversation!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Store messages
+    chatMessages = data.messages;
+
+    // Add date separator
+    addDateSeparator();
+
+    // Display all messages in correct order
+    data.messages.forEach(msg => {
+      addMessageToUI(msg, true);
+    });
+
+    // Scroll to bottom
+    setTimeout(() => scrollToBottom(), 100);
+
+    console.log(`✅ Loaded ${data.messages.length} messages`);
+
+  } catch (error) {
+    console.error('❌ Load messages error:', error);
+    messageContainer.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h3>Failed to Load Messages</h3>
+        <p>${error.message}</p>
+        <button onclick="loadCommunityMessages()" class="btn-primary">Retry</button>
+      </div>
+    `;
+  } finally {
+    isLoadingMessages = false;
+  }
+}
+
+// ==========================================
+// SEND MESSAGE
+// ==========================================
+
+async function sendCommunityMessage() {
+  const input = document.getElementById('chatInput');
+  const content = input?.value?.trim();
+
+  if (!content) {
+    return;
+  }
+
+  if (!currentUser || !currentUser.community_joined) {
+    showMessage('Please join a community first', 'error');
+    return;
+  }
+
+  try {
+    // Create temporary message for immediate feedback
+    const tempId = 'temp-' + Date.now();
+    const tempMessage = {
+      id: tempId,
+      content: content,
+      sender_id: currentUser.id,
+      college_name: currentUser.college,
+      created_at: new Date().toISOString(),
+      users: {
+        username: currentUser.username,
+        profile_pic: currentUser.profile_pic
+      },
+      isTemp: true
+    };
+
+    // Add to UI immediately
+    addMessageToUI(tempMessage, false);
+
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Send to server
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch('https://vibexpert-backend-main.onrender.com/api/community/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content })
+    });
+
+    const data = await response.json();
+
+    if (data.success && data.message) {
+      // Remove temporary message
+      removeMessageFromUI(tempId);
+      
+      // Add real message (if not already added by socket)
+      const messageExists = document.getElementById(`msg-${data.message.id}`);
+      if (!messageExists) {
+        addMessageToUI(data.message, false);
+      }
+
+      // Play send sound
+      playSound('send');
+
+      console.log('✅ Message sent:', data.message.id);
+    } else {
+      throw new Error(data.error || 'Failed to send message');
+    }
+
+  } catch (error) {
+    console.error('❌ Send error:', error);
+    showMessage('Failed to send message: ' + error.message, 'error');
+    
+    // Mark temp messages as failed
+    document.querySelectorAll('[id^="msg-temp-"]').forEach(el => {
+      el.style.opacity = '0.5';
+      el.style.border = '2px solid #ff6b6b';
+    });
+  }
+
+  // Stop typing indicator
+  if (socket && currentUser.college) {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }
+}
+
+// ==========================================
+// ADD MESSAGE TO UI
+// ==========================================
+
+function addMessageToUI(message, skipScroll = false) {
+  if (!messageContainer) {
+    messageContainer = document.getElementById('chatMessages');
+  }
+
+  if (!messageContainer) return;
+
+  // Check if message already exists
+  const existingMsg = document.getElementById(`msg-${message.id}`);
+  if (existingMsg) {
+    console.log('⚠️ Message already exists:', message.id);
+    return;
+  }
+
+  // Remove empty state if present
+  const emptyState = messageContainer.querySelector('.empty-chat-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  const isOwnMessage = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || message.sender_name || 'User';
+  const timestamp = new Date(message.created_at || message.timestamp);
+  const timeStr = timestamp.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
+  // Create message element
+  const messageEl = document.createElement('div');
+  messageEl.className = `chat-message ${isOwnMessage ? 'own-message' : 'other-message'}`;
+  messageEl.id = `msg-${message.id}`;
+
+  let html = '';
+
+  // Add sender name for other users
+  if (!isOwnMessage) {
+    html += `<div class="message-sender">@${escapeHtml(sender)}</div>`;
+  }
+
+  // Message bubble
+  html += `
+    <div class="message-bubble">
+      <div class="message-content">${escapeHtml(message.content || message.text)}</div>
+      <div class="message-footer">
+        <span class="message-time">${timeStr}</span>
+        ${isOwnMessage ? '<span class="message-status">✓✓</span>' : ''}
+      </div>
+    </div>
+  `;
+
+  // Message actions
+  html += `
+    <div class="message-actions">
+      <button class="message-action-btn" onclick="reactToMessage('${message.id}')" title="React">
+        ❤️
+      </button>
+      <button class="message-action-btn" onclick="copyMessage('${message.id}')" title="Copy">
+        📋
+      </button>
+      ${isOwnMessage ? `
+        <button class="message-action-btn delete-btn" onclick="deleteMessage('${message.id}')" title="Delete">
+          🗑️
+        </button>
+      ` : ''}
+    </div>
+  `;
+
+  messageEl.innerHTML = html;
+
+  // Append to container
+  messageContainer.appendChild(messageEl);
+
+  // Animate entrance
+  setTimeout(() => {
+    messageEl.classList.add('message-visible');
+  }, 10);
+
+  // Scroll to bottom
+  if (!skipScroll) {
+    setTimeout(() => scrollToBottom(), 50);
+  }
+
+  // Play receive sound for other users' messages
+  if (!isOwnMessage && !message.isTemp) {
+    playSound('receive');
+  }
+}
+
+// ==========================================
+// REMOVE MESSAGE FROM UI
+// ==========================================
+
+function removeMessageFromUI(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (messageEl) {
+    messageEl.style.animation = 'fadeOutMessage 0.3s ease-out';
+    setTimeout(() => messageEl.remove(), 300);
+  }
+}
+
+// ==========================================
+// DELETE MESSAGE
+// ==========================================
+
+async function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+
+  try {
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch(`https://vibexpert-backend-main.onrender.com/api/community/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      removeMessageFromUI(messageId);
+      console.log('✅ Message deleted');
+    } else {
+      throw new Error(data.error);
+    }
+
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    showMessage('Failed to delete message', 'error');
+  }
+}
+
+// ==========================================
+// REACT TO MESSAGE
+// ==========================================
+
+async function reactToMessage(messageId) {
+  // Show emoji picker
+  showEmojiPickerForMessage(messageId);
+}
+
+function showEmojiPickerForMessage(messageId) {
+  // Remove any existing picker
+  const existingPicker = document.querySelector('.emoji-picker-popup');
+  if (existingPicker) {
+    existingPicker.remove();
+    return;
+  }
+
+  const picker = document.createElement('div');
+  picker.className = 'emoji-picker-popup';
+  picker.innerHTML = `
+    <div class="emoji-picker-header">
+      <span>React with emoji</span>
+      <button onclick="this.closest('.emoji-picker-popup').remove()">✕</button>
+    </div>
+    <div class="emoji-picker-grid">
+      ${['❤️', '👍', '😂', '😮', '😢', '🔥', '🎉', '👏', '💯', '⭐', '🙌', '🤝'].map(emoji => `
+        <button class="emoji-btn" onclick="addReactionToMessage('${messageId}', '${emoji}')">
+          ${emoji}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  document.body.appendChild(picker);
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function closePickerOnOutside(e) {
+      if (!picker.contains(e.target)) {
+        picker.remove();
+        document.removeEventListener('click', closePickerOnOutside);
+      }
+    });
+  }, 100);
+}
+
+async function addReactionToMessage(messageId, emoji) {
+  // Close picker
+  const picker = document.querySelector('.emoji-picker-popup');
+  if (picker) picker.remove();
+
+  try {
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch(`https://vibexpert-backend-main.onrender.com/api/community/messages/${messageId}/react`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ emoji })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log('✅ Reaction added');
+    }
+
+  } catch (error) {
+    console.error('❌ React error:', error);
+  }
+}
+
+// ==========================================
+// COPY MESSAGE
+// ==========================================
+
+function copyMessage(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (!messageEl) return;
+
+  const content = messageEl.querySelector('.message-content')?.textContent;
+  if (!content) return;
+
+  navigator.clipboard.writeText(content).then(() => {
+    showMessage('Message copied!', 'success');
+  }).catch(() => {
+    showMessage('Failed to copy', 'error');
+  });
+}
+
+// ==========================================
+// TYPING INDICATORS
+// ==========================================
+
+let typingUsers = new Set();
+let typingIndicatorEl = null;
+
+function handleTyping() {
+  if (!socket || !currentUser) return;
+
+  const now = Date.now();
+  if (now - (window.lastTypingEmit || 0) < 1000) return;
+
+  window.lastTypingEmit = now;
+
+  socket.emit('typing', {
+    collegeName: currentUser.college,
+    username: currentUser.username
+  });
+
+  // Auto-stop typing after 3 seconds
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }, 3000);
+}
+
+function showTypingIndicator(username) {
+  typingUsers.add(username);
+  updateTypingIndicator();
+}
+
+function hideTypingIndicator(username) {
+  typingUsers.delete(username);
+  updateTypingIndicator();
+}
+
+function updateTypingIndicator() {
+  if (!typingIndicatorEl) {
+    typingIndicatorEl = document.getElementById('typingIndicator');
+  }
+
+  if (!typingIndicatorEl) return;
+
+  if (typingUsers.size === 0) {
+    typingIndicatorEl.style.display = 'none';
+    return;
+  }
+
+  const usernames = Array.from(typingUsers);
+  let text = '';
+  
+  if (usernames.length === 1) {
+    text = `${usernames[0]} is typing...`;
+  } else if (usernames.length === 2) {
+    text = `${usernames[0]} and ${usernames[1]} are typing...`;
+  } else {
+    text = `${usernames.length} people are typing...`;
+  }
+
+  typingIndicatorEl.textContent = text;
+  typingIndicatorEl.style.display = 'block';
+}
+
+// ==========================================
+// INPUT HANDLERS
+// ==========================================
+
+function setupChatInput() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+
+  // Auto-resize
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    handleTyping();
+  });
+
+  // Enter to send
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendCommunityMessage();
+    }
+  });
+}
+
+function handleChatKeypress(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendCommunityMessage();
+  }
+}
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+function scrollToBottom() {
+  if (!messageContainer) return;
+  
+  messageContainer.scrollTo({
+    top: messageContainer.scrollHeight,
+    behavior: 'smooth'
+  });
+}
+
+function addDateSeparator() {
+  if (!messageContainer) return;
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  const separator = document.createElement('div');
+  separator.className = 'date-separator';
+  separator.innerHTML = `<span>${dateStr}</span>`;
+  messageContainer.appendChild(separator);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function playSound(type) {
+  try {
+    const sounds = {
+      send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
+      receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav'
+    };
+
+    if (sounds[type]) {
+      const audio = new Audio(sounds[type]);
+      audio.volume = 0.2;
+      audio.play().catch(() => {}); // Silently fail
+    }
+  } catch (error) {
+    // Ignore audio errors
+  }
+}
+
+function setupEmojiPicker() {
+  // Emoji picker is now shown on demand
+  console.log('✅ Emoji picker ready');
+}
+
+// ==========================================
+// EXPORT FUNCTIONS
+// ==========================================
+
+// Make functions globally available
+window.openCommunityChat = openCommunityChat;
+window.sendCommunityMessage = sendCommunityMessage;
+window.handleChatKeypress = handleChatKeypress;
+window.deleteMessage = deleteMessage;
+window.reactToMessage = reactToMessage;
+window.copyMessage = copyMessage;
+window.addReactionToMessage = addReactionToMessage;
+
+console.log('✅ Community chat module loaded');
