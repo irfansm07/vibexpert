@@ -1180,184 +1180,29 @@ function loadCommunities() {
     return;
   }
 
-  // WhatsApp-style complete layout
+  // Simple community card to open chat
   container.innerHTML = `
-    <div class="whatsapp-container">
-      <!-- Left Sidebar: Chats List -->
-      <div class="whatsapp-sidebar">
-        <div class="whatsapp-sidebar-header">
-          <div>
-            <h3>${currentUser.college}</h3>
-            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
-          </div>
-          <div class="sidebar-actions">
-          </div>
-        </div>
-        
-        <div class="whatsapp-search">
-          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
-        </div>
-        
-        <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Community Group Chat -->
-          <div class="chat-item active" onclick="openCommunityChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar">🎓</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>${currentUser.college} Community</h4>
-                <span class="chat-time">Now</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Click to open group chat</span>
-                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Announcements Channel -->
-          <div class="chat-item" onclick="openAnnouncementsChannel()">
-            <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>📢 Announcements</h4>
-                <span class="chat-time">"COMING SOON"</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Important college updates</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Study Groups -->
-          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
-            <div class="chat-avatar">
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                 </div>
-              <div class="chat-preview">
-              </div>
-            </div>
+    <div class="community-card-wrapper">
+      <div class="community-card" onclick="openCommunityChat()">
+        <div class="community-icon">🎓</div>
+        <div class="community-info">
+          <h3>${currentUser.college}</h3>
+          <p>College Community Chat</p>
+          <div class="community-stats">
+            <span class="stat-badge">
+              <span class="online-dot"></span>
+              <span id="commOnlineCount">0</span> Online
+            </span>
+            <span class="stat-badge">💬 Community Chat</span>
           </div>
         </div>
-      </div>
-
-      <!-- Right Main Chat Area -->
-      <div class="whatsapp-main" id="whatsappMain">
-        <div class="whatsapp-chat-header">
-          <div class="chat-header-info">
-            <div class="chat-avatar-large">🎓</div>
-            <div>
-              <h3>${currentUser.college} Community</h3>
-              <p class="chat-status">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> members online
-              </p>
-            </div>
-          </div>
-          <div class="chat-header-actions">
-            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
-          </div>
-        </div>
-
-        <div class="whatsapp-messages" id="whatsappMessages">
-          <div class="date-separator">
-            <span>Today</span>
-          </div>
-          <div style="text-align:center;padding:40px;color:#888;">
-          </div>
-        </div>
-
-        <div class="whatsapp-input-area">
-          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <div class="input-wrapper">
-            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
-              onkeydown="handleWhatsAppKeypress(event)" 
-              oninput="handleTypingIndicator()"></textarea>
-          </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
-            <span class="send-icon">➤</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Twitter-style Feed (Initially Hidden) -->
-      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
-        <div class="twitter-header">
-          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
-          <h3>Community Posts</h3>
-        </div>
-        <div class="twitter-feed" id="twitterFeed">
-          <div style="text-align:center;padding:40px;color:#888;">
-            <div style="font-size:48px;margin-bottom:15px;">📰</div>
-            <p>Loading posts...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat Info Panel (Hidden) -->
-      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-        <div class="info-panel-header">
-          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
-          <h3>Chat Info</h3>
-        </div>
-        <div class="info-panel-content">
-          <div class="info-section">
-            <div class="info-avatar">🎓</div>
-            <h2>${currentUser.college}</h2>
-            <p>College Community Group</p>
-          </div>
-          
-          <div class="info-section">
-            <h4>📊 Statistics</h4>
-            <div class="info-stats">
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMembers">0</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMessages">0</span>
-                <span class="stat-label">Messages</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="activeToday">0</span>
-                <span class="stat-label">Active Today</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4>⚙️ Settings</h4>
-            <div class="info-option" onclick="toggleNotifications()">
-              <span>🔔 Notifications</span>
-              <span id="notifStatus">On</span>
-            </div>
-            <div class="info-option" onclick="muteChat()">
-              <span>🔇 Mute Chat</span>
-              <span>Off</span>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
-          </div>
-        </div>
+        <div class="community-arrow">→</div>
       </div>
     </div>
   `;
-
-  // Initialize chat
-  setTimeout(() => {
-    loadWhatsAppMessages();
-    initWhatsAppFeatures();
-    loadTwitterFeed();
-  }, 100);
+  
+  // Update online count
+  updateOnlineCount();
 }
   
 // ==========================================
@@ -5659,3 +5504,22 @@ function setupEmojiPicker() {
 }
 
 console.log('✅ Community chat module loaded');
+
+
+// ==========================================
+// CLOSE COMMUNITY CHAT FUNCTION
+// ==========================================
+function closeCommunityChat() {
+  const chatSection = document.getElementById('chatSection');
+  if (chatSection) {
+    chatSection.style.display = 'none';
+  }
+  // Don't need to show communities page as it's in the same section
+}
+
+function updateOnlineCount() {
+  // This will be called periodically to update online counts
+  if (socket && socket.connected) {
+    socket.emit('request_online_count');
+  }
+}
