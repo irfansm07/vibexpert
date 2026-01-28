@@ -5523,3 +5523,129 @@ function updateOnlineCount() {
     socket.emit('request_online_count');
   }
 }
+
+// ==========================================
+// ENHANCED CHAT HELPERS
+// ==========================================
+
+// Add date separator to chat
+function addDateSeparator() {
+  if (!messageContainer) return;
+  
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  const separator = document.createElement('div');
+  separator.className = 'date-separator';
+  separator.innerHTML = `<span>${dateStr}</span>`;
+  
+  messageContainer.appendChild(separator);
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// React to message
+function reactToMessage(messageId) {
+  console.log('React to:', messageId);
+  showMessage('Reactions coming soon! ❤️', 'success');
+}
+
+// Copy message content
+function copyMessage(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (messageEl) {
+    const content = messageEl.querySelector('.message-content').textContent;
+    navigator.clipboard.writeText(content).then(() => {
+      showMessage('Message copied! 📋', 'success');
+    });
+  }
+}
+
+// Delete message
+async function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+  
+  try {
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      const messageEl = document.getElementById(`msg-${messageId}`);
+      if (messageEl) {
+        messageEl.style.opacity = '0';
+        messageEl.style.transform = 'scale(0.8)';
+        setTimeout(() => messageEl.remove(), 300);
+      }
+      showMessage('Message deleted', 'success');
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    showMessage('Failed to delete message', 'error');
+  }
+}
+
+// Play sound effect
+function playSound(type) {
+  // Audio feedback (optional)
+  try {
+    const audio = new Audio();
+    if (type === 'send') {
+      // Subtle send sound
+      audio.volume = 0.3;
+    }
+  } catch (e) {
+    // Silent fail
+  }
+}
+
+// Remove message from UI
+function removeMessageFromUI(messageId) {
+  const messageEl = document.getElementById(messageId);
+  if (messageEl) {
+    messageEl.remove();
+  }
+}
+
+// Enhanced scroll to bottom with smooth animation
+function scrollToBottom(smooth = true) {
+  if (messageContainer) {
+    messageContainer.scrollTo({
+      top: messageContainer.scrollHeight,
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+  }
+}
+
+// Format relative time
+function getRelativeTime(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now - then;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return then.toLocaleDateString();
+}
