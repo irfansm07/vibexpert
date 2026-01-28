@@ -5526,7 +5526,7 @@ function copyMessage(messageId) {
 // TYPING INDICATORS
 // ==========================================
 
-let typingUsers = new Set();
+
 let typingIndicatorEl = null;
 
 function handleTyping() {
@@ -5692,4 +5692,5 @@ window.copyMessage = copyMessage;
 window.addReactionToMessage = addReactionToMessage;
 
 console.log('✅ Community chat module loaded');
+
 
