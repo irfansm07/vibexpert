@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>VibeXpert - Connect With Your College</title>
 <link rel="stylesheet" href="vibemap.css" />
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
 </head>
 <body class="dark-theme">
 
@@ -26,6 +30,9 @@
     ABOUT US LANDING PAGE (Keep as is - not changing)
     ======================================== -->
 <div id="aboutUsPage" class="about-us-page">
+    <!-- ✅ ADD THIS VANTA BACKGROUND CONTAINER -->
+<div id="vanta-globe-bg" class="vanta-globe-background"></div>
+
 <!-- Scroll Progress Bar -->
 <div class="scroll-progress-bar">
 <div class="scroll-progress-fill" id="scrollProgressFill"></div>
@@ -328,7 +335,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 support@vibexpert.com</p>
+<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f1828481819e8385b1879893948981948385df929e9c">[email&#160;protected]</a></p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -339,9 +346,7 @@ Get Started Now →
 </footer>
 </div>
 
-<!-- ========================================
-    AUTH POPUP MODAL (Keep as is - not changing)
-    ======================================== -->
+
 <div id="authPopup" class="auth-popup" style="display:none;">
 <div class="auth-popup-overlay" onclick="closeAuthPopup()"></div>
 <div class="auth-popup-content">
@@ -357,18 +362,26 @@ Get Started Now →
 <!-- LOGIN FORM -->
 <form id="loginForm" onsubmit="login(event)">
 <h2>Login</h2>
-<div class="input-with-avatar">
-<div class="avatar-container">
-<div class="input-avatar" id="loginEmailAvatar">�</div>
+
+<!-- Eye Tracking Character for Login -->
+<div class="eye-tracker-character" id="loginEyeTracker">
+<div class="character-face">
+<div class="character-eye left-eye">
+<div class="eye-pupil"></div>
 </div>
-<input type="text" id="loginEmail" placeholder="Email or Reg Number" required oninput="handleInputChange('loginEmail')" onmousemove="handleAvatarMove(event, 'loginEmailAvatar')" onmouseleave="resetAvatar('loginEmailAvatar')">
+<div class="character-eye right-eye">
+<div class="eye-pupil"></div>
 </div>
-<div class="input-with-avatar">
-<div class="avatar-container">
-<div class="input-avatar" id="loginPasswordAvatar">�</div>
+<div class="character-mouth">
+<svg viewBox="0 0 100 50" class="mouth-svg">
+<path class="mouth-path" d="M 20,25 Q 50,25 80,25" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+</svg>
 </div>
-<input type="password" id="loginPassword" placeholder="Password" required oninput="handleInputChange('loginPassword')" onmousemove="handleAvatarMove(event, 'loginPasswordAvatar')" onmouseleave="resetAvatar('loginPasswordAvatar')">
 </div>
+</div>
+
+<input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
+<input type="password" id="loginPassword" class="password-input" placeholder="Password" required>
 <button type="submit">Login</button>
 <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
 <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
@@ -405,13 +418,26 @@ Enter your email address and we'll send you a verification code.
 <!-- SIGNUP FORM -->
 <form id="signupForm" onsubmit="signup(event)" style="display:none;">
 <h2>Create Account</h2>
+
+<!-- Eye Tracking Character for Signup -->
+<div class="eye-tracker-character" id="signupEyeTracker">
+<div class="character-face">
+<div class="character-eye left-eye">
+<div class="eye-pupil"></div>
+</div>
+<div class="character-eye right-eye">
+<div class="eye-pupil"></div>
+</div>
+<div class="character-mouth">
+<svg viewBox="0 0 100 50" class="mouth-svg">
+<path class="mouth-path" d="M 20,25 Q 50,25 80,25" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+</svg>
+</div>
+</div>
+</div>
+
 <input type="text" id="signupName" placeholder="Full Name" required>
-<div class="input-with-avatar">
-<div class="avatar-container">
-<div class="input-avatar" id="signupEmailAvatar">�</div>
-</div>
-<input type="email" id="signupEmail" placeholder="Email" required oninput="handleInputChange('signupEmail')" onmousemove="handleAvatarMove(event, 'signupEmailAvatar')" onmouseleave="resetAvatar('signupEmailAvatar')">
-</div>
+<input type="email" id="signupEmail" placeholder="Email" required>
 <input type="text" id="signupReg" placeholder="Registration Number" required>
 
 <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
@@ -430,18 +456,8 @@ Enter your email address and we'll send you a verification code.
 </label>
 </div>
 
-<div class="input-with-avatar">
-<div class="avatar-container">
-<div class="input-avatar" id="signupPassAvatar">�</div>
-</div>
-<input type="password" id="signupPass" placeholder="Password" required oninput="handleInputChange('signupPass')" onmousemove="handleAvatarMove(event, 'signupPassAvatar')" onmouseleave="resetAvatar('signupPassAvatar')">
-</div>
-<div class="input-with-avatar">
-<div class="avatar-container">
-<div class="input-avatar" id="signupConfirmAvatar">🐵</div>
-</div>
-<input type="password" id="signupConfirm" placeholder="Confirm Password" required oninput="handleInputChange('signupConfirm')" onmousemove="handleAvatarMove(event, 'signupConfirmAvatar')" onmouseleave="resetAvatar('signupConfirmAvatar')">
-</div>
+<input type="password" id="signupPass" class="password-input" placeholder="Password" required>
+<input type="password" id="signupConfirm" class="password-input" placeholder="Confirm Password" required>
 
 <button type="submit">Create Account</button>
 <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
@@ -455,6 +471,8 @@ Enter your email address and we'll send you a verification code.
     MAIN PAGE (ENHANCED UI/UX)
     ======================================== -->
 <div id="mainPage" class="main-page" style="display:none;">
+<!-- ✅ NET BACKGROUND FOR MAIN PAGE -->
+<div id="vanta-net-bg" class="vanta-background"></div>
 
 <!-- HEADER -->
 <header class="header">
@@ -468,25 +486,36 @@ Enter your email address and we'll send you a verification code.
 <nav class="nav">
 <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
 <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
+<a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
 <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
 <a href="#" class="nav-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
 </nav>
 
 <div class="header-right">
-<div class="search-container">
-<input type="text" class="search-box" placeholder="Search users..." id="searchBox">
-<div class="search-results" id="searchResults" style="display:none;"></div>
+<!-- Profile Avatar Circle -->
+<div class="profile-avatar-container" onclick="showProfilePage()">
+<div class="profile-avatar" id="profileAvatar">
+<img id="profileAvatarImg" src="" alt="" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+<span id="profileAvatarInitial">👤</span>
 </div>
-<span class="user-name" id="userName">Hi, User</span>
+<div class="profile-greeting">
+<span class="greeting-hi"></span>
+<span class="greeting-name" id="userName">User</span>
+</div>
+</div>
 
 <button class="options-btn" onclick="toggleOptionsMenu()">
 <span></span>
 <span></span>
 <span></span>
 </button>
-
 <div class="options-menu" id="optionsMenu" style="display:none;">
-<div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
+<!-- Search Bar -->
+<div class="menu-search-container">
+<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="searchBox">
+<div class="search-results" id="searchResults" style="display:none;"></div>
+</div>
+<hr>
 <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
 <div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
 <div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
@@ -502,168 +531,521 @@ Enter your email address and we'll send you a verification code.
 </button>
 
 <div class="hamburger-menu" id="hamburgerMenu" style="display:none;">
-<div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
-<div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
-<div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-<div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
+<!-- Search Bar -->
+<div class="menu-search-container">
+<input type="text" class="menu-search-box" placeholder="🔍 Search users..." id="mobileSearchBox">
+<div class="search-results" id="mobileSearchResults" style="display:none;"></div>
+</div>
 <hr>
-<div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
-<div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
-<div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
-<div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
-<div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
+<a href="#" class="hamburger-link" onclick="showPage('home', event)">🏠 Home</a>
+<a href="#" class="hamburger-link" onclick="showPage('communities', event)">👥 Communities</a>
+<a href="#" class="hamburger-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
+<a href="#" class="hamburger-link" onclick="showPage('posts', event)">📝 Posts</a>
+<a href="#" class="hamburger-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
 <hr>
-<div class="menu-item logout" onclick="logout()">🚪 Logout</div>
+<div class="hamburger-link" onclick="showComplaintModal()">📢 Complaint</div>
+<div class="hamburger-link" onclick="showFeedbackModal()">💬 Feedback</div>
+<div class="hamburger-link" onclick="toggleTheme()">🎨 Theme</div>
+<div class="hamburger-link" onclick="showContactModal()">📞 Contact Us</div>
+<hr>
+<div class="hamburger-link logout" onclick="logout()">🚪 Logout</div>
 </div>
 </div>
 </header>
 
-<!-- CONTENT -->
-<main class="content">
+<!-- MAIN CONTENT -->
+<main>
+
 <!-- HOME -->
-<section id="home" class="page active">
-<div class="hero">
-<h1>Welcome to VibeXpert</h1>
-<p>Connect with students across 500+ universities!</p>
-<div class="hero-stats">
-<div class="hero-stat">
-<span class="stat-num" id="heroOnline">0</span>
-<span class="stat-label">Online Now</span>
+<section id="home" style="display:block;">
+<div class="content-wrapper">
+<div class="main-content">
+<!-- Enhanced Post Creator -->
+<div class="enhanced-post-creator">
+<div class="creator-header">
+<div class="user-avatar" id="creatorAvatar">
+<img id="creatorAvatarImg" src="" alt="" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+<span id="creatorAvatarInitial">👤</span>
 </div>
-<div class="hero-stat">
-<span class="stat-num" id="heroPostsToday">0</span>
-<span class="stat-label">Posts Today</span>
+<textarea id="postTextarea" class="post-textarea" placeholder="What's on your mind?" maxlength="5000"></textarea>
 </div>
-<div class="hero-stat">
-<span class="stat-num" id="heroChats">0</span>
-<span class="stat-label">Active Chats</span>
+
+<!-- Media Preview Section -->
+<div class="media-preview-section" id="mediaPreviewSection" style="display:none;">
+<div class="media-preview-container" id="mediaPreviewContainer"></div>
+<button class="remove-all-media-btn" onclick="removeAllMedia()">🗑️ Remove All</button>
+</div>
+
+<!-- Selected Music Display -->
+<div class="selected-music-display" id="selectedMusicDisplay" style="display:none;">
+<span class="music-icon">🎵</span>
+<span class="music-title" id="selectedMusicTitle"></span>
+<button class="remove-music-btn" onclick="removeSelectedMusic()">✖</button>
+</div>
+
+<!-- Post Actions Row -->
+<div class="post-actions-row">
+<div class="post-features">
+<label for="postMedia" class="feature-btn">
+<input type="file" id="postMedia" accept="image/*,video/*" multiple style="display:none;" onchange="handleMediaSelect(event)">
+<span class="feature-icon">📷</span>
+<span class="feature-label">Photo/Video</span>
+</label>
+
+<button class="feature-btn" onclick="openMusicSelector()">
+<span class="feature-icon">🎵</span>
+<span class="feature-label">Music</span>
+</button>
+
+<button class="feature-btn" onclick="openStickerSelector()">
+<span class="feature-icon">😊</span>
+<span class="feature-label">Stickers</span>
+</button>
+</div>
+
+<button class="post-button" onclick="openPostDestinationModal()">
+<span class="post-icon">✨</span>
+Share Post
+</button>
+</div>
+</div>
+
+<!-- Community Feed Posts -->
+<div id="communityPostsContainer" class="posts-container">
+<div class="loading">Loading community posts...</div>
+</div>
+</div>
+
+<!-- RIGHT SIDEBAR -->
+<aside class="right-sidebar">
+<!-- Community Members Card -->
+<div class="sidebar-card">
+<h3 class="sidebar-title">🎓 Community Members</h3>
+<div id="communityMembersBox" class="community-members-list">
+<div class="loading-small">Loading...</div>
+</div>
+</div>
+
+<!-- Trending Topics -->
+<div class="sidebar-card">
+<h3 class="sidebar-title">🔥 Trending</h3>
+<div class="trending-topics">
+<div class="trending-item">
+<span class="trend-tag">#ExamWeek</span>
+<span class="trend-count">1.2K posts</span>
+</div>
+<div class="trending-item">
+<span class="trend-tag">#CampusLife</span>
+<span class="trend-count">856 posts</span>
+</div>
+<div class="trending-item">
+<span class="trend-tag">#StudyTips</span>
+<span class="trend-count">642 posts</span>
+</div>
+<div class="trending-item">
+<span class="trend-tag">#CollegeFest</span>
+<span class="trend-count">421 posts</span>
 </div>
 </div>
 </div>
 
-<div class="trending-section">
-<h2 class="title">🔥 Trending Now</h2>
-<div id="trendingContainer" class="trending-grid"></div>
+<!-- Quick Stats -->
+<div class="sidebar-card">
+<h3 class="sidebar-title">📊 Your Stats</h3>
+<div class="quick-stats">
+<div class="stat-row">
+<span class="stat-label">Posts</span>
+<span class="stat-value" id="userPostCount">0</span>
 </div>
-
-<h2 class="title">500+ Active Universities</h2>
-<div class="cards">
-<div class="card" onclick="selectUniversity('nit')">
-<div class="icon">🏛️</div>
-<h3>NIT Colleges</h3>
-<p>National Institutes of Technology</p>
-<button>Explore</button>
+<div class="stat-row">
+<span class="stat-label">Likes Received</span>
+<span class="stat-value" id="userLikesCount">0</span>
 </div>
-<div class="card" onclick="selectUniversity('iit')">
-<div class="icon">🏰</div>
-<h3>IIT Colleges</h3>
-<p>Indian Institutes of Technology</p>
-<button>Explore</button>
+<div class="stat-row">
+<span class="stat-label">Comments</span>
+<span class="stat-value" id="userCommentsCount">0</span>
 </div>
-<div class="card" onclick="selectUniversity('vit')">
-<div class="icon">🎓</div>
-<h3>VIT Colleges</h3>
-<p>VIT Bhopal & Other Campuses</p>
-<button>Explore</button>
-</div>
-<div class="card" onclick="selectUniversity('other')">
-<div class="icon">🌟</div>
-<h3>Other Universities</h3>
-<p>Central & State Universities</p>
-<button>Explore</button>
+<div class="stat-row">
+<span class="stat-label">Points</span>
+<span class="stat-value" id="userPointsDisplay">0</span>
 </div>
 </div>
-</section>
-
-<!-- COLLEGE LIST -->
-<section id="collegeList" class="page" style="display:none;">
-<div class="college-header">
-<h2 id="collegeTitle">Colleges</h2>
-<input type="text" id="searchCollege" placeholder="Search colleges..." onkeyup="searchColleges()">
 </div>
-<div id="collegeContainer" class="colleges"></div>
-<div id="pagination" class="pagination"></div>
-<button class="back-btn" onclick="backToUniversities()">← Back</button>
+</aside>
+</div>
 </section>
 
 <!-- COMMUNITIES -->
-<section id="communities" class="page" style="display:none;">
-<h2 class="title">Join Communities</h2>
-<div id="communitiesContainer"></div>
-<div id="chatSection" style="display:none; margin-top:40px;">
-<div class="chat-header">
-<h3>Community Chat</h3>
-<div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
+<section id="communities" style="display:none;">
+<div class="section-header">
+<h1>👥 Communities</h1>
+<p>Join verified college communities</p>
 </div>
-<div class="chat-box">
-<div class="chat-messages" id="chatMessages"></div>
-<div class="chat-input-box">
-<div class="chat-input-wrapper">
-<input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
-<button class="emoji-btn" onclick="toggleEmojiPicker()" title="Add Emoji">😊</button>
-<button class="voice-btn" onclick="toggleVoiceRecording()" title="Voice Message">🎤</button>
-</div>
-<div id="emojiPicker" class="emoji-picker" style="display:none;">
-<div class="emoji-categories">
-<button class="emoji-category active" onclick="showEmojiCategory('emotions')">😊</button>
-<button class="emoji-category" onclick="showEmojiCategory('animals')">🐵</button>
-<button class="emoji-category" onclick="showEmojiCategory('objects')">🎈</button>
-<button class="emoji-category" onclick="showEmojiCategory('gifs')">🎬</button>
-<button class="emoji-category" onclick="showEmojiCategory('stickers')">🎨</button>
-</div>
-<div class="emoji-grid" id="emojiGrid"></div>
-</div>
-<div id="voiceRecorder" class="voice-recorder" style="display:none;">
-<div class="voice-recorder-content">
-<div class="voice-recording-animation">
-<div class="voice-wave"></div>
-<div class="voice-wave"></div>
-<div class="voice-wave"></div>
-</div>
-<div class="voice-timer">00:00</div>
-<div class="voice-controls">
-<button class="voice-stop-btn" onclick="stopVoiceRecording()">⏹️ Stop</button>
-<button class="voice-cancel-btn" onclick="cancelVoiceRecording()">❌ Cancel</button>
+
+<div class="communities-grid">
+<div class="community-card joined-community">
+<div class="community-header">
+<div class="community-icon">🎓</div>
+<div class="community-info">
+<h3 id="userCollegeName">Your College</h3>
+<p id="userCommunityMembers">0 members</p>
 </div>
 </div>
+<div class="community-stats">
+<div class="stat">
+<span class="stat-number" id="communityPostCount">0</span>
+<span class="stat-label">Posts</span>
 </div>
-<button class="send-btn" onclick="sendChatMessage()">Send</button>
+<div class="stat">
+<span class="stat-number" id="communityActiveUsers">0</span>
+<span class="stat-label">Active</span>
 </div>
 </div>
+<button class="community-btn active" onclick="openCommunityChat()">💬 Open Chat</button>
 </div>
 </div>
 </section>
 
-<!-- POSTS -->
-<section id="posts" class="page" style="display:none;">
-<h2 class="title">My Posts</h2>
-
-<div class="enhanced-post-creator">
-<textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
-<div id="selectedAssets" class="selected-assets"></div>
-<div id="photoPreviewContainer" class="media-preview"></div>
-
-<div id="postDestinationDisplay" class="post-destination-display">
-📍 Posting to: <span id="currentDestination">My Profile</span>
-<button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
+<!-- REALVIBE (Stories) -->
+<section id="realvibe" style="display:none;">
+<div class="section-header">
+<h1>✨ RealVibe</h1>
+<p>Share your moments with your community</p>
 </div>
 
-<div class="post-actions-row">
-<div class="post-features">
-<button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
-<button type="button" class="feature-btn" onclick="openCamera()">📷 Camera</button>
-<button type="button" class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
-<button type="button" class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
-</div>
-<button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
-</div>
+<div class="realvibe-container">
+<div class="realvibe-upload-card" onclick="document.getElementById('realvibeUpload').click()">
+<input type="file" id="realvibeUpload" accept="image/*,video/*" style="display:none;" onchange="uploadRealVibe(event)">
+<div class="upload-icon">➕</div>
+<p>Share Your Vibe</p>
 </div>
 
-<div id="postsFeed" class="posts-feed"></div>
+<div id="realvibeGrid" class="realvibe-grid">
+<!-- RealVibes will be loaded here -->
+</div>
+</div>
+</section>
+
+<!-- POSTS (User Profile Posts) -->
+<section id="posts" style="display:none;">
+<div class="section-header">
+<h1>📝 Your Posts</h1>
+<p>Manage your shared content</p>
+</div>
+
+<div class="posts-filter-tabs">
+<button class="filter-tab active" onclick="filterUserPosts('all')">All Posts</button>
+<button class="filter-tab" onclick="filterUserPosts('profile')">Profile Only</button>
+<button class="filter-tab" onclick="filterUserPosts('community')">Community</button>
+</div>
+
+<div id="userPostsContainer" class="posts-container">
+<div class="loading">Loading your posts...</div>
+</div>
 </section>
 
 <!-- REWARDS -->
-<section id="rewards" class="page" style="display:none;"></section>
+<section id="rewards" style="display:none;">
+<div class="section-header">
+<h1>🎁 Rewards & Achievements</h1>
+<p>Earn points, unlock badges, and climb the leaderboard!</p>
+</div>
+
+<!-- Points Overview -->
+<div class="rewards-overview">
+<div class="points-card">
+<div class="points-icon">💎</div>
+<div class="points-info">
+<h2 id="totalPoints">0</h2>
+<p>Total Points</p>
+</div>
+</div>
+
+<div class="points-card">
+<div class="points-icon">🏆</div>
+<div class="points-info">
+<h2 id="totalAchievements">0</h2>
+<p>Achievements</p>
+</div>
+</div>
+
+<div class="points-card">
+<div class="points-icon">📊</div>
+<div class="points-info">
+<h2 id="leaderboardRank">--</h2>
+<p>Rank</p>
+</div>
+</div>
+</div>
+
+<!-- Tabs -->
+<div class="rewards-tabs">
+<button class="reward-tab active" onclick="showRewardTab('daily')">📅 Daily Tasks</button>
+<button class="reward-tab" onclick="showRewardTab('achievements')">🏆 Achievements</button>
+<button class="reward-tab" onclick="showRewardTab('leaderboard')">📊 Leaderboard</button>
+<button class="reward-tab" onclick="showRewardTab('redeem')">🎁 Redeem</button>
+<button class="reward-tab" onclick="showRewardTab('roadmap')">🗺️ Roadmap</button>
+</div>
+
+<!-- Daily Tasks -->
+<div id="dailyTasksTab" class="reward-tab-content">
+<div class="tasks-grid" id="dailyTasksGrid">
+<!-- Tasks will be loaded here -->
+</div>
+</div>
+
+<!-- Achievements -->
+<div id="achievementsTab" class="reward-tab-content" style="display:none;">
+<div class="achievements-grid" id="achievementsGrid">
+<!-- Achievements will be loaded here -->
+</div>
+</div>
+
+<!-- Leaderboard -->
+<div id="leaderboardTab" class="reward-tab-content" style="display:none;">
+<div class="leaderboard-container">
+<div class="leaderboard-list" id="leaderboardList">
+<div class="loading">Loading leaderboard...</div>
+</div>
+</div>
+</div>
+
+<!-- Redeem Rewards -->
+<div id="redeemTab" class="reward-tab-content" style="display:none;">
+<div class="redeem-grid" id="redeemGrid">
+<!-- Redeemable items will be loaded here -->
+</div>
+</div>
+
+<!-- Roadmap Tab -->
+<div id="roadmapTab" class="reward-tab-content" style="display:none;">
+<div class="roadmap-container">
+<h2 style="text-align:center; margin-bottom:30px; color:#4f74a3;">🗺️ VibeXpert Journey</h2>
+<div class="roadmap-timeline" id="roadmapTimeline">
+<!-- Roadmap milestones will be loaded here -->
+</div>
+</div>
+</div>
+</section>
+
+<!-- PROFILE PAGE -->
+<section id="profilePage" style="display:none;">
+<div class="profile-container">
+<!-- Profile Header -->
+<div class="profile-header">
+<div class="profile-cover">
+<button class="edit-cover-btn" onclick="editCoverPhoto()">📷 Change Cover</button>
+<input type="file" id="coverPhotoInput" accept="image/*" style="display:none;" onchange="uploadCoverPhoto(event)">
+</div>
+
+<div class="profile-main">
+<div class="profile-avatar-large">
+<img id="profilePageAvatar" src="" alt="Profile" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
+<span id="profilePageInitial">👤</span>
+<button class="edit-avatar-btn" onclick="editProfilePhoto()">📷</button>
+<input type="file" id="profilePhotoInput" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(event)">
+</div>
+
+<div class="profile-info">
+<h1 id="profileName">User Name</h1>
+<p id="profileBio">No bio yet</p>
+<button class="edit-profile-btn" onclick="openEditProfile()">✏️ Edit Profile</button>
+</div>
+</div>
+
+<div class="profile-stats-row">
+<div class="profile-stat">
+<span class="stat-number" id="profilePostsCount">0</span>
+<span class="stat-label">Posts</span>
+</div>
+<div class="profile-stat">
+<span class="stat-number" id="profileLikesCount">0</span>
+<span class="stat-label">Likes</span>
+</div>
+<div class="profile-stat">
+<span class="stat-number" id="profilePointsCount">0</span>
+<span class="stat-label">Points</span>
+</div>
+<div class="profile-stat">
+<span class="stat-number" id="profileBadgesCount">0</span>
+<span class="stat-label">Badges</span>
+</div>
+</div>
+</div>
+
+<!-- Profile Posts -->
+<div class="profile-posts-section">
+<h2>Your Posts</h2>
+<div id="profilePostsContainer" class="posts-container">
+<div class="loading">Loading posts...</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- COMMUNITY CHAT PAGE -->
+<section id="communityChatPage" style="display:none;">
+<div class="chat-container">
+<div class="chat-header">
+<button class="back-btn" onclick="closeCommunityChat()">← Back</button>
+<div class="chat-header-info">
+<h2 id="chatCommunityName">Community Chat</h2>
+<p id="chatOnlineCount">0 online</p>
+</div>
+</div>
+
+<div class="chat-messages" id="chatMessages">
+<!-- Messages will be loaded here -->
+</div>
+
+<div class="chat-input-container">
+<textarea id="chatInput" class="chat-input" placeholder="Type a message..." maxlength="1000"></textarea>
+<button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+</div>
+</div>
+</section>
+
+<!-- Redeem Confirmation Modal -->
+<div id="redeemConfirmModal" class="modal" style="display:none;">
+<div class="modal-box">
+<span class="close" onclick="closeModal('redeemConfirmModal')">&times;</span>
+<h2>Confirm Redemption</h2>
+<div id="redeemConfirmContent"></div>
+<div style="display:flex; gap:10px; margin-top:20px;">
+<button onclick="closeModal('redeemConfirmModal')" style="flex:1;">Cancel</button>
+<button onclick="confirmRedemption()" style="flex:1;">Confirm</button>
+</div>
+</div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal" style="display:none;">
+<div class="modal-box">
+<span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+<h2>Edit Profile</h2>
+<div style="margin-bottom:15px;">
+<label style="display:block; margin-bottom:5px; color:#a0a0a0;">Bio</label>
+<textarea id="editBio" placeholder="Tell us about yourself..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white;"></textarea>
+</div>
+<button onclick="saveProfileChanges()">Save Changes</button>
+</div>
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal" style="display:none;">
+<div class="modal-box">
+<span class="close" onclick="closeModal('feedbackModal')">&times;</span>
+<h2>Send Feedback</h2>
+<textarea id="feedbackText" placeholder="Share your thoughts..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
+<button onclick="submitFeedback()">Submit Feedback</button>
+</div>
+</div>
+
+<section id="advertisingPlans" style="display:none; padding: 40px 20px;">
+  <div class="section-header">
+    <h1>📢 Advertising Plans</h1>
+    <p>Boost your visibility with targeted college advertising</p>
+  </div>
+
+  <div class="plans-container">
+    <div class="plan-grid">
+      <!-- Peasant Plan -->
+      <div class="plan-card">
+        <div class="plan-badge">🌱 Starter</div>
+        <h2 class="plan-name">Peasant Plan</h2>
+        <div class="plan-price">
+          <span class="price-amount">₹99</span>
+          <span class="price-period">/7 days</span>
+        </div>
+
+        <ul class="plan-features">
+          <li>2 Advertisement Posters</li>
+          <li>1 Advertisement Video</li>
+          <li>7 Days advertising</li>
+          <li>Community Feed visibility</li>
+          <li>Basic analytics</li>
+        </ul>
+
+        <button class="plan-select-btn" onclick="selectPlan('peasant')">
+          Select Peasant Plan
+        </button>
+      </div>
+
+      <!-- Noble Plan -->
+      <div class="plan-card featured">
+        <div class="plan-badge popular">⭐ Most Popular</div>
+        <h2 class="plan-name">Noble Plan</h2>
+        <div class="plan-price">
+          <span class="price-amount">₹249</span>
+          <span class="price-period">/15 days</span>
+        </div>
+
+        <ul class="plan-features">
+          <li>3 Advertisement Posters</li>
+          <li>2 Advertisement Videos</li>
+          <li>15 Days advertising</li>
+          <li>Priority in Community Feed</li>
+          <li>RealVibes section placement</li>
+          <li>Enhanced analytics</li>
+          <li>Noble badge on posts</li>
+        </ul>
+
+        <button class="plan-select-btn" onclick="selectPlan('noble')">
+          Select Noble Plan
+        </button>
+      </div>
+
+      <!-- Royal Plan -->
+      <div class="plan-card premium">
+        <div class="plan-badge premium">👑 Premium</div>
+        <h2 class="plan-name">Royal Plan</h2>
+        <div class="plan-price">
+          <span class="price-amount">₹499</span>
+          <span class="price-period">/month</span>
+        </div>
+
+        <ul class="plan-features">
+          <li>Everything in Noble</li>
+          <li>5 Advertisement Posters</li>
+          <li>3 Advertisement Videos</li>
+          <li>23 Days advertising</li>
+          <li>Priority in Community Feed</li>
+          <li>Priority in RealVibes</li>
+          <li>Premium badge on profile</li>
+        </ul>
+
+        <button class="plan-select-btn" onclick="selectPlan('royal')">
+          Select Royal Plan
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:40px;">
+      <button class="back-btn" onclick="showPage('home')">← Back to Home</button>
+    </div>
+  </div>
+</section>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Initialize roadmap when rewards page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    // Call updateRoadmapUI when rewards page becomes visible
+    const rewardsPage = document.getElementById('rewards');
+    if (rewardsPage) {
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.target.style.display !== 'none') {
+            updateRoadmapUI();
+          }
+        });
+      });
+
+      observer.observe(rewardsPage, { 
+        attributes: true, 
+        attributeFilter: ['style'] 
+      });
+    }
+  });
+</script>
 </main>
 
 <footer>
@@ -773,7 +1155,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: support@vibexpert.com</p>
+<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c7b4b2b7b7a8b5b387b1aea5a2bfb7a2b5b3e9a4a8aa">[email&#160;protected]</a></p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -789,6 +1171,162 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<script src="vibemap.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
+
+<!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
+<script>
+// Global variables to store vanta instances
+let vantaGlobeEffect = null;
+let vantaNetEffect = null;
+
+// Initialize Globe Background for Landing Page
+function initGlobeBackground() {
+if (document.getElementById('vanta-globe-bg')) {
+    vantaGlobeEffect = VANTA.GLOBE({
+    el: "#vanta-globe-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.00,
+    minWidth: 200.00,
+    scale: 1.00,
+    scaleMobile: 1.00,
+      color: 0x4f74a3,         // Your primary blue
+      color2: 0x8da4d3,        // Your light blue
+    size: 1.20,
+         });
+    console.log('Globe background initialized');
+}
+}
+
+// Initialize NET Background for Main Page
+function initNetBackground() {
+if (document.getElementById('vanta-net-bg')) {
+    vantaNetEffect = VANTA.NET({
+    el: "#vanta-net-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.00,
+    minWidth: 200.00,
+    scale: 1.00,
+    scaleMobile: 1.00,
+      color: 0x4f74a3,         // Match your theme
+            points: 25.00,            // Network points
+      maxDistance: 20.00,       // Connection distance
+      spacing: 25.00            // Space between points
+    });
+    console.log('NET background initialized'); }
+}
+
+// Destroy Globe Background
+function destroyGlobeBackground() {
+if (vantaGlobeEffect) {
+    vantaGlobeEffect.destroy();
+    vantaGlobeEffect = null;
+    console.log('Globe background destroyed');
+}
+}
+
+// Destroy NET Background
+function destroyNetBackground() {
+if (vantaNetEffect) {
+    vantaNetEffect.destroy();
+    vantaNetEffect = null;
+    console.log('NET background destroyed');
+}
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Check which page is visible and init appropriate background
+  if (document.getElementById('aboutUsPage').style.display !== 'none') {
+    initGlobeBackground();
+  }
+});
+
+// ========================================
+// EYE TRACKING CHARACTER ANIMATION
+// ========================================
+
+// Initialize eye tracking for both login and signup forms
+function initEyeTracking() {
+  const loginTracker = document.getElementById('loginEyeTracker');
+  const signupTracker = document.getElementById('signupEyeTracker');
+  
+  if (loginTracker) {
+    setupEyeTracker(loginTracker, '#loginForm');
+  }
+  
+  if (signupTracker) {
+    setupEyeTracker(signupTracker, '#signupForm');
+  }
+}
+
+function setupEyeTracker(trackerElement, formSelector) {
+  const leftPupil = trackerElement.querySelector('.left-eye .eye-pupil');
+  const rightPupil = trackerElement.querySelector('.right-eye .eye-pupil');
+  const mouthPath = trackerElement.querySelector('.mouth-path');
+  const form = document.querySelector(formSelector);
+  
+  let typingCount = 0;
+  
+  // Track mouse movement for eye following
+  document.addEventListener('mousemove', function(e) {
+    if (trackerElement.closest('form').style.display !== 'none') {
+      const rect = trackerElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      const distance = Math.min(8, Math.hypot(e.clientX - centerX, e.clientY - centerY) / 20);
+      
+      const moveX = Math.cos(angle) * distance;
+      const moveY = Math.sin(angle) * distance;
+      
+      leftPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      rightPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    }
+  });
+  
+  // Track typing for smile animation
+  const passwordInputs = form.querySelectorAll('.password-input, input[type="password"]');
+  const allInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+  
+  allInputs.forEach(input => {
+    input.addEventListener('input', function() {
+      typingCount++;
+      updateSmile(mouthPath, typingCount);
+    });
+    
+    input.addEventListener('focus', function() {
+      typingCount = input.value.length;
+      updateSmile(mouthPath, typingCount);
+    });
+  });
+}
+
+function updateSmile(mouthPath, count) {
+  // Gradually increase smile based on typing count
+  const smileIntensity = Math.min(count * 2, 40); // Max smile at 20 characters
+  const curvature = 25 + smileIntensity;
+  
+  // Update SVG path for smile
+  mouthPath.setAttribute('d', `M 20,25 Q 50,${curvature} 80,25`);
+}
+
+// Call initialization when DOM is ready
+document.addEventListener('DOMContentLoaded', initEyeTracking);
+
+// Re-initialize when auth popup is shown
+const originalShowAuthPopup = window.showAuthPopup;
+if (typeof originalShowAuthPopup === 'function') {
+  window.showAuthPopup = function() {
+    originalShowAuthPopup();
+    setTimeout(initEyeTracking, 100);
+  };
+}
+</script>
+
 </body>
 </html>
