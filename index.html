@@ -20,6 +20,9 @@
 <!-- Socket.io CDN -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
+<!-- Enhanced Chat System -->
+<script src="enhanced-chat-functions.js"></script>
+
 <!-- LIVE ACTIVITY NOTIFICATION -->
 <div id="liveActivityNotif" class="live-activity-notif">
 <div class="notif-dot"></div>
@@ -335,7 +338,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d2a1a7a2a2bda0a692a4bbb0b7aaa2b7a0a6fcb1bdbf">[email&#160;protected]</a></p>
+<p>📧 support@vibexpert.com</p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -613,22 +616,285 @@ Enter your email address and we'll send you a verification code.
 <button class="back-btn" onclick="backToUniversities()">← Back</button>
 </section>
 
-
-<!-- ==========================================
-     FIXED COMMUNITY SECTION - COMPLETELY REPLACED
-     ========================================== -->
+<!-- COMMUNITIES -->
 <section id="communities" class="page" style="display:none;">
-  <h2 class="title">Community Chat</h2>
-  
-  <!-- Communities Container - Where chat interface loads -->
-  <div id="communitiesContainer" class="communities-main-container">
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <p>Loading community...</p>
+<h2 class="title">Join Communities</h2>
+<div id="communitiesContainer"></div>
+<!-- ==========================================
+     AMAZING COMMUNITY CHAT SYSTEM
+     ========================================== -->
+<div id="chatSection" style="display:none;" class="enhanced-chat-system">
+  <!-- Modern Chat Header -->
+  <div class="modern-chat-header">
+    <div class="chat-header-left">
+      <button class="back-to-communities" onclick="backToCommunities()">
+        <span></span>
+      </button>
+      <div class="chat-college-info">
+        <div class="college-avatar">
+          <span id="collegeIcon"></span>
+        </div>
+        <div class="college-details">
+          <h3 id="chatCollegeName">Community Chat</h3>
+          <div class="online-status">
+            <span class="online-pulse"></span>
+            <span id="chatOnlineCount">0</span> members online
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-header-right">
+      <button class="chat-action-btn" onclick="toggleChatSearch()" title="Search messages">
+        <span></span>
+      </button>
+      <button class="chat-action-btn" onclick="toggleChatInfo()" title="Chat info">
+        <span></span>
+      </button>
+      <button class="chat-action-btn" onclick="toggleChatSettings()" title="Settings">
+        <span></span>
+      </button>
     </div>
   </div>
-</section>
 
+  <!-- Chat Search Bar -->
+  <div id="chatSearchBar" class="chat-search-bar" style="display:none;">
+    <div class="search-input-container">
+      <span class="search-icon"></span>
+      <input type="text" id="chatSearchInput" placeholder="Search messages..." onkeyup="searchChatMessages()">
+      <button class="clear-search" onclick="clearChatSearch()">×</button>
+    </div>
+    <div id="chatSearchResults" class="search-results"></div>
+  </div>
+
+  <!-- Connection Status Banner -->
+  <div id="connectionStatus" class="connection-banner" style="display:none;">
+    <div class="status-content">
+      <span class="status-icon">⚠️</span>
+      <span class="status-text">Reconnecting...</span>
+    </div>
+  </div>
+
+  <!-- Messages Container with Enhanced UI -->
+  <div class="modern-chat-messages" id="chatMessages">
+    <!-- Date Separator -->
+    <div class="date-separator" id="todaySeparator">
+      <span class="date-line"></span>
+      <span class="date-text">Today</span>
+      <span class="date-line"></span>
+    </div>
+    
+    <!-- Welcome Message -->
+    <div class="welcome-message" id="welcomeMessage">
+      <div class="welcome-content">
+        <div class="welcome-icon"></div>
+        <h4>Welcome to the Community Chat!</h4>
+        <p>Connect with your college mates, share ideas, and build friendships.</p>
+        <div class="welcome-tips">
+          <span> Be respectful</span>
+          <span> Stay on topic</span>
+          <span> Help others</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-messages-state" id="loadingState" style="display:none;">
+      <div class="message-loader">
+        <div class="loader-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p>Loading amazing conversations...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typing Indicator -->
+  <div id="typingIndicator" class="typing-indicator-modern"></div>
+
+  <!-- Scroll to Bottom Button -->
+  <button id="scrollToBottom" class="scroll-to-bottom" onclick="scrollToChatBottom()" style="display:none;">
+    <span>↓</span>
+    <div class="new-message-indicator" id="newMessageIndicator"></div>
+  </button>
+
+  <!-- Enhanced Chat Input -->
+  <div class="modern-chat-input-container">
+    <!-- Quick Actions Bar -->
+    <div class="quick-actions-bar">
+      <button class="quick-action-btn" onclick="openEmojiPicker()" title="Emoji">
+        <span></span>
+      </button>
+      <button class="quick-action-btn" onclick="openGifPicker()" title="GIF">
+        <span></span>
+      </button>
+      <button class="quick-action-btn" onclick="openMediaUpload()" title="Share media">
+        <span></span>
+      </button>
+      <button class="quick-action-btn" onclick="openVoiceRecorder()" title="Voice message">
+        <span></span>
+      </button>
+      <button class="quick-action-btn" onclick="openPollCreator()" title="Create poll">
+        <span></span>
+      </button>
+    </div>
+
+    <!-- Main Input Area -->
+    <div class="chat-input-wrapper">
+      <div class="input-container">
+        <textarea 
+          id="chatInput" 
+          class="modern-chat-input"
+          placeholder="Type a message... (Shift+Enter for new line)"
+          rows="1"
+          maxlength="2000"
+        ></textarea>
+        <div class="input-actions">
+          <button class="input-action-btn" onclick="formatText('bold')" title="Bold">
+            <strong>B</strong>
+          </button>
+          <button class="input-action-btn" onclick="formatText('italic')" title="Italic">
+            <em>I</em>
+          </button>
+          <button class="input-action-btn" onclick="formatText('code')" title="Code">
+            {'</>'}
+          </button>
+        </div>
+      </div>
+      
+      <!-- Send Button -->
+      <button id="sendButton" class="modern-send-btn" onclick="sendEnhancedMessage()" disabled>
+        <div class="send-icon">
+          <span></span>
+        </div>
+        <div class="send-text">Send</div>
+      </button>
+    </div>
+
+    <!-- Character Count -->
+    <div class="input-footer">
+      <span id="charCount">0 / 2000</span>
+      <span class="input-tips">Press Enter to send, Shift+Enter for new line</span>
+    </div>
+  </div>
+
+  <!-- Emoji Picker Modal -->
+  <div id="emojiPicker" class="emoji-picker-modal" style="display:none;">
+    <div class="emoji-picker-content">
+      <div class="emoji-categories">
+        <button class="emoji-category active" onclick="showEmojiCategory('smileys')">😊</button>
+        <button class="emoji-category" onclick="showEmojiCategory('animals')">🐻</button>
+        <button class="emoji-category" onclick="showEmojiCategory('food')">🍕</button>
+        <button class="emoji-category" onclick="showEmojiCategory('activities')">⚽</button>
+        <button class="emoji-category" onclick="showEmojiCategory('objects')">💡</button>
+      </div>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </div>
+  </div>
+
+  <!-- Media Upload Modal -->
+  <div id="mediaUploadModal" class="media-upload-modal" style="display:none;">
+    <div class="media-upload-content">
+      <div class="upload-header">
+        <h3>Share Media</h3>
+        <button class="close-modal" onclick="closeMediaUpload()">×</button>
+      </div>
+      <div class="upload-options">
+        <button class="upload-option" onclick="selectImageUpload()">
+          <span class="upload-icon"></span>
+          <span>Image</span>
+        </button>
+        <button class="upload-option" onclick="selectVideoUpload()">
+          <span class="upload-icon"></span>
+          <span>Video</span>
+        </button>
+        <button class="upload-option" onclick="selectAudioUpload()">
+          <span class="upload-icon"></span>
+          <span>Audio</span>
+        </button>
+        <button class="upload-option" onclick="selectDocumentUpload()">
+          <span class="upload-icon"></span>
+          <span>Document</span>
+        </button>
+      </div>
+      <input type="file" id="mediaFileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" style="display:none;" onchange="handleMediaUpload(event)">
+      <div id="mediaPreview" class="media-preview"></div>
+    </div>
+  </div>
+
+  <!-- Chat Info Panel -->
+  <div id="chatInfoPanel" class="chat-info-panel" style="display:none;">
+    <div class="info-header">
+      <h3>Chat Information</h3>
+      <button class="close-info" onclick="toggleChatInfo()">×</button>
+    </div>
+    <div class="info-content">
+      <div class="info-section">
+        <h4> Chat Stats</h4>
+        <div class="stat-item">
+          <span>Total Messages:</span>
+          <span id="totalMessages">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Active Members:</span>
+          <span id="activeMembers">0</span>
+        </div>
+        <div class="stat-item">
+          <span>Created:</span>
+          <span>Today</span>
+        </div>
+      </div>
+      <div class="info-section">
+        <h4> Chat Rules</h4>
+        <ul>
+          <li>Be respectful and kind</li>
+          <li>No spam or inappropriate content</li>
+          <li>Stay on topic</li>
+          <li>Help others when possible</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REALVIBE SECTION -->
+<section id="realvibe" class="page" style="display:none;">
+<div class="realvibe-header">
+<div class="realvibe-title-section">
+<h1 class="realvibe-title">✨ RealVibe</h1>
+<p class="realvibe-subtitle">Share authentic moments that disappear in 24 hours</p>
+</div>
+<button class="create-realvibe-btn" onclick="openRealVibeCreator()">
+<span class="btn-icon">➕</span>
+<span class="btn-text">Create RealVibe</span>
+</button>
+</div>
+
+<!-- Stories/RealVibes Container -->
+<div class="realvibe-stories-container">
+<h3 class="section-subtitle">📖 Today's RealVibes</h3>
+<div class="realvibe-stories-grid" id="realVibeStoriesGrid">
+<!-- Stories will be dynamically loaded here -->
+<div class="no-realvibes">
+<div class="no-realvibes-icon">✨</div>
+<h4>No RealVibes Yet</h4>
+<p>Be the first to share your authentic moment!</p>
+<button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
+</div>
+</div>
+</div>
+
+<!-- Your RealVibes -->
+<div class="your-realvibes-section">
+<h3 class="section-subtitle">🎬 Your RealVibes</h3>
+<div class="your-realvibes-grid" id="yourRealVibesGrid">
+<div class="no-your-realvibes">
+<p>You haven't created any RealVibes yet</p>
+</div>
+</div>
+</div>
+</section>
 
 <!-- RealVibe Creator Modal -->
 <div id="realVibeCreatorModal" class="modal" style="display:none;">
@@ -1057,7 +1323,7 @@ Enter your email address and we'll send you a verification code.
     </div>
   </div>
 </section>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // Initialize roadmap when rewards page loads
   document.addEventListener('DOMContentLoaded', function() {
     // Call updateRoadmapUI when rewards page becomes visible
@@ -1187,7 +1453,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fb888e8b8b94898fbb8d92999e838b9e898fd5989496">[email&#160;protected]</a></p>
+<p>📧 Email: support@vibexpert.com</p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1203,7 +1469,7 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
+<script src="vibemap.js"></script>
 
 <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
 <script>
@@ -1271,4 +1537,24 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropria
+  // Check which page is visible and init appropriate background
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+
+if (aboutPage && aboutPage.style.display !== 'none') {
+    initGlobeBackground();
+}
+
+if (mainPage && mainPage.style.display !== 'none') {
+    initNetBackground();
+}
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+destroyGlobeBackground();
+destroyNetBackground();
+});
+</script>
+
+</body>
