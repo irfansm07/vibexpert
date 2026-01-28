@@ -30,13 +30,6 @@ let hasScrolledToBottom = false;
 let scrollCheckEnabled = true;
 let scrollProgressIndicator = null;
 
-
-
-let chatMessages = [];
-
-let isLoadingMessages = false;
-let messageContainer = null;
-
 // ENHANCED CHAT VARIABLES
 let typingUsers = new Set();
 let typingTimeout = null;
@@ -4955,24 +4948,18 @@ function editBio() {
 
 }
   
+
+
 console.log('✨ RealVibe features initialized!');
 
+// ==========================================
+// FIXED COMMUNITY CHAT - COMPLETE SOLUTION
+// ==========================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Additional chat-specific global variables (socket, currentUser, typingTimeout already declared globally)
+let chatMessages = [];
+let isLoadingMessages = false;
+let messageContainer = null;
 
 // ==========================================
 // INITIALIZE CHAT WHEN SECTION OPENS
@@ -5034,8 +5021,6 @@ function initializeSocket() {
     return;
   }
 
-  const API_URL = 'https://vibexpert-backend-main.onrender.com';
-  
   socket = io(API_URL, {
     transports: ['websocket', 'polling'],
     reconnection: true,
@@ -5133,7 +5118,7 @@ async function loadCommunityMessages() {
     `;
 
     const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch('https://vibexpert-backend-main.onrender.com/api/community/messages', {
+    const response = await fetch(`${API_URL}/api/community/messages`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -5245,7 +5230,7 @@ async function sendCommunityMessage() {
 
     // Send to server
     const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch('https://vibexpert-backend-main.onrender.com/api/community/messages', {
+    const response = await fetch(`${API_URL}/api/community/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -5408,7 +5393,7 @@ async function deleteMessage(messageId) {
 
   try {
     const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`https://vibexpert-backend-main.onrender.com/api/community/messages/${messageId}`, {
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -5484,7 +5469,7 @@ async function addReactionToMessage(messageId, emoji) {
 
   try {
     const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`https://vibexpert-backend-main.onrender.com/api/community/messages/${messageId}/react`, {
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}/react`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -5526,9 +5511,6 @@ function copyMessage(messageId) {
 // TYPING INDICATORS
 // ==========================================
 
-
-let typingIndicatorEl = null;
-
 function handleTyping() {
   if (!socket || !currentUser) return;
 
@@ -5563,9 +5545,7 @@ function hideTypingIndicator(username) {
 }
 
 function updateTypingIndicator() {
-  if (!typingIndicatorEl) {
-    typingIndicatorEl = document.getElementById('typingIndicator');
-  }
+  let typingIndicatorEl = document.getElementById('typingIndicator');
 
   if (!typingIndicatorEl) return;
 
@@ -5678,19 +5658,4 @@ function setupEmojiPicker() {
   console.log('✅ Emoji picker ready');
 }
 
-// ==========================================
-// EXPORT FUNCTIONS
-// ==========================================
-
-// Make functions globally available
-window.openCommunityChat = openCommunityChat;
-window.sendCommunityMessage = sendCommunityMessage;
-window.handleChatKeypress = handleChatKeypress;
-window.deleteMessage = deleteMessage;
-window.reactToMessage = reactToMessage;
-window.copyMessage = copyMessage;
-window.addReactionToMessage = addReactionToMessage;
-
 console.log('✅ Community chat module loaded');
-
-
