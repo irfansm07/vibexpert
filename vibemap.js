@@ -33,7 +33,7 @@ let scrollProgressIndicator = null;
 
 
 let chatMessages = [];
-let typingTimeout = null;
+
 let isLoadingMessages = false;
 let messageContainer = null;
 
@@ -5692,3 +5692,4 @@ window.copyMessage = copyMessage;
 window.addReactionToMessage = addReactionToMessage;
 
 console.log('✅ Community chat module loaded');
+
