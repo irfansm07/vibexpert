@@ -8833,7 +8833,7 @@ body.light-theme .twitter-text {
 
 /* ==========================================
    FIXED COMMUNITY CHAT STYLES
-   Add this to your vibemap.css file
+   Add this to the END of vibemap.css
    ========================================== */
 
 /* Chat Section Container */
@@ -9407,11 +9407,3 @@ body.light-theme .twitter-text {
     font-size: 13px;
   }
 }
-
-/* Smooth transitions */
-* {
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-
-
