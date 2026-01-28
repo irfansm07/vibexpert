@@ -335,7 +335,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f1828481819e8385b1879893948981948385df929e9c">[email&#160;protected]</a></p>
+<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="91e2e4e1e1fee3e5d1e7f8f3f4e9e1f4e3e5bff2fefc">[email&#160;protected]</a></p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -362,25 +362,7 @@ Get Started Now →
 <!-- LOGIN FORM -->
 <form id="loginForm" onsubmit="login(event)">
 <h2>Login</h2>
-
-<!-- Eye Tracking Character for Login -->
-<div class="eye-tracker-character" id="loginEyeTracker">
-<div class="character-face">
-<div class="character-eye left-eye">
-<div class="eye-pupil"></div>
-</div>
-<div class="character-eye right-eye">
-<div class="eye-pupil"></div>
-</div>
-<div class="character-mouth">
-<svg viewBox="0 0 100 50" class="mouth-svg">
-<path class="mouth-path" d="M 20,25 Q 50,25 80,25" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-</svg>
-</div>
-</div>
-</div>
-
-<input type="text" id="loginEmail" class="auth-input" placeholder="Email or Reg Number" required>
+<input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
 <input type="password" id="loginPassword" class="auth-input password-input" placeholder="Password" required>
 <button type="submit">Login</button>
 <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
@@ -418,24 +400,6 @@ Enter your email address and we'll send you a verification code.
 <!-- SIGNUP FORM -->
 <form id="signupForm" onsubmit="signup(event)" style="display:none;">
 <h2>Create Account</h2>
-
-<!-- Eye Tracking Character for Signup -->
-<div class="eye-tracker-character" id="signupEyeTracker">
-<div class="character-face">
-<div class="character-eye left-eye">
-<div class="eye-pupil"></div>
-</div>
-<div class="character-eye right-eye">
-<div class="eye-pupil"></div>
-</div>
-<div class="character-mouth">
-<svg viewBox="0 0 100 50" class="mouth-svg">
-<path class="mouth-path" d="M 20,25 Q 50,25 80,25" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-</svg>
-</div>
-</div>
-</div>
-
 <input type="text" id="signupName" class="auth-input" placeholder="Full Name" required>
 <input type="email" id="signupEmail" class="auth-input" placeholder="Email" required>
 <input type="text" id="signupReg" class="auth-input" placeholder="Registration Number" required>
@@ -537,457 +501,562 @@ Enter your email address and we'll send you a verification code.
 <div class="search-results" id="mobileSearchResults" style="display:none;"></div>
 </div>
 <hr>
-<a href="#" class="hamburger-link" onclick="showPage('home', event)">🏠 Home</a>
-<a href="#" class="hamburger-link" onclick="showPage('communities', event)">👥 Communities</a>
-<a href="#" class="hamburger-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
-<a href="#" class="hamburger-link" onclick="showPage('posts', event)">📝 Posts</a>
-<a href="#" class="hamburger-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
+<div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
+<div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
+<div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
+<div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
+<div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
 <hr>
-<div class="hamburger-link" onclick="showComplaintModal()">📢 Complaint</div>
-<div class="hamburger-link" onclick="showFeedbackModal()">💬 Feedback</div>
-<div class="hamburger-link" onclick="toggleTheme()">🎨 Theme</div>
-<div class="hamburger-link" onclick="showContactModal()">📞 Contact Us</div>
+<div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
+<div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
+<div class="menu-item" onclick="showFeedbackModal()">💬 Feedback</div>
+<div class="menu-item" onclick="toggleTheme()">🎨 Theme</div>
+<div class="menu-item" onclick="showContactModal()">📞 Contact Us</div>
 <hr>
-<div class="hamburger-link logout" onclick="logout()">🚪 Logout</div>
+<div class="menu-item logout" onclick="logout()">🚪 Logout</div>
 </div>
 </div>
 </header>
+<!-- PREMIUM CROWN BUTTON -->
+<button class="premium-crown-btn" onclick="openSubscriptionPopup()" title="Get Premium">
+  <span>👑</span>
+</button>
 
-<!-- MAIN CONTENT -->
-<main>
+<!-- SUBSCRIPTION POPUP -->
+<div id="subscriptionPopup" class="subscription-popup">
+  <div class="subscription-content">
+    <button class="subscription-close" onclick="closeSubscriptionPopup()">&times;</button>
 
+    <div class="subscription-header">
+      <div class="subscription-icon">👑</div>
+      <h2 class="subscription-title">Unlock Premium Power!</h2>
+      <p class="subscription-subtitle">Advertise your content in Community & RealVibes</p>
+    </div>
+
+    <div class="first-time-badge">🎉 First Time Offer!</div>
+
+    <div class="first-price">₹9</div>
+    <div class="price-label">Special introductory price</div>
+
+    <button class="subscribe-now-btn" onclick="selectPlan('noble')">
+      Subscribe Now ✨
+    </button>
+
+    <a class="view-plans-link" onclick="viewAllPlans()">View All Plans →</a>
+  </div>
+</div>
+<!-- CONTENT -->
+<main class="content">
 <!-- HOME -->
-<section id="home" style="display:block;">
-<div class="content-wrapper">
-<div class="main-content">
-<!-- Enhanced Post Creator -->
-<div class="enhanced-post-creator">
-<div class="creator-header">
-<div class="user-avatar" id="creatorAvatar">
-<img id="creatorAvatarImg" src="" alt="" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
-<span id="creatorAvatarInitial">👤</span>
+<section id="home" class="page active">
+<div class="hero">
+<h1>Welcome to VibeXpert</h1>
+<p>Connect with students across 500+ universities!</p>
+<div class="hero-stats">
+<div class="hero-stat">
+<span class="stat-num" id="heroOnline">0</span>
+<span class="stat-label">Online Now</span>
 </div>
-<textarea id="postTextarea" class="post-textarea" placeholder="What's on your mind?" maxlength="5000"></textarea>
+<div class="hero-stat">
+<span class="stat-num" id="heroPostsToday">0</span>
+<span class="stat-label">Posts Today</span>
 </div>
-
-<!-- Media Preview Section -->
-<div class="media-preview-section" id="mediaPreviewSection" style="display:none;">
-<div class="media-preview-container" id="mediaPreviewContainer"></div>
-<button class="remove-all-media-btn" onclick="removeAllMedia()">🗑️ Remove All</button>
-</div>
-
-<!-- Selected Music Display -->
-<div class="selected-music-display" id="selectedMusicDisplay" style="display:none;">
-<span class="music-icon">🎵</span>
-<span class="music-title" id="selectedMusicTitle"></span>
-<button class="remove-music-btn" onclick="removeSelectedMusic()">✖</button>
-</div>
-
-<!-- Post Actions Row -->
-<div class="post-actions-row">
-<div class="post-features">
-<label for="postMedia" class="feature-btn">
-<input type="file" id="postMedia" accept="image/*,video/*" multiple style="display:none;" onchange="handleMediaSelect(event)">
-<span class="feature-icon">📷</span>
-<span class="feature-label">Photo/Video</span>
-</label>
-
-<button class="feature-btn" onclick="openMusicSelector()">
-<span class="feature-icon">🎵</span>
-<span class="feature-label">Music</span>
-</button>
-
-<button class="feature-btn" onclick="openStickerSelector()">
-<span class="feature-icon">😊</span>
-<span class="feature-label">Stickers</span>
-</button>
-</div>
-
-<button class="post-button" onclick="openPostDestinationModal()">
-<span class="post-icon">✨</span>
-Share Post
-</button>
-</div>
-</div>
-
-<!-- Community Feed Posts -->
-<div id="communityPostsContainer" class="posts-container">
-<div class="loading">Loading community posts...</div>
-</div>
-</div>
-
-<!-- RIGHT SIDEBAR -->
-<aside class="right-sidebar">
-<!-- Community Members Card -->
-<div class="sidebar-card">
-<h3 class="sidebar-title">🎓 Community Members</h3>
-<div id="communityMembersBox" class="community-members-list">
-<div class="loading-small">Loading...</div>
-</div>
-</div>
-
-<!-- Trending Topics -->
-<div class="sidebar-card">
-<h3 class="sidebar-title">🔥 Trending</h3>
-<div class="trending-topics">
-<div class="trending-item">
-<span class="trend-tag">#ExamWeek</span>
-<span class="trend-count">1.2K posts</span>
-</div>
-<div class="trending-item">
-<span class="trend-tag">#CampusLife</span>
-<span class="trend-count">856 posts</span>
-</div>
-<div class="trending-item">
-<span class="trend-tag">#StudyTips</span>
-<span class="trend-count">642 posts</span>
-</div>
-<div class="trending-item">
-<span class="trend-tag">#CollegeFest</span>
-<span class="trend-count">421 posts</span>
+<div class="hero-stat">
+<span class="stat-num" id="heroChats">0</span>
+<span class="stat-label">Active Chats</span>
 </div>
 </div>
 </div>
 
-<!-- Quick Stats -->
-<div class="sidebar-card">
-<h3 class="sidebar-title">📊 Your Stats</h3>
-<div class="quick-stats">
-<div class="stat-row">
-<span class="stat-label">Posts</span>
-<span class="stat-value" id="userPostCount">0</span>
+<div class="trending-section">
+<h2 class="title">🔥 Trending Now</h2>
+<div id="trendingContainer" class="trending-grid"></div>
 </div>
-<div class="stat-row">
-<span class="stat-label">Likes Received</span>
-<span class="stat-value" id="userLikesCount">0</span>
+
+<h2 class="title">500+ Active Universities</h2>
+<div class="cards">
+<div class="card" onclick="selectUniversity('nit')">
+<div class="icon">🏛️</div>
+<h3>NIT Colleges</h3>
+<p>National Institutes of Technology</p>
+<button>Explore</button>
 </div>
-<div class="stat-row">
-<span class="stat-label">Comments</span>
-<span class="stat-value" id="userCommentsCount">0</span>
+<div class="card" onclick="selectUniversity('iit')">
+<div class="icon">🏰</div>
+<h3>IIT Colleges</h3>
+<p>Indian Institutes of Technology</p>
+<button>Explore</button>
 </div>
-<div class="stat-row">
-<span class="stat-label">Points</span>
-<span class="stat-value" id="userPointsDisplay">0</span>
+<div class="card" onclick="selectUniversity('vit')">
+<div class="icon">🎓</div>
+<h3>VIT Colleges</h3>
+<p>VIT Bhopal & Other Campuses</p>
+<button>Explore</button>
+</div>
+<div class="card" onclick="selectUniversity('other')">
+<div class="icon">🌟</div>
+<h3>Other Universities</h3>
+<p>Central & State Universities</p>
+<button>Explore</button>
 </div>
 </div>
+</section>
+
+<!-- COLLEGE LIST -->
+<section id="collegeList" class="page" style="display:none;">
+<div class="college-header">
+<h2 id="collegeTitle">Colleges</h2>
+<input type="text" id="searchCollege" placeholder="Search colleges..." onkeyup="searchColleges()">
 </div>
-</aside>
-</div>
+<div id="collegeContainer" class="colleges"></div>
+<div id="pagination" class="pagination"></div>
+<button class="back-btn" onclick="backToUniversities()">← Back</button>
 </section>
 
 <!-- COMMUNITIES -->
-<section id="communities" style="display:none;">
-<div class="section-header">
-<h1>👥 Communities</h1>
-<p>Join verified college communities</p>
+<section id="communities" class="page" style="display:none;">
+<h2 class="title">Join Communities</h2>
+<div id="communitiesContainer"></div>
+<div id="chatSection" style="display:none; margin-top:40px;">
+<div class="chat-header">
+<h3>Community Chat</h3>
+<div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
 </div>
-
-<div class="communities-grid">
-<div class="community-card joined-community">
-<div class="community-header">
-<div class="community-icon">🎓</div>
-<div class="community-info">
-<h3 id="userCollegeName">Your College</h3>
-<p id="userCommunityMembers">0 members</p>
+<div class="chat-box">
+<div class="chat-messages" id="chatMessages"></div>
+<div class="chat-input-box">
+<input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
+<button class="send-btn" onclick="sendChatMessage()">Send</button>
 </div>
-</div>
-<div class="community-stats">
-<div class="stat">
-<span class="stat-number" id="communityPostCount">0</span>
-<span class="stat-label">Posts</span>
-</div>
-<div class="stat">
-<span class="stat-number" id="communityActiveUsers">0</span>
-<span class="stat-label">Active</span>
-</div>
-</div>
-<button class="community-btn active" onclick="openCommunityChat()">💬 Open Chat</button>
 </div>
 </div>
 </section>
 
-<!-- REALVIBE (Stories) -->
-<section id="realvibe" style="display:none;">
-<div class="section-header">
-<h1>✨ RealVibe</h1>
-<p>Share your moments with your community</p>
+<!-- REALVIBE SECTION -->
+<section id="realvibe" class="page" style="display:none;">
+<div class="realvibe-header">
+<div class="realvibe-title-section">
+<h1 class="realvibe-title">✨ RealVibe</h1>
+<p class="realvibe-subtitle">Share authentic moments that disappear in 24 hours</p>
+</div>
+<button class="create-realvibe-btn" onclick="openRealVibeCreator()">
+<span class="btn-icon">➕</span>
+<span class="btn-text">Create RealVibe</span>
+</button>
 </div>
 
-<div class="realvibe-container">
-<div class="realvibe-upload-card" onclick="document.getElementById('realvibeUpload').click()">
-<input type="file" id="realvibeUpload" accept="image/*,video/*" style="display:none;" onchange="uploadRealVibe(event)">
-<div class="upload-icon">➕</div>
-<p>Share Your Vibe</p>
+<!-- Stories/RealVibes Container -->
+<div class="realvibe-stories-container">
+<h3 class="section-subtitle">📖 Today's RealVibes</h3>
+<div class="realvibe-stories-grid" id="realVibeStoriesGrid">
+<!-- Stories will be dynamically loaded here -->
+<div class="no-realvibes">
+<div class="no-realvibes-icon">✨</div>
+<h4>No RealVibes Yet</h4>
+<p>Be the first to share your authentic moment!</p>
+<button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
+</div>
+</div>
 </div>
 
-<div id="realvibeGrid" class="realvibe-grid">
-<!-- RealVibes will be loaded here -->
+<!-- Your RealVibes -->
+<div class="your-realvibes-section">
+<h3 class="section-subtitle">🎬 Your RealVibes</h3>
+<div class="your-realvibes-grid" id="yourRealVibesGrid">
+<div class="no-your-realvibes">
+<p>You haven't created any RealVibes yet</p>
+</div>
 </div>
 </div>
 </section>
 
-<!-- POSTS (User Profile Posts) -->
-<section id="posts" style="display:none;">
-<div class="section-header">
-<h1>📝 Your Posts</h1>
-<p>Manage your shared content</p>
+<!-- RealVibe Creator Modal -->
+<div id="realVibeCreatorModal" class="modal" style="display:none;">
+<div class="modal-box realvibe-modal">
+<span class="close" onclick="closeModal('realVibeCreatorModal')">&times;</span>
+<h2>✨ Create RealVibe</h2>
+<p class="realvibe-modal-subtitle">Share a moment that disappears in 24 hours</p>
+
+<div class="realvibe-creator-content">
+<!-- Camera/Upload Options -->
+<div class="realvibe-upload-options">
+<button class="upload-option" onclick="captureRealVibePhoto()">
+<span class="option-icon">📷</span>
+<span class="option-text">Take Photo</span>
+</button>
+<button class="upload-option" onclick="uploadRealVibeMedia()">
+<span class="option-icon">🖼️</span>
+<span class="option-text">Upload Media</span>
+</button>
+<button class="upload-option" onclick="captureRealVibeVideo()">
+<span class="option-icon">🎥</span>
+<span class="option-text">Record Video</span>
+</button>
 </div>
 
-<div class="posts-filter-tabs">
-<button class="filter-tab active" onclick="filterUserPosts('all')">All Posts</button>
-<button class="filter-tab" onclick="filterUserPosts('profile')">Profile Only</button>
-<button class="filter-tab" onclick="filterUserPosts('community')">Community</button>
+<!-- Preview Area -->
+<div class="realvibe-preview-area" id="realVibePreviewArea" style="display:none;">
+<div class="preview-container">
+<img id="realVibePreviewImg" src="" alt="Preview" style="display:none;">
+<video id="realVibePreviewVideo" controls style="display:none;"></video>
+</div>
+<button class="remove-preview-btn" onclick="clearRealVibePreview()">✕ Remove</button>
 </div>
 
-<div id="userPostsContainer" class="posts-container">
-<div class="loading">Loading your posts...</div>
+<!-- Caption Input -->
+<div class="realvibe-caption-section">
+<textarea id="realVibeCaption" placeholder="Add a caption... (optional)" maxlength="200"></textarea>
+<div class="caption-counter"><span id="captionCount">0</span>/200</div>
 </div>
+
+<!-- Visibility Options -->
+<div class="realvibe-visibility">
+<h4>👁️ Visibility</h4>
+<div class="visibility-options">
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="public" checked>
+<span class="option-label">
+<span class="option-emoji">🌐</span>
+<span>Everyone</span>
+</span>
+</label>
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="community">
+<span class="option-label">
+<span class="option-emoji">🎓</span>
+<span>My College</span>
+</span>
+</label>
+<label class="visibility-option">
+<input type="radio" name="realVibeVisibility" value="friends">
+<span class="option-label">
+<span class="option-emoji">👥</span>
+<span>Friends Only</span>
+</span>
+</label>
+</div>
+</div>
+
+<!-- Action Buttons -->
+<div class="realvibe-actions">
+<button class="btn-secondary" onclick="closeModal('realVibeCreatorModal')">Cancel</button>
+<button class="btn-primary" onclick="publishRealVibe()" id="publishRealVibeBtn" disabled>
+<span>✨ Publish RealVibe</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- RealVibe Viewer Modal -->
+<div id="realVibeViewerModal" class="modal realvibe-viewer-modal" style="display:none;">
+<div class="realvibe-viewer-container">
+<button class="viewer-close" onclick="closeModal('realVibeViewerModal')">✕</button>
+<button class="viewer-prev" onclick="viewPreviousRealVibe()">‹</button>
+<button class="viewer-next" onclick="viewNextRealVibe()">›</button>
+
+<div class="realvibe-viewer-content">
+<!-- Header -->
+<div class="viewer-header">
+<div class="viewer-author">
+<div class="author-avatar">👤</div>
+<div class="author-info">
+<div class="author-name" id="viewerAuthorName">Username</div>
+<div class="author-time" id="viewerTime">2h ago</div>
+</div>
+</div>
+<div class="viewer-progress-bar">
+<div class="progress-fill" id="viewerProgressFill"></div>
+</div>
+</div>
+
+<!-- Media Content -->
+<div class="viewer-media">
+<img id="viewerMediaImg" src="" alt="" style="display:none;">
+<video id="viewerMediaVideo" playsinline style="display:none;"></video>
+</div>
+
+<!-- Caption -->
+<div class="viewer-caption" id="viewerCaption"></div>
+
+<!-- Actions -->
+<div class="viewer-actions">
+<button class="viewer-action-btn" onclick="reactToRealVibe()">
+<span id="reactionIcon">❤️</span>
+<span id="reactionCount">0</span>
+</button>
+<button class="viewer-action-btn" onclick="replyToRealVibe()">
+<span>💬</span>
+<span>Reply</span>
+</button>
+<button class="viewer-action-btn" onclick="shareRealVibe()">
+<span>🔄</span>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- POSTS -->
+<section id="posts" class="page" style="display:none;">
+<h2 class="title">My Posts</h2>
+
+<div class="enhanced-post-creator">
+<textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨" maxlength="1000"></textarea>
+<div id="selectedAssets" class="selected-assets"></div>
+<div id="photoPreviewContainer" class="media-preview"></div>
+
+<div id="postDestinationDisplay" class="post-destination-display">
+📍 Posting to: <span id="currentDestination">My Profile</span>
+<button type="button" class="change-destination-btn" onclick="showPostDestinationModal()">Change</button>
+</div>
+
+<div class="post-actions-row">
+<div class="post-features">
+<button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
+<button type="button" class="feature-btn" onclick="openCamera()">📷 Camera</button>
+<button type="button" class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
+<button type="button" class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
+</div>
+<button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
+</div>
+</div>
+
+<div id="postsFeed" class="posts-feed"></div>
 </section>
 
 <!-- REWARDS -->
-<section id="rewards" style="display:none;">
-<div class="section-header">
-<h1>🎁 Rewards & Achievements</h1>
-<p>Earn points, unlock badges, and climb the leaderboard!</p>
-</div>
 
-<!-- Points Overview -->
-<div class="rewards-overview">
-<div class="points-card">
-<div class="points-icon">💎</div>
-<div class="points-info">
-<h2 id="totalPoints">0</h2>
-<p>Total Points</p>
-</div>
-</div>
+<section id="rewards" class="page" style="display:none;">
 
-<div class="points-card">
-<div class="points-icon">🏆</div>
-<div class="points-info">
-<h2 id="totalAchievements">0</h2>
-<p>Achievements</p>
-</div>
-</div>
+  <!-- Fireworks Canvas -->
+  <canvas id="fireworksCanvas"></canvas>
 
-<div class="points-card">
-<div class="points-icon">📊</div>
-<div class="points-info">
-<h2 id="leaderboardRank">--</h2>
-<p>Rank</p>
-</div>
-</div>
-</div>
+  <!-- Rewards Roadmap Container -->
+  <div class="rewards-roadmap-container" id="rewardsRoadmapSection">
+    <h1 class="roadmap-title">🏆 Your Journey to Success</h1>
 
-<!-- Tabs -->
-<div class="rewards-tabs">
-<button class="reward-tab active" onclick="showRewardTab('daily')">📅 Daily Tasks</button>
-<button class="reward-tab" onclick="showRewardTab('achievements')">🏆 Achievements</button>
-<button class="reward-tab" onclick="showRewardTab('leaderboard')">📊 Leaderboard</button>
-<button class="reward-tab" onclick="showRewardTab('redeem')">🎁 Redeem</button>
-<button class="reward-tab" onclick="showRewardTab('roadmap')">🗺️ Roadmap</button>
-</div>
+    <div class="roadmap-wrapper">
+      <!-- Vertical Path Line -->
+      <div class="roadmap-path"></div>
 
-<!-- Daily Tasks -->
-<div id="dailyTasksTab" class="reward-tab-content">
-<div class="tasks-grid" id="dailyTasksGrid">
-<!-- Tasks will be loaded here -->
-</div>
-</div>
 
-<!-- Achievements -->
-<div id="achievementsTab" class="reward-tab-content" style="display:none;">
-<div class="achievements-grid" id="achievementsGrid">
-<!-- Achievements will be loaded here -->
-</div>
-</div>
+     <!-- Character/Avatar that moves along path -->
+<div class="roadmap-character" id="roadmapCharacter"></div>
 
-<!-- Leaderboard -->
-<div id="leaderboardTab" class="reward-tab-content" style="display:none;">
-<div class="leaderboard-container">
-<div class="leaderboard-list" id="leaderboardList">
-<div class="loading">Loading leaderboard...</div>
-</div>
-</div>
-</div>
+      <!-- Current Progress Info Box -->
+      <div class="progress-info" id="progressInfo">
+        <h3>
+          <span>🎯</span>
+          <span id="currentLevelName">Wood League</span>
+        </h3>
+        <p id="progressDescription">Keep going to unlock new levels!</p>
 
-<!-- Redeem Rewards -->
-<div id="redeemTab" class="reward-tab-content" style="display:none;">
-<div class="redeem-grid" id="redeemGrid">
-<!-- Redeemable items will be loaded here -->
-</div>
-</div>
-
-<!-- Roadmap Tab -->
-<div id="roadmapTab" class="reward-tab-content" style="display:none;">
-<div class="roadmap-container">
-<h2 style="text-align:center; margin-bottom:30px; color:#4f74a3;">🗺️ VibeXpert Journey</h2>
-<div class="roadmap-timeline" id="roadmapTimeline">
-<!-- Roadmap milestones will be loaded here -->
-</div>
-</div>
-</div>
-</section>
-
-<!-- PROFILE PAGE -->
-<section id="profilePage" style="display:none;">
-<div class="profile-container">
-<!-- Profile Header -->
-<div class="profile-header">
-<div class="profile-cover">
-<button class="edit-cover-btn" onclick="editCoverPhoto()">📷 Change Cover</button>
-<input type="file" id="coverPhotoInput" accept="image/*" style="display:none;" onchange="uploadCoverPhoto(event)">
-</div>
-
-<div class="profile-main">
-<div class="profile-avatar-large">
-<img id="profilePageAvatar" src="" alt="Profile" style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
-<span id="profilePageInitial">👤</span>
-<button class="edit-avatar-btn" onclick="editProfilePhoto()">📷</button>
-<input type="file" id="profilePhotoInput" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(event)">
-</div>
-
-<div class="profile-info">
-<h1 id="profileName">User Name</h1>
-<p id="profileBio">No bio yet</p>
-<button class="edit-profile-btn" onclick="openEditProfile()">✏️ Edit Profile</button>
-</div>
-</div>
-
-<div class="profile-stats-row">
-<div class="profile-stat">
-<span class="stat-number" id="profilePostsCount">0</span>
-<span class="stat-label">Posts</span>
-</div>
-<div class="profile-stat">
-<span class="stat-number" id="profileLikesCount">0</span>
-<span class="stat-label">Likes</span>
-</div>
-<div class="profile-stat">
-<span class="stat-number" id="profilePointsCount">0</span>
-<span class="stat-label">Points</span>
-</div>
-<div class="profile-stat">
-<span class="stat-number" id="profileBadgesCount">0</span>
-<span class="stat-label">Badges</span>
-</div>
-</div>
-</div>
-
-<!-- Profile Posts -->
-<div class="profile-posts-section">
-<h2>Your Posts</h2>
-<div id="profilePostsContainer" class="posts-container">
-<div class="loading">Loading posts...</div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- COMMUNITY CHAT PAGE -->
-<section id="communityChatPage" style="display:none;">
-<div class="chat-container">
-<div class="chat-header">
-<button class="back-btn" onclick="closeCommunityChat()">← Back</button>
-<div class="chat-header-info">
-<h2 id="chatCommunityName">Community Chat</h2>
-<p id="chatOnlineCount">0 online</p>
-</div>
-</div>
-
-<div class="chat-messages" id="chatMessages">
-<!-- Messages will be loaded here -->
-</div>
-
-<div class="chat-input-container">
-<textarea id="chatInput" class="chat-input" placeholder="Type a message..." maxlength="1000"></textarea>
-<button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
-</div>
-</div>
-</section>
-
-<!-- Redeem Confirmation Modal -->
-<div id="redeemConfirmModal" class="modal" style="display:none;">
-<div class="modal-box">
-<span class="close" onclick="closeModal('redeemConfirmModal')">&times;</span>
-<h2>Confirm Redemption</h2>
-<div id="redeemConfirmContent"></div>
-<div style="display:flex; gap:10px; margin-top:20px;">
-<button onclick="closeModal('redeemConfirmModal')" style="flex:1;">Cancel</button>
-<button onclick="confirmRedemption()" style="flex:1;">Confirm</button>
-</div>
-</div>
-</div>
-
-<!-- Edit Profile Modal -->
-<div id="editProfileModal" class="modal" style="display:none;">
-<div class="modal-box">
-<span class="close" onclick="closeModal('editProfileModal')">&times;</span>
-<h2>Edit Profile</h2>
-<div style="margin-bottom:15px;">
-<label style="display:block; margin-bottom:5px; color:#a0a0a0;">Bio</label>
-<textarea id="editBio" placeholder="Tell us about yourself..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white;"></textarea>
-</div>
-<button onclick="saveProfileChanges()">Save Changes</button>
-</div>
-</div>
-
-<!-- Feedback Modal -->
-<div id="feedbackModal" class="modal" style="display:none;">
-<div class="modal-box">
-<span class="close" onclick="closeModal('feedbackModal')">&times;</span>
-<h2>Send Feedback</h2>
-<textarea id="feedbackText" placeholder="Share your thoughts..." style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
-<button onclick="submitFeedback()">Submit Feedback</button>
-</div>
-</div>
-
-<section id="advertisingPlans" style="display:none; padding: 40px 20px;">
-  <div class="section-header">
-    <h1>📢 Advertising Plans</h1>
-    <p>Boost your visibility with targeted college advertising</p>
-  </div>
-
-  <div class="plans-container">
-    <div class="plan-grid">
-      <!-- Peasant Plan -->
-      <div class="plan-card">
-        <div class="plan-badge">🌱 Starter</div>
-        <h2 class="plan-name">Peasant Plan</h2>
-        <div class="plan-price">
-          <span class="price-amount">₹99</span>
-          <span class="price-period">/7 days</span>
+        <div id="progressTasks">
+          <div style="margin-top: 15px; color: #888;">
+            <div>⏱️ Active Hours: 0/20 per week</div>
+            <div>📅 Weeks: 0/4</div>
+            <div>🔥 Alternative: 0/50 hours in 10 days</div>
+          </div>
         </div>
 
-        <ul class="plan-features">
-          <li>2 Advertisement Posters</li>
-          <li>1 Advertisement Video</li>
-          <li>7 Days advertising</li>
-          <li>Community Feed visibility</li>
-          <li>Basic analytics</li>
-        </ul>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+        </div>
 
-        <button class="plan-select-btn" onclick="selectPlan('peasant')">
-          Select Peasant Plan
-        </button>
+        <div class="progress-percentage" id="progressPercentage">0%</div>
       </div>
 
-      <!-- Noble Plan -->
-      <div class="plan-card featured">
-        <div class="plan-badge popular">⭐ Most Popular</div>
-        <h2 class="plan-name">Noble Plan</h2>
-        <div class="plan-price">
-          <span class="price-amount">₹249</span>
-          <span class="price-period">/15 days</span>
+      <!-- WOOD LEAGUE -->
+      <div class="milestone-level wood">
+        <div class="level-header">
+          <div>
+            <div>🪵</div>
+            <div>
+              <h3>Wood League</h3>
+              <p>Beginner Level</p>
+            </div>
+          </div>
+          <div class="level-status in-progress">🎯 In Progress</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>⏱️</span><span>Be active 20 hours/week for a month</span></li>
+              <li><span>🔥</span><span>OR be active 50 hours over 10 days</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>✅</span><span>Verification Badge</span></li>
+              <li><span>🏅</span><span>Trusted Member Status</span></li>
+              <li><span>🔓</span><span>Access to exclusive features</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRONZE LEAGUE -->
+      <div class="milestone-level bronze">
+        <div class="level-header">
+          <div>
+            <div>🥉</div>
+            <div>
+              <h3>Bronze League</h3>
+              <p>Content Creator</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>📝</span><span>Post 150 posts</span></li>
+              <li><span>👁️</span><span>Reach 1,000 total views</span></li>
+              <li><span>❤️</span><span>OR get 10,000 likes</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>📢</span><span>Eligible for Official Posts</span></li>
+              <li><span>🥉</span><span>Bronze Creator Badge</span></li>
+              <li><span>📊</span><span>Advanced Analytics</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SILVER LEAGUE -->
+      <div class="milestone-level silver">
+        <div class="level-header">
+          <div>
+            <div>🥈</div>
+            <div>
+              <h3>Silver League</h3>
+              <p>Influencer Tier</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>👥</span><span>Exceed 5,000 followers</span></li>
+              <li><span>📈</span><span>Maintain engagement rate</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>📣</span><span>Able to Advertise</span></li>
+              <li><span>🥈</span><span>Silver Influencer Badge</span></li>
+              <li><span>💼</span><span>Brand Partnership Access</span></li>
+              <li><span>🎨</span><span>Custom Profile Themes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOLD LEAGUE -->
+      <div class="milestone-level gold">
+        <div class="level-header">
+          <div>
+            <div>🥇</div>
+            <div>
+              <h3>Gold League</h3>
+              <p>Elite Monetization</p>
+            </div>
+          </div>
+          <div class="level-status locked">🔒 Locked</div>
+        </div>
+
+        <div class="level-content">
+          <div class="requirements">
+            <h4>📋 Requirements</h4>
+            <ul>
+              <li><span>📝</span><span>Upload 1 post daily for 3 days</span></li>
+              <li><span>🎥</span><span>Upload 1 vlog for 3 days</span></li>
+              <li><span>📊</span><span>Maintain quality content</span></li>
+            </ul>
+          </div>
+
+          <div class="rewards">
+            <h4>🎁 Rewards</h4>
+            <ul>
+              <li><span>💰</span><span>Earn Money from Content</span></li>
+              <li><span>📈</span><span>Paid by views & likes</span></li>
+              <li><span>🥇</span><span>Gold Elite Badge</span></li>
+              <li><span>👑</span><span>VIP Creator Status</span></li>
+              <li><span>🌟</span><span>Featured on Homepage</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<!-- SUBSCRIPTION PLANS PAGE -->
+<section id="subscriptionPlans" class="page" style="display:none;">
+  <div class="subscription-plans-page">
+    <div class="plans-header">
+      <h1 class="plans-title">Choose Your Plan</h1>
+      <p class="plans-subtitle">Advertise your content and reach thousands of students!</p>
+    </div>
+
+    <div class="plans-grid">
+      <!-- NORMAL PLAN -->
+      <div class="plan-card normal">
+        <div class="plan-icon">📱</div>
+        <h3 class="plan-name">Normal</h3>
+
+        <div class="plan-price-section">
+          <div class="plan-price">FREE</div>
+          <div class="plan-duration">Current plan</div>
         </div>
 
         <ul class="plan-features">
-          <li>3 Advertisement Posters</li>
-          <li>2 Advertisement Videos</li>
+          <li>Create unlimited posts</li>
+          <li>Share unlimited vibes</li>
+          <li>Join communities</li>
+          <li>Chat with students</li>
+          <li>No advertising allowed</li>
+        </ul>
+
+        <button class="plan-select-btn" disabled>Current Plan</button>
+      </div>
+
+      <!-- NOBLE PLAN -->
+      <div class="plan-card noble">
+        <div class="plan-badge recommended">Recommended</div>
+        <div class="plan-icon">🥈</div>
+        <h3 class="plan-name">Noble</h3>
+
+        <div class="plan-price-section">
+          <div class="plan-original-price">₹79</div>
+          <div class="plan-price">₹9</div>
+          <div class="plan-duration">First time only • Then ₹79</div>
+        </div>
+
+        <ul class="plan-features">
+          <li>Everything in Normal</li>
+          <li>5 Advertisement Posters</li>
+          <li>1 Advertisement Video</li>
           <li>15 Days advertising</li>
-          <li>Priority in Community Feed</li>
-          <li>RealVibes section placement</li>
-          <li>Enhanced analytics</li>
-          <li>Noble badge on posts</li>
+          <li>Show in Community Feed</li>
+          <li>Show in RealVibes</li>
         </ul>
 
         <button class="plan-select-btn" onclick="selectPlan('noble')">
@@ -995,13 +1064,16 @@ Share Post
         </button>
       </div>
 
-      <!-- Royal Plan -->
-      <div class="plan-card premium">
-        <div class="plan-badge premium">👑 Premium</div>
-        <h2 class="plan-name">Royal Plan</h2>
-        <div class="plan-price">
-          <span class="price-amount">₹499</span>
-          <span class="price-period">/month</span>
+      <!-- ROYAL PLAN -->
+      <div class="plan-card royal">
+        <div class="plan-badge popular">Most Popular</div>
+        <div class="plan-icon">👑</div>
+        <h3 class="plan-name">Royal</h3>
+
+        <div class="plan-price-section">
+          <div class="plan-original-price">₹99</div>
+          <div class="plan-price">₹15</div>
+          <div class="plan-duration">First time only • Then ₹99</div>
         </div>
 
         <ul class="plan-features">
@@ -1155,7 +1227,7 @@ Share Post
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c7b4b2b7b7a8b5b387b1aea5a2bfb7a2b5b3e9a4a8aa">[email&#160;protected]</a></p>
+<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="275452575748555367514e45425f574255530944484a">[email&#160;protected]</a></p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1239,121 +1311,4 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropriate background
-  if (document.getElementById('aboutUsPage').style.display !== 'none') {
-    initGlobeBackground();
-  }
-});
-
-// ========================================
-// EYE TRACKING CHARACTER ANIMATION
-// ========================================
-
-// Initialize eye tracking for both login and signup forms
-function initEyeTracking() {
-  setTimeout(() => {
-    const loginTracker = document.getElementById('loginEyeTracker');
-    const signupTracker = document.getElementById('signupEyeTracker');
-    
-    if (loginTracker) {
-      setupEyeTracker(loginTracker, '#loginForm');
-    }
-    
-    if (signupTracker) {
-      setupEyeTracker(signupTracker, '#signupForm');
-    }
-  }, 100);
-}
-
-function setupEyeTracker(trackerElement, formSelector) {
-  const leftPupil = trackerElement.querySelector('.left-eye .eye-pupil');
-  const rightPupil = trackerElement.querySelector('.right-eye .eye-pupil');
-  const mouthPath = trackerElement.querySelector('.mouth-path');
-  const form = document.querySelector(formSelector);
-  
-  if (!leftPupil || !rightPupil || !mouthPath || !form) return;
-  
-  let typingCount = 0;
-  
-  // Track mouse movement for eye following
-  const handleMouseMove = function(e) {
-    const formStyle = window.getComputedStyle(form);
-    if (formStyle.display === 'none') return;
-    
-    const rect = trackerElement.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-    const distance = Math.min(6, Math.hypot(e.clientX - centerX, e.clientY - centerY) / 30);
-    
-    const moveX = Math.cos(angle) * distance;
-    const moveY = Math.sin(angle) * distance;
-    
-    leftPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
-    rightPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
-  };
-  
-  document.addEventListener('mousemove', handleMouseMove);
-  
-  // Track typing for smile animation
-  const allInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
-  
-  allInputs.forEach(input => {
-    input.addEventListener('input', function() {
-      typingCount = this.value.length;
-      updateSmile(mouthPath, typingCount);
-    });
-    
-    input.addEventListener('focus', function() {
-      typingCount = this.value.length;
-      updateSmile(mouthPath, typingCount);
-    });
-    
-    input.addEventListener('blur', function() {
-      typingCount = this.value.length;
-      updateSmile(mouthPath, typingCount);
-    });
-  });
-}
-
-function updateSmile(mouthPath, count) {
-  if (!mouthPath) return;
-  
-  // Gradually increase smile based on typing count
-  const smileIntensity = Math.min(count * 1.5, 30); // Max smile at ~20 characters
-  const curvature = 25 + smileIntensity;
-  
-  // Update SVG path for smile
-  mouthPath.setAttribute('d', `M 20,25 Q 50,${curvature} 80,25`);
-}
-
-// Call initialization when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initEyeTracking);
-} else {
-  initEyeTracking();
-}
-
-// Re-initialize when switching between login and signup
-window.addEventListener('load', function() {
-  // Watch for form visibility changes
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.attributeName === 'style') {
-        initEyeTracking();
-      }
-    });
-  });
-  
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  
-  if (loginForm) observer.observe(loginForm, { attributes: true });
-  if (signupForm) observer.observe(signupForm, { attributes: true });
-});
-
-</script>
-
-</body>
-</html>
+  // Check which page is visible and init appropriate
