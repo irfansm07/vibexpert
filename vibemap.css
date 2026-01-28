@@ -8900,11 +8900,6 @@ body.light-theme .twitter-text {
   transition: d 0.3s ease-out;
 }
 
-/* Add relative positioning to forms to contain the character */
-#loginForm, #signupForm {
-  position: relative;
-}
-
 /* Responsive positioning for mobile */
 @media (max-width: 768px) {
   .eye-tracker-character {
