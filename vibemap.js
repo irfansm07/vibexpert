@@ -1,6 +1,5 @@
 // ========================================
-// VIBEXPERT - COMPLETE JAVASCRIPT
-// Enhanced Community Chat + All Features
+// VIBEXPERT - COMPLETE JAVASCRIPT PART 1: INITIALIZATION & CORE
 // ========================================
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
@@ -40,280 +39,132 @@ let currentMessagePage = 1;
 let lastMessageTime = Date.now();
 let connectionStatus = 'connected';
 let chatInitialized = false;
+let currentChatCollege = null;
+let chatMessages = [];
+let isTyping = false;
+let onlineUsers = new Set();
+let emojiCategories = {
+  smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥'],
+  animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🦋', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🐊'],
+  food: ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🌽', '🥕', '🥔', '🍠', '🥐', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🥞', '🥓', '🥩', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🌮', '🌯', '🥗', '🥘', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🍩', '🍪'],
+  activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸', '🥌', '🎿', '⛷', '🏂', '🏋️', '🤼', '🤸', '🤺', '🤾', '🏌️', '🏇', '🧘', '🏄', '🏊', '🤽', '🚣', '🧗', '🚵', '🚴', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖', '🏵', '🎗', '🎫', '🎟', '🎯', '🎪', '🎭', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟', '🃏', '🀄', '🎴', '🎳'],
+  objects: ['⌚', '📱', '📲', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '🗜️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱', '⏲', '⏰', '🕰', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯', '🪔', '🧯', '🛢️', '💸', '💵', '💴', '💶', '💷', '🪙', '💰', '💳', '💎', '⚖️', '🧰', '🔧', '🔨', '⚒️', '🛠', '⛏', '🔩', '⚙️', '🗜', '⚗️', '⛓', '⚔', '🪓', '🔫', '🏹', '🛡', '🪚']
+};
 
 // Data
 const rewardsData = {
-dailyTasks: [
-{ id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
-{ id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
-{ id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
-{ id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
-],
-achievements: [
-{ id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
-{ id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
-{ id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
-{ id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
-]
-};
-
-const musicLibrary = [
-{ id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
-{ id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
-{ id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
-{ id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
-{ id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
-{ id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
-];
-
-const stickerLibrary = {
-emotions: [
-{ id: 'happy', emoji: '😊', name: 'Happy' },
-{ id: 'laugh', emoji: '😂', name: 'Laugh' },
-{ id: 'love', emoji: '❤️', name: 'Love' },
-{ id: 'cool', emoji: '😎', name: 'Cool' },
-{ id: 'fire', emoji: '🔥', name: 'Fire' },
-{ id: 'star', emoji: '⭐', name: 'Star' }
-],
-animals: [
-{ id: 'cat', emoji: '🐱', name: 'Cat' },
-{ id: 'dog', emoji: '🐶', name: 'Dog' },
-{ id: 'panda', emoji: '🐼', name: 'Panda' },
-{ id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
-{ id: 'dragon', emoji: '🐉', name: 'Dragon' },
-{ id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
-],
-objects: [
-{ id: 'balloon', emoji: '🎈', name: 'Balloon' },
-{ id: 'gift', emoji: '🎁', name: 'Gift' },
-{ id: 'camera', emoji: '📷', name: 'Camera' },
-{ id: 'music', emoji: '🎵', name: 'Music' },
-{ id: 'book', emoji: '📚', name: 'Book' },
-{ id: 'computer', emoji: '💻', name: 'Computer' }
-]
-};
-
-const colleges = {
-nit: [
-    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
-    {name: 'NIT Bhopal', email: '@gmail.com', location: 'Bhopal'},
-{name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-{name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
-{name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-{name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}
-],
-iit: [
-{name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
-{name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
-{name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
-{name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
-{name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'}
-],
-vit: [
-{name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
-{name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
-{name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'}
-],
-other: [
-{name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
-{name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
-{name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'}
-]
+  dailyTasks: [
+    { id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
+    { id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
+    { id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
+    { id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
+  ],
+  achievements: [
+    { id: 'first_post', title: 'First Post', desc: 'Create your first post', reward: 25, icon: '🎯', unlocked: false },
+    { id: 'social_butterfly', title: 'Social Butterfly', desc: 'Make 10 friends', reward: 100, icon: '🦋', unlocked: false },
+    { id: 'content_creator', title: 'Content Creator', desc: 'Create 50 posts', reward: 200, icon: '📸', unlocked: false },
+    { id: 'chat_master', title: 'Chat Master', desc: 'Send 100 messages', reward: 150, icon: '💬', unlocked: false }
+  ]
 };
 
 // ========================================
 // INITIALIZATION
 // ========================================
 
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 VibeXpert initializing...');
-
-const token = getToken();
-const saved = localStorage.getItem('user');
-
-if (token && saved) {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (mainPage) mainPage.style.display = 'block';
-
-try {
-currentUser = JSON.parse(saved);
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-if (currentUser.college) {
-updateLiveNotif(`Connected to ${currentUser.college}`);
-initializeSocket();
-}
-} catch(e) {
-console.error('Parse error:', e);
-localStorage.clear();
-showAboutUsPage();
-}
-} else {
-showAboutUsPage();
-}
-
-setupEventListeners();
-initializeMusicPlayer();
-updateLiveStats();
-setInterval(updateLiveStats, 5000);
-initializeSearchBar();
-loadTrending();
-console.log('✅ Initialized');
+  initializeApp();
 });
 
-// ========================================
-// ABOUT US PAGE FUNCTIONALITY
-// ========================================
+function initializeApp() {
+  checkAuthStatus();
+  initializeSocket();
+  setupEventListeners();
+  initializeVantaBackgrounds();
+  setupScrollProgress();
+  setupRevealOnScroll();
+}
+
+function checkAuthStatus() {
+  const token = localStorage.getItem('vibexpert_token');
+  if (token) {
+    validateToken(token);
+  } else {
+    showAboutUsPage();
+  }
+}
+
+function validateToken(token) {
+  fetch(`${API_URL}/api/validate-token`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.valid) {
+      currentUser = data.user;
+      showMainPage();
+      loadUserData();
+    } else {
+      localStorage.removeItem('vibexpert_token');
+      showAboutUsPage();
+    }
+  })
+  .catch(error => {
+    console.error('Token validation error:', error);
+    showAboutUsPage();
+  });
+}
 
 function showAboutUsPage() {
-document.body.classList.remove('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'block';
-if (mainPage) mainPage.style.display = 'none';
-
-initScrollProgress();
-initRevealOnScroll();
-initStatsCounter();
-initScrollDetection();
-createScrollProgressIndicator();
+  document.getElementById('aboutUsPage').style.display = 'block';
+  document.getElementById('mainPage').style.display = 'none';
 }
 
-function createScrollProgressIndicator() {
-if (scrollProgressIndicator) return;
-scrollProgressIndicator = document.createElement('div');
-scrollProgressIndicator.className = 'scroll-progress-indicator';
-scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
-document.body.appendChild(scrollProgressIndicator);
+function showMainPage() {
+  document.getElementById('aboutUsPage').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'block';
+  document.getElementById('userName').textContent = currentUser.name || 'User';
 }
 
-function initScrollProgress() {
-window.addEventListener('scroll', updateScrollProgress);
-}
+// ========================================
+// SOCKET.IO INITIALIZATION
+// ========================================
 
-function updateScrollProgress() {
-const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-const scrollHeight = document.documentElement.scrollHeight;
-const clientHeight = window.innerHeight;
-const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+function initializeSocket() {
+  socket = io(API_URL, {
+    auth: {
+      token: localStorage.getItem('vibexpert_token')
+    }
+  });
 
-const progressFill = document.getElementById('scrollProgressFill');
-if (progressFill) progressFill.style.width = scrolled + '%';
+  socket.on('connect', () => {
+    console.log('Connected to server');
+    connectionStatus = 'connected';
+    hideConnectionBanner();
+  });
 
-const scrollPercent = document.getElementById('scrollPercent');
-if (scrollPercent) scrollPercent.textContent = Math.round(scrolled) + '%';
+  socket.on('disconnect', () => {
+    console.log('Disconnected from server');
+    connectionStatus = 'disconnected';
+    showConnectionBanner();
+  });
 
-if (scrollProgressIndicator) {
-if (scrolled > 10 && scrolled < 95) scrollProgressIndicator.classList.add('show');
-else scrollProgressIndicator.classList.remove('show');
-}
+  socket.on('reconnect', () => {
+    console.log('Reconnected to server');
+    connectionStatus = 'connected';
+    hideConnectionBanner();
+  });
 
-if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
-hasScrolledToBottom = true;
-scrollCheckEnabled = false;
-showAuthPopupAutomatic();
-}
-}
-
-function initRevealOnScroll() {
-const revealElements = document.querySelectorAll('.reveal-on-scroll');
-const revealObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) entry.target.classList.add('revealed');
-});
-}, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
-revealElements.forEach(element => revealObserver.observe(element));
-}
-
-function initStatsCounter() {
-const statNumbers = document.querySelectorAll('.stat-number');
-let hasAnimated = false;
-const statsObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting && !hasAnimated) {
-hasAnimated = true;
-statNumbers.forEach(stat => {
-const target = parseInt(stat.getAttribute('data-count'));
-animateCounter(stat, 0, target, 2000);
-});
-}
-});
-}, { threshold: 0.5 });
-const statsSection = document.querySelector('.stats-grid');
-if (statsSection) statsObserver.observe(statsSection);
-}
-
-function animateCounter(element, start, end, duration) {
-const range = end - start;
-const increment = range / (duration / 30);
-let current = start;
-const timer = setInterval(() => {
-current += increment;
-if (current >= end) {
-current = end;
-clearInterval(timer);
-}
-element.textContent = Math.floor(current).toLocaleString();
-}, 16);
-}
-
-function initScrollDetection() {
-window.addEventListener('scroll', checkScrollPosition);
-}
-
-function checkScrollPosition() {
-if (!scrollCheckEnabled || hasScrolledToBottom) return;
-const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-const scrollHeight = document.documentElement.scrollHeight;
-const clientHeight = window.innerHeight;
-const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
-if (scrollPercentage >= 95) {
-hasScrolledToBottom = true;
-scrollCheckEnabled = false;
-showAuthPopupAutomatic();
-}
-}
-
-function showAuthPopupAutomatic() {
-console.log('🎉 User reached bottom');
-showAuthPopup();
-createConfetti();
-}
-
-function showAuthPopup() {
-const authPopup = document.getElementById('authPopup');
-if (authPopup) {
-authPopup.classList.add('show');
-authPopup.style.display = 'flex';
-document.body.style.overflow = 'hidden';
-if (scrollProgressIndicator) scrollProgressIndicator.classList.remove('show');
-}
-}
-
-function closeAuthPopup() {
-const authPopup = document.getElementById('authPopup');
-if (authPopup) {
-authPopup.classList.remove('show');
-authPopup.style.display = 'none';
-document.body.style.overflow = 'auto';
-setTimeout(() => {
-scrollCheckEnabled = true;
-hasScrolledToBottom = false;
-}, 1000);
-}
-}
-
-function createConfetti() {
-const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
-for (let i = 0; i < 50; i++) {
-const confetti = document.createElement('div');
-confetti.style.cssText = `position:fixed;width:10px;height:10px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}%;top:-10px;opacity:${Math.random()};transform:rotate(${Math.random()*360}deg);animation:confettiFall ${2+Math.random()*3}s linear forwards;z-index:25000;pointer-events:none;`;
-document.body.appendChild(confetti);
-setTimeout(() => confetti.remove(), 5000);
-}
+  // Chat events
+  socket.on('new_message', handleNewMessage);
+  socket.on('typing_start', handleTypingStart);
+  socket.on('typing_stop', handleTypingStop);
+  socket.on('message_reaction', handleMessageReaction);
+  socket.on('user_joined', handleUserJoined);
+  socket.on('user_left', handleUserLeft);
+  socket.on('online_users', handleOnlineUsers);
 }
 
 // ========================================
@@ -321,4189 +172,2887 @@ setTimeout(() => confetti.remove(), 5000);
 // ========================================
 
 function setupEventListeners() {
-document.addEventListener('click', function(e) {
-const optionsMenu = document.getElementById('optionsMenu');
-const optionsBtn = document.querySelector('.options-btn');
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const hamburgerBtn = document.querySelector('.hamburger-btn');
-
-if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
-optionsMenu.style.display = 'none';
-}
-if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
-hamburgerMenu.style.display = 'none';
-}
-
-const authPopup = document.getElementById('authPopup');
-const authOverlay = document.querySelector('.auth-popup-overlay');
-if (authPopup && authPopup.classList.contains('show') && e.target === authOverlay) {
-closeAuthPopup();
-}
-
-if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
-e.preventDefault();
-showAuthPopup();
-}
-});
-}
-
-function initializeMusicPlayer() {
-window.musicPlayer = new Audio();
-window.musicPlayer.volume = 0.5;
-}
-
-// ========================================
-// API & AUTH
-// ========================================
-
-function getToken() {
-return localStorage.getItem('authToken');
-}
-
-async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000);
-const options = { method, headers: {}, signal: controller.signal };
-const token = getToken();
-if (token) options.headers['Authorization'] = `Bearer ${token}`;
-if (body && !(body instanceof FormData)) {
-options.headers['Content-Type'] = 'application/json';
-options.body = JSON.stringify(body);
-} else if (body instanceof FormData) {
-options.body = body;
-}
-try {
-const response = await fetch(`${API_URL}${endpoint}`, options);
-clearTimeout(timeoutId);
-const data = await response.json();
-if (!response.ok) throw new Error(data.error || 'Request failed');
-return data;
-} catch (error) {
-clearTimeout(timeoutId);
-if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
-await new Promise(r => setTimeout(r, 1000));
-return apiCall(endpoint, method, body, retries - 1);
-}
-throw error;
-}
-}
-
-async function login(e) {
-e.preventDefault();
-const email = document.getElementById('loginEmail')?.value.trim();
-const password = document.getElementById('loginPassword')?.value;
-if(!email || !password) return showMessage('Fill all fields', 'error');
-try {
-showMessage('Logging in...', 'success');
-const data = await apiCall('/api/login', 'POST', { email, password });
-localStorage.setItem('authToken', data.token);
-localStorage.setItem('user', JSON.stringify(data.user));
-currentUser = data.user;
-currentUser.postCount = currentUser.postCount || 0;
-currentUser.commentCount = currentUser.commentCount || 0;
-currentUser.likeCount = currentUser.likeCount || 0;
-currentUser.daysActive = currentUser.daysActive || 1;
-currentUser.currentLevel = currentUser.currentLevel || 'wood';
-showMessage('✅ Login successful!', 'success');
-setTimeout(() => {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const authPopup = document.getElementById('authPopup');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (authPopup) {
-authPopup.classList.remove('show');
-authPopup.style.display = 'none';
-}
-if (mainPage) mainPage.style.display = 'block';
-document.body.style.overflow = 'auto';
-if (scrollProgressIndicator) {
-scrollProgressIndicator.remove();
-scrollProgressIndicator = null;
-}
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-const form = document.getElementById('loginForm');
-if (form) form.reset();
-loadPosts();
-if (currentUser.college) initializeSocket();
-}, 800);
-} catch(error) {
-showMessage('❌ Login failed: ' + error.message, 'error');
-}
-}
-
-async function signup(e) {
-e.preventDefault();
-const username = document.getElementById('signupName')?.value.trim();
-const email = document.getElementById('signupEmail')?.value.trim();
-const registrationNumber = document.getElementById('signupReg')?.value.trim();
-const password = document.getElementById('signupPass')?.value;
-const confirm = document.getElementById('signupConfirm')?.value;
-const gender = document.querySelector('input[name="gender"]:checked')?.value;
-if(!username || !email || !registrationNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
-if(!gender) return showMessage('Please select gender', 'error');
-if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
-if(password.length < 6) return showMessage('Password min 6 characters', 'error');
-try {
-showMessage('Creating account...', 'success');
-await apiCall('/api/register', 'POST', { username, email, password, registrationNumber, gender });
-showMessage('🎉 Account created!', 'success');
-const form = document.getElementById('signupForm');
-if (form) form.reset();
-setTimeout(() => goLogin(null), 2000);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-function goSignup(e) {
-if (e) e.preventDefault();
-document.getElementById('loginForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'none';
-document.getElementById('signupForm').style.display = 'block';
-}
-
-function goLogin(e) {
-if(e) e.preventDefault();
-document.getElementById('signupForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'none';
-document.getElementById('loginForm').style.display = 'block';
-}
-
-function goForgotPassword(e) {
-e.preventDefault();
-document.getElementById('loginForm').style.display = 'none';
-document.getElementById('signupForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'block';
-}
-
-async function handleForgotPassword(e) {
-e.preventDefault();
-const email = document.getElementById('resetEmail')?.value.trim();
-if (!email) return showMessage('⚠️ Enter email', 'error');
-try {
-showMessage('📧 Sending code...', 'success');
-await apiCall('/api/forgot-password', 'POST', { email });
-showMessage('✅ Check email', 'success');
-document.getElementById('resetEmailSection').style.display = 'none';
-document.getElementById('resetCodeSection').style.display = 'block';
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-async function verifyResetCode(e) {
-e.preventDefault();
-const email = document.getElementById('resetEmail')?.value.trim();
-const code = document.getElementById('resetCode')?.value.trim();
-const newPassword = document.getElementById('newPassword')?.value;
-const confirmPassword = document.getElementById('confirmNewPassword')?.value;
-if(!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
-if(!newPassword || !confirmPassword) return showMessage('⚠️ Enter password', 'error');
-if(newPassword !== confirmPassword) return showMessage('⚠️ Passwords don\'t match', 'error');
-if(newPassword.length < 6) return showMessage('⚠️ Min 6 characters', 'error');
-try {
-showMessage('🔐 Verifying...', 'success');
-await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
-showMessage('✅ Password reset!', 'success');
-document.getElementById('forgotPasswordForm').reset();
-document.getElementById('resetEmailSection').style.display = 'block';
-document.getElementById('resetCodeSection').style.display = 'none';
-setTimeout(() => goLogin(null), 2000);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-async function resendResetCode() {
-const email = document.getElementById('resetEmail')?.value.trim();
-if (!email) return showMessage('⚠️ Email required', 'error');
-try {
-showMessage('📧 Resending...', 'success');
-await apiCall('/api/forgot-password', 'POST', { email });
-showMessage('✅ New code sent!', 'success');
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-function logout() {
-if (socket) {
-socket.disconnect();
-socket = null;
-}
-currentUser = null;
-localStorage.clear();
-document.body.classList.remove('logged-in');
-document.getElementById('aboutUsPage').style.display = 'block';
-document.getElementById('mainPage').style.display = 'none';
-showMessage('👋 Logged out', 'success');
-hasScrolledToBottom = false;
-scrollCheckEnabled = true;
-createScrollProgressIndicator();
-window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ========================================
-// ENHANCED COMMUNITY CHAT
-// ========================================
-
-
-// ========================================
-// FIXED COMMUNITY CHAT SYSTEM - REPLACED
-// Single unified implementation
-// ========================================
-
-// Chat State Variables
-let messageContainer = null;
-let chatMessages = [];
-let isLoadingMessages = false;
-let typingTimeout = null;
-let lastTypingTime = 0;
-
-// ========================================
-// LOAD COMMUNITIES PAGE
-// ========================================
-
-function loadCommunities() {
-  const container = document.getElementById('communitiesContainer');
-  if (!container) return;
-
-  if (!currentUser || !currentUser.college) {
-    container.innerHTML = `
-      <div class="community-guidance">
-        <div class="guidance-icon">🎓</div>
-        <h2>Join Your College Community</h2>
-        <p>Connect with your college to access the community chat</p>
-        <button class="btn-primary" onclick="showPage('home')">Connect to College</button>
-      </div>
-    `;
-    return;
-  }
-
-  // Show community chat interface
-  container.innerHTML = `
-    <div class="community-chat-container">
-      <!-- Chat Header -->
-      <div class="community-chat-header">
-        <div class="chat-header-left">
-          <div class="college-avatar">🎓</div>
-          <div class="chat-header-info">
-            <h2>${escapeHtml(currentUser.college)}</h2>
-            <p class="online-status">
-              <span class="status-dot"></span>
-              <span id="onlineCount">0</span> members online
-            </p>
-          </div>
-        </div>
-        <div class="chat-header-actions">
-          <button class="icon-btn" onclick="refreshChat()" title="Refresh">🔄</button>
-          <button class="icon-btn" onclick="toggleChatInfo()" title="Info">ℹ️</button>
-        </div>
-      </div>
-
-      <!-- Connection Status Banner -->
-      <div id="connectionStatus" class="connection-status" style="display:none;"></div>
-
-      <!-- Messages Area -->
-      <div class="community-messages-container" id="chatMessagesContainer">
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Loading messages...</p>
-        </div>
-      </div>
-
-      <!-- Typing Indicator -->
-      <div id="typingIndicator" class="typing-indicator" style="display:none;">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span id="typingText">Someone is typing...</span>
-      </div>
-
-      <!-- Input Area -->
-      <div class="community-input-area">
-        <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-        <div class="input-wrapper">
-          <textarea 
-            id="communityMessageInput" 
-            placeholder="Type a message..." 
-            rows="1"
-            maxlength="1000"
-            onkeydown="handleChatKeypress(event)"
-            oninput="handleChatInput(event)"
-          ></textarea>
-        </div>
-        <button class="send-btn" onclick="sendMessage()" title="Send" id="sendButton">
-          <span class="send-icon">📤</span>
-        </button>
-      </div>
-    </div>
-  `;
-
-  // Initialize chat
-  initializeCommunityChat();
-}
-
-// ========================================
-// INITIALIZE COMMUNITY CHAT
-// ========================================
-
-async function initializeCommunityChat() {
-  console.log('🚀 Initializing community chat...');
-
-  // Get message container
-  messageContainer = document.getElementById('chatMessagesContainer');
-  if (!messageContainer) {
-    console.error('❌ Message container not found');
-    return;
-  }
-
-  // Initialize socket if not already connected
-  if (!socket || !socket.connected) {
-    initializeSocket();
-  } else {
-    // Rejoin college room
-    socket.emit('join_college', currentUser.college);
-  }
-
-  // Load messages
-  await loadMessages();
-
-  console.log('✅ Community chat initialized');
-}
-
-// ========================================
-// LOAD MESSAGES
-// ========================================
-
-async function loadMessages() {
-  if (isLoadingMessages) return;
-  isLoadingMessages = true;
-
-  try {
-    console.log('📥 Loading messages...');
-    
-    const token = getToken();
-    if (!token) {
-      throw new Error('Not authenticated');
+  // Theme toggle
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('theme-toggle')) {
+      toggleTheme();
     }
-
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('📦 Received data:', data);
-
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear container
-    messageContainer.innerHTML = '';
-
-    // Check if no messages
-    if (!data.messages || data.messages.length === 0) {
-      messageContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">💬</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      isLoadingMessages = false;
-      return;
-    }
-
-    // Store messages
-    chatMessages = data.messages;
-
-    // Add date separator
-    const today = new Date().toDateString();
-    const dateSeparator = document.createElement('div');
-    dateSeparator.className = 'date-separator';
-    dateSeparator.innerHTML = `<span>Today - ${today}</span>`;
-    messageContainer.appendChild(dateSeparator);
-
-    // Display all messages
-    data.messages.forEach(msg => {
-      displayMessage(msg, true);
-    });
-
-    // Scroll to bottom
-    setTimeout(() => scrollToBottom(), 100);
-
-    console.log(`✅ Loaded ${data.messages.length} messages`);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    messageContainer.innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <h3>Failed to Load Messages</h3>
-        <p>${escapeHtml(error.message)}</p>
-        <button onclick="loadMessages()" class="btn-primary">Try Again</button>
-      </div>
-    `;
-  } finally {
-    isLoadingMessages = false;
-  }
-}
-
-// ========================================
-// DISPLAY MESSAGE
-// ========================================
-
-function displayMessage(message, skipScroll = false) {
-  if (!messageContainer) {
-    messageContainer = document.getElementById('chatMessagesContainer');
-  }
-
-  if (!messageContainer) {
-    console.error('❌ Message container not found');
-    return;
-  }
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) {
-    console.log('⚠️ Message already exists:', message.id);
-    return;
-  }
-
-  // Remove empty state if present
-  const emptyState = messageContainer.querySelector('.empty-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
-
-  const isOwnMessage = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  
-  // Parse timestamp
-  let timestamp;
-  if (message.created_at) {
-    timestamp = new Date(message.created_at);
-  } else if (message.timestamp) {
-    timestamp = new Date(message.timestamp);
-  } else {
-    timestamp = new Date();
-  }
-
-  const timeStr = timestamp.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
   });
 
-  // Create message element
-  const messageEl = document.createElement('div');
-  messageEl.className = `message ${isOwnMessage ? 'message-own' : 'message-other'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  // Build message HTML
-  let html = '';
-
-  // Sender name (only for other users)
-  if (!isOwnMessage) {
-    html += `<div class="message-sender">@${escapeHtml(sender)}</div>`;
-  }
-
-  // Message bubble
-  html += `
-    <div class="message-bubble">
-      <div class="message-text">${escapeHtml(message.content || message.text || '')}</div>
-      <div class="message-meta">
-        <span class="message-time">${timeStr}</span>
-        ${isOwnMessage ? '<span class="message-check">✓✓</span>' : ''}
-      </div>
-    </div>
-  `;
-
-  // Message actions (show on hover)
-  html += `
-    <div class="message-actions">
-      <button class="action-btn" onclick="reactToMessage('${message.id}')" title="React">❤️</button>
-      <button class="action-btn" onclick="copyMessage('${message.id}')" title="Copy">📋</button>
-      ${isOwnMessage ? `<button class="action-btn delete-btn" onclick="deleteMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-
-  // Append to container
-  messageContainer.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => {
-    messageEl.classList.add('visible');
-  }, 10);
-
-  // Scroll to bottom
-  if (!skipScroll) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Play sound for received messages
-  if (!isOwnMessage && !skipScroll) {
-    playMessageSound('receive');
-  }
-}
-
-// ========================================
-// SEND MESSAGE
-// ========================================
-
-async function sendMessage() {
-  const input = document.getElementById('communityMessageInput');
-  const content = input?.value?.trim();
-
-  if (!content) {
-    return;
-  }
-
-  // Disable input and button
-  input.disabled = true;
-  const sendBtn = document.getElementById('sendButton');
-  if (sendBtn) sendBtn.disabled = true;
-
-  try {
-    // Create temp message for optimistic UI
-    const tempMessage = {
-      id: 'temp-' + Date.now(),
-      content: content,
-      sender_id: currentUser.id,
-      users: { username: currentUser.username },
-      timestamp: new Date(),
-      isTemp: true
-    };
-
-    // Display immediately
-    displayMessage(tempMessage);
-
-    // Clear input
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    const token = getToken();
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ content })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+  // Logout
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('logout-btn')) {
+      logout();
     }
+  });
 
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to send message');
+  // Navigation
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('nav-btn')) {
+      const sectionName = e.target.textContent.toLowerCase().replace(/[^\w]/g, '');
+      showSection(sectionName);
     }
+  });
 
-    // Remove temp message
-    const tempEl = document.getElementById(`msg-${tempMessage.id}`);
-    if (tempEl) {
-      tempEl.remove();
+  // Modal close buttons
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('close-modal-btn') || 
+        e.target.classList.contains('close-modal')) {
+      const modal = e.target.closest('.modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
     }
+  });
 
-    // Display real message (will come via socket)
-    console.log('✅ Message sent:', data.message);
+  // Click outside modal to close
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+      e.target.style.display = 'none';
+    }
+  });
 
-    // Stop typing indicator
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    // Escape to close modals
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
       });
     }
-
-    // Play send sound
-    playMessageSound('send');
-
-  } catch (error) {
-    console.error('❌ Send error:', error);
-    showMessage('Failed to send message: ' + error.message, 'error');
     
-    // Re-populate input
-    input.value = content;
-  } finally {
-    // Re-enable input and button
-    input.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    input.focus();
+    // Ctrl/Cmd + K for search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      // Focus search input
+      const searchInput = document.querySelector('#collegeSearchInput, #chatSearchInput');
+      if (searchInput) {
+        searchInput.focus();
+      }
+    }
+  });
+
+  // Window resize handler
+  window.addEventListener('resize', function() {
+    handleWindowResize();
+  });
+
+  // Scroll handler for infinite loading
+  window.addEventListener('scroll', function() {
+    handleScroll();
+  });
+}
+
+// ========================================
+// VANTA BACKGROUNDS
+// ========================================
+
+function initializeVantaBackgrounds() {
+  // About page globe background
+  if (document.getElementById('vanta-globe-bg')) {
+    VANTA.GLOBE({
+      el: "#vanta-globe-bg",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0x4f74a3,
+      backgroundColor: 0x0a0a0a,
+      size: 0.80
+    });
+  }
+
+  // Main page net background
+  if (document.getElementById('vanta-net-bg')) {
+    VANTA.NET({
+      el: "#vanta-net-bg",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0x4f74a3,
+      backgroundColor: 0x0a0a0a,
+      points: 10.00,
+      maxDistance: 20.00,
+      spacing: 15.00
+    });
   }
 }
 
 // ========================================
-// DELETE MESSAGE
+// SCROLL PROGRESS
 // ========================================
 
-async function deleteMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
+function setupScrollProgress() {
+  const progressBar = document.getElementById('scrollProgressFill');
+  const progressIndicator = document.getElementById('scrollProgressIndicator');
+  
+  if (!progressBar) return;
 
-  try {
-    const token = getToken();
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+  window.addEventListener('scroll', function() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercent = (scrollTop / scrollHeight) * 100;
+    
+    progressBar.style.width = scrollPercent + '%';
+    
+    // Show/hide progress indicator
+    if (progressIndicator) {
+      if (scrollPercent > 10 && scrollPercent < 90) {
+        progressIndicator.classList.add('show');
+        progressIndicator.textContent = Math.round(scrollPercent) + '%';
+      } else {
+        progressIndicator.classList.remove('show');
+      }
+    }
+  });
+}
+
+// ========================================
+// REVEAL ON SCROLL
+// ========================================
+
+function setupRevealOnScroll() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
       }
     });
+  }, observerOptions);
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.success) {
-      // Remove from UI
-      removeMessageFromUI(messageId);
-      showMessage('Message deleted', 'success');
-    }
-
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    showMessage('Failed to delete message', 'error');
-  }
-}
-
-// ========================================
-// MESSAGE ACTIONS
-// ========================================
-
-function reactToMessage(messageId) {
-  // Simple reaction - can be expanded
-  const emojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮'];
-  const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-  
-  showMessage(`Reacted with ${emoji}`, 'success');
-  
-  // TODO: Implement proper reaction system with API
-}
-
-function copyMessage(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (!messageEl) return;
-
-  const textEl = messageEl.querySelector('.message-text');
-  if (!textEl) return;
-
-  const text = textEl.textContent;
-  
-  navigator.clipboard.writeText(text).then(() => {
-    showMessage('Message copied', 'success');
-  }).catch(err => {
-    console.error('Copy failed:', err);
-    showMessage('Failed to copy', 'error');
+  // Observe all reveal elements
+  document.querySelectorAll('.reveal-on-scroll').forEach(element => {
+    observer.observe(element);
   });
-}
-
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (messageEl) {
-    messageEl.classList.add('removing');
-    setTimeout(() => messageEl.remove(), 300);
-  }
-}
-
-// ========================================
-// INPUT HANDLERS
-// ========================================
-
-function handleChatKeypress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-function handleChatInput(event) {
-  const textarea = event.target;
-  
-  // Auto-resize
-  textarea.style.height = 'auto';
-  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-
-  // Handle typing indicator
-  handleTypingIndicator();
-}
-
-function handleTypingIndicator() {
-  if (!socket || !currentUser || !currentUser.college) return;
-
-  const now = Date.now();
-  
-  // Throttle typing events to once per 3 seconds
-  if (now - lastTypingTime > 3000) {
-    socket.emit('user_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-    lastTypingTime = now;
-  }
-
-  // Clear existing timeout
-  if (typingTimeout) {
-    clearTimeout(typingTimeout);
-  }
-
-  // Stop typing after 3 seconds of inactivity
-  typingTimeout = setTimeout(() => {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }, 3000);
-}
-
-// ========================================
-// TYPING INDICATOR
-// ========================================
-
-function showTypingIndicator(username) {
-  const indicator = document.getElementById('typingIndicator');
-  const text = document.getElementById('typingText');
-  
-  if (indicator && text) {
-    text.textContent = `${username} is typing...`;
-    indicator.style.display = 'flex';
-  }
-}
-
-function hideTypingIndicator(username) {
-  const indicator = document.getElementById('typingIndicator');
-  
-  if (indicator) {
-    indicator.style.display = 'none';
-  }
-}
-
-// ========================================
-// SOCKET.IO INTEGRATION
-// ========================================
-
-function setupEnhancedSocketListeners() {
-  if (!socket) return;
-
-  // New message received
-  socket.on('new_message', (message) => {
-    console.log('📨 New message:', message);
-    displayMessage(message);
-  });
-
-  // Message deleted
-  socket.on('message_deleted', ({ id }) => {
-    console.log('🗑️ Message deleted:', id);
-    removeMessageFromUI(id);
-  });
-
-  // User typing
-  socket.on('user_typing', ({ username }) => {
-    if (username !== currentUser?.username) {
-      showTypingIndicator(username);
-    }
-  });
-
-  // User stopped typing
-  socket.on('user_stop_typing', ({ username }) => {
-    hideTypingIndicator(username);
-  });
-
-  // Online count updated
-  socket.on('online_count', (count) => {
-    updateOnlineCount(count);
-  });
-
-  console.log('✅ Enhanced socket listeners set up');
-}
-
-function updateOnlineCount(count) {
-  const countEl = document.getElementById('onlineCount');
-  if (countEl) {
-    countEl.textContent = count || 0;
-  }
 }
 
 // ========================================
 // UTILITY FUNCTIONS
 // ========================================
 
-function scrollToBottom() {
-  if (messageContainer) {
-    messageContainer.scrollTo({
-      top: messageContainer.scrollHeight,
-      behavior: 'smooth'
-    });
+function handleWindowResize() {
+  // Handle responsive adjustments
+  if (window.innerWidth < 768) {
+    // Mobile adjustments
+    document.body.classList.add('mobile-view');
+  } else {
+    document.body.classList.remove('mobile-view');
   }
 }
 
-function refreshChat() {
-  showMessage('Refreshing chat...', 'success');
-  loadMessages();
+function handleScroll() {
+  // Handle infinite scroll for feeds
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    // Near bottom, load more content
+    loadMoreContent();
+  }
 }
 
-function openEmojiPicker() {
-  // Check if picker already exists
-  const existingPicker = document.querySelector('.emoji-picker-popup');
-  if (existingPicker) {
-    existingPicker.remove();
-    return;
+function loadMoreContent() {
+  // Implementation depends on current section
+  const activeSection = document.querySelector('.section.active');
+  if (activeSection) {
+    const sectionId = activeSection.id;
+    
+    switch(sectionId) {
+      case 'homeSection':
+        loadMoreHomeFeed();
+        break;
+      case 'realvibeSection':
+        loadMoreRealVibe();
+        break;
+      case 'postsSection':
+        loadMoreMyPosts();
+        break;
+    }
   }
+}
 
-  const emojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','☺️','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','🔥','✨','🎉','🎊','🎈','🎁','🏆','🏅','🥇','🥈','🥉','⭐','🌟','💫','✅','✔️','👍','👎','👏','🙌','👐','🤝','💪','🙏'];
+function formatMessageTime(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
   
-  const picker = document.createElement('div');
-  picker.className = 'emoji-picker-popup';
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   
-  emojis.forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.style.cssText = `
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 5px;
-      border-radius: 5px;
-      transition: all 0.2s;
-    `;
-    btn.onclick = () => {
-      const input = document.getElementById('communityMessageInput');
-      if (input) {
-        input.value += emoji;
-        input.focus();
-      }
-      picker.remove();
-    };
-    btn.onmouseenter = () => {
-      btn.style.background = 'rgba(79, 116, 163, 0.3)';
-      btn.style.transform = 'scale(1.2)';
-    };
-    btn.onmouseleave = () => {
-      btn.style.background = 'none';
-      btn.style.transform = 'scale(1)';
-    };
-    picker.appendChild(btn);
-  });
+  return date.toLocaleDateString();
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#22c55e' : '#4f74a3'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+    max-width: 300px;
+  `;
   
-  // Close on click outside
+  document.body.appendChild(notification);
+  
   setTimeout(() => {
-    document.addEventListener('click', function closePickerOutside(e) {
-      if (!picker.contains(e.target) && !e.target.classList.contains('icon-btn')) {
-        picker.remove();
-        document.removeEventListener('click', closePickerOutside);
-      }
-    });
-  }, 100);
-  
-  document.body.appendChild(picker);
+    notification.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
 }
 
-function toggleChatInfo() {
-  showMessage('Chat info coming soon!', 'success');
-}
+// ========================================
+// API CALLS
+// ========================================
 
-function playMessageSound(type) {
-  // Simple sound feedback
-  try {
-    const audio = new Audio();
-    if (type === 'send') {
-      // Short beep for send
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } else {
-      // Different beep for receive
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 600;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
+async function apiCall(endpoint, method = 'GET', data = null) {
+  const token = localStorage.getItem('vibexpert_token');
+  const options = {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     }
-  } catch (e) {
-    // Audio API not supported, silently fail
+  };
+  
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+  
+  const response = await fetch(`${API_URL}${endpoint}`, options);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return await response.json();
+}
+
+// ========================================
+// THEME MANAGEMENT
+// ========================================
+
+function toggleTheme() {
+  const body = document.body;
+  const themeBtn = document.querySelector('.theme-toggle');
+  
+  if (body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+    themeBtn.textContent = '🌙';
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+    themeBtn.textContent = '☀️';
+  }
+  
+  localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+}
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light') {
+    document.body.classList.remove('dark-theme');
+    document.body.classList.add('light-theme');
+    const themeBtn = document.querySelector('.theme-toggle');
+    if (themeBtn) themeBtn.textContent = '🌙';
   }
 }
 
 // ========================================
-// END OF FIXED COMMUNITY CHAT SYSTEM
+// AUTHENTICATION
 // ========================================
 
-// COLLEGE VERIFICATION
-// ========================================
-
-function selectUniversity(type) {
-currentType = type;
-currentPage = 1;
-allColleges = colleges[type];
-
-const titles = {
-nit: 'National Institutes of Technology', 
-iit: 'Indian Institutes of Technology', 
-vit: 'VIT Colleges', 
-other: 'Other Universities'
-};
-
-const title = document.getElementById('collegeTitle');
-if (title) title.textContent = titles[type];
-
-const home = document.getElementById('home');
-const list = document.getElementById('collegeList');
-
-if (home) home.style.display = 'none';
-if (list) list.style.display = 'block';
-
-showColleges();
-}
-
-function showColleges() {
-const list = allColleges;
-const start = (currentPage - 1) * ITEMS_PER_PAGE;
-const end = start + ITEMS_PER_PAGE;
-const page = list.slice(start, end);
-
-let html = '';
-page.forEach(c => {
-const isConnected = currentUser && currentUser.college === c.name;
-html += `
-     <div class="college-item">
-       <h3>${c.name}</h3>
-       <p>${c.location}</p>
-       ${isConnected ? 
-         '<button class="verified" disabled>✓ Connected</button>' : 
-         `<button onclick="openVerify('${c.name}','${c.email}')">Connect</button>`
-       }
-     </div>
-   `;
-});
-
-const container = document.getElementById('collegeContainer');
-if (container) container.innerHTML = html;
-}
-
-function searchColleges() {
-const searchInput = document.getElementById('searchCollege');
-if (!searchInput) return;
-
-const search = searchInput.value.toLowerCase();
-const filtered = colleges[currentType].filter(c => 
-c.name.toLowerCase().includes(search) || 
-c.location.toLowerCase().includes(search)
-);
-
-allColleges = filtered;
-currentPage = 1;
-showColleges();
-}
-
-function backToUniversities() {
-const list = document.getElementById('collegeList');
-const home = document.getElementById('home');
-
-if (list) list.style.display = 'none';
-if (home) home.style.display = 'block';
-}
-
-function openVerify(name, emailDomain) {
-if (currentUser && currentUser.college) {
-showMessage('⚠️ Already connected to ' + currentUser.college, 'error');
-return;
-}
-
-currentVerifyCollege = {name, emailDomain};
-
-const modalHtml = `
-   <div class="modal-box">
-     <span class="close" onclick="closeModal('verifyModal')">&times;</span>
-     <h2>Verify College</h2>
-     <p>Enter your college email</p>
-     <p style="color:#888;font-size:13px;">Must end with: ${emailDomain}</p>
-     <input type="email" id="verifyEmail" placeholder="your.email${emailDomain}">
-     <button onclick="requestVerificationCode()">Send Code</button>
-     <div id="codeSection" style="display:none;margin-top:20px;">
-       <input type="text" id="verifyCode" placeholder="6-digit code" maxlength="6">
-       <button onclick="verifyCollegeCode()">Verify</button>
-     </div>
-   </div>
- `;
-
-const modal = document.getElementById('verifyModal');
-if (modal) {
-modal.innerHTML = modalHtml;
-modal.style.display = 'flex';
-}
-}
-
-async function requestVerificationCode() {
-const emailInput = document.getElementById('verifyEmail');
-if (!emailInput) return;
-
-const email = emailInput.value.trim();
-if (!email) return showMessage('⚠️ Enter email', 'error');
-
-if (!email.endsWith(currentVerifyCollege.emailDomain)) {
-return showMessage('⚠️ Must end with ' + currentVerifyCollege.emailDomain, 'error');
-}
-
-try {
-showMessage('📧 Sending code...', 'success');
-await apiCall('/api/college/request-verification', 'POST', {
-collegeName: currentVerifyCollege.name, 
-collegeEmail: email
-});
-
-showMessage('✅ Code sent to ' + email, 'success');
-const codeSection = document.getElementById('codeSection');
-if (codeSection) codeSection.style.display = 'block';
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-async function verifyCollegeCode() {
-const codeInput = document.getElementById('verifyCode');
-if (!codeInput) return;
-
-const code = codeInput.value.trim();
-if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
-
-try {
-showMessage('🔐 Verifying...', 'success');
-const data = await apiCall('/api/college/verify', 'POST', { code });
-
-showMessage('🎉 ' + data.message, 'success');
-currentUser.college = data.college;
-currentUser.communityJoined = true;
-currentUser.badges = data.badges;
-localStorage.setItem('user', JSON.stringify(currentUser));
-
-closeModal('verifyModal');
-initializeSocket();
-
-setTimeout(() => {
-showPage('communities');
-updateLiveNotif('Connected to ' + data.college);
-}, 1500);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
-}
-
-// ========================================
-// SOCKET.IO REAL-TIME
-// ========================================
-
-function initializeSocket() {
-if (socket) return;
-
-socket = io(API_URL);
-
-socket.on('connect', () => {
-console.log('Socket connected');
-if (currentUser?.college) socket.emit('join_college', currentUser.college);
-socket.emit('user_online', currentUser.id);
-});
-
-socket.on('new_message', (message) => appendMessageToChat(message));
-socket.on('message_updated', (message) => updateMessageInChat(message));
-socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
-socket.on('online_count', (count) => updateOnlineCount(count));
-
-socket.on('post_liked', (data) => {
-const likeCount = document.querySelector(`#like-count-${data.postId}`);
-if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
-});
-
-socket.on('post_commented', (data) => {
-const commentCount = document.querySelector(`#comment-count-${data.postId}`);
-if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
-});
-
-socket.on('post_shared', (data) => {
-const shareCount = document.querySelector(`#share-count-${data.postId}`);
-if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
-});
-
-setupEnhancedSocketListeners();
-}
-
-function updateMessageInChat(msg) {
-const messageEl = document.getElementById(`msg-${msg.id}`);
-if (!messageEl) return;
-
-const textEl = messageEl.querySelector('.text');
-if (textEl) {
-textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
-}
-}
-
-function removeMessageFromChat(id) {
-const messageEl = document.getElementById(`msg-${id}`);
-if (messageEl) messageEl.remove();
-}
-
-
-
-// ========================================
-// SOCKET.IO REAL-TIME (UPDATED)
-// ========================================
-
-function initializeSocket() {
-  // Don't reinitialize if already connected
-  if (socket && socket.connected) {
-    console.log('✅ Socket already connected');
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-    }
-    // Setup listeners if not already done
-    setTimeout(() => setupEnhancedSocketListeners(), 100);
-    return;
+function logout() {
+  localStorage.removeItem('vibexpert_token');
+  if (socket) {
+    socket.disconnect();
   }
-
-  console.log('🔌 Initializing socket connection...');
-  
-  socket = io(API_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-      socket.emit('user_online', currentUser.id);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
-  });
-
-  socket.on('reconnect', () => {
-    console.log('🔄 Socket reconnected');
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-    }
-  });
-
-  // Post-related socket events
-  socket.on('post_liked', (data) => {
-    const likeCount = document.querySelector(`#like-count-${data.postId}`);
-    if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
-  });
-
-  socket.on('post_commented', (data) => {
-    const commentCount = document.querySelector(`#comment-count-${data.postId}`);
-    if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
-  });
-
-  socket.on('post_shared', (data) => {
-    const shareCount = document.querySelector(`#share-count-${data.postId}`);
-    if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
-  });
-
-  // Setup enhanced listeners for chat
-  setTimeout(() => setupEnhancedSocketListeners(), 100);
-}
-
-// ========================================
-// PROFILE & SEARCH
-// ========================================
-
-function initializeSearchBar() {
-const searchBox = document.getElementById('searchBox');
-const searchResults = document.getElementById('searchResults');
-
-if (!searchBox) return;
-
-console.log('✅ Search initialized');
-
-searchBox.addEventListener('input', (e) => {
-if (searchTimeout) clearTimeout(searchTimeout);
-
-const query = e.target.value.trim();
-if (query.length < 2) {
-hideSearchResults();
-return;
-}
-
-if (searchResults) {
-searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
-searchResults.style.display = 'block';
-}
-
-searchTimeout = setTimeout(() => performUserSearch(query), 600);
-});
-
-searchBox.addEventListener('focus', (e) => {
-const query = e.target.value.trim();
-if (query.length >= 2) performUserSearch(query);
-});
-
-document.addEventListener('click', (e) => {
-if (!e.target.closest('.search-container')) hideSearchResults();
-});
-
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') {
-hideSearchResults();
-searchBox.blur();
-}
-});
-}
-
-async function performUserSearch(query) {
-const searchResults = document.getElementById('searchResults');
-if (!searchResults) return;
-
-try {
-console.log('🔍 Searching:', query);
-const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
-
-if (!data.success) throw new Error('Search failed');
-displaySearchResults(data.users || []);
-} catch(error) {
-console.error('❌ Search:', error);
-searchResults.innerHTML = '<div class="no-results" style="color:#ff6b6b;">❌ Search failed</div>';
-searchResults.style.display = 'block';
-}
-}
-
-function displaySearchResults(users) {
-const searchResults = document.getElementById('searchResults');
-if (!searchResults) return;
-
-if (users.length === 0) {
-searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
-searchResults.style.display = 'block';
-return;
-}
-
-let html = '';
-users.forEach(user => {
-const avatarContent = user.profile_pic ? 
-`<img src="${user.profile_pic}" alt="${user.username}">` : '👤';
-
-html += `
-     <div class="search-result-item" onclick="showUserProfile('${user.id}')">
-       <div class="search-result-avatar">${avatarContent}</div>
-       <div class="search-result-info">
-         <div class="search-result-username">@${user.username}</div>
-         <div class="search-result-details">${user.registration_number || user.email}</div>
-         ${user.college ? `<div class="search-result-college">🎓 ${user.college}</div>` : ''}
-       </div>
-     </div>
-   `;
-});
-
-searchResults.innerHTML = html;
-searchResults.style.display = 'block';
-}
-
-function hideSearchResults() {
-const searchResults = document.getElementById('searchResults');
-if (searchResults) searchResults.style.display = 'none';
-}
-
-async function showUserProfile(userId) {
-hideSearchResults();
-const searchBox = document.getElementById('searchBox');
-if (searchBox) searchBox.value = '';
-}
-
-
-function showProfilePage() {
-if (!currentUser) return;
-showProfileModal(currentUser);
-
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
-}
-
-function showProfileModal(user) {
-const isOwnProfile = currentUser && user.id === currentUser.id;
-
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
-
-modal.innerHTML = `
-   <div class="modal-box profile-modal-box">
-     <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
-     <div class="profile-container">
-       <div class="profile-header">
-         <div class="profile-cover"></div>
-         <div class="profile-main">
-           <div class="profile-photo-section">
-             <div class="profile-photo" style="${user.profile_pic ? `background-image:url('${user.profile_pic}');background-size:cover;` : ''}">
-               ${!user.profile_pic ? '👤' : ''}
-             </div>
-             ${isOwnProfile ? '<button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change</button>' : ''}
-             <div class="active-badge">
-               <span class="status-dot"></span>
-               <span>Active</span>
-             </div>
-           </div>
-           <div class="profile-name-section">
-             <h2>${user.username}</h2>
-             <div class="nickname-display">
-               <span class="nickname-label">@${user.username}</span>
-             </div>
-             ${user.college ? `<p style="color:#888;font-size:14px;">🎓 ${user.college}</p>` : ''}
-             ${user.registration_number ? `<p style="color:#888;font-size:13px;">📋 ${user.registration_number}</p>` : ''}
-           </div>
-           ${isOwnProfile ? '<button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit</button>' : ''}
-         </div>
-       </div>
-       <div class="profile-stats-section">
-         <div class="stat-card">
-           <div class="stat-icon">📝</div>
-           <div class="stat-value">${user.postCount || 0}</div>
-           <div class="stat-title">Posts</div>
-         </div>
-         <div class="stat-card">
-           <div class="stat-icon">🏆</div>
-           <div class="stat-value">${user.badges?.length || 0}</div>
-           <div class="stat-title">Badges</div>
-         </div>
-         <div class="stat-card">
-           <div class="stat-icon">⏱️</div>
-           <div class="stat-value">24h</div>
-           <div class="stat-title">Active</div>
-         </div>
-       </div>
-     </div>
-   </div>
- `;
-
-document.body.appendChild(modal);
+  showAboutUsPage();
 }
 
 // ========================================
 // NAVIGATION
 // ========================================
 
-function showPage(name, e) {
-if(e) e.preventDefault();
-
-document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-const page = document.getElementById(name);
-if(page) page.style.display = 'block';
-
-document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-if(e?.target) e.target.classList.add('active');
-
-if(name === 'posts') loadPosts();
-else if(name === 'communities') loadCommunities();
-else if(name === 'rewards') loadRewardsPage();
-
-const hamburger = document.getElementById('hamburgerMenu');
-if (hamburger) hamburger.style.display = 'none';
-
-window.scrollTo(0, 0);
-}
-
-function goHome() {
-showPage('home');
-document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-const homeLink = document.querySelector('.nav-link[onclick*="home"]');
-if (homeLink) homeLink.classList.add('active');
-}
-
-// ========================================
-// POSTS SYSTEM
-// ========================================
-
-async function createPost() {
-const postText = document.getElementById('postText')?.value.trim();
-console.log('🚀 Creating post');
-
-if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
-return showMessage('⚠️ Add content', 'error');
-}
-
-if (!currentUser) return showMessage('⚠️ Login required', 'error');
-
-if (selectedPostDestination === 'community') {
-if (!currentUser.communityJoined || !currentUser.college) {
-showMessage('⚠️ Join university first', 'error');
-setTimeout(() => {
-if (confirm('Join college community?')) {
-showPage('home');
-const homeLink = document.querySelector('.nav-link[onclick*="home"]');
-if (homeLink) homeLink.classList.add('active');
-}
-}, 500);
-return;
-}
-}
-
-try {
-showMessage('📤 Creating...', 'success');
-
-const formData = new FormData();
-formData.append('content', postText);
-formData.append('postTo', selectedPostDestination);
-
-if (selectedMusic) formData.append('music', JSON.stringify(selectedMusic));
-if (selectedStickers.length > 0) formData.append('stickers', JSON.stringify(selectedStickers));
-
-if (selectedFiles.length > 0) {
-showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
-for (let i = 0; i < selectedFiles.length; i++) {
-formData.append('media', selectedFiles[i]);
-}
-}
-
-const data = await apiCall('/api/posts', 'POST', formData);
-
-if (data.success) {
-const msg = selectedPostDestination === 'profile' ? 
-'✅ Posted to profile!' : '✅ Shared to community!';
-showMessage(msg, 'success');
-checkAndUpdateRewards('post');
-const postCount = data.postCount || 1;
-setTimeout(() => showPostCelebrationModal(postCount), 800);
-
-if (data.badgeUpdated && data.newBadges?.length > 0) {
-setTimeout(() => showMessage(`🏆 Badge: ${data.newBadges.join(', ')}`, 'success'), 6000);
-}
-
-resetPostForm();
-
-setTimeout(() => {
-loadPosts();
-if (selectedPostDestination === 'profile') {
-const profilePosts = document.getElementById('userProfilePosts');
-if (profilePosts && currentUser) loadUserProfilePosts(currentUser.id);
-}
-if (selectedPostDestination === 'community') {
-const communityPosts = document.getElementById('communityPostsContainer');
-if (communityPosts) loadCommunityPosts();
-}
-}, 1000);
-} else {
-showMessage('❌ Failed', 'error');
-}
-} catch(error) {
-console.error('❌ Post error:', error);
-if (error.message.includes('timeout')) {
-showMessage('⚠️ Timeout - try smaller images', 'error');
-} else if (error.message.includes('university') || error.message.includes('community')) {
-showMessage('⚠️ Join university first', 'error');
-} else {
-showMessage('❌ Error: ' + error.message, 'error');
-}
-}
-}
-
-function resetPostForm() {
-const postText = document.getElementById('postText');
-if (postText) postText.value = '';
-
-selectedFiles = [];
-previewUrls = [];
-selectedMusic = null;
-selectedStickers = [];
-
-const photoContainer = document.getElementById('photoPreviewContainer');
-if (photoContainer) {
-photoContainer.innerHTML = '';
-photoContainer.style.display = 'none';
-}
-
-const assetsContainer = document.getElementById('selectedAssets');
-if (assetsContainer) {
-assetsContainer.innerHTML = '';
-assetsContainer.style.display = 'none';
-}
-}
-
-function renderPosts(posts) {
-let html = '';
-
-posts.forEach(post => {
-const author = post.users?.username || 'User';
-const authorId = post.users?.id || '';
-const content = post.content || '';
-const media = post.media || [];
-const time = new Date(post.created_at || post.timestamp).toLocaleString();
-const isOwn = currentUser && authorId === currentUser.id;
-const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
-const music = post.music || null;
-const stickers = post.stickers || [];
-const likeCount = post.like_count || 0;
-const commentCount = post.comment_count || 0;
-const shareCount = post.share_count || 0;
-const isLiked = post.is_liked || false;
-
-html += `
-     <div class="enhanced-post" id="post-${post.id}">
-       <div class="enhanced-post-header">
-         <div class="enhanced-user-info" onclick="showUserProfile('${authorId}')" style="cursor:pointer;">
-           <div class="enhanced-user-avatar">
-             ${post.users?.profile_pic ? 
-               `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : 
-               '👤'
-             }
-           </div>
-           <div class="enhanced-user-details">
-             <div class="enhanced-username">@${author}</div>
-             <div class="enhanced-post-meta">
-               <span>${time}</span>
-               <span>•</span>
-               <span>${postedTo}</span>
-             </div>
-           </div>
-         </div>
-         ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
-       </div>
-       <div class="enhanced-post-content">
-         ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
-         ${stickers.length > 0 ? 
-           `<div class="post-stickers-container">
-             ${stickers.map(s => `<span class="post-sticker">${s.emoji || s}</span>`).join('')}
-           </div>` : ''
-         }
-         ${music ? 
-           `<div class="post-music-container">
-             <div class="music-player">
-               <div class="music-info">
-                 <div class="music-icon">${music.emoji || '🎵'}</div>
-                 <div class="music-details">
-                   <div class="music-name">${music.name}</div>
-                   <div class="music-duration">${music.artist} • ${music.duration}</div>
-                 </div>
-               </div>
-               <audio controls class="post-audio-player">
-                 <source src="${music.url}" type="audio/mpeg">
-               </audio>
-             </div>
-           </div>` : ''
-         }
-         ${media.length > 0 ? 
-           `<div class="enhanced-post-media">
-             ${media.map(m => 
-               m.type === 'image' ? 
-                 `<div class="enhanced-media-item"><img src="${m.url}"></div>` :
-               m.type === 'video' ? 
-                 `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>` :
-                 `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
-             ).join('')}
-           </div>` : ''
-         }
-       </div>
-       <div class="enhanced-post-footer">
-         <div class="enhanced-post-stats">
-           <span id="like-count-${post.id}">❤️ ${likeCount}</span>
-           <span id="comment-count-${post.id}">💬 ${commentCount}</span>
-           <span id="share-count-${post.id}">🔄 ${shareCount}</span>
-         </div>
-         <div class="enhanced-post-engagement">
-           <button class="engagement-btn ${isLiked ? 'liked' : ''}" id="like-btn-${post.id}" onclick="toggleLike('${post.id}')">
-             ${isLiked ? '❤️ Liked' : '❤️ Like'}
-           </button>
-           <button class="engagement-btn" onclick="openCommentModal('${post.id}')">💬 Comment</button>
-           <button class="engagement-btn" onclick="sharePost('${post.id}', '${content.replace(/'/g, "\\'")}', '${author}')">🔄 Share</button>
-         </div>
-       </div>
-     </div>
-   `;
-});
-
-return html;
-}
-
-async function loadPosts() {
-const feedEl = document.getElementById('postsFeed');
-if (!feedEl) return;
-
-try {
-feedEl.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading...</div>';
-const data = await apiCall('/api/posts', 'GET');
-
-if (!data.posts || data.posts.length === 0) {
-feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">📝 No posts yet</div>';
-return;
-}
-
-feedEl.innerHTML = renderPosts(data.posts);
-} catch(error) {
-console.error('❌ Load posts:', error);
-feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#ff6b6b;">❌ Failed to load</div>';
-}
-}
-
-async function deletePost(postId) {
-if (!confirm('Delete this post?')) return;
-
-try {
-await apiCall(`/api/posts/${postId}`, 'DELETE');
-showMessage('🗑️ Deleted', 'success');
-
-const postEl = document.getElementById(`post-${postId}`);
-if (postEl) postEl.remove();
-
-setTimeout(() => loadPosts(), 500);
-} catch(error) {
-showMessage('❌ Failed: ' + error.message, 'error');
-}
-}
-
-async function toggleLike(postId) {
-if (!currentUser) return showMessage('⚠️ Login to like', 'error');
-
-try {
-const likeBtn = document.querySelector(`#like-btn-${postId}`);
-const likeCount = document.querySelector(`#like-count-${postId}`);
-
-if (likeBtn) likeBtn.disabled = true;
-
-const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
-
-if (data.success) {
+function showSection(sectionName) {
+  // Hide all sections
+  document.querySelectorAll('.section').forEach(section => {
+    section.style.display = 'none';
+  });
   
-  if (data.liked) {
-    checkAndUpdateRewards('like');
+  // Show selected section
+  const selectedSection = document.getElementById(`${sectionName}Section`);
+  if (selectedSection) {
+    selectedSection.style.display = 'block';
   }
-if (likeBtn) {
-likeBtn.innerHTML = data.liked ? '❤️ Liked' : '❤️ Like';
-if (data.liked) likeBtn.classList.add('liked');
-else likeBtn.classList.remove('liked');
-likeBtn.disabled = false;
-}
-
-if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
-}
-} catch(error) {
-console.error('❌ Like:', error);
-showMessage('❌ Failed to like', 'error');
-
-const likeBtn = document.querySelector(`#like-btn-${postId}`);
-if (likeBtn) likeBtn.disabled = false;
-}
-}
-
-function openCommentModal(postId) {
-if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
-
-currentCommentPostId = postId;
-
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.id = 'commentModal';
-modal.style.display = 'flex';
-
-modal.innerHTML = `
-   <div class="modal-box" style="max-width:600px;max-height:80vh;overflow-y:auto;">
-     <span class="close" onclick="closeCommentModal()">&times;</span>
-     <h2>💬 Comments</h2>
-     <div id="commentsContainer" style="margin:20px 0;max-height:300px;overflow-y:auto;">
-       <div style="text-align:center;padding:20px;color:#888;">⏳ Loading...</div>
-     </div>
-     <div style="border-top:1px solid rgba(79,116,163,0.2);padding-top:20px;">
-       <textarea id="commentInput" placeholder="Write a comment..." 
-         style="width:100%;min-height:80px;padding:12px;background:rgba(20,30,50,0.6);
-         border:1px solid rgba(79,116,163,0.3);border-radius:10px;color:white;
-         font-family:inherit;resize:vertical;"></textarea>
-       <button onclick="submitComment('${postId}')" style="width:100%;margin-top:10px;">💬 Post</button>
-     </div>
-   </div>
- `;
-
-document.body.appendChild(modal);
-loadComments(postId);
-}
-
-function closeCommentModal() {
-const modal = document.getElementById('commentModal');
-if (modal) modal.remove();
-currentCommentPostId = null;
-}
-
-async function loadComments(postId) {
-const container = document.getElementById('commentsContainer');
-if (!container) return;
-
-try {
-const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
-
-if (!data.success || !data.comments || data.comments.length === 0) {
-container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">💬 No comments yet</div>';
-return;
-}
-
-let html = '';
-data.comments.forEach(comment => {
-const author = comment.users?.username || 'User';
-const time = new Date(comment.created_at).toLocaleString();
-const isOwn = currentUser && comment.user_id === currentUser.id;
-
-html += `
-       <div class="comment-item" style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
-         border-radius:12px;padding:15px;margin-bottom:10px;">
-         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-           <div style="display:flex;align-items:center;gap:10px;">
-             <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f74a3,#8da4d3);
-               display:flex;align-items:center;justify-content:center;font-size:18px;">
-               ${comment.users?.profile_pic ? 
-                 `<img src="${comment.users.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
-                 '👤'
-               }
-             </div>
-             <div>
-               <div style="font-weight:600;color:#4f74a3;">@${author}</div>
-               <div style="font-size:11px;color:#888;">${time}</div>
-             </div>
-           </div>
-           ${isOwn ? 
-             `<button onclick="deleteComment('${comment.id}','${postId}')" 
-               style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:none;
-               padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>` : 
-             ''
-           }
-         </div>
-         <div style="color:#e0e0e0;line-height:1.5;">${comment.content}</div>
-       </div>
-     `;
-});
-
-container.innerHTML = html;
-} catch(error) {
-console.error('❌ Load comments:', error);
-container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
-}
-}
-
-async function submitComment(postId) {
-const input = document.getElementById('commentInput');
-const content = input?.value.trim();
-
-if (!content) return showMessage('⚠️ Empty comment', 'error');
-
-try {
-const data = await apiCall(`/api/posts/${postId}/comments`, 'POST', { content });
-
-if (data.success) {
-showMessage('✅ Comment posted!', 'success');
-checkAndUpdateRewards('comment');
-input.value = '';
-loadComments(postId);
-
-const commentCount = document.querySelector(`#comment-count-${postId}`);
-if (commentCount) {
-const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
-commentCount.textContent = `💬 ${currentCount + 1}`;
-}
-}
-} catch(error) {
-console.error('❌ Comment:', error);
-showMessage('❌ Failed to post', 'error');
-}
-}
-
-async function deleteComment(commentId, postId) {
-if (!confirm('Delete?')) return;
-
-try {
-await apiCall(`/api/posts/${postId}/comments/${commentId}`, 'DELETE');
-showMessage('🗑️ Deleted', 'success');
-loadComments(postId);
-
-const commentCount = document.querySelector(`#comment-count-${postId}`);
-if (commentCount) {
-const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
-if (currentCount > 0) commentCount.textContent = `💬 ${currentCount - 1}`;
-}
-} catch(error) {
-console.error('❌ Delete comment:', error);
-showMessage('❌ Failed', 'error');
-}
-}
-
-function sharePost(postId, postContent = '', author = '') {
-const shareModal = document.createElement('div');
-shareModal.className = 'modal';
-shareModal.id = 'shareModal';
-shareModal.style.display = 'flex';
-
-const postUrl = `${window.location.origin}/?post=${postId}`;
-const shareText = `Check out @${author} on VibeXpert!`;
-
-shareModal.innerHTML = `
-   <div class="modal-box" style="max-width:500px;">
-     <span class="close" onclick="closeShareModal()">&times;</span>
-     <h2>🔄 Share</h2>
-     <div style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
-       border-radius:12px;padding:20px;margin:20px 0;">
-       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;">
-         <button onclick="shareVia('copy','${postUrl}')" class="share-option-btn">
-           <span style="font-size:32px;">📋</span>
-           <span>Copy Link</span>
-         </button>
-         <button onclick="shareVia('whatsapp','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">💬</span>
-           <span>WhatsApp</span>
-         </button>
-         <button onclick="shareVia('twitter','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">🐦</span>
-           <span>Twitter</span>
-         </button>
-         <button onclick="shareVia('native','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">📤</span>
-           <span>More</span>
-         </button>
-       </div>
-     </div>
-     <div style="background:rgba(79,116,163,0.1);padding:12px;border-radius:8px;">
-       <input type="text" value="${postUrl}" readonly id="shareUrlInput" 
-         style="width:100%;background:transparent;border:none;color:#4f74a3;text-align:center;font-size:14px;">
-     </div>
-   </div>
- `;
-
-document.body.appendChild(shareModal);
-}
-
-function closeShareModal() {
-const modal = document.getElementById('shareModal');
-if (modal) modal.remove();
-}
-
-async function shareVia(platform, url, text = '') {
-switch(platform) {
-case 'copy':
-try {
-await navigator.clipboard.writeText(url);
-showMessage('✅ Link copied!', 'success');
-closeShareModal();
-} catch(err) {
-const input = document.getElementById('shareUrlInput');
-if (input) {
-input.select();
-document.execCommand('copy');
-showMessage('✅ Link copied!', 'success');
-}
-}
-break;
-
-case 'whatsapp':
-window.open(`https://wa.me/?text=${text}%20${encodeURIComponent(url)}`, '_blank');
-closeShareModal();
-break;
-
-case 'twitter':
-window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank');
-closeShareModal();
-break;
-
-case 'native':
-if (navigator.share) {
-try {
-await navigator.share({ 
-title: 'VibeXpert', 
-text: decodeURIComponent(text), 
-url 
-});
-closeShareModal();
-} catch(err) {
-if (err.name !== 'AbortError') console.error('Share:', err);
-}
-} else {
-showMessage('⚠️ Not supported', 'error');
-}
-break;
-}
-
-try {
-const postId = url.split('post=')[1];
-if (postId) {
-await apiCall(`/api/posts/${postId}/share`, 'POST');
-const shareCount = document.querySelector(`#share-count-${postId}`);
-if (shareCount) {
-const currentCount = parseInt(shareCount.textContent.replace(/\D/g, '')) || 0;
-shareCount.textContent = `🔄 ${currentCount + 1}`;
-}
-}
-} catch(error) {
-console.error('Share count:', error);
-}
-}
-
-// ========================================
-// POST MEDIA FEATURES
-// ========================================
-
-function showPostDestinationModal() {
-showModal('postDestinationModal');
-}
-
-function selectPostDestination(destination) {
-selectedPostDestination = destination;
-
-const displayEl = document.getElementById('currentDestination');
-if (displayEl) {
-displayEl.textContent = destination === 'profile' ? 'My Profile' : 'Community Feed';
-}
-
-closeModal('postDestinationModal');
-showMessage(`✅ Will post to ${destination === 'profile' ? 'Profile' : 'Community'}`, 'success');
-}
-
-function openPhotoGallery() {
-const input = document.createElement('input');
-input.type = 'file';
-input.accept = 'image/*,video/*,audio/*';
-input.multiple = true;
-
-input.onchange = (e) => {
-const files = Array.from(e.target.files);
-handleMediaFiles(files);
-};
-
-input.click();
-}
-
-function openCamera() {
-const input = document.createElement('input');
-input.type = 'file';
-input.accept = 'image/*';
-input.capture = 'environment';
-
-input.onchange = (e) => {
-const files = Array.from(e.target.files);
-handleMediaFiles(files);
-};
-
-input.click();
-}
-
-function handleMediaFiles(files) {
-if (!files || files.length === 0) return;
-
-files.forEach(file => {
-if (file.size > 10 * 1024 * 1024) {
-showMessage('⚠️ File too large (max 10MB)', 'error');
-return;
-}
-
-selectedFiles.push(file);
-
-const reader = new FileReader();
-reader.onload = (e) => {
-previewUrls.push(e.target.result);
-updatePhotoPreview();
-};
-reader.readAsDataURL(file);
-});
-}
-
-function updatePhotoPreview() {
-const container = document.getElementById('photoPreviewContainer');
-if (!container) return;
-
-if (previewUrls.length === 0) {
-container.style.display = 'none';
-return;
-}
-
-container.style.display = 'grid';
-container.innerHTML = '';
-
-previewUrls.forEach((url, index) => {
-const wrapper = document.createElement('div');
-wrapper.className = 'media-preview-item';
-
-const file = selectedFiles[index];
-const isVideo = file.type.startsWith('video/');
-const isAudio = file.type.startsWith('audio/');
-
-if (isVideo) {
-wrapper.innerHTML = `
-       <video src="${url}" controls></video>
-       <button class="remove-media-btn" onclick="removeMedia(${index})">&times;</button>
-     `;
-} else if (isAudio) {
-wrapper.innerHTML = `
-       <div class="audio-preview">🎵 ${file.name}</div>
-       <audio src="${url}" controls></audio>
-       <button class="remove-media-btn" onclick="removeMedia(${index})">&times;</button>
-     `;
-} else {
-wrapper.innerHTML = `
-       <img src="${url}" alt="Preview">
-       <div class="media-actions">
-         <button onclick="openCropEditor(${index})">✂️</button>
-         <button onclick="openPhotoEditor(${index})">🎨</button>
-         <button onclick="removeMedia(${index})">&times;</button>
-       </div>
-     `;
-}
-
-container.appendChild(wrapper);
-});
-}
-
-function removeMedia(index) {
-selectedFiles.splice(index, 1);
-previewUrls.splice(index, 1);
-updatePhotoPreview();
-showMessage('✅ Media removed', 'success');
-}
-
-function openMusicSelector() {
-const modal = document.getElementById('musicSelectorModal');
-if (!modal) return;
-
-let html = '<div class="music-library">';
-
-musicLibrary.forEach(music => {
-const isSelected = selectedMusic && selectedMusic.id === music.id;
-html += `
-     <div class="music-item ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-       <div class="music-item-icon">${music.emoji}</div>
-       <div class="music-item-info">
-         <div class="music-item-name">${music.name}</div>
-         <div class="music-item-artist">${music.artist}</div>
-         <div class="music-item-duration">${music.duration}</div>
-       </div>
-       ${isSelected ? '<div class="music-selected-badge">✓</div>' : ''}
-     </div>
-   `;
-});
-
-html += '</div>';
-
-const selector = document.getElementById('musicSelector');
-if (selector) selector.innerHTML = html;
-
-showModal('musicSelectorModal');
-}
-
-function selectMusic(musicId) {
-const music = musicLibrary.find(m => m.id === musicId);
-if (!music) return;
-
-selectedMusic = music;
-closeModal('musicSelectorModal');
-updateSelectedAssets();
-showMessage(`🎵 Added: ${music.name}`, 'success');
-}
-
-function openStickerSelector() {
-const modal = document.getElementById('stickerSelectorModal');
-if (!modal) return;
-
-let html = '<div class="sticker-categories">';
-
-Object.keys(stickerLibrary).forEach(category => {
-html += `<h3 style="text-transform:capitalize;color:#4f74a3;margin:20px 0 10px 0;">${category}</h3>`;
-html += '<div class="sticker-grid">';
-
-stickerLibrary[category].forEach(sticker => {
-const isSelected = selectedStickers.some(s => s.id === sticker.id);
-html += `
-       <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="toggleSticker('${sticker.id}', '${category}')">
-         <span class="sticker-emoji">${sticker.emoji}</span>
-         <span class="sticker-name">${sticker.name}</span>
-       </div>
-     `;
-});
-
-html += '</div>';
-});
-
-html += '</div>';
-
-const selector = document.getElementById('stickerSelector');
-if (selector) selector.innerHTML = html;
-
-showModal('stickerSelectorModal');
-}
-
-function toggleSticker(stickerId, category) {
-const sticker = stickerLibrary[category].find(s => s.id === stickerId);
-if (!sticker) return;
-
-const index = selectedStickers.findIndex(s => s.id === stickerId);
-
-if (index > -1) {
-selectedStickers.splice(index, 1);
-showMessage('✅ Sticker removed', 'success');
-} else {
-if (selectedStickers.length >= 5) {
-showMessage('⚠️ Max 5 stickers', 'error');
-return;
-}
-selectedStickers.push(sticker);
-showMessage(`✅ Added: ${sticker.name}`, 'success');
-}
-
-updateSelectedAssets();
-openStickerSelector();
-}
-
-function updateSelectedAssets() {
-const container = document.getElementById('selectedAssets');
-if (!container) return;
-
-if (!selectedMusic && selectedStickers.length === 0) {
-container.style.display = 'none';
-return;
-}
-
-container.style.display = 'block';
-let html = '<div class="selected-assets-wrapper">';
-
-if (selectedMusic) {
-html += `
-     <div class="selected-asset-item">
-       <span>${selectedMusic.emoji} ${selectedMusic.name}</span>
-       <button onclick="removeMusic()">&times;</button>
-     </div>
-   `;
-}
-
-selectedStickers.forEach((sticker, index) => {
-html += `
-     <div class="selected-asset-item">
-       <span>${sticker.emoji} ${sticker.name}</span>
-       <button onclick="removeSticker(${index})">&times;</button>
-     </div>
-   `;
-});
-
-html += '</div>';
-container.innerHTML = html;
-}
-
-function removeMusic() {
-selectedMusic = null;
-updateSelectedAssets();
-showMessage('✅ Music removed', 'success');
-}
-
-function removeSticker(index) {
-selectedStickers.splice(index, 1);
-updateSelectedAssets();
-showMessage('✅ Sticker removed', 'success');
-}
-
-function openPhotoEditor(index) {
-currentEditIndex = index;
-const img = document.getElementById('editImage');
-if (img) {
-img.src = previewUrls[index];
-showModal('photoEditorModal');
-}
-}
-
-function applyFilter(filterName) {
-const img = document.getElementById('editImage');
-if (!img) return;
-
-currentFilters = {};
-
-switch(filterName) {
-case 'normal':
-img.style.filter = 'none';
-break;
-case 'vintage':
-currentFilters = { sepia: 50, contrast: 110, brightness: 90 };
-break;
-case 'clarendon':
-currentFilters = { contrast: 120, saturate: 135 };
-break;
-case 'moon':
-currentFilters = { grayscale: 100, contrast: 110, brightness: 110 };
-break;
-case 'lark':
-currentFilters = { contrast: 90, brightness: 110, saturate: 130 };
-break;
-case 'reyes':
-currentFilters = { sepia: 22, brightness: 110, contrast: 85, saturate: 75 };
-break;
-}
-
-applyFiltersToImage();
-}
-
-function applyFiltersToImage() {
-const img = document.getElementById('editImage');
-if (!img) return;
-
-let filterString = '';
-
-if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
-if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
-if (currentFilters.saturate) filterString += `saturate(${currentFilters.saturate}%) `;
-if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
-if (currentFilters.grayscale) filterString += `grayscale(${currentFilters.grayscale}%) `;
-
-img.style.filter = filterString.trim();
-}
-
-function resetFilters() {
-const img = document.getElementById('editImage');
-if (img) img.style.filter = 'none';
-currentFilters = {};
-showMessage('✅ Filters reset', 'success');
-}
-
-function saveEditedPhoto() {
-showMessage('✅ Changes saved!', 'success');
-closeModal('photoEditorModal');
-}
-
-function openCropEditor(index) {
-currentCropIndex = index;
-const img = document.getElementById('cropImage');
-
-if (img) {
-img.src = previewUrls[index];
-showModal('cropEditorModal');
-
-setTimeout(() => {
-if (cropper) cropper.destroy();
-
-cropper = new Cropper(img, {
-aspectRatio: NaN,
-viewMode: 1,
-autoCropArea: 1,
-responsive: true,
-background: false
-});
-}, 300);
-}
-}
-
-function resetCrop() {
-if (cropper) {
-cropper.reset();
-showMessage('✅ Crop reset', 'success');
-}
-}
-
-function rotateImage() {
-if (cropper) {
-cropper.rotate(90);
-}
-}
-
-function applyCrop() {
-if (!cropper) return;
-
-const canvas = cropper.getCroppedCanvas();
-if (!canvas) return;
-
-canvas.toBlob((blob) => {
-const file = new File([blob], selectedFiles[currentCropIndex].name, {
-type: 'image/jpeg'
-});
-
-selectedFiles[currentCropIndex] = file;
-
-const reader = new FileReader();
-reader.onload = (e) => {
-previewUrls[currentCropIndex] = e.target.result;
-updatePhotoPreview();
-closeModal('cropEditorModal');
-showMessage('✅ Crop applied!', 'success');
-
-if (cropper) {
-cropper.destroy();
-cropper = null;
-}
-};
-reader.readAsDataURL(file);
-}, 'image/jpeg', 0.9);
-}
-
-// Setup aspect ratio buttons
-document.addEventListener('DOMContentLoaded', () => {
-const aspectBtns = document.querySelectorAll('.aspect-ratio-btn');
-aspectBtns.forEach(btn => {
-btn.addEventListener('click', () => {
-aspectBtns.forEach(b => b.classList.remove('active'));
-btn.classList.add('active');
-
-const ratio = btn.getAttribute('data-ratio');
-if (cropper) {
-if (ratio === 'free') {
-cropper.setAspectRatio(NaN);
-} else {
-cropper.setAspectRatio(eval(ratio));
-}
-}
-});
-});
-});
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
-
-function showModal(modalId) {
-const modal = document.getElementById(modalId);
-if (modal) modal.style.display = 'flex';
-}
-
-function closeModal(modalId) {
-const modal = document.getElementById(modalId);
-if (modal) modal.style.display = 'none';
-
-if (modalId === 'cropEditorModal' && cropper) {
-cropper.destroy();
-cropper = null;
-}
-}
-
-function showMessage(text, type) {
-const box = document.getElementById('message');
-
-if (!box) {
-console.log('Message:', text);
-return;
-}
-
-const div = document.createElement('div');
-div.className = 'msg msg-' + type;
-div.textContent = text;
-
-box.innerHTML = '';
-box.appendChild(div);
-
-setTimeout(() => {
-if (div.parentNode) div.remove();
-}, 4000);
-}
-
-function updateLiveStats() {
-const onlineCount = Math.floor(Math.random() * 300) + 150;
-const postsToday = Math.floor(Math.random() * 500) + 200;
-const activeChats = Math.floor(Math.random() * 100) + 50;
-
-const elements = {
-'liveUsersCount': onlineCount + ' Active',
-'heroOnline': onlineCount,
-'heroPostsToday': postsToday,
-'heroChats': activeChats,
-'footerUsers': onlineCount
-};
-
-Object.keys(elements).forEach(id => {
-const el = document.getElementById(id);
-if (el) el.textContent = elements[id];
-});
-}
-
-function updateOnlineCount(count) {
-const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
-
-elements.forEach(id => {
-const el = document.getElementById(id);
-if (el) {
-if (id === 'liveUsersCount') el.textContent = count + ' Active';
-else el.textContent = count;
-}
-});
-}
-
-function updateLiveNotif(text) {
-const notif = document.getElementById('notifText');
-if (notif) notif.textContent = text;
-}
-
-function toggleOptionsMenu() {
-const menu = document.getElementById('optionsMenu');
-const hamburger = document.getElementById('hamburgerMenu');
-
-if (hamburger) hamburger.style.display = 'none';
-if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-}
-
-function toggleHamburgerMenu() {
-const menu = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-
-if (options) options.style.display = 'none';
-if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-}
-
-function showComplaintModal() {
-const modal = document.getElementById('complaintModal');
-if (modal) modal.style.display = 'flex';
-
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
-}
-
-function showContactModal() {
-const modal = document.getElementById('contactModal');
-if (modal) modal.style.display = 'flex';
-
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
-}
-
-function showFeedbackModal() {
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
-
-modal.innerHTML = `
-   <div class="modal-box">
-     <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-     <h2>📢 Feedback</h2>
-     <p style="color:#888;margin-bottom:20px;">We'd love to hear from you!</p>
-     <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
-     <textarea id="feedbackMessage" placeholder="Your feedback..." 
-       style="width:100%;min-height:120px;padding:12px;background:rgba(20,30,50,0.6);
-       border:1px solid rgba(79,116,163,0.3);border-radius:10px;color:white;
-       font-family:inherit;resize:vertical;"></textarea>
-     <button onclick="submitFeedback()" style="width:100%;margin-top:15px;">📤 Send</button>
-   </div>
- `;
-
-document.body.appendChild(modal);
-
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
-}
-
-async function submitFeedback() {
-const subject = document.getElementById('feedbackSubject')?.value.trim();
-const message = document.getElementById('feedbackMessage')?.value.trim();
-
-if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
-
-try {
-await apiCall('/api/feedback', 'POST', { subject, message });
-showMessage('✅ Thank you!', 'success');
-document.querySelector('.modal')?.remove();
-} catch(error) {
-showMessage('❌ Failed', 'error');
-}
-}
-
-function submitComplaint() {
-const text = document.getElementById('complaintText')?.value.trim();
-
-if (text) {
-showMessage('✅ Submitted!', 'success');
-const input = document.getElementById('complaintText');
-if (input) input.value = '';
-closeModal('complaintModal');
-} else {
-showMessage('⚠️ Enter details', 'error');
-}
-}
-
-function toggleTheme() {
-const body = document.body;
-
-if (body.classList.contains('dark-theme')) {
-body.classList.remove('dark-theme');
-body.classList.add('light-theme');
-} else {
-body.classList.remove('light-theme');
-body.classList.add('dark-theme');
-}
-
-showMessage('🎨 Theme changed!', 'success');
-
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
-}
-
-function loadTrending() {
-const container = document.getElementById('trendingContainer');
-if (!container) return;
-
-const trending = [
-{ title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
-{ title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
-{ title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
-];
-
-let html = '';
-
-trending.forEach(item => {
-html += `
-     <div class="trending-card">
-       <div class="trending-card-header">
-         <div class="trending-title">${item.title}</div>
-         <div class="trending-badge">${item.badge}</div>
-       </div>
-       <div class="trending-text">${item.text}</div>
-       <div class="trending-footer">
-         <div class="trending-engagement">
-           <div class="engagement-item">❤️ ${item.likes}</div>
-           <div class="engagement-item">💬 ${item.comments}</div>
-         </div>
-       </div>
-     </div>
-   `;
-});
-
-container.innerHTML = html;
-}
-
-function loadRewardsPage() {
-  console.log('📊 Loading Rewards Page');
   
-  // Just update the roadmap UI - that's it!
-  setTimeout(() => updateRoadmapUI(), 100);
-}
-
-function completeTask(taskId) {
-const task = rewardsData.dailyTasks.find(t => t.id === taskId);
-if (!task) return;
-
-if (task.completed) {
-showMessage('⚠️ Already completed', 'error');
-return;
-}
-
-task.completed = true;
-showMessage(`✅ +${task.reward} points earned!`, 'success');
-loadRewardsPage();
-}
-
-function showPostCelebrationModal(postCount) {
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
-
-let milestone = '';
-if (postCount === 1) milestone = '🎉 First Post!';
-else if (postCount === 10) milestone = '🎉 10 Posts!';
-else if (postCount === 50) milestone = '🎉 50 Posts!';
-else if (postCount === 100) milestone = '🎉 100 Posts!';
-
-modal.innerHTML = `
-   <div class="modal-box" style="text-align:center;max-width:400px;">
-     <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-     <div style="font-size:80px;margin:20px 0;">🎊</div>
-     <h2 style="color:#4f74a3;font-size:32px;margin-bottom:15px;">${milestone || 'Post Shared!'}</h2>
-     <p style="color:#888;font-size:16px;margin-bottom:25px;">
-       Your content is now live! Keep sharing your amazing moments.
-     </p>
-     <div style="background:linear-gradient(135deg,rgba(79,116,163,0.2),rgba(141,164,211,0.2));
-       padding:20px;border-radius:15px;margin-bottom:20px;">
-       <div style="font-size:36px;font-weight:800;color:#4f74a3;">${postCount}</div>
-       <div style="font-size:14px;color:#888;">Total Posts</div>
-     </div>
-     <button onclick="this.parentElement.parentElement.remove()" 
-       style="width:100%;padding:14px;background:linear-gradient(135deg,#4f74a3,#8da4d3);
-       color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
-       Awesome! 🚀
-     </button>
-   </div>
- `;
-
-document.body.appendChild(modal);
-}
-// ========================================
-// REWARDS ROADMAP SYSTEM
-// ========================================
-
-const roadmapLevels = {
-  wood: {
-    name: 'Wood League',
-    color: '#8B4513',
-    icon: '🪵',
-    position: 80,
-    requirements: { posts: 5, comments: 10, likes: 20, days_active: 3 },
-    rewards: ['Wood Badge', '50 Points', 'Basic Avatar Frame']
-  },
-  bronze: {
-    name: 'Bronze League',
-    color: '#CD7F32',
-    icon: '🥉',
-    position: 480,
-    requirements: { posts: 15, comments: 30, likes: 50, days_active: 7 },
-    rewards: ['Bronze Badge', '150 Points', 'Bronze Avatar Frame']
-  },
-  silver: {
-    name: 'Silver League',
-    color: '#C0C0C0',
-    icon: '🥈',
-    position: 880,
-    requirements: { posts: 50, comments: 100, likes: 200, days_active: 15 },
-    rewards: ['Silver Badge', '500 Points', 'Silver Avatar Frame']
-  },
-  gold: {
-    name: 'Gold League',
-    color: '#FFD700',
-    icon: '🥇',
-    position: 1280,
-    requirements: { posts: 100, comments: 250, likes: 500, days_active: 30 },
-    rewards: ['Gold Badge', '1000 Points', 'Gold Avatar Frame', 'VIP Status']
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  if (event && event.target) {
+    event.target.classList.add('active');
   }
-};
-
-function updateRoadmapUI() {
-  if (!currentUser) return;
   
-  const userStats = {
-    posts: currentUser.postCount || 0,
-    comments: currentUser.commentCount || 0,
-    likes: currentUser.likeCount || 0,
-    days_active: currentUser.daysActive || 1
-  };
-  
-  const currentLevel = calculateUserLevel(userStats);
-  const nextLevel = getNextLevel(currentLevel);
-  
-  updateCharacterPosition(currentLevel);  // ✅ Make sure this line is here
-  updateProgressInfo(currentLevel, nextLevel, userStats);
-  updateMilestoneStatuses(userStats);
+  // Load section data
+  loadSectionData(sectionName);
 }
 
-function calculateUserLevel(stats) {
-  const levels = ['wood', 'bronze', 'silver', 'gold'];
-  for (let i = levels.length - 1; i >= 0; i--) {
-    const level = levels[i];
-    const reqs = roadmapLevels[level].requirements;
-    if (stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
-        stats.likes >= reqs.likes && stats.days_active >= reqs.days_active) {
-      return level;
-    }
-  }
-  return 'wood';
-}
-
-function getNextLevel(currentLevel) {
-  const levels = ['wood', 'bronze', 'silver', 'gold'];
-  const idx = levels.indexOf(currentLevel);
-  return idx < levels.length - 1 ? levels[idx + 1] : null;
-}
-
-function updateCharacterPosition(level) {
-  const char = document.getElementById('roadmapCharacter');
-  if (char) {
-    char.style.top = roadmapLevels[level].position + 'px';
-    char.textContent = roadmapLevels[level].icon;
+function loadSectionData(sectionName) {
+  switch(sectionName) {
+    case 'home':
+      loadHomeFeed();
+      break;
+    case 'communities':
+      loadColleges();
+      break;
+    case 'realvibe':
+      loadRealVibe();
+      break;
+    case 'posts':
+      loadMyPosts();
+      break;
+    case 'rewards':
+      loadRewards();
+      break;
   }
 }
 
-function updateProgressInfo(currentLevel, nextLevel, stats) {
-  const nameEl = document.getElementById('currentLevelName');
-  const descEl = document.getElementById('progressDescription');
-  const tasksEl = document.getElementById('progressTasks');
-  const barEl = document.getElementById('progressBarFill');
-  const percentEl = document.getElementById('progressPercentage');
+// ========================================
+// DATA LOADING FUNCTIONS
+// ========================================
+
+async function loadUserData() {
+  try {
+    const response = await apiCall('/api/user/data');
+    updateLiveCounter(response.onlineCount);
+  } catch (error) {
+    console.error('Error loading user data:', error);
+  }
+}
+
+function updateLiveCounter(count) {
+  const liveCountElement = document.getElementById('liveCount');
+  if (liveCountElement) {
+    liveCountElement.textContent = count || '0';
+  }
+}
+
+// ========================================
+// SCROLL TO FUNCTIONS
+// ========================================
+
+function scrollToSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function showMainPage() {
+  document.getElementById('aboutUsPage').style.display = 'none';
+  document.getElementById('mainPage').style.display = 'block';
+  document.getElementById('userName').textContent = currentUser.name || 'User';
   
-  if (nameEl) nameEl.textContent = roadmapLevels[currentLevel].name;
+  // Load initial data
+  loadSectionData('home');
+}
+// ========================================
+// VIBEXPERT - COMPLETE JAVASCRIPT PART 2: ENHANCED CHAT SYSTEM
+// ========================================
+
+// ========================================
+// CHAT SYSTEM INITIALIZATION
+// ========================================
+
+function initializeEnhancedChat() {
+  if (chatInitialized) return;
   
-  if (nextLevel) {
-    const reqs = roadmapLevels[nextLevel].requirements;
-    const progress = ((stats.posts/reqs.posts + stats.comments/reqs.comments + 
-                      stats.likes/reqs.likes + stats.days_active/reqs.days_active) / 4) * 100;
+  chatInitialized = true;
+  setupChatInputEnhancements();
+  setupMessageActions();
+  setupTypingIndicator();
+  setupReactionSystem();
+  setupConnectionMonitor();
+  setupMessageOptimization();
+  setupInfiniteScroll();
+}
+
+function joinCollegeChat(collegeName) {
+  if (!socket || !currentUser) return;
+  
+  currentChatCollege = collegeName;
+  socket.emit('join_college', { college: collegeName, user: currentUser });
+  
+  // Update UI
+  document.getElementById('chatCollegeName').textContent = collegeName;
+  document.getElementById('chatSection').style.display = 'flex';
+  document.getElementById('communitiesSection').style.display = 'none';
+  
+  // Load messages
+  loadChatMessages();
+  
+  // Initialize chat features
+  initializeEnhancedChat();
+}
+
+function leaveCollegeChat() {
+  if (!socket || !currentChatCollege) return;
+  
+  socket.emit('leave_college', { college: currentChatCollege, user: currentUser });
+  currentChatCollege = null;
+  
+  document.getElementById('chatSection').style.display = 'none';
+  document.getElementById('communitiesSection').style.display = 'block';
+}
+
+function backToCommunities() {
+  leaveCollegeChat();
+}
+
+// ========================================
+// MESSAGE LOADING & RENDERING
+// ========================================
+
+async function loadChatMessages() {
+  try {
+    const response = await apiCall(`/api/community/messages?college=${currentChatCollege}&page=${currentMessagePage}`, 'GET');
     
-    if (descEl) descEl.textContent = `Progress to ${roadmapLevels[nextLevel].name}`;
-    if (tasksEl) tasksEl.innerHTML = `
-      <div style="margin-top: 15px;">
-        <div>📝 Posts: ${stats.posts}/${reqs.posts}</div>
-        <div>💬 Comments: ${stats.comments}/${reqs.comments}</div>
-        <div>❤️ Likes: ${stats.likes}/${reqs.likes}</div>
-        <div>📅 Days Active: ${stats.days_active}/${reqs.days_active}</div>
-      </div>`;
-    if (barEl) barEl.style.width = Math.min(100, progress) + '%';
-    if (percentEl) percentEl.textContent = Math.round(progress) + '%';
-  } else {
-    if (descEl) descEl.textContent = '🏆 Maximum Level!';
-    if (tasksEl) tasksEl.innerHTML = '<div style="margin-top:15px;color:#FFD700;">Highest level achieved! 🎉</div>';
-    if (barEl) barEl.style.width = '100%';
-    if (percentEl) percentEl.textContent = '100%';
-  }
-}
-
-function updateMilestoneStatuses(stats) {
-  Object.keys(roadmapLevels).forEach(level => {
-    const card = document.querySelector(`.milestone-level.${level}`);
-    if (!card) return;
-    
-    const reqs = roadmapLevels[level].requirements;
-    const completed = stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
-                     stats.likes >= reqs.likes && stats.days_active >= reqs.days_active;
-    
-    const badge = card.querySelector('.level-status');
-    if (badge) {
-      if (completed) {
-        badge.className = 'level-status completed';
-        badge.textContent = '✅ Completed';
+    if (response.messages) {
+      if (currentMessagePage === 1) {
+        chatMessages = response.messages;
+        renderChatMessages();
       } else {
-        const current = calculateUserLevel(stats);
-        const next = getNextLevel(current);
-        if (level === next) {
-          badge.className = 'level-status in-progress';
-          badge.textContent = '🎯 In Progress';
-        } else {
-          badge.className = 'level-status locked';
-          badge.textContent = '🔒 Locked';
-        }
+        chatMessages.unshift(...response.messages);
+        prependMessages(response.messages);
       }
+      
+      hasMoreMessages = response.messages.length === ITEMS_PER_PAGE;
+      currentMessagePage++;
     }
-  });
-}
-
-function checkAndUpdateRewards(action) {
-  if (!currentUser) return;
-  
-  switch(action) {
-    case 'post': currentUser.postCount = (currentUser.postCount || 0) + 1; break;
-    case 'comment': currentUser.commentCount = (currentUser.commentCount || 0) + 1; break;
-    case 'like': currentUser.likeCount = (currentUser.likeCount || 0) + 1; break;
-  }
-  
-  localStorage.setItem('user', JSON.stringify(currentUser));
-  updateRoadmapUI();
-  checkLevelUp();
-}
-
-function checkLevelUp() {
-  const stats = {
-    posts: currentUser.postCount || 0,
-    comments: currentUser.commentCount || 0,
-    likes: currentUser.likeCount || 0,
-    days_active: currentUser.daysActive || 1
-  };
-  
-  const current = calculateUserLevel(stats);
-  const previous = currentUser.currentLevel || 'wood';
-  
-  if (current !== previous) {
-    currentUser.currentLevel = current;
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    showLevelUpCelebration(current);
+  } catch (error) {
+    console.error('Error loading messages:', error);
+    showNotification('Failed to load messages', 'error');
   }
 }
 
-function showLevelUpCelebration(level) {
-  const data = roadmapLevels[level];
-  const modal = document.createElement('div');
-  modal.className = 'modal celebration-modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="celebration-modal-content">
-      <div class="celebration-emoji">${data.icon}</div>
-      <h2 class="celebration-title" style="color:${data.color}">Level Up!</h2>
-      <p class="celebration-message">You've reached ${data.name}!</p>
-      <div class="celebration-stats" style="background:linear-gradient(135deg,${data.color}33,${data.color}22);">
-        <div class="celebration-count">${data.name}</div>
-        <div class="celebration-label">New Rank</div>
-      </div>
-      <div class="celebration-quote">
-        <strong>Rewards:</strong><br>${data.rewards.join(' • ')}
-      </div>
-      <button class="celebration-button" style="background:linear-gradient(135deg,${data.color},${data.color}cc);" 
-        onclick="this.closest('.modal').remove()">Awesome! 🎉</button>
-    </div>`;
-  document.body.appendChild(modal);
-  createConfetti();
-}
-
-window.updateRoadmapUI = updateRoadmapUI;
-window.checkAndUpdateRewards = checkAndUpdateRewards;
-// ========================================
-// CONSOLE LOG - INITIALIZATION COMPLETE
-// ========================================
-
-console.log('%c🎉 VibeXpert Enhanced Chat Ready! 🎉', 'color: #4f74a3; font-size: 20px; font-weight: bold;');
-console.log('%cFeatures: Real-time chat, Reactions, Typing indicators, Message actions', 'color: #8da4d3; font-size: 14px;');
-
-// ==========================================
-// FIREWORKS ANIMATION - BIGGER & FASTER
-// ==========================================
-
-function initFireworks() {
-  const canvas = document.getElementById('fireworksCanvas');
-  if (!canvas) return;
+function renderChatMessages() {
+  const container = document.getElementById('chatMessagesContainer');
+  container.innerHTML = '';
   
-  const ctx = canvas.getContext('2d');
-  
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  chatMessages.forEach(message => {
+    const messageElement = createMessageElement(message);
+    container.appendChild(messageElement);
   });
   
-  class Particle {
-    constructor(x, y, color) {
-      this.x = x;
-      this.y = y;
-      this.color = color;
-      this.velocity = {
-        x: (Math.random() - 0.5) * 12,  // FASTER (was 8)
-        y: (Math.random() - 0.5) * 12   // FASTER (was 8)
-      };
-      this.alpha = 1;
-      this.decay = Math.random() * 0.018 + 0.018;  // SLOWER FADE (was 0.015)
-      this.size = Math.random() * 1 + 2;  // BIGGER (was 3 + 2)
-    }
-    
-    update() {
-      this.velocity.x *= 0.98;
-      this.velocity.y *= 0.98;
-      this.velocity.y += 0.1;
-      this.x += this.velocity.x;
-      this.y += this.velocity.y;
-      this.alpha -= this.decay;
-    }
-    
-    draw() {
-      ctx.save();
-      ctx.globalAlpha = this.alpha;
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-  
-  let particles = [];
-  // MORE COLORFUL (12 colors instead of 6)
-  const colors = [
-    '#FFD700', '#FFA500', '#FF6B6B', '#FF1493', 
-    '#00FF00', '#00FFFF', '#FF00FF', '#4f74a3', 
-    '#8da4d3', '#C0C0C0', '#FF4500', '#7FFF00'
-  ];
-  
-  function createFirework(x, y) {
-    const particleCount = 60;  // MORE PARTICLES (was 30)
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle(x, y, color));
-    }
-  }
-  
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    particles = particles.filter(particle => {
-      particle.update();
-      particle.draw();
-      return particle.alpha > 0;
-    });
-    
-    requestAnimationFrame(animate);
-  }
-  
-  // MORE FREQUENT FIREWORKS (800ms instead of 2000ms)
-  setInterval(() => {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height * 0.5;
-    createFirework(x, y);
-  }, 800);
-  
-  animate();
+  scrollToBottom();
 }
 
-// ==========================================
-// REWARDS PROGRESS UPDATE
-// ==========================================
-
-function updateRewardsProgress() {
-  if (!currentUser) return;
+function prependMessages(newMessages) {
+  const container = document.getElementById('chatMessagesContainer');
+  const scrollHeight = container.scrollHeight;
   
-  const userStats = {
-    activeHours: currentUser.activeHours || 0,
-    weeksActive: currentUser.weeksActive || 0,
-    alternativeHours: currentUser.alternativeHours || 0,
-    posts: currentUser.postCount || 0,
-    views: currentUser.viewCount || 0,
-    likes: currentUser.likeCount || 0,
-    followers: currentUser.followerCount || 0
-  };
+  newMessages.forEach(message => {
+    const messageElement = createMessageElement(message);
+    container.insertBefore(messageElement, container.firstChild);
+  });
   
-  const woodProgress = Math.min(100, (userStats.activeHours / 20) * 100);
-  const altWoodProgress = Math.min(100, (userStats.alternativeHours / 50) * 100);
-  const progress = Math.max(woodProgress, altWoodProgress);
-  
-  const progressBar = document.getElementById('progressBarFill');
-  const progressPercent = document.getElementById('progressPercentage');
-  
-  if (progressBar) progressBar.style.width = progress + '%';
-  if (progressPercent) progressPercent.textContent = Math.round(progress) + '%';
-  
-  const tasksEl = document.getElementById('progressTasks');
-  if (tasksEl) {
-    tasksEl.innerHTML = `
-      <div style="margin-top: 15px;">
-        <div style="color: ${userStats.activeHours >= 20 ? '#22c55e' : '#888'};">
-          ⏱️ Active Hours: ${userStats.activeHours}/20 per week
-        </div>
-        <div style="color: ${userStats.weeksActive >= 4 ? '#22c55e' : '#888'};">
-          📅 Weeks: ${userStats.weeksActive}/4
-        </div>
-        <div style="color: ${userStats.alternativeHours >= 50 ? '#22c55e' : '#888'};">
-          🔥 Alternative: ${userStats.alternativeHours}/50 hours in 10 days
-        </div>
-      </div>
-    `;
-  }
+  // Maintain scroll position
+  container.scrollTop = container.scrollHeight - scrollHeight;
 }
 
-function updateRewardsCharacterPosition(level) {
-  const positions = {
-    wood: 80,
-    bronze: 480,
-    silver: 880,
-    gold: 1280
-  };
-   
-   const emojis = {
-    wood: '🚶‍♂️',    // Walking man
-    bronze: '🏃‍♂️',   // Running man
-    silver: '🤸‍♂️',   // Gymnast
-    gold: '👑'       // Crown/King
-  };
+function createMessageElement(message) {
+  const isOwn = message.sender_id === currentUser.id;
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${isOwn ? 'own' : 'other'}`;
+  messageDiv.dataset.messageId = message.id;
   
-  const char = document.getElementById('roadmapCharacter');
-  if (char) {
-    char.style.top = (positions[level] || 80) + 'px';
-    char.textContent = emojis[level] || '🚶‍♂️';
+  const avatar = document.createElement('div');
+  avatar.className = 'message-avatar';
+  avatar.textContent = message.sender_name ? message.sender_name[0].toUpperCase() : '?';
+  
+  const content = document.createElement('div');
+  content.className = 'message-content';
+  
+  const header = document.createElement('div');
+  header.className = 'message-header';
+  
+  if (!isOwn) {
+    const senderName = document.createElement('span');
+    senderName.className = 'sender-name';
+    senderName.textContent = message.sender_name || 'Unknown';
+    header.appendChild(senderName);
   }
+  
+  const time = document.createElement('span');
+  time.className = 'message-time';
+  time.textContent = formatMessageTime(message.created_at);
+  header.appendChild(time);
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble';
+  
+  // Handle media content
+  if (message.media_url) {
+    const mediaElement = createMediaElement(message);
+    bubble.appendChild(mediaElement);
+  }
+  
+  // Add text content
+  if (message.content) {
+    const textElement = document.createElement('div');
+    textElement.textContent = message.content;
+    bubble.appendChild(textElement);
+  }
+  
+  const actions = document.createElement('div');
+  actions.className = 'message-actions';
+  actions.innerHTML = `
+    <button class="message-action-btn" onclick="copyMessage('${message.id}')" title="Copy">📋</button>
+    <button class="message-action-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
+    ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
+  `;
+  
+  content.appendChild(header);
+  content.appendChild(bubble);
+  content.appendChild(actions);
+  
+  // Add reactions if any
+  if (message.reactions && message.reactions.length > 0) {
+    const reactionBar = createReactionBar(message.reactions, message.id);
+    content.appendChild(reactionBar);
+  }
+  
+  messageDiv.appendChild(avatar);
+  messageDiv.appendChild(content);
+  
+  return messageDiv;
 }
 
-// Initialize when rewards page loads
-document.addEventListener('DOMContentLoaded', () => {
-  initFireworks();
+function createMediaElement(message) {
+  const mediaDiv = document.createElement('div');
+  mediaDiv.className = 'message-media';
   
-  const rewardsPage = document.getElementById('rewards');
-  if (rewardsPage) {
-    const observer = new MutationObserver(() => {
-      if (rewardsPage.style.display !== 'none') {
-        updateRewardsProgress();
-        updateRewardsCharacterPosition('wood');
-      }
-    });
-    
-    observer.observe(rewardsPage, { 
-      attributes: true, 
-      attributeFilter: ['style'] 
-    });
+  if (message.media_type === 'image') {
+    const img = document.createElement('img');
+    img.src = message.media_url;
+    img.alt = 'Shared image';
+    img.style.maxWidth = '100%';
+    img.style.borderRadius = '8px';
+    img.onclick = () => viewMedia(message.media_url, 'image');
+    mediaDiv.appendChild(img);
+  } else if (message.media_type === 'video') {
+    const video = document.createElement('video');
+    video.src = message.media_url;
+    video.controls = true;
+    video.style.maxWidth = '100%';
+    video.style.borderRadius = '8px';
+    mediaDiv.appendChild(video);
+  } else if (message.media_type === 'audio') {
+    const audio = document.createElement('audio');
+    audio.src = message.media_url;
+    audio.controls = true;
+    audio.style.width = '100%';
+    mediaDiv.appendChild(audio);
+  } else {
+    const docLink = document.createElement('a');
+    docLink.href = message.media_url;
+    docLink.target = '_blank';
+    docLink.textContent = '📄 View Document';
+    docLink.style.display = 'inline-block';
+    docLink.style.padding = '8px 12px';
+    docLink.style.background = 'rgba(79, 116, 163, 0.2)';
+    docLink.style.borderRadius = '6px';
+    docLink.style.textDecoration = 'none';
+    docLink.style.color = '#4f74a3';
+    mediaDiv.appendChild(docLink);
   }
-});
-
-// PROFILE AVATAR UPDATE
-// ==========================================
-
-function updateProfileAvatar() {
-  if (!currentUser) return;
   
-  const avatarImg = document.getElementById('profileAvatarImg');
-  const avatarInitial = document.getElementById('profileAvatarInitial');
-  const userName = document.getElementById('userName');
-  
-  if (userName) {
-    userName.textContent = currentUser.username || 'User';
-  }
-  
-  if (currentUser.profile_pic && avatarImg && avatarInitial) {
-    avatarImg.src = currentUser.profile_pic;
-    avatarImg.style.display = 'block';
-    avatarInitial.style.display = 'none';
-  } else if (avatarInitial) {
-    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
-    avatarInitial.textContent = initial;
-  }
+  return mediaDiv;
 }
 
-// Call this after login
-document.addEventListener('DOMContentLoaded', function() {
-  if (currentUser) {
-    updateProfileAvatar();
-  }
-});
-
-// ==========================================
-// SEARCH BAR IN MENU FUNCTIONALITY
-// ==========================================
-
-function initializeMenuSearch() {
-  const menuSearchBox = document.getElementById('searchBox');
-  const mobileSearchBox = document.getElementById('mobileSearchBox');
+function createReactionBar(reactions, messageId) {
+  const reactionBar = document.createElement('div');
+  reactionBar.className = 'reaction-bar';
   
-  if (menuSearchBox) {
-    menuSearchBox.addEventListener('input', (e) => {
-      handleMenuSearch(e.target.value, 'searchResults');
-    });
-  }
+  reactions.forEach(reaction => {
+    const pill = document.createElement('span');
+    pill.className = 'reaction-pill';
+    pill.innerHTML = `${reaction.emoji} <span class="reaction-count">${reaction.count}</span>`;
+    pill.onclick = () => toggleReaction(messageId, reaction.emoji);
+    reactionBar.appendChild(pill);
+  });
   
-  if (mobileSearchBox) {
-    mobileSearchBox.addEventListener('input', (e) => {
-      handleMenuSearch(e.target.value, 'mobileSearchResults');
-    });
-  }
+  return reactionBar;
 }
 
-function handleMenuSearch(query, resultsId) {
-  const searchResults = document.getElementById(resultsId);
-  
-  if (searchTimeout) clearTimeout(searchTimeout);
-  
-  if (query.length < 2) {
-    if (searchResults) searchResults.style.display = 'none';
-    return;
-  }
-  
-  if (searchResults) {
-    searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
-    searchResults.style.display = 'block';
-  }
-  
-  searchTimeout = setTimeout(() => performUserSearch(query), 600);
-}
+// ========================================
+// MESSAGE SENDING
+// ========================================
 
-// Initialize menu search on load
-document.addEventListener('DOMContentLoaded', function() {
-  initializeMenuSearch();
-});
-
-// ==========================================
-// REALVIBE FUNCTIONALITY
-// ==========================================
-
-let realVibeMediaFile = null;
-let realVibeMediaType = null;
-
-function openRealVibeCreator() {
-  const modal = document.getElementById('realVibeCreatorModal');
-  if (modal) modal.style.display = 'flex';
+async function sendModernMessage() {
+  const input = document.getElementById('modernChatInput');
+  const content = input.value.trim();
   
-  // Reset form
-  clearRealVibePreview();
-  const caption = document.getElementById('realVibeCaption');
-  if (caption) caption.value = '';
-  updateCaptionCounter();
-  
-  // Disable publish button
-  const publishBtn = document.getElementById('publishRealVibeBtn');
-  if (publishBtn) publishBtn.disabled = true;
-}
-
-function captureRealVibePhoto() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) handleRealVibeFile(file, 'image');
-  };
-  
-  input.click();
-}
-
-function uploadRealVibeMedia() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const type = file.type.startsWith('video/') ? 'video' : 'image';
-      handleRealVibeFile(file, type);
-    }
-  };
-  
-  input.click();
-}
-
-function captureRealVibeVideo() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'video/*';
-  input.capture = 'environment';
-  
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) handleRealVibeFile(file, 'video');
-  };
-  
-  input.click();
-}
-
-function handleRealVibeFile(file, type) {
-  if (file.size > 50 * 1024 * 1024) {
-    showMessage('⚠️ File too large (max 50MB)', 'error');
-    return;
-  }
-  
-  realVibeMediaFile = file;
-  realVibeMediaType = type;
-  
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const previewArea = document.getElementById('realVibePreviewArea');
-    const previewImg = document.getElementById('realVibePreviewImg');
-    const previewVideo = document.getElementById('realVibePreviewVideo');
-    
-    if (type === 'image') {
-      previewImg.src = e.target.result;
-      previewImg.style.display = 'block';
-      previewVideo.style.display = 'none';
-    } else {
-      previewVideo.src = e.target.result;
-      previewVideo.style.display = 'block';
-      previewImg.style.display = 'none';
-    }
-    
-    if (previewArea) previewArea.style.display = 'block';
-    
-    // Enable publish button
-    const publishBtn = document.getElementById('publishRealVibeBtn');
-    if (publishBtn) publishBtn.disabled = false;
-  };
-  
-  reader.readAsDataURL(file);
-}
-
-function clearRealVibePreview() {
-  realVibeMediaFile = null;
-  realVibeMediaType = null;
-  
-  const previewArea = document.getElementById('realVibePreviewArea');
-  const previewImg = document.getElementById('realVibePreviewImg');
-  const previewVideo = document.getElementById('realVibePreviewVideo');
-  
-  if (previewImg) {
-    previewImg.src = '';
-    previewImg.style.display = 'none';
-  }
-  if (previewVideo) {
-    previewVideo.src = '';
-    previewVideo.style.display = 'none';
-  }
-  if (previewArea) previewArea.style.display = 'none';
-  
-  // Disable publish button
-  const publishBtn = document.getElementById('publishRealVibeBtn');
-  if (publishBtn) publishBtn.disabled = true;
-}
-
-async function publishRealVibe() {
-  if (!realVibeMediaFile) {
-    showMessage('⚠️ Please add media first', 'error');
-    return;
-  }
-  
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
+  if (!content || !currentChatCollege) return;
   
   try {
-    showMessage('✨ Publishing RealVibe...', 'success');
+    updateMessageStatus('Sending...');
     
-    const caption = document.getElementById('realVibeCaption')?.value.trim();
-    const visibility = document.querySelector('input[name="realVibeVisibility"]:checked')?.value || 'public';
+    const response = await apiCall('/api/community/messages', 'POST', {
+      content: content,
+      college: currentChatCollege
+    });
+    
+    if (response.success) {
+      input.value = '';
+      updateCharCount();
+      updateMessageStatus('Message sent');
+      
+      // Message will be received via socket
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+    updateMessageStatus('Failed to send');
+  }
+}
+
+async function sendMediaMessage(file, type) {
+  if (!file || !currentChatCollege) return;
+  
+  try {
+    updateMessageStatus('Uploading...');
     
     const formData = new FormData();
-    formData.append('media', realVibeMediaFile);
-    formData.append('caption', caption);
-    formData.append('visibility', visibility);
-    formData.append('type', realVibeMediaType);
+    formData.append('file', file);
+    formData.append('college', currentChatCollege);
+    formData.append('media_type', type);
     
-    // For now, simulate success (replace with actual API call)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    showMessage('🎉 RealVibe published successfully!', 'success');
-    closeModal('realVibeCreatorModal');
-    
-    // Reload RealVibes
-    loadRealVibes();
-    
-  } catch (error) {
-    console.error('Publish RealVibe error:', error);
-    showMessage('❌ Failed to publish RealVibe', 'error');
-  }
-}
-
-function updateCaptionCounter() {
-  const caption = document.getElementById('realVibeCaption');
-  const counter = document.getElementById('captionCount');
-  
-  if (caption && counter) {
-    counter.textContent = caption.value.length;
-  }
-}
-
-// Add caption counter listener
-document.addEventListener('DOMContentLoaded', function() {
-  const caption = document.getElementById('realVibeCaption');
-  if (caption) {
-    caption.addEventListener('input', updateCaptionCounter);
-  }
-});
-
-async function loadRealVibes() {
-  const storiesGrid = document.getElementById('realVibeStoriesGrid');
-  const yourGrid = document.getElementById('yourRealVibesGrid');
-  
-  // For now, show empty state (replace with actual API call)
-  if (storiesGrid) {
-    storiesGrid.innerHTML = `
-      <div class="no-realvibes">
-        <div class="no-realvibes-icon">✨</div>
-        <h4>No RealVibes Yet</h4>
-        <p>Be the first to share your authentic moment!</p>
-        <button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
-      </div>
-    `;
-  }
-  
-  if (yourGrid) {
-    yourGrid.innerHTML = '<div class="no-your-realvibes"><p>You haven\'t created any RealVibes yet</p></div>';
-  }
-}
-
-function viewRealVibe(realVibeId) {
-  const modal = document.getElementById('realVibeViewerModal');
-  if (modal) modal.style.display = 'flex';
-  
-  // Load and display RealVibe (implement with actual data)
-  // For now, just show modal structure
-}
-
-function viewPreviousRealVibe() {
-  // Navigate to previous RealVibe
-  console.log('Previous RealVibe');
-}
-
-function viewNextRealVibe() {
-  // Navigate to next RealVibe
-  console.log('Next RealVibe');
-}
-
-function reactToRealVibe() {
-  showMessage('❤️ Reacted!', 'success');
-}
-
-function replyToRealVibe() {
-  showMessage('💬 Reply feature coming soon!', 'success');
-}
-
-function shareRealVibe() {
-  showMessage('🔄 Share feature coming soon!', 'success');
-}
-
-// Load RealVibes when page is shown
-document.addEventListener('DOMContentLoaded', function() {
-  const realVibePage = document.getElementById('realvibe');
-  if (realVibePage) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.target.style.display !== 'none') {
-          loadRealVibes();
-        }
-      });
+    const token = localStorage.getItem('vibexpert_token');
+    const response = await fetch(`${API_URL}/api/community/messages/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
     });
     
-    observer.observe(realVibePage, { 
-      attributes: true, 
-      attributeFilter: ['style'] 
-    });
-  }
-});
-// ==========================================
-// SUBSCRIPTION SYSTEM
-// ==========================================
-
-function openSubscriptionPopup() {
-  const popup = document.getElementById('subscriptionPopup');
-  if (popup) {
-    popup.classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function closeSubscriptionPopup() {
-  const popup = document.getElementById('subscriptionPopup');
-  if (popup) {
-    popup.classList.remove('show');
-    document.body.style.overflow = 'auto';
-  }
-}
-
-function viewAllPlans() {
-  closeSubscriptionPopup();
-  showPage('subscriptionPlans');
-  
-  // Update nav
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  
-  // Scroll to top
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-async function selectPlan(planType) {
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    closeSubscriptionPopup();
-    showAuthPopup();
-    return;
-  }
-  
-  // Plan details
-  const plans = {
-    noble: {
-      name: 'Noble',
-      firstTimePrice: 9,
-      regularPrice: 79,
-      posters: 5,
-      videos: 1,
-      days: 15
-    },
-    royal: {
-      name: 'Royal',
-      firstTimePrice: 15,
-      regularPrice: 99,
-      posters: 5,
-      videos: 3,
-      days: 23
+    if (response.ok) {
+      updateMessageStatus('Media sent');
+      closeMediaUpload();
+    } else {
+      throw new Error('Upload failed');
     }
-  };
-  
-  const plan = plans[planType];
-  
-  if (!plan) {
-    showMessage('❌ Invalid plan', 'error');
-    return;
-  }
-  
-  // Check if first time subscriber
-  const isFirstTime = !currentUser.hasSubscribed;
-  const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
-  
-  // Confirmation
-  const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
-    `Price: ₹${price}\n` +
-    `Posters: ${plan.posters}\n` +
-    `Videos: ${plan.videos}\n` +
-    `Duration: ${plan.days} days\n\n` +
-    (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
-  
-  if (!confirm(confirmMsg)) return;
-  
-  try {
-    showMessage('💳 Processing payment...', 'success');
-    
-    // Simulate payment processing (replace with actual payment gateway)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Here you would integrate with actual payment gateway
-    // For now, we'll simulate success
-    
-    // Update user subscription
-    currentUser.subscription = {
-      plan: planType,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + plan.days * 24 * 60 * 60 * 1000),
-      posters: plan.posters,
-      videos: plan.videos,
-      postersUsed: 0,
-      videosUsed: 0
-    };
-    
-    currentUser.hasSubscribed = true;
-    currentUser.isPremium = true;
-    
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    
-    closeSubscriptionPopup();
-    
-    showMessage('🎉 Subscription successful!', 'success');
-    
-    // Show success modal
-    showSubscriptionSuccessModal(plan);
-    
   } catch (error) {
-    console.error('Subscription error:', error);
-    showMessage('❌ Payment failed. Please try again.', 'error');
+    console.error('Error sending media:', error);
+    updateMessageStatus('Failed to send media');
   }
 }
 
-function showSubscriptionSuccessModal(plan) {
+// ========================================
+// CHAT INPUT HANDLING
+// ========================================
+
+function setupChatInputEnhancements() {
+  const input = document.getElementById('modernChatInput');
+  if (!input) return;
+  
+  // Auto-resize
+  input.addEventListener('input', handleChatInput);
+  
+  // Keyboard shortcuts
+  input.addEventListener('keydown', handleChatInputKeydown);
+  
+  // Character count
+  input.addEventListener('input', updateCharCount);
+}
+
+function handleChatInputKeydown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendModernMessage();
+  } else {
+    handleTyping();
+  }
+}
+
+function handleChatInput() {
+  const input = document.getElementById('modernChatInput');
+  updateCharCount();
+  
+  // Auto-resize textarea
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+}
+
+function updateCharCount() {
+  const input = document.getElementById('modernChatInput');
+  const charCount = document.getElementById('charCount');
+  const sendBtn = document.getElementById('modernSendBtn');
+  
+  if (!input || !charCount || !sendBtn) return;
+  
+  const count = input.value.length;
+  charCount.textContent = `${count} / 1000`;
+  
+  sendBtn.disabled = count === 0 || count > 1000;
+}
+
+function updateMessageStatus(status) {
+  const statusElement = document.getElementById('messageStatus');
+  if (statusElement) {
+    statusElement.textContent = status;
+    
+    setTimeout(() => {
+      statusElement.textContent = 'Ready';
+    }, 3000);
+  }
+}
+
+// ========================================
+// TYPING INDICATOR
+// ========================================
+
+function setupTypingIndicator() {
+  // Typing indicator is handled by socket events
+}
+
+function handleTyping() {
+  if (!socket || !currentChatCollege) return;
+  
+  const now = Date.now();
+  if (now - lastTypingEmit > 3000) {
+    socket.emit('typing_start', { college: currentChatCollege, user: currentUser });
+    lastTypingEmit = now;
+  }
+  
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit('typing_stop', { college: currentChatCollege, user: currentUser });
+  }, 3000);
+}
+
+function handleTypingStart(data) {
+  if (data.college !== currentChatCollege || data.user.id === currentUser.id) return;
+  
+  typingUsers.add(data.user.name);
+  updateTypingIndicator();
+}
+
+function handleTypingStop(data) {
+  if (data.college !== currentChatCollege || data.user.id === currentUser.id) return;
+  
+  typingUsers.delete(data.user.name);
+  updateTypingIndicator();
+}
+
+function updateTypingIndicator() {
+  const indicator = document.getElementById('typingIndicator');
+  const typingText = document.getElementById('typingText');
+  
+  if (!indicator || !typingText) return;
+  
+  if (typingUsers.size > 0) {
+    const names = Array.from(typingUsers);
+    let text = '';
+    
+    if (names.length === 1) {
+      text = `${names[0]} is typing...`;
+    } else if (names.length === 2) {
+      text = `${names[0]} and ${names[1]} are typing...`;
+    } else {
+      text = `${names.length} people are typing...`;
+    }
+    
+    typingText.textContent = text;
+    indicator.style.display = 'flex';
+  } else {
+    indicator.style.display = 'none';
+  }
+}
+
+// ========================================
+// EMOJI PICKER
+// ========================================
+
+function toggleEmojiPicker() {
+  const modal = document.getElementById('emojiPickerModal');
+  if (!modal) return;
+  
+  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+  
+  if (modal.style.display === 'block') {
+    loadEmojiCategory('smileys');
+  }
+}
+
+function loadEmojiCategory(category) {
+  const grid = document.getElementById('emojiGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  
+  const emojis = emojiCategories[category] || [];
+  emojis.forEach(emoji => {
+    const button = document.createElement('button');
+    button.textContent = emoji;
+    button.onclick = () => insertEmoji(emoji);
+    grid.appendChild(button);
+  });
+}
+
+function showEmojiCategory(category) {
+  // Update active category button
+  document.querySelectorAll('.emoji-category').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
+  
+  loadEmojiCategory(category);
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('modernChatInput');
+  if (!input) return;
+  
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const text = input.value;
+  
+  input.value = text.substring(0, start) + emoji + text.substring(end);
+  input.selectionStart = input.selectionEnd = start + emoji.length;
+  input.focus();
+  
+  toggleEmojiPicker();
+  updateCharCount();
+}
+
+// ========================================
+// MEDIA UPLOAD
+// ========================================
+
+function toggleMediaUpload() {
+  const modal = document.getElementById('mediaUploadModal');
+  if (!modal) return;
+  
+  modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+}
+
+function selectMediaUpload(type) {
+  const input = document.getElementById('mediaFileInput');
+  if (!input) return;
+  
+  input.accept = {
+    'image': 'image/*',
+    'video': 'video/*',
+    'audio': 'audio/*',
+    'document': '.pdf,.doc,.docx,.txt'
+  }[type] || '*/*';
+  
+  input.click();
+}
+
+function handleMediaFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const preview = document.getElementById('mediaPreview');
+  if (!preview) return;
+  
+  preview.innerHTML = '';
+  
+  if (file.type.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '200px';
+    img.style.borderRadius = '8px';
+    preview.appendChild(img);
+  } else {
+    const info = document.createElement('div');
+    info.innerHTML = `
+      <div>📄 ${file.name}</div>
+      <div>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+      <div>Type: ${file.type}</div>
+    `;
+    preview.appendChild(info);
+  }
+  
+  // Auto-send the media
+  const mediaType = file.type.split('/')[0];
+  sendMediaMessage(file, mediaType);
+}
+
+function closeMediaUpload() {
+  const modal = document.getElementById('mediaUploadModal');
+  const input = document.getElementById('mediaFileInput');
+  const preview = document.getElementById('mediaPreview');
+  
+  if (modal) modal.style.display = 'none';
+  if (input) input.value = '';
+  if (preview) preview.innerHTML = '<span>Preview will appear here</span>';
+}
+
+function viewMedia(url, type) {
+  // Create modal to view media
   const modal = document.createElement('div');
-  modal.className = 'modal celebration-modal';
+  modal.className = 'modal';
   modal.style.display = 'flex';
   
-  modal.innerHTML = `
-    <div class="celebration-modal-content">
-      <div class="celebration-emoji">👑</div>
-      <h2 class="celebration-title" style="color:#FFD700;">Welcome to ${plan.name}!</h2>
-      <p class="celebration-message">You can now advertise your content</p>
-      
-      <div class="celebration-stats" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.2));">
-        <div class="celebration-count">${plan.posters} Posters + ${plan.videos} Video${plan.videos > 1 ? 's' : ''}</div>
-        <div class="celebration-label">Available Now</div>
+  const content = document.createElement('div');
+  content.className = 'modal-content';
+  content.style.maxWidth = '90%';
+  content.style.maxHeight = '90%';
+  content.style.background = 'rgba(15, 20, 35, 0.95)';
+  content.style.borderRadius = '12px';
+  content.style.padding = '20px';
+  
+  if (type === 'image') {
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '70vh';
+    img.style.borderRadius = '8px';
+    content.appendChild(img);
+  }
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  content.appendChild(closeBtn);
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+  
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
+  };
+}
+
+// ========================================
+// CHAT SEARCH
+// ========================================
+
+function toggleChatSearch() {
+  const searchBar = document.getElementById('chatSearchBar');
+  if (!searchBar) return;
+  
+  searchBar.style.display = searchBar.style.display === 'none' ? 'block' : 'none';
+  
+  if (searchBar.style.display === 'block') {
+    const searchInput = document.getElementById('chatSearchInput');
+    if (searchInput) searchInput.focus();
+  }
+}
+
+function searchChatMessages() {
+  const query = document.getElementById('chatSearchInput').value.toLowerCase();
+  const messages = document.querySelectorAll('.chat-message');
+  
+  messages.forEach(message => {
+    const bubble = message.querySelector('.message-bubble');
+    if (!bubble) return;
+    
+    const content = bubble.textContent.toLowerCase();
+    
+    if (content.includes(query)) {
+      message.style.display = 'flex';
+      highlightText(bubble, query);
+    } else {
+      message.style.display = 'none';
+    }
+  });
+}
+
+function clearChatSearch() {
+  const searchInput = document.getElementById('chatSearchInput');
+  if (!searchInput) return;
+  
+  searchInput.value = '';
+  
+  document.querySelectorAll('.chat-message').forEach(message => {
+    message.style.display = 'flex';
+    const bubble = message.querySelector('.message-bubble');
+    if (bubble) {
+      bubble.innerHTML = bubble.textContent;
+    }
+  });
+}
+
+function highlightText(element, query) {
+  const text = element.textContent;
+  const regex = new RegExp(`(${query})`, 'gi');
+  element.innerHTML = text.replace(regex, '<mark>$1</mark>');
+}
+
+// ========================================
+// CHAT INFO PANEL
+// ========================================
+
+function toggleChatInfo() {
+  const panel = document.getElementById('chatInfoPanel');
+  if (!panel) return;
+  
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  
+  if (panel.style.display === 'block') {
+    loadChatInfo();
+  }
+}
+
+function loadChatInfo() {
+  const totalMessagesEl = document.getElementById('totalMessages');
+  const activeUsersEl = document.getElementById('activeUsers');
+  const chatCollegeInfoEl = document.getElementById('chatCollegeInfo');
+  
+  if (totalMessagesEl) totalMessagesEl.textContent = chatMessages.length;
+  if (activeUsersEl) activeUsersEl.textContent = onlineUsers.size;
+  if (chatCollegeInfoEl) chatCollegeInfoEl.textContent = currentChatCollege || '-';
+}
+
+function closeChatInfo() {
+  const panel = document.getElementById('chatInfoPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+// ========================================
+// REACTIONS SYSTEM
+// ========================================
+
+function setupReactionSystem() {
+  // Reactions are handled by socket events
+}
+
+async function toggleReaction(messageId, emoji) {
+  try {
+    await apiCall(`/api/community/messages/${messageId}/react`, 'POST', {
+      emoji: emoji
+    });
+  } catch (error) {
+    console.error('Error toggling reaction:', error);
+  }
+}
+
+// ========================================
+// CONNECTION MONITOR
+// ========================================
+
+function setupConnectionMonitor() {
+  // Connection monitoring is handled by socket events
+}
+
+function showConnectionBanner() {
+  const banner = document.getElementById('connectionBanner');
+  const statusText = document.getElementById('connectionStatusText');
+  
+  if (banner && statusText) {
+    statusText.textContent = 'Reconnecting...';
+    banner.style.display = 'block';
+  }
+}
+
+function hideConnectionBanner() {
+  const banner = document.getElementById('connectionBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// ========================================
+// MESSAGE ACTIONS
+// ========================================
+
+function setupMessageActions() {
+  // Message actions are handled by individual functions
+}
+
+function copyMessage(messageId) {
+  const message = chatMessages.find(m => m.id === messageId);
+  if (message) {
+    navigator.clipboard.writeText(message.content);
+    showNotification('Message copied', 'success');
+  }
+}
+
+function replyToMessage(messageId) {
+  const message = chatMessages.find(m => m.id === messageId);
+  if (message) {
+    const input = document.getElementById('modernChatInput');
+    if (input) {
+      input.value = `@${message.sender_name}: `;
+      input.focus();
+    }
+  }
+}
+
+async function deleteMessage(messageId) {
+  if (!confirm('Are you sure you want to delete this message?')) return;
+  
+  try {
+    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    
+    // Remove from UI
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (messageElement) {
+      messageElement.remove();
+    }
+    
+    // Remove from array
+    chatMessages = chatMessages.filter(m => m.id !== messageId);
+    
+    showNotification('Message deleted', 'success');
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    showNotification('Failed to delete message', 'error');
+  }
+}
+
+// ========================================
+// SCROLL MANAGEMENT
+// ========================================
+
+function setupInfiniteScroll() {
+  const messagesContainer = document.getElementById('modernChatMessages');
+  if (!messagesContainer) return;
+  
+  messagesContainer.addEventListener('scroll', function() {
+    const scrollTop = messagesContainer.scrollTop;
+    const scrollHeight = messagesContainer.scrollHeight;
+    const clientHeight = messagesContainer.clientHeight;
+    
+    // Show/hide scroll to bottom button
+    const scrollBtn = document.getElementById('scrollToBottom');
+    if (scrollBtn) {
+      if (scrollTop < scrollHeight - clientHeight - 100) {
+        scrollBtn.style.display = 'flex';
+      } else {
+        scrollBtn.style.display = 'none';
+      }
+    }
+    
+    // Load more messages when scrolling to top
+    if (scrollTop === 0 && hasMoreMessages) {
+      loadMoreMessages();
+    }
+  });
+}
+
+function scrollToBottom() {
+  const messagesContainer = document.getElementById('modernChatMessages');
+  if (messagesContainer) {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    hideScrollToBottomButton();
+  }
+}
+
+function scrollToChatBottom() {
+  scrollToBottom();
+}
+
+function showScrollToBottomButton() {
+  const button = document.getElementById('scrollToBottom');
+  if (button) button.style.display = 'flex';
+}
+
+function hideScrollToBottomButton() {
+  const button = document.getElementById('scrollToBottom');
+  if (button) button.style.display = 'none';
+}
+
+function showNewMessageIndicator() {
+  const indicator = document.querySelector('.new-message-indicator');
+  if (indicator) indicator.style.display = 'block';
+}
+
+async function loadMoreMessages() {
+  if (!hasMoreMessages || !currentChatCollege) return;
+  
+  try {
+    const response = await apiCall(`/api/community/messages?college=${currentChatCollege}&page=${currentMessagePage}`, 'GET');
+    
+    if (response.messages && response.messages.length > 0) {
+      chatMessages.unshift(...response.messages);
+      prependMessages(response.messages);
+      hasMoreMessages = response.messages.length === ITEMS_PER_PAGE;
+      currentMessagePage++;
+    }
+  } catch (error) {
+    console.error('Error loading more messages:', error);
+  }
+}
+
+// ========================================
+// MESSAGE OPTIMIZATION
+// ========================================
+
+function setupMessageOptimization() {
+  // Optimize message rendering for better performance
+}
+
+// ========================================
+// SOCKET EVENT HANDLERS
+// ========================================
+
+function handleNewMessage(message) {
+  if (message.college !== currentChatCollege) return;
+  
+  chatMessages.push(message);
+  const messageElement = createMessageElement(message);
+  const container = document.getElementById('chatMessagesContainer');
+  if (container) {
+    container.appendChild(messageElement);
+    scrollToBottom();
+    showNewMessageIndicator();
+  }
+}
+
+function handleMessageReaction(data) {
+  if (data.college !== currentChatCollege) return;
+  
+  // Update reaction display
+  const messageElement = document.querySelector(`[data-message-id="${data.messageId}"]`);
+  if (messageElement) {
+    const existingReactionBar = messageElement.querySelector('.reaction-bar');
+    if (existingReactionBar) {
+      existingReactionBar.remove();
+    }
+    
+    if (data.reactions && data.reactions.length > 0) {
+      const reactionBar = createReactionBar(data.reactions, data.messageId);
+      messageElement.querySelector('.message-content').appendChild(reactionBar);
+    }
+  }
+}
+
+function handleUserJoined(data) {
+  if (data.college !== currentChatCollege) return;
+  
+  onlineUsers.add(data.user.name);
+  updateOnlineCount();
+}
+
+function handleUserLeft(data) {
+  if (data.college !== currentChatCollege) return;
+  
+  onlineUsers.delete(data.user.name);
+  updateOnlineCount();
+}
+
+function handleOnlineUsers(data) {
+  if (data.college !== currentChatCollege) return;
+  
+  onlineUsers = new Set(data.users.map(u => u.name));
+  updateOnlineCount();
+}
+
+function updateOnlineCount() {
+  const onlineCountEl = document.getElementById('chatOnlineCount');
+  if (onlineCountEl) {
+    onlineCountEl.textContent = onlineUsers.size;
+  }
+}
+// ========================================
+// VIBEXPERT - COMPLETE JAVASCRIPT PART 3: COMMUNITIES & POSTS
+// ========================================
+
+// ========================================
+// COLLEGES SECTION
+// ========================================
+
+async function loadColleges() {
+  try {
+    const response = await apiCall('/api/colleges');
+    renderColleges(response.colleges || []);
+  } catch (error) {
+    console.error('Error loading colleges:', error);
+    showNotification('Failed to load colleges', 'error');
+  }
+}
+
+function renderColleges(colleges) {
+  const container = document.getElementById('collegesContainer');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (colleges.length === 0) {
+    container.innerHTML = `
+      <div class="no-colleges">
+        <p>No colleges found</p>
       </div>
-      
-      <div class="celebration-quote">
-        <strong>Duration:</strong> ${plan.days} days<br>
-        Your ads will appear in Community & RealVibes sections
+    `;
+    return;
+  }
+  
+  colleges.forEach(college => {
+    const collegeElement = createCollegeElement(college);
+    container.appendChild(collegeElement);
+  });
+}
+
+function createCollegeElement(college) {
+  const collegeDiv = document.createElement('div');
+  collegeDiv.className = 'college-card';
+  collegeDiv.innerHTML = `
+    <div class="college-header">
+      <div class="college-logo">${college.name ? college.name[0].toUpperCase() : '?'}</div>
+      <div class="college-info">
+        <h3>${college.name || 'Unknown College'}</h3>
+        <p>${college.location || 'Location not specified'}</p>
       </div>
-      
-      <button class="celebration-button" style="background:linear-gradient(135deg,#FFD700,#FFA500);" 
-        onclick="this.closest('.modal').remove(); showPage('posts');">
-        Start Creating Ads 🚀
+    </div>
+    <div class="college-stats">
+      <div class="stat">
+        <span class="stat-number">${college.student_count || 0}</span>
+        <span class="stat-label">Students</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">${college.online_count || 0}</span>
+        <span class="stat-label">Online</span>
+      </div>
+    </div>
+    <div class="college-actions">
+      <button class="join-btn" onclick="joinCollege('${college.id}', '${college.name}')">
+        Join Community
       </button>
     </div>
   `;
   
-  document.body.appendChild(modal);
-  createConfetti();
+  return collegeDiv;
 }
 
-// Check subscription status
-function checkSubscriptionStatus() {
-  if (!currentUser || !currentUser.subscription) return null;
-  
-  const now = new Date();
-  const endDate = new Date(currentUser.subscription.endDate);
-  
-  if (now > endDate) {
-    // Subscription expired
-    currentUser.isPremium = false;
-    currentUser.subscription = null;
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    return null;
-  }
-  
-  return currentUser.subscription;
-}
-
-// Display premium badge if user is subscribed
-function updatePremiumBadge() {
-  const userName = document.getElementById('userName');
-  if (!userName) return;
-  
-  const subscription = checkSubscriptionStatus();
-  
-  if (subscription) {
-    const planEmoji = subscription.plan === 'royal' ? '👑' : '🥈';
-    userName.innerHTML = `${planEmoji} Hi, ${currentUser.username}`;
-  } else {
-    userName.textContent = 'Hi, ' + currentUser.username;
-  }
-}
-
-// Call this after login
-document.addEventListener('DOMContentLoaded', function() {
-  if (currentUser) {
-    updatePremiumBadge();
-  }
-});
-
-// TWITTER-STYLE FEED FUNCTIONS
-// ==========================================
-
-function toggleTwitterFeed() {
-  const twitterPanel = document.getElementById('twitterFeedPanel');
-  const whatsappMain = document.getElementById('whatsappMain');
-  
-  if (!twitterPanel || !whatsappMain) return;
-
-  if (twitterPanel.style.display === 'none') {
-    // Show Twitter feed
-    twitterPanel.style.display = 'flex';
-    whatsappMain.style.display = 'none';
-    loadTwitterFeed();
-  } else {
-    // Show WhatsApp chat
-    twitterPanel.style.display = 'none';
-    whatsappMain.style.display = 'flex';
-  }
-}
-
-async function loadTwitterFeed() {
-  const feedEl = document.getElementById('twitterFeed');
-  if (!feedEl) return;
-
+async function joinCollege(collegeId, collegeName) {
   try {
-    feedEl.innerHTML = '<div class="loading-spinner">⏳ Loading posts...</div>';
+    const response = await apiCall('/api/colleges/join', 'POST', {
+      college_id: collegeId
+    });
     
-    const data = await apiCall('/api/posts/community', 'GET');
-
-    if (!data.posts || data.posts.length === 0) {
-      feedEl.innerHTML = `
-        <div class="no-posts-state">
-          <div class="no-posts-icon">📸</div>
-          <h3>No posts yet</h3>
-          <p>Be the first to share something!</p>
-          <button class="create-post-btn" onclick="openCreatePostModal()">Create Post</button>
-        </div>
-      `;
-      return;
+    if (response.success) {
+      showNotification(`Joined ${collegeName} community!`, 'success');
+      joinCollegeChat(collegeName);
     }
-
-    feedEl.innerHTML = renderTwitterPosts(data.posts);
-  } catch(error) {
-    console.error('Load feed:', error);
-    feedEl.innerHTML = '<div class="error-state">❌ Failed to load posts</div>';
+  } catch (error) {
+    console.error('Error joining college:', error);
+    showNotification('Failed to join college', 'error');
   }
 }
 
-function renderTwitterPosts(posts) {
-  let html = '';
-
-  posts.forEach(post => {
-    const author = post.users?.username || 'User';
-    const authorId = post.users?.id || '';
-    const content = post.content || '';
-    const media = post.media || [];
-    const time = formatTimeAgo(new Date(post.created_at || post.timestamp));
-    const isOwn = currentUser && authorId === currentUser.id;
-    const likeCount = post.like_count || 0;
-    const commentCount = post.comment_count || 0;
-    const shareCount = post.share_count || 0;
-    const isLiked = post.is_liked || false;
-
-    html += `
-      <div class="twitter-post" id="twitter-post-${post.id}">
-        <div class="twitter-post-header">
-          <div class="twitter-user-info" onclick="showUserProfile('${authorId}')">
-            <div class="twitter-avatar">
-              ${post.users?.profile_pic ? 
-                `<img src="${post.users.profile_pic}">` : 
-                '👤'
-              }
-            </div>
-            <div class="twitter-user-details">
-              <span class="twitter-username">@${author}</span>
-              <span class="twitter-time">· ${time}</span>
-            </div>
-          </div>
-          ${isOwn ? `<button class="twitter-delete-btn" onclick="deleteTwitterPost('${post.id}')">🗑️</button>` : ''}
-        </div>
-
-        <div class="twitter-post-content">
-          ${content ? `<p class="twitter-text">${content}</p>` : ''}
-          
-          ${media.length > 0 ? `
-            <div class="twitter-media ${media.length === 1 ? 'single' : 'grid'}">
-              ${media.slice(0, 4).map((m, idx) => {
-                if (m.type === 'image') {
-                  return `<img src="${m.url}" onclick="openMediaViewer('${post.id}', ${idx})">`;
-                } else if (m.type === 'video') {
-                  return `<video src="${m.url}" controls></video>`;
-                }
-                return '';
-              }).join('')}
-              ${media.length > 4 ? `<div class="media-overlay">+${media.length - 4}</div>` : ''}
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="twitter-post-actions">
-          <button class="twitter-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleTwitterLike('${post.id}')">
-            <span>${isLiked ? '❤️' : '🤍'}</span>
-            <span>${likeCount}</span>
-          </button>
-          <button class="twitter-action-btn" onclick="openTwitterComments('${post.id}')">
-            <span>💬</span>
-            <span>${commentCount}</span>
-          </button>
-          <button class="twitter-action-btn" onclick="shareTwitterPost('${post.id}')">
-            <span>🔄</span>
-            <span>${shareCount}</span>
-          </button>
-        </div>
-      </div>
-    `;
+function searchColleges() {
+  const searchInput = document.getElementById('collegeSearchInput');
+  if (!searchInput) return;
+  
+  const query = searchInput.value.toLowerCase();
+  const collegeCards = document.querySelectorAll('.college-card');
+  
+  collegeCards.forEach(card => {
+    const collegeName = card.querySelector('h3').textContent.toLowerCase();
+    const collegeLocation = card.querySelector('p').textContent.toLowerCase();
+    
+    if (collegeName.includes(query) || collegeLocation.includes(query)) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
   });
-
-  return html;
 }
 
-async function toggleTwitterLike(postId) {
-  if (!currentUser) return showMessage('⚠️ Login to like', 'error');
+// ========================================
+// POST CREATION
+// ========================================
 
+function showPostCreator() {
+  const modal = document.getElementById('postCreatorModal');
+  if (!modal) return;
+  
+  modal.style.display = 'flex';
+  resetPostCreator();
+}
+
+function closePostCreator() {
+  const modal = document.getElementById('postCreatorModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function resetPostCreator() {
+  const content = document.getElementById('postContent');
+  const mediaPreview = document.getElementById('postMediaPreview');
+  
+  if (content) content.value = '';
+  if (mediaPreview) mediaPreview.innerHTML = '';
+  
+  selectedFiles = [];
+  previewUrls = [];
+  selectedMusic = null;
+  selectedStickers = [];
+}
+
+function selectPostType(type) {
+  const buttons = document.querySelectorAll('.post-type-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
+  
+  const mediaArea = document.getElementById('mediaUploadArea');
+  if (!mediaArea) return;
+  
+  if (type === 'image' || type === 'video' || type === 'audio') {
+    mediaArea.style.display = 'block';
+    setupMediaUpload(type);
+  } else {
+    mediaArea.style.display = 'none';
+  }
+}
+
+function setupMediaUpload(type) {
+  const input = document.getElementById('postMediaInput');
+  if (!input) return;
+  
+  input.accept = {
+    'image': 'image/*',
+    'video': 'video/*',
+    'audio': 'audio/*'
+  }[type] || '*/*';
+}
+
+function handlePostMediaSelect(event) {
+  const files = Array.from(event.target.files);
+  selectedFiles = selectedFiles.concat(files);
+  
+  const preview = document.getElementById('postMediaPreview');
+  if (!preview) return;
+  
+  files.forEach(file => {
+    const previewElement = createMediaPreview(file);
+    preview.appendChild(previewElement);
+  });
+}
+
+function createMediaPreview(file) {
+  const previewDiv = document.createElement('div');
+  previewDiv.className = 'media-preview-item';
+  
+  if (file.type.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    img.style.maxWidth = '100px';
+    img.style.maxHeight = '100px';
+    img.style.borderRadius = '8px';
+    previewDiv.appendChild(img);
+  } else {
+    const info = document.createElement('div');
+    info.innerHTML = `
+      <div>📄 ${file.name}</div>
+      <div>${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+    `;
+    previewDiv.appendChild(info);
+  }
+  
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent = '✕';
+  removeBtn.style.cssText = `
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+  `;
+  removeBtn.onclick = () => {
+    selectedFiles = selectedFiles.filter(f => f !== file);
+    previewDiv.remove();
+  };
+  
+  previewDiv.style.position = 'relative';
+  previewDiv.appendChild(removeBtn);
+  
+  return previewDiv;
+}
+
+function addEmoji() {
+  // Simple emoji picker for post creator
+  const commonEmojis = ['😀', '😍', '🎉', '❤️', '👍', '🔥', '💯', '✨'];
+  const emoji = prompt('Choose an emoji:\n' + commonEmojis.join(' '));
+  
+  if (emoji && commonEmojis.includes(emoji)) {
+    const content = document.getElementById('postContent');
+    if (content) {
+      content.value += emoji;
+      content.focus();
+    }
+  }
+}
+
+function addHashtag() {
+  const content = document.getElementById('postContent');
+  if (content) {
+    content.value += ' #';
+    content.focus();
+  }
+}
+
+function addMention() {
+  const content = document.getElementById('postContent');
+  if (content) {
+    content.value += '@';
+    content.focus();
+  }
+}
+
+function addLocation() {
+  const location = prompt('Enter location:');
+  if (location) {
+    const content = document.getElementById('postContent');
+    if (content) {
+      content.value += ` 📍 ${location}`;
+      content.focus();
+    }
+  }
+}
+
+async function publishPost() {
+  const content = document.getElementById('postContent');
+  const audience = document.getElementById('postAudience');
+  const allowComments = document.getElementById('allowComments');
+  const allowReactions = document.getElementById('allowReactions');
+  
+  if (!content || !content.value.trim()) {
+    showNotification('Please add some content to your post', 'error');
+    return;
+  }
+  
   try {
-    const btn = document.querySelector(`#twitter-post-${postId} .twitter-action-btn.liked, #twitter-post-${postId} .twitter-action-btn:first-child`);
-    if (btn) btn.disabled = true;
-
-    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
-
-    if (data.success) {
-      const postEl = document.getElementById(`twitter-post-${postId}`);
-      if (postEl) {
-        const likeBtn = postEl.querySelector('.twitter-action-btn:first-child');
-        if (likeBtn) {
-          likeBtn.classList.toggle('liked', data.liked);
-          likeBtn.innerHTML = `
-            <span>${data.liked ? '❤️' : '🤍'}</span>
-            <span>${data.likeCount}</span>
-          `;
-          likeBtn.disabled = false;
-        }
+    const postData = {
+      content: content.value.trim(),
+      audience: audience ? audience.value : 'public',
+      allow_comments: allowComments ? allowComments.checked : true,
+      allow_reactions: allowReactions ? allowReactions.checked : true
+    };
+    
+    // Handle media files
+    if (selectedFiles.length > 0) {
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      Object.keys(postData).forEach(key => {
+        formData.append(key, postData[key]);
+      });
+      
+      const token = localStorage.getItem('vibexpert_token');
+      const response = await fetch(`${API_URL}/api/posts/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        showNotification('Post published successfully!', 'success');
+        closePostCreator();
+        loadSectionData('posts');
+      } else {
+        throw new Error('Failed to publish post');
+      }
+    } else {
+      const response = await apiCall('/api/posts/create', 'POST', postData);
+      
+      if (response.success) {
+        showNotification('Post published successfully!', 'success');
+        closePostCreator();
+        loadSectionData('posts');
       }
     }
-  } catch(error) {
-    showMessage('❌ Failed to like', 'error');
+  } catch (error) {
+    console.error('Error publishing post:', error);
+    showNotification('Failed to publish post', 'error');
   }
 }
 
-function openCreatePostModal() {
+async function saveDraft() {
+  const content = document.getElementById('postContent');
+  if (!content || !content.value.trim()) {
+    showNotification('Nothing to save', 'error');
+    return;
+  }
+  
+  try {
+    const draftData = {
+      content: content.value.trim(),
+      files: selectedFiles.map(f => f.name),
+      created_at: new Date().toISOString()
+    };
+    
+    const drafts = JSON.parse(localStorage.getItem('post_drafts') || '[]');
+    drafts.push(draftData);
+    localStorage.setItem('post_drafts', JSON.stringify(drafts));
+    
+    showNotification('Draft saved', 'success');
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    showNotification('Failed to save draft', 'error');
+  }
+}
+
+function viewDrafts() {
+  const drafts = JSON.parse(localStorage.getItem('post_drafts') || '[]');
+  
+  if (drafts.length === 0) {
+    showNotification('No drafts found', 'info');
+    return;
+  }
+  
+  // Show drafts modal or list
+  showDraftsModal(drafts);
+}
+
+function showDraftsModal(drafts) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="modal-box" style="max-width:600px;">
-      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-      <h2>Create Post</h2>
-      
-      <textarea id="newPostContent" placeholder="What's happening?" 
-        style="width:100%;min-height:120px;padding:15px;background:rgba(20,30,50,0.6);
-        border:2px solid rgba(79,116,163,0.3);border-radius:12px;color:white;
-        font-family:inherit;resize:vertical;margin-bottom:15px;"></textarea>
-
-      <div id="newPostMediaPreview" style="display:none;margin-bottom:15px;"></div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <button onclick="selectPostMedia()" 
-          style="background:rgba(79,116,163,0.2);color:#4f74a3;border:2px solid rgba(79,116,163,0.3);
-          padding:10px 20px;border-radius:10px;cursor:pointer;">
-          📷 Add Photo/Video
-        </button>
-        <button onclick="submitNewPost()" 
-          style="background:linear-gradient(135deg,#4f74a3,#8da4d3);color:white;border:none;
-          padding:12px 30px;border-radius:10px;font-weight:700;cursor:pointer;">
-          Post
-        </button>
-      </div>
+  
+  const content = document.createElement('div');
+  content.className = 'modal-content';
+  content.innerHTML = `
+    <div class="modal-header">
+      <h3>Your Drafts</h3>
+      <button class="close-modal-btn" onclick="this.closest('.modal').remove()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${drafts.map((draft, index) => `
+        <div class="draft-item" style="border: 1px solid #333; padding: 10px; margin-bottom: 10px; border-radius: 8px;">
+          <p>${draft.content.substring(0, 100)}${draft.content.length > 100 ? '...' : ''}</p>
+          <small>${new Date(draft.created_at).toLocaleString()}</small>
+          <div style="margin-top: 10px;">
+            <button onclick="loadDraft(${index})" style="background: #4f74a3; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-right: 5px;">Edit</button>
+            <button onclick="deleteDraft(${index})" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px;">Delete</button>
+          </div>
+        </div>
+      `).join('')}
     </div>
   `;
+  
+  modal.appendChild(content);
   document.body.appendChild(modal);
-}
-
-let newPostMediaFiles = [];
-
-function selectPostMedia() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = true;
-  input.onchange = (e) => {
-    const files = Array.from(e.target.files);
-    newPostMediaFiles = files;
-    previewNewPostMedia(files);
+  
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
   };
-  input.click();
 }
 
-function previewNewPostMedia(files) {
-  const preview = document.getElementById('newPostMediaPreview');
-  if (!preview) return;
-
-  preview.style.display = 'grid';
-  preview.style.gridTemplateColumns = 'repeat(auto-fill,minmax(100px,1fr))';
-  preview.style.gap = '10px';
-  preview.innerHTML = '';
-
-  files.forEach((file, idx) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const div = document.createElement('div');
-      div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;';
-      
-      if (file.type.startsWith('video/')) {
-        div.innerHTML = `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;"></video>`;
-      } else {
-        div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-      }
-      
-      div.innerHTML += `<button onclick="removeNewPostMedia(${idx})" 
-        style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.7);color:white;
-        border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;">×</button>`;
-      
-      preview.appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function removeNewPostMedia(idx) {
-  newPostMediaFiles.splice(idx, 1);
-  previewNewPostMedia(newPostMediaFiles);
-  if (newPostMediaFiles.length === 0) {
-    document.getElementById('newPostMediaPreview').style.display = 'none';
-  }
-}
-
-async function submitNewPost() {
-  const content = document.getElementById('newPostContent')?.value.trim();
+function loadDraft(index) {
+  const drafts = JSON.parse(localStorage.getItem('post_drafts') || '[]');
+  const draft = drafts[index];
   
-  if (!content && newPostMediaFiles.length === 0) {
-    return showMessage('⚠️ Add content or media', 'error');
-  }
-
-  try {
-    showMessage('📤 Creating post...', 'success');
-
-    const formData = new FormData();
-    formData.append('content', content);
-    formData.append('postTo', 'community');
-
-    newPostMediaFiles.forEach(file => {
-      formData.append('media', file);
-    });
-
-    await apiCall('/api/posts', 'POST', formData);
+  if (draft) {
+    const content = document.getElementById('postContent');
+    if (content) {
+      content.value = draft.content;
+    }
     
-    showMessage('✅ Post created!', 'success');
+    showPostCreator();
     document.querySelector('.modal').remove();
-    newPostMediaFiles = [];
-    loadTwitterFeed();
-  } catch(error) {
-    showMessage('❌ Failed to create post', 'error');
   }
 }
 
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function formatTimeAgo(date) {
-  const seconds = Math.floor((new Date() - date) / 1000);
+function deleteDraft(index) {
+  const drafts = JSON.parse(localStorage.getItem('post_drafts') || '[]');
+  drafts.splice(index, 1);
+  localStorage.setItem('post_drafts', JSON.stringify(drafts));
   
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
-  if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
-  if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
-  return date.toLocaleDateString();
+  // Refresh drafts modal
+  document.querySelector('.modal').remove();
+  viewDrafts();
 }
 
-function initWhatsAppFeatures() {
-  // Setup typing indicator
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    let typingTimeout;
-    input.addEventListener('input', () => {
-      if (socket && currentUser && currentUser.college) {
-        socket.emit('typing', { 
-          collegeName: currentUser.college, 
-          username: currentUser.username 
-        });
-        
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-          socket.emit('stop_typing', { 
-            collegeName: currentUser.college, 
-            username: currentUser.username 
-          });
-        }, 2000);
-      }
-    });
+// ========================================
+// FEED LOADING & RENDERING
+// ========================================
+
+async function loadHomeFeed() {
+  try {
+    const response = await apiCall('/api/posts/feed');
+    renderFeed(response.posts || []);
+  } catch (error) {
+    console.error('Error loading feed:', error);
+    renderFeed([]);
   }
 }
 
-function searchChats() {
-  const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
-  const chatItems = document.querySelectorAll('.chat-item');
-  
-  chatItems.forEach(item => {
-    const text = item.textContent.toLowerCase();
-    item.style.display = text.includes(query) ? 'flex' : 'none';
-  });
-}
-
-function openChat(chatId) {
-  document.querySelectorAll('.chat-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  event.currentTarget?.classList.add('active');
-}
-
-function refreshChats() {
-  loadWhatsAppMessages();
-  showMessage('🔄 Refreshed', 'success');
-}
-
-// Update socket listeners for WhatsApp
-if (socket) {
-  socket.on('new_message', (message) => {
-    appendWhatsAppMessage(message);
+async function loadMoreHomeFeed() {
+  try {
+    const response = await apiCall(`/api/posts/feed?page=${currentPage + 1}`);
+    const morePosts = response.posts || [];
     
-    // Show notification if not focused
-    if (document.hidden) {
-      const unreadBadge = document.getElementById('unreadCount');
-      if (unreadBadge) {
-        const count = parseInt(unreadBadge.textContent || '0') + 1;
-        unreadBadge.textContent = count;
-        unreadBadge.style.display = 'inline';
-      }
+    if (morePosts.length > 0) {
+      currentPage++;
+      appendToFeed(morePosts);
     }
-  });
+  } catch (error) {
+    console.error('Error loading more feed:', error);
+  }
+}
+
+function renderFeed(posts) {
+  const feedContainer = document.getElementById('homeFeed');
+  if (!feedContainer) return;
   
-  socket.on('user_typing', (data) => {
-    if (data.username && currentUser && data.username !== currentUser.username) {
-      showTypingIndicator(data.username);
-    }
-  });
+  feedContainer.innerHTML = '';
   
-  socket.on('user_stop_typing', (data) => {
-    hideTypingIndicator(data.username);
+  if (posts.length === 0) {
+    feedContainer.innerHTML = `
+      <div class="empty-feed">
+        <p>No posts yet. Be the first to share something!</p>
+        <button class="create-post-btn" onclick="showPostCreator()">
+          Create Post
+        </button>
+      </div>
+    `;
+    return;
+  }
+  
+  posts.forEach(post => {
+    const postElement = createPostElement(post);
+    feedContainer.appendChild(postElement);
   });
 }
 
-function showTypingIndicator(username) {
-  let indicator = document.getElementById('typing-indicator');
-  if (!indicator) {
-    indicator = document.createElement('div');
-    indicator.id = 'typing-indicator';
-    indicator.className = 'whatsapp-typing-indicator';
-    document.getElementById('whatsappMessages')?.appendChild(indicator);
-  }
-  indicator.innerHTML = `
-    <div class="typing-bubble">
-      <span>${username} is typing</span>
-      <div class="typing-dots">
-        <span></span><span></span><span></span>
+function appendToFeed(posts) {
+  const feedContainer = document.getElementById('homeFeed');
+  if (!feedContainer) return;
+  
+  posts.forEach(post => {
+    const postElement = createPostElement(post);
+    feedContainer.appendChild(postElement);
+  });
+}
+
+function createPostElement(post) {
+  const postDiv = document.createElement('div');
+  postDiv.className = 'post';
+  postDiv.dataset.postId = post.id;
+  
+  const isOwn = post.author_id === currentUser.id;
+  
+  postDiv.innerHTML = `
+    <div class="post-header">
+      <div class="post-avatar">${post.author_name ? post.author_name[0].toUpperCase() : '?'}</div>
+      <div class="post-info">
+        <div class="post-author">${post.author_name || 'Anonymous'}</div>
+        <div class="post-time">${formatMessageTime(post.created_at)}</div>
+      </div>
+      <div class="post-menu">
+        <button class="menu-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
+      </div>
+    </div>
+    <div class="post-content">
+      ${post.content ? `<p>${post.content}</p>` : ''}
+      ${post.media_url ? createPostMedia(post) : ''}
+    </div>
+    <div class="post-stats">
+      <button class="stat-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+        <span class="stat-icon">❤️</span>
+        <span class="stat-count">${post.likes_count || 0}</span>
+      </button>
+      <button class="stat-btn" onclick="toggleComments('${post.id}')">
+        <span class="stat-icon">💬</span>
+        <span class="stat-count">${post.comments_count || 0}</span>
+      </button>
+      <button class="stat-btn" onclick="sharePost('${post.id}')">
+        <span class="stat-icon">🔄</span>
+      </button>
+    </div>
+    <div class="post-comments" id="comments-${post.id}" style="display: none;">
+      <div class="comments-container" id="comments-container-${post.id}"></div>
+      <div class="comment-input">
+        <input type="text" placeholder="Add a comment..." id="comment-input-${post.id}">
+        <button onclick="addComment('${post.id}')">Send</button>
       </div>
     </div>
   `;
-  scrollToBottom();
+  
+  return postDiv;
 }
 
-function hideTypingIndicator(username) {
-  const indicator = document.getElementById('typing-indicator');
-  if (indicator) indicator.remove();
+function createPostMedia(post) {
+  let mediaHtml = '';
+  
+  if (post.media_type === 'image') {
+    mediaHtml = `<img src="${post.media_url}" alt="Post image" style="max-width: 100%; border-radius: 8px;" onclick="viewMedia('${post.media_url}', 'image')">`;
+  } else if (post.media_type === 'video') {
+    mediaHtml = `<video src="${post.media_url}" controls style="max-width: 100%; border-radius: 8px;"></video>`;
+  } else if (post.media_type === 'audio') {
+    mediaHtml = `<audio src="${post.media_url}" controls style="width: 100%;"></audio>`;
+  } else {
+    mediaHtml = `<a href="${post.media_url}" target="_blank" style="display: inline-block; padding: 8px 12px; background: rgba(79, 116, 163, 0.2); border-radius: 6px; text-decoration: none; color: #4f74a3;">📄 View Document</a>`;
+  }
+  
+  return `<div class="post-media">${mediaHtml}</div>`;
 }
 
-// ==========================================
-// ENHANCED PROFILE FUNCTIONS
-// ==========================================
-
-let profilePhotoActionsVisible = false;
-
-// Show enhanced profile modal
-function showEnhancedProfile() {
-  if (!currentUser) return;
+function togglePostMenu(postId) {
+  // Show post menu with options like edit, delete, report
+  const menu = document.createElement('div');
+  menu.className = 'post-menu-dropdown';
+  menu.innerHTML = `
+    <button onclick="editPost('${postId}')">Edit</button>
+    <button onclick="deletePost('${postId}')">Delete</button>
+    <button onclick="reportPost('${postId}')">Report</button>
+  `;
   
-  const modal = document.getElementById('enhancedProfileModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    loadEnhancedProfileData();
-  }
-}
-
-// Close enhanced profile
-function closeEnhancedProfile() {
-  const modal = document.getElementById('enhancedProfileModal');
-  if (modal) modal.style.display = 'none';
-  profilePhotoActionsVisible = false;
-}
-
-// Load profile data
-async function loadEnhancedProfileData() {
-  if (!currentUser) return;
+  // Position menu near the button
+  const button = event.target;
+  const rect = button.getBoundingClientRect();
+  menu.style.position = 'absolute';
+  menu.style.top = rect.bottom + 'px';
+  menu.style.right = '0';
+  menu.style.background = 'rgba(15, 20, 35, 0.95)';
+  menu.style.border = '1px solid rgba(79, 116, 163, 0.2)';
+  menu.style.borderRadius = '8px';
+  menu.style.padding = '5px 0';
+  menu.style.zIndex = '1000';
   
-  // Display name and username
-  const displayName = document.getElementById('profileDisplayName');
-  const username = document.getElementById('profileUsername');
+  menu.querySelectorAll('button').forEach(btn => {
+    btn.style.cssText = `
+      display: block;
+      width: 100%;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      color: white;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+    `;
+    btn.onmouseover = () => btn.style.background = 'rgba(79, 116, 163, 0.2)';
+    btn.onmouseout = () => btn.style.background = 'none';
+  });
   
-  if (displayName) displayName.textContent = currentUser.username || 'User';
-  if (username) username.textContent = '@' + (currentUser.username || 'user');
+  document.body.appendChild(menu);
   
-  // College info
-  const collegeEl = document.getElementById('profileCollege');
-  if (collegeEl && currentUser.college) {
-    collegeEl.textContent = `🎓 ${currentUser.college}`;
-  }
-  
-  // Profile photo
-  updateProfilePhotoDisplay();
-  
-  // Bio
-  const bioText = document.getElementById('bioText');
-  if (bioText) {
-    if (currentUser.bio) {
-      bioText.textContent = currentUser.bio;
-      bioText.style.color = '#e0e0e0';
-    } else {
-      bioText.textContent = 'Click to add bio...';
-      bioText.style.color = '#888';
-    }
-  }
-  
-  // Cover photo
-  if (currentUser.coverPhoto) {
-    const cover = document.getElementById('profileCover');
-    if (cover) {
-      cover.style.backgroundImage = `url('${currentUser.coverPhoto}')`;
-      cover.style.backgroundSize = 'cover';
-      cover.style.backgroundPosition = 'center';
-    }
-  }
-  
-  // Stats
-  updateProfileStats();
-  
-  // Badges
-  updateProfileBadges();
-}
-
-// Update profile photo display
-function updateProfilePhotoDisplay() {
-  const photoImg = document.getElementById('profilePhotoImg');
-  const photoInitial = document.getElementById('profilePhotoInitial');
-  
-  if (currentUser.profile_pic && photoImg && photoInitial) {
-    photoImg.src = currentUser.profile_pic;
-    photoImg.style.display = 'block';
-    photoInitial.style.display = 'none';
-  } else if (photoInitial) {
-    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
-    photoInitial.textContent = initial;
-    photoInitial.style.display = 'block';
-    if (photoImg) photoImg.style.display = 'none';
-  }
-  
-  // Also update header avatar
-  const headerImg = document.getElementById('profileAvatarImg');
-  const headerInitial = document.getElementById('profileAvatarInitial');
-  
-  if (currentUser.profile_pic && headerImg && headerInitial) {
-    headerImg.src = currentUser.profile_pic;
-    headerImg.style.display = 'block';
-    headerInitial.style.display = 'none';
-  } else if (headerInitial) {
-    const initial = (currentUser.username || 'U').charAt(0).toUpperCase();
-    headerInitial.textContent = initial;
-  }
-}
-
-// Toggle photo actions
-function togglePhotoActions() {
-  const actions = document.getElementById('profilePhotoActions');
-  if (!actions) return;
-  
-  profilePhotoActionsVisible = !profilePhotoActionsVisible;
-  actions.style.display = profilePhotoActionsVisible ? 'flex' : 'none';
-}
-
-// Capture photo from camera
-function captureProfilePhoto() {
-  const input = document.getElementById('profilePhotoCameraInput');
-  if (input) input.click();
-}
-
-// Upload photo from gallery
-function uploadProfilePhoto() {
-  const input = document.getElementById('profilePhotoInput');
-  if (input) input.click();
-}
-
-// Handle photo upload
-async function handleProfilePhotoUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    showMessage('⚠️ Photo too large (max 5MB)', 'error');
-    return;
-  }
-  
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    showMessage('⚠️ Please select an image file', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('📤 Uploading photo...', 'success');
-    
-    const formData = new FormData();
-    formData.append('profilePhoto', file);
-    
-    const data = await apiCall('/api/user/profile-photo', 'POST', formData);
-    
-    if (data.success && data.photoUrl) {
-      currentUser.profile_pic = data.photoUrl;
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      
-      updateProfilePhotoDisplay();
-      showMessage('✅ Photo updated!', 'success');
-      
-      // Hide actions
-      const actions = document.getElementById('profilePhotoActions');
-      if (actions) actions.style.display = 'none';
-      profilePhotoActionsVisible = false;
-    }
-  } catch (error) {
-    console.error('Photo upload error:', error);
-    showMessage('❌ Failed to upload photo', 'error');
-  }
-  
-  // Clear input
-  event.target.value = '';
-}
-
-// Remove profile photo
-async function removeProfilePhoto() {
-  if (!confirm('Remove profile photo?')) return;
-  
-  try {
-    showMessage('🗑️ Removing photo...', 'success');
-    
-    const data = await apiCall('/api/user/profile-photo', 'DELETE');
-    
-    if (data.success) {
-      currentUser.profile_pic = null;
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      
-      updateProfilePhotoDisplay();
-      showMessage('✅ Photo removed', 'success');
-      
-      // Hide actions
-      const actions = document.getElementById('profilePhotoActions');
-      if (actions) actions.style.display = 'none';
-      profilePhotoActionsVisible = false;
-    }
-  } catch (error) {
-    console.error('Photo remove error:', error);
-    showMessage('❌ Failed to remove photo', 'error');
-  }
-}
-
-// Edit cover photo
-function editCoverPhoto() {
-  const input = document.getElementById('coverPhotoInput');
-  if (input) input.click();
-}
-
-// Handle cover photo upload
-async function handleCoverPhotoUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  if (file.size > 5 * 1024 * 1024) {
-    showMessage('⚠️ Photo too large (max 5MB)', 'error');
-    return;
-  }
-  
-  if (!file.type.startsWith('image/')) {
-    showMessage('⚠️ Please select an image file', 'error');
-    return;
-  }
-  
-  try {
-    showMessage('📤 Uploading cover...', 'success');
-    
-    const formData = new FormData();
-    formData.append('coverPhoto', file);
-    
-    const data = await apiCall('/api/user/cover-photo', 'POST', formData);
-    
-    if (data.success && data.photoUrl) {
-      currentUser.coverPhoto = data.photoUrl;
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      
-      const cover = document.getElementById('profileCover');
-      if (cover) {
-        cover.style.backgroundImage = `url('${data.photoUrl}')`;
-        cover.style.backgroundSize = 'cover';
-        cover.style.backgroundPosition = 'center';
+  // Close menu when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', function closeMenu(e) {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
       }
-      
-      showMessage('✅ Cover updated!', 'success');
+    });
+  }, 100);
+}
+
+async function editPost(postId) {
+  try {
+    const response = await apiCall(`/api/posts/${postId}`);
+    const post = response.post;
+    
+    if (post) {
+      showPostCreator();
+      document.getElementById('postContent').value = post.content;
+      // Load media if any
     }
   } catch (error) {
-    console.error('Cover upload error:', error);
-    showMessage('❌ Failed to upload cover', 'error');
+    console.error('Error loading post for editing:', error);
+    showNotification('Failed to load post', 'error');
+  }
+}
+
+async function deletePost(postId) {
+  if (!confirm('Are you sure you want to delete this post?')) return;
+  
+  try {
+    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    
+    // Remove from UI
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postElement) {
+      postElement.remove();
+    }
+    
+    showNotification('Post deleted', 'success');
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    showNotification('Failed to delete post', 'error');
+  }
+}
+
+function reportPost(postId) {
+  const reason = prompt('Why are you reporting this post?');
+  if (reason) {
+    // Send report to server
+    showNotification('Post reported. Thank you for helping keep the community safe.', 'success');
+  }
+}
+
+async function toggleLike(postId) {
+  try {
+    const response = await apiCall(`/api/posts/${postId}/like`, 'POST');
+    
+    if (response.success) {
+      const likeBtn = document.querySelector(`[data-post-id="${postId}"] .stat-btn`);
+      const likeCount = likeBtn.querySelector('.stat-count');
+      
+      if (response.liked) {
+        likeBtn.classList.add('liked');
+        likeCount.textContent = parseInt(likeCount.textContent) + 1;
+      } else {
+        likeBtn.classList.remove('liked');
+        likeCount.textContent = parseInt(likeCount.textContent) - 1;
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error);
+  }
+}
+
+function toggleComments(postId) {
+  const commentsSection = document.getElementById(`comments-${postId}`);
+  if (!commentsSection) return;
+  
+  if (commentsSection.style.display === 'none') {
+    commentsSection.style.display = 'block';
+    loadComments(postId);
+  } else {
+    commentsSection.style.display = 'none';
+  }
+}
+
+async function loadComments(postId) {
+  try {
+    const response = await apiCall(`/api/posts/${postId}/comments`);
+    renderComments(postId, response.comments || []);
+  } catch (error) {
+    console.error('Error loading comments:', error);
+  }
+}
+
+function renderComments(postId, comments) {
+  const container = document.getElementById(`comments-container-${postId}`);
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (comments.length === 0) {
+    container.innerHTML = '<p style="text-align: center; color: #666;">No comments yet</p>';
+    return;
   }
   
-  event.target.value = '';
+  comments.forEach(comment => {
+    const commentDiv = document.createElement('div');
+    commentDiv.className = 'comment';
+    commentDiv.innerHTML = `
+      <div class="comment-header">
+        <span class="comment-author">${comment.author_name}</span>
+        <span class="comment-time">${formatMessageTime(comment.created_at)}</span>
+      </div>
+      <div class="comment-content">${comment.content}</div>
+    `;
+    container.appendChild(commentDiv);
+  });
 }
 
-// Edit bio
-function editBio() {
-  const bioDisplay = document.getElementById('bioDisplay');
-  const bioEdit = document.getElementById('bioEdit');
-  const bioInput = document.getElementById('bioInput');
-  const bioCount = document.getElementById('bioCount');
+async function addComment(postId) {
+  const input = document.getElementById(`comment-input-${postId}`);
+  if (!input || !input.value.trim()) return;
   
-  if (!bioDisplay || !bioEdit || !bioInput) return;
-
+  try {
+    const response = await apiCall(`/api/posts/${postId}/comments`, 'POST', {
+      content: input.value.trim()
+    });
+    
+    if (response.success) {
+      input.value = '';
+      loadComments(postId);
+      
+      // Update comment count
+      const commentBtn = document.querySelector(`[data-post-id="${postId}"] .stat-btn:nth-child(2) .stat-count`);
+      if (commentBtn) {
+        commentBtn.textContent = parseInt(commentBtn.textContent) + 1;
+      }
+    }
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    showNotification('Failed to add comment', 'error');
+  }
 }
+
+function sharePost(postId) {
+  // Copy post link to clipboard
+  const postUrl = `${window.location.origin}/post/${postId}`;
+  navigator.clipboard.writeText(postUrl);
+  showNotification('Post link copied to clipboard!', 'success');
+}
+
+// ========================================
+// MY POSTS SECTION
+// ========================================
+
+async function loadMyPosts() {
+  try {
+    const response = await apiCall('/api/posts/my');
+    renderMyPosts(response.posts || []);
+  } catch (error) {
+    console.error('Error loading my posts:', error);
+    renderMyPosts([]);
+  }
+}
+
+async function loadMoreMyPosts() {
+  try {
+    const response = await apiCall(`/api/posts/my?page=${currentPage + 1}`);
+    const morePosts = response.posts || [];
+    
+    if (morePosts.length > 0) {
+      currentPage++;
+      appendToFeed(morePosts);
+    }
+  } catch (error) {
+    console.error('Error loading more my posts:', error);
+  }
+}
+
+function renderMyPosts(posts) {
+  const container = document.getElementById('myPostsContainer');
+  if (!container) return;
   
+  container.innerHTML = '';
+  
+  if (posts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-posts">
+        <p>You haven't created any posts yet.</p>
+        <button class="create-post-btn" onclick="showPostCreator()">
+          Create Your First Post
+        </button>
+      </div>
+    `;
+    return;
+  }
+  
+  posts.forEach(post => {
+    const postElement = createPostElement(post);
+    container.appendChild(postElement);
+  });
+}
 
+// ========================================
+// REALVIBE SECTION
+// ========================================
 
-console.log('✨ RealVibe features initialized!');
+async function loadRealVibe() {
+  try {
+    const response = await apiCall('/api/posts/trending');
+    renderRealVibe(response.posts || []);
+  } catch (error) {
+    console.error('Error loading trending posts:', error);
+    renderRealVibe([]);
+  }
+}
 
-// ==========================================
-// FIXED COMMUNITY CHAT - COMPLETE SOLUTION
-// ==========================================
+async function loadMoreRealVibe() {
+  try {
+    const response = await apiCall(`/api/posts/trending?page=${currentPage + 1}`);
+    const morePosts = response.posts || [];
+    
+    if (morePosts.length > 0) {
+      currentPage++;
+      appendToFeed(morePosts);
+    }
+  } catch (error) {
+    console.error('Error loading more trending posts:', error);
+  }
+}
 
-// Additional chat-specific global variables (socket, currentUser, typingTimeout already declared globally)
-let chatMessages = [];
-let isLoadingMessages = false;
-let messageContainer = null;
+function renderRealVibe(posts) {
+  const container = document.getElementById('realvibeFeed');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (posts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-trending">
+        <p>No trending content right now.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  posts.forEach(post => {
+    const postElement = createPostElement(post);
+    container.appendChild(postElement);
+  });
+}
 
-// ==========================================
-// INITIALIZE CHAT WHEN SECTION OPENS
-// ==========================================
+function filterRealVibe(filter) {
+  // Update active filter button
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
+  
+  // Load filtered content
+  loadFilteredRealVibe(filter);
+}
+
+async function loadFilteredRealVibe(filter) {
+  try {
+    const response = await apiCall(`/api/posts/trending?filter=${filter}`);
+    renderRealVibe(response.posts || []);
+  } catch (error) {
+    console.error('Error loading filtered trending posts:', error);
+  }
+}
+// ========================================
+// VIBEXPERT - COMPLETE JAVASCRIPT PART 4: REWARDS & FINAL FUNCTIONS
+// ========================================
+
+// ========================================
+// REWARDS SYSTEM
+// ========================================
+
+async function loadRewards() {
+  try {
+    const response = await apiCall('/api/rewards');
+    renderRewards(response);
+  } catch (error) {
+    console.error('Error loading rewards:', error);
+    renderRewards({
+      totalPoints: 0,
+      achievementsCount: 0,
+      currentStreak: 0,
+      currentRank: 'Beginner',
+      dailyTasks: rewardsData.dailyTasks,
+      achievements: rewardsData.achievements
+    });
+  }
+}
+
+function renderRewards(data) {
+  // Update stats
+  updateRewardStats(data);
+  
+  // Render daily tasks
+  renderDailyTasks(data.dailyTasks || rewardsData.dailyTasks);
+  
+  // Render achievements
+  renderAchievements(data.achievements || rewardsData.achievements);
+}
+
+function updateRewardStats(data) {
+  const totalPointsEl = document.getElementById('totalPoints');
+  const achievementsCountEl = document.getElementById('achievementsCount');
+  const currentStreakEl = document.getElementById('currentStreak');
+  const currentRankEl = document.getElementById('currentRank');
+  
+  if (totalPointsEl) totalPointsEl.textContent = data.totalPoints || 0;
+  if (achievementsCountEl) achievementsCountEl.textContent = data.achievementsCount || 0;
+  if (currentStreakEl) currentStreakEl.textContent = data.currentStreak || 0;
+  if (currentRankEl) currentRankEl.textContent = data.currentRank || 'Beginner';
+}
+
+function renderDailyTasks(tasks) {
+  const container = document.getElementById('dailyTasksGrid');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  tasks.forEach(task => {
+    const taskElement = createTaskElement(task);
+    container.appendChild(taskElement);
+  });
+}
+
+function createTaskElement(task) {
+  const taskDiv = document.createElement('div');
+  taskDiv.className = `task-card ${task.completed ? 'completed' : ''}`;
+  taskDiv.innerHTML = `
+    <div class="task-icon">${task.icon}</div>
+    <div class="task-info">
+      <h4>${task.title}</h4>
+      <p>${task.desc}</p>
+    </div>
+    <div class="task-reward">+${task.reward} pts</div>
+    <div class="task-status">
+      ${task.completed ? 
+        '<span class="completed-badge">✓ Completed</span>' : 
+        `<button class="claim-btn" onclick="completeTask('${task.id}')">Complete</button>`
+      }
+    </div>
+  `;
+  
+  return taskDiv;
+}
+
+async function completeTask(taskId) {
+  try {
+    const response = await apiCall('/api/tasks/complete', 'POST', {
+      task_id: taskId
+    });
+    
+    if (response.success) {
+      showNotification(`Task completed! +${response.points} points`, 'success');
+      loadRewards(); // Refresh rewards data
+    }
+  } catch (error) {
+    console.error('Error completing task:', error);
+    showNotification('Failed to complete task', 'error');
+  }
+}
+
+function renderAchievements(achievements) {
+  const container = document.getElementById('achievementsGrid');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  achievements.forEach(achievement => {
+    const achievementElement = createAchievementElement(achievement);
+    container.appendChild(achievementElement);
+  });
+}
+
+function createAchievementElement(achievement) {
+  const achievementDiv = document.createElement('div');
+  achievementDiv.className = `achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+  achievementDiv.innerHTML = `
+    <div class="achievement-icon">${achievement.icon}</div>
+    <div class="achievement-info">
+      <h4>${achievement.title}</h4>
+      <p>${achievement.desc}</p>
+    </div>
+    <div class="achievement-reward">+${achievement.reward} pts</div>
+    <div class="achievement-status">
+      ${achievement.unlocked ? 
+        '<span class="unlocked-badge">🏆 Unlocked</span>' : 
+        '<span class="locked-badge">🔒 Locked</span>'
+      }
+    </div>
+  `;
+  
+  return achievementDiv;
+}
+
+// ========================================
+// LIVE ACTIVITY NOTIFICATIONS
+// ========================================
+
+function updateLiveActivity(text) {
+  const notif = document.getElementById('liveActivityNotif');
+  const notifText = document.getElementById('notifText');
+  
+  if (notif && notifText) {
+    notifText.textContent = text;
+    notif.style.display = 'flex';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      notif.style.display = 'none';
+    }, 5000);
+  }
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+// ========================================
+// ANIMATION HELPERS
+// ========================================
+
+function animateValue(element, start, end, duration) {
+  const range = end - start;
+  const startTime = performance.now();
+  
+  function updateValue(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    const value = Math.floor(start + range * progress);
+    element.textContent = formatNumber(value);
+    
+    if (progress < 1) {
+      requestAnimationFrame(updateValue);
+    }
+  }
+  
+  requestAnimationFrame(updateValue);
+}
+
+function animateCounter(selector, targetValue, duration = 2000) {
+  const element = document.querySelector(selector);
+  if (element) {
+    animateValue(element, 0, targetValue, duration);
+  }
+}
+
+// ========================================
+// LOCAL STORAGE HELPERS
+// ========================================
+
+function saveToLocalStorage(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+}
+
+function loadFromLocalStorage(key, defaultValue = null) {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : defaultValue;
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+    return defaultValue;
+  }
+}
+
+// ========================================
+// ERROR HANDLING
+// ========================================
+
+function handleApiError(error, defaultMessage = 'An error occurred') {
+  console.error('API Error:', error);
+  
+  let message = defaultMessage;
+  if (error.message) {
+    message = error.message;
+  } else if (error.status === 401) {
+    message = 'Please log in again';
+    logout();
+  } else if (error.status === 403) {
+    message = 'You do not have permission to perform this action';
+  } else if (error.status === 404) {
+    message = 'Resource not found';
+  } else if (error.status >= 500) {
+    message = 'Server error. Please try again later';
+  }
+  
+  showNotification(message, 'error');
+}
+
+// ========================================
+// VALIDATION HELPERS
+// ========================================
+
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+function validatePassword(password) {
+  return password.length >= 8;
+}
+
+function validateUsername(username) {
+  return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username);
+}
+
+// ========================================
+// DATE/TIME HELPERS
+// ========================================
+
+function getRelativeTime(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+  return `${Math.floor(diffInSeconds / 31536000)} years ago`;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function formatTime(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// ========================================
+// URL HELPERS
+// ========================================
+
+function getQueryParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+}
+
+function updateQueryParam(name, value) {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set(name, value);
+  
+  const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+  window.history.replaceState({}, '', newUrl);
+}
+
+// ========================================
+// DEVICE/PLATFORM HELPERS
+// ========================================
+
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isTablet() {
+  return /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/i.test(navigator.userAgent);
+}
+
+function isDesktop() {
+  return !isMobile() && !isTablet();
+}
+
+// ========================================
+// ACCESSIBILITY HELPERS
+// ========================================
+
+function announceToScreenReader(message) {
+  const announcement = document.createElement('div');
+  announcement.setAttribute('aria-live', 'polite');
+  announcement.setAttribute('aria-atomic', 'true');
+  announcement.className = 'sr-only';
+  announcement.textContent = message;
+  
+  document.body.appendChild(announcement);
+  
+  setTimeout(() => {
+    document.body.removeChild(announcement);
+  }, 1000);
+}
+
+function setFocus(element) {
+  if (element) {
+    element.focus();
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// ========================================
+// PERFORMANCE HELPERS
+// ========================================
+
+function preloadImage(url) {
+  const img = new Image();
+  img.src = url;
+}
+
+function lazyLoadImages() {
+  const images = document.querySelectorAll('img[data-src]');
+  
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        observer.unobserve(img);
+      }
+    });
+  });
+  
+  images.forEach(img => imageObserver.observe(img));
+}
+
+// ========================================
+// THEME HELPERS
+// ========================================
+
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function watchSystemTheme(callback) {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addListener(callback);
+  return () => mediaQuery.removeListener(callback);
+}
+
+// ========================================
+// KEYBOARD SHORTCUTS
+// ========================================
+
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + K for search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      focusSearchInput();
+    }
+    
+    // Ctrl/Cmd + N for new post
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      e.preventDefault();
+      showPostCreator();
+    }
+    
+    // Ctrl/Cmd + / for help
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+      e.preventDefault();
+      showKeyboardShortcuts();
+    }
+    
+    // Escape to close modals
+    if (e.key === 'Escape') {
+      closeAllModals();
+    }
+  });
+}
+
+function focusSearchInput() {
+  const searchInput = document.querySelector('#collegeSearchInput, #chatSearchInput, input[placeholder*="search"]');
+  if (searchInput) {
+    searchInput.focus();
+    searchInput.select();
+  }
+}
+
+function showKeyboardShortcuts() {
+  const shortcuts = [
+    { key: 'Ctrl + K', description: 'Search' },
+    { key: 'Ctrl + N', description: 'New Post' },
+    { key: 'Ctrl + /', description: 'Show Shortcuts' },
+    { key: 'Escape', description: 'Close Modal' },
+    { key: 'Enter', description: 'Send Message' },
+    { key: 'Shift + Enter', description: 'New Line in Chat' }
+  ];
+  
+  let shortcutsHtml = '<h3>Keyboard Shortcuts</h3><ul>';
+  shortcuts.forEach(shortcut => {
+    shortcutsHtml += `<li><strong>${shortcut.key}:</strong> ${shortcut.description}</li>`;
+  });
+  shortcutsHtml += '</ul>';
+  
+  showNotification(shortcutsHtml, 'info', 5000);
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.style.display = 'none';
+  });
+}
+
+// ========================================
+// INITIALIZATION HELPERS
+// ========================================
+
+function initializeAppFeatures() {
+  setupKeyboardShortcuts();
+  lazyLoadImages();
+  loadTheme();
+  
+  // Preload critical images
+  preloadImage('/api/user/avatar');
+  
+  // Initialize tooltips
+  initializeTooltips();
+  
+  // Setup form validation
+  setupFormValidation();
+}
+
+function initializeTooltips() {
+  const tooltipElements = document.querySelectorAll('[title]');
+  
+  tooltipElements.forEach(element => {
+    element.addEventListener('mouseenter', function(e) {
+      showTooltip(e.target, e.target.title);
+    });
+    
+    element.addEventListener('mouseleave', function() {
+      hideTooltip();
+    });
+  });
+}
+
+function showTooltip(element, text) {
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  tooltip.textContent = text;
+  tooltip.style.cssText = `
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10000;
+    pointer-events: none;
+  `;
+  
+  document.body.appendChild(tooltip);
+  
+  const rect = element.getBoundingClientRect();
+  tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+  tooltip.style.top = rect.top - tooltip.offsetHeight - 5 + 'px';
+}
+
+function hideTooltip() {
+  const tooltip = document.querySelector('.tooltip');
+  if (tooltip) {
+    tooltip.remove();
+  }
+}
+
+function setupFormValidation() {
+  const forms = document.querySelectorAll('form');
+  
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      if (!validateForm(form)) {
+        e.preventDefault();
+      }
+    });
+  });
+}
+
+function validateForm(form) {
+  const inputs = form.querySelectorAll('input[required], textarea[required]');
+  let isValid = true;
+  
+  inputs.forEach(input => {
+    if (!input.value.trim()) {
+      showFieldError(input, 'This field is required');
+      isValid = false;
+    } else {
+      clearFieldError(input);
+    }
+  });
+  
+  return isValid;
+}
+
+function showFieldError(field, message) {
+  clearFieldError(field);
+  
+  field.classList.add('error');
+  
+  const errorElement = document.createElement('div');
+  errorElement.className = 'field-error';
+  errorElement.textContent = message;
+  errorElement.style.cssText = `
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
+  `;
+  
+  field.parentNode.appendChild(errorElement);
+}
+
+function clearFieldError(field) {
+  field.classList.remove('error');
+  const errorElement = field.parentNode.querySelector('.field-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
+}
+
+// ========================================
+// FINAL INITIALIZATION
+// ========================================
+
+// Initialize all features when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  initializeAppFeatures();
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    // Page is hidden
+    if (socket) {
+      socket.emit('page_hidden');
+    }
+  } else {
+    // Page is visible
+    if (socket) {
+      socket.emit('page_visible');
+    }
+    loadUserData(); // Refresh user data
+  }
+});
+
+// Handle online/offline status
+window.addEventListener('online', function() {
+  showNotification('Connection restored', 'success');
+  if (socket && !socket.connected) {
+    socket.connect();
+  }
+});
+
+window.addEventListener('offline', function() {
+  showNotification('Connection lost', 'error');
+});
+
+// Handle beforeunload (page closing)
+window.addEventListener('beforeunload', function(e) {
+  if (socket) {
+    socket.emit('user_leaving');
+  }
+});
+
+// ========================================
+// EXPORT FUNCTIONS FOR GLOBAL ACCESS
+// ========================================
+
+// Make important functions globally accessible
+window.VibeXpert = {
+  // Chat functions
+  joinCollegeChat,
+  leaveCollegeChat,
+  sendModernMessage,
+  toggleEmojiPicker,
+  toggleMediaUpload,
+  
+  // Post functions
+  showPostCreator,
+  publishPost,
+  toggleLike,
+  addComment,
+  
+  // Navigation
+  showSection,
+  toggleTheme,
+  
+  // Utility
+  showNotification,
+  formatMessageTime,
+  
+  // Rewards
+  completeTask,
+  
+  // Authentication
+  logout
+};
+
+// ========================================
+// DEBUG HELPERS (Remove in production)
+// ========================================
+
+function debugLog(message, data = null) {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('[VibeXpert Debug]', message, data);
+  }
+}
+
+// Add debug logging to important functions
+const originalApiCall = window.apiCall;
+window.apiCall = function(endpoint, method, data) {
+  debugLog('API Call', { endpoint, method, data });
+  return originalApiCall(endpoint, method, data);
+};
+
+// ========================================
+// APP READY
+// ========================================
+
+debugLog('VibeXpert application initialized');
+
+// Signal that the app is ready
+window.dispatchEvent(new CustomEvent('vibexpert:ready'));
