@@ -335,7 +335,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="91e2e4e1e1fee3e5d1e7f8f3f4e9e1f4e3e5bff2fefc">[email&#160;protected]</a></p>
+<p>📧 support@vibexpert.com</p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -363,7 +363,7 @@ Get Started Now →
 <form id="loginForm" onsubmit="login(event)">
 <h2>Login</h2>
 <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
-<input type="password" id="loginPassword" class="auth-input password-input" placeholder="Password" required>
+<input type="password" id="loginPassword" placeholder="Password" required>
 <button type="submit">Login</button>
 <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
 <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
@@ -400,9 +400,9 @@ Enter your email address and we'll send you a verification code.
 <!-- SIGNUP FORM -->
 <form id="signupForm" onsubmit="signup(event)" style="display:none;">
 <h2>Create Account</h2>
-<input type="text" id="signupName" class="auth-input" placeholder="Full Name" required>
-<input type="email" id="signupEmail" class="auth-input" placeholder="Email" required>
-<input type="text" id="signupReg" class="auth-input" placeholder="Registration Number" required>
+<input type="text" id="signupName" placeholder="Full Name" required>
+<input type="email" id="signupEmail" placeholder="Email" required>
+<input type="text" id="signupReg" placeholder="Registration Number" required>
 
 <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
 <div style="display:flex; gap:15px; margin-bottom:15px;">
@@ -420,8 +420,8 @@ Enter your email address and we'll send you a verification code.
 </label>
 </div>
 
-<input type="password" id="signupPass" class="auth-input password-input" placeholder="Password" required>
-<input type="password" id="signupConfirm" class="auth-input password-input" placeholder="Confirm Password" required>
+<input type="password" id="signupPass" placeholder="Password" required>
+<input type="password" id="signupConfirm" placeholder="Confirm Password" required>
 
 <button type="submit">Create Account</button>
 <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
@@ -617,20 +617,48 @@ Enter your email address and we'll send you a verification code.
 <section id="communities" class="page" style="display:none;">
 <h2 class="title">Join Communities</h2>
 <div id="communitiesContainer"></div>
-<div id="chatSection" style="display:none; margin-top:40px;">
-<div class="chat-header">
-<h3>Community Chat</h3>
-<div class="chat-online-count"><span class="online-dot"></span><span id="chatOnlineCount">0</span> Online</div>
+<div id="chatSection" style="display:none;">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div class="chat-title">
+      <span>💬</span>
+      <span id="chatCollegeName">Community Chat</span>
+    </div>
+    <div class="chat-online-count">
+      <span class="online-dot"></span>
+      <span id="chatOnlineCount">0</span> Online
+    </div>
+  </div>
+
+  <!-- Connection Status -->
+  <div id="connectionStatus" style="display:none;"></div>
+
+  <!-- Messages Container -->
+  <div class="chat-messages" id="chatMessages">
+    <div class="loading-messages-state">
+      <div class="spinner"></div>
+      <p>Loading messages...</p>
+    </div>
+  </div>
+
+  <!-- Typing Indicator -->
+  <div id="typingIndicator"></div>
+
+  <!-- Chat Input -->
+  <div class="chat-input-container">
+    <div class="chat-input-box">
+      <textarea 
+        id="chatInput" 
+        placeholder="Type a message..." 
+        rows="1"
+      ></textarea>
+      <button class="chat-send-btn" onclick="sendCommunityMessage()">
+        <span>Send</span>
+        <span>📤</span>
+      </button>
+    </div>
+  </div>
 </div>
-<div class="chat-box">
-<div class="chat-messages" id="chatMessages"></div>
-<div class="chat-input-box">
-<input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
-<button class="send-btn" onclick="sendChatMessage()">Send</button>
-</div>
-</div>
-</div>
-</section>
 
 <!-- REALVIBE SECTION -->
 <section id="realvibe" class="page" style="display:none;">
@@ -1097,7 +1125,7 @@ Enter your email address and we'll send you a verification code.
     </div>
   </div>
 </section>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // Initialize roadmap when rewards page loads
   document.addEventListener('DOMContentLoaded', function() {
     // Call updateRoadmapUI when rewards page becomes visible
@@ -1227,7 +1255,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="275452575748555367514e45425f574255530944484a">[email&#160;protected]</a></p>
+<p>📧 Email: support@vibexpert.com</p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1243,7 +1271,7 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
+<script src="vibemap.js"></script>
 
 <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
 <script>
@@ -1311,4 +1339,24 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropriate
+  // Check which page is visible and init appropriate background
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+
+if (aboutPage && aboutPage.style.display !== 'none') {
+    initGlobeBackground();
+}
+
+if (mainPage && mainPage.style.display !== 'none') {
+    initNetBackground();
+}
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+destroyGlobeBackground();
+destroyNetBackground();
+});
+</script>
+
+</body>
