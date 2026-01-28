@@ -335,7 +335,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 support@vibexpert.com</p>
+<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="92e1e7e2e2fde0e6d2e4fbf0f7eae2f7e0e6bcf1fdff">[email&#160;protected]</a></p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -618,11 +618,14 @@ Enter your email address and we'll send you a verification code.
 <h2 class="title">Join Communities</h2>
 <div id="communitiesContainer"></div>
 <!-- ==========================================
-     IMPROVED COMMUNITY CHAT SECTION
+     CLEAN COMMUNITY CHAT SECTION
      ========================================== -->
-<div id="chatSection" style="display:none;">
-  <!-- Chat Header -->
+<div id="chatSection" class="clean-chat-section" style="display:none;">
+  <!-- Chat Header with Back Button -->
   <div class="chat-header">
+    <button class="back-btn-chat" onclick="closeCommunityChat()" title="Back to Communities">
+      ← Back
+    </button>
     <div class="chat-title">
       <span>💬</span>
       <span id="chatCollegeName">Community Chat</span>
@@ -634,7 +637,7 @@ Enter your email address and we'll send you a verification code.
   </div>
 
   <!-- Connection Status -->
-  <div id="connectionStatus" style="display:none;"></div>
+  <div id="connectionStatus" class="connection-status" style="display:none;"></div>
 
   <!-- Messages Container -->
   <div class="chat-messages" id="chatMessages">
@@ -645,17 +648,18 @@ Enter your email address and we'll send you a verification code.
   </div>
 
   <!-- Typing Indicator -->
-  <div id="typingIndicator"></div>
+  <div id="typingIndicator" class="typing-indicator"></div>
 
   <!-- Chat Input -->
   <div class="chat-input-container">
     <div class="chat-input-box">
       <textarea 
         id="chatInput" 
-        placeholder="Type a message..." 
+        placeholder="Type your message..." 
         rows="1"
+        maxlength="500"
       ></textarea>
-      <button class="chat-send-btn" onclick="sendCommunityMessage()">
+      <button class="chat-send-btn" onclick="sendCommunityMessage()" title="Send message">
         <span>Send</span>
         <span>📤</span>
       </button>
@@ -1128,7 +1132,7 @@ Enter your email address and we'll send you a verification code.
     </div>
   </div>
 </section>
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // Initialize roadmap when rewards page loads
   document.addEventListener('DOMContentLoaded', function() {
     // Call updateRoadmapUI when rewards page becomes visible
@@ -1258,7 +1262,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: support@vibexpert.com</p>
+<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="42313732322d303602342b20273a322730366c212d2f">[email&#160;protected]</a></p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1274,7 +1278,7 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<script src="vibemap.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
 
 <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
 <script>
@@ -1342,24 +1346,4 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropriate background
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-
-if (aboutPage && aboutPage.style.display !== 'none') {
-    initGlobeBackground();
-}
-
-if (mainPage && mainPage.style.display !== 'none') {
-    initNetBackground();
-}
-});
-
-// Clean up on page unload
-window.addEventListener('beforeunload', () => {
-destroyGlobeBackground();
-destroyNetBackground();
-});
-</script>
-
-</body>
+  // Check which page is visible and init appropria
