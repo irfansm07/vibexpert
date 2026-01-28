@@ -8819,123 +8819,6 @@ body.light-theme .twitter-text {
   font-size: 16px;
 }
 
-/* ==========================================
-   EYE TRACKING CHARACTER ANIMATION
-   ========================================== */
-
-.eye-tracker-character {
-  position: relative;
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 20px auto;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.character-face {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(145deg, #4f74a3, #6a8fbe);
-  border-radius: 50%;
-  position: relative;
-  box-shadow: 0 8px 20px rgba(79, 116, 163, 0.4);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  animation: characterFloat 3s ease-in-out infinite;
-}
-
-@keyframes characterFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-}
-
-.character-eye {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  background: white;
-  border-radius: 50%;
-  top: 28px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.character-eye.left-eye {
-  left: 20px;
-}
-
-.character-eye.right-eye {
-  right: 20px;
-}
-
-.eye-pupil {
-  width: 11px;
-  height: 11px;
-  background: radial-gradient(circle at 30% 30%, #2a3f5f, #1a2332);
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transition: transform 0.15s ease-out;
-}
-
-.character-mouth {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 25px;
-  overflow: visible;
-}
-
-.mouth-svg {
-  width: 100%;
-  height: 100%;
-  color: rgba(255, 255, 255, 0.9);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
-.mouth-path {
-  transition: d 0.3s ease-out;
-}
-
-/* Responsive positioning for mobile */
-@media (max-width: 768px) {
-  .eye-tracker-character {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 15px;
-  }
-  
-  .character-eye {
-    width: 20px;
-    height: 20px;
-    top: 25px;
-  }
-  
-  .character-eye.left-eye {
-    left: 18px;
-  }
-  
-  .character-eye.right-eye {
-    right: 18px;
-  }
-  
-  .eye-pupil {
-    width: 10px;
-    height: 10px;
-  }
-  
-  .character-mouth {
-    width: 45px;
-    height: 22px;
-    bottom: 16px;
-  }
-}
-
-
-
 
 
 
@@ -9529,3 +9412,6 @@ body.light-theme .twitter-text {
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
+
+
+
