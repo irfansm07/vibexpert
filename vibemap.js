@@ -549,1093 +549,725 @@ window.scrollTo({ top: 0, behavior: 'smooth' });
 // ENHANCED COMMUNITY CHAT
 // ========================================
 
-function initializeEnhancedChat() {
-if (chatInitialized) return;
-chatInitialized = true;
-console.log('✨ Enhanced chat initializing');
-setupChatInputEnhancements();
-setupMessageActions();
-setupTypingIndicator();
-setupReactionSystem();
-setupConnectionMonitor();
-setupMessageOptimization();
-setupInfiniteScroll();
-}
-
-function setupChatInputEnhancements() {
-const chatInput = document.getElementById('chatInput');
-if (!chatInput) return;
-
-chatInput.addEventListener('input', function() {
-this.style.height = 'auto';
-this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-handleTypingIndicator();
-});
-
-chatInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter' && !e.shiftKey) {
-e.preventDefault();
-sendEnhancedMessage();
-}
-});
-}
-
-async function sendEnhancedMessage() {
-const chatInput = document.getElementById('chatInput');
-const content = chatInput?.value.trim();
-if (!content) return;
-
-try {
-const messageData = { 
-content, 
-timestamp: Date.now(), 
-tempId: 'temp-' + Date.now() 
-};
-
-addMessageToUI({ 
-id: messageData.tempId, 
-content, 
-sender_id: currentUser.id, 
-users: currentUser, 
-timestamp: new Date(), 
-status: 'sending' 
-});
-
-chatInput.value = '';
-chatInput.style.height = 'auto';
-
-await apiCall('/api/community/messages', 'POST', { content });
-updateMessageStatus(messageData.tempId, 'sent');
-playMessageSound('send');
-
-if (socket && currentUser.college) {
-socket.emit('stop_typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-}
-} catch(error) {
-showMessage('❌ Failed to send', 'error');
-}
-}
-
-function appendMessageToChat(msg) {
-const messagesEl = document.getElementById('chatMessages');
-if (!messagesEl) return;
-
-const isOwn = msg.sender_id === (currentUser && currentUser.id);
-const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
-
-if (document.getElementById('msg-' + messageId)) return;
-
-const wrapper = document.createElement('div');
-wrapper.className = 'chat-message ' + (isOwn ? 'own' : 'other');
-wrapper.id = `msg-${messageId}`;
-
-let messageHTML = '';
-if (!isOwn) messageHTML += `<div class="sender">@${escapeHtml(sender)}</div>`;
-
-messageHTML += `
-   <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
-   <div class="message-footer">
-     <span class="message-time">${timeLabel}</span>
-     <div class="message-actions">
-       <button class="message-action-btn" onclick="addReactionToMessage('${messageId}')" title="React">❤️</button>
-       <button class="message-action-btn" onclick="copyMessageText('${messageId}')" title="Copy">📋</button>
-       ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${messageId}')" title="Delete">🗑️</button>` : ''}
-     </div>
-   </div>
- `;
-
-messageHTML += createReactionBar(messageId, msg.message_reactions || []);
-wrapper.innerHTML = messageHTML;
-messagesEl.appendChild(wrapper);
-messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-
-if (!isOwn) playMessageSound('receive');
-}
-
-function escapeHtml(unsafe) {
-if (!unsafe) return '';
-return String(unsafe)
-.replace(/&/g, "&amp;")
-.replace(/</g, "&lt;")
-.replace(/>/g, "&gt;")
-.replace(/"/g, "&quot;")
-.replace(/'/g, "&#039;");
-}
-
-function createReactionBar(messageId, reactions) {
-const reactionCounts = {};
-const userReacted = {};
-
-if (reactions && Array.isArray(reactions)) {
-reactions.forEach(r => {
-reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
-if (r.user_id && currentUser && r.user_id === currentUser.id) userReacted[r.emoji] = true;
-});
-}
-
-const defaultEmojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮'];
-const allEmojis = Array.from(new Set([...defaultEmojis, ...Object.keys(reactionCounts)]));
-
-let html = '<div class="reaction-bar">';
-allEmojis.forEach(emoji => {
-const count = reactionCounts[emoji] || 0;
-const selected = userReacted[emoji] ? 'selected' : '';
-html += `<div class="reaction-pill ${selected}" onclick="toggleReaction('${messageId}', '${emoji}')">
-     <span class="emoji">${emoji}</span>
-     ${count > 0 ? `<span class="reaction-count">${count}</span>` : ''}
-   </div>`;
-});
-html += `<div class="reaction-pill" onclick="showEmojiPickerForMessage('${messageId}')" title="Add reaction">✚</div></div>`;
-return html;
-}
-
-async function toggleReaction(messageId, emoji) {
-try {
-const pill = event.target.closest('.reaction-pill');
-const countSpan = pill.querySelector('.reaction-count');
-let count = parseInt(countSpan?.textContent) || 0;
-
-if (pill.classList.contains('selected')) {
-pill.classList.remove('selected');
-count = Math.max(0, count - 1);
-} else {
-pill.classList.add('selected');
-count = count + 1;
-}
-
-if (countSpan) {
-countSpan.textContent = count || '';
-} else if (count > 0) {
-const newCountSpan = document.createElement('span');
-newCountSpan.className = 'reaction-count';
-newCountSpan.textContent = count;
-pill.appendChild(newCountSpan);
-}
-
-await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
-} catch (err) {
-console.error('Reaction failed', err);
-showMessage('❌ Failed to add reaction', 'error');
-}
-}
-
-function showEmojiPickerForMessage(messageId) {
-document.querySelectorAll('.emoji-picker').forEach(e => e.remove());
-
-const picker = document.createElement('div');
-picker.className = 'emoji-picker';
-
-const emojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮', '😢', '👏', '🤝', '🙌', '⭐', '💯'];
-emojis.forEach(emoji => {
-const btn = document.createElement('button');
-btn.textContent = emoji;
-btn.onclick = (e) => {
-e.stopPropagation();
-toggleReaction(messageId, emoji);
-picker.remove();
-};
-picker.appendChild(btn);
-});
-
-document.body.appendChild(picker);
-
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-const rect = messageEl.getBoundingClientRect();
-picker.style.position = 'fixed';
-picker.style.left = Math.max(10, rect.left) + 'px';
-picker.style.top = Math.max(10, rect.top - picker.offsetHeight - 10) + 'px';
-}
-
-setTimeout(() => {
-const closeHandler = (e) => {
-if (!picker.contains(e.target)) {
-picker.remove();
-document.removeEventListener('click', closeHandler);
-}
-};
-document.addEventListener('click', closeHandler);
-}, 10);
-}
-
-function addReactionToMessage(messageId) {
-showEmojiPickerForMessage(messageId);
-}
-
-function copyMessageText(messageId) {
-const messageEl = document.getElementById(`msg-${messageId}`);
-const text = messageEl?.querySelector('.text')?.textContent;
-if (!text) return;
-
-navigator.clipboard.writeText(text).then(() => {
-showMessage('📋 Message copied!', 'success');
-}).catch(() => {
-showMessage('❌ Failed to copy', 'error');
-});
-}
-
-function handleTypingIndicator() {
-const now = Date.now();
-if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-socket.emit('typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-lastTypingEmit = now;
-}
-
-clearTimeout(typingTimeout);
-typingTimeout = setTimeout(() => {
-if (socket && currentUser && currentUser.college) {
-socket.emit('stop_typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-}
-}, 3000);
-}
-
-function showTypingIndicator(username) {
-typingUsers.add(username);
-updateTypingDisplay();
-}
-
-function hideTypingIndicator(username) {
-typingUsers.delete(username);
-updateTypingDisplay();
-}
-
-function updateTypingDisplay() {
-let container = document.querySelector('.typing-indicators-container');
-const messagesBox = document.querySelector('.chat-messages');
-
-if (!container && messagesBox) {
-container = document.createElement('div');
-container.className = 'typing-indicators-container';
-messagesBox.appendChild(container);
-}
-
-if (!container) return;
-
-if (typingUsers.size === 0) {
-container.innerHTML = '';
-return;
-}
-
-const usersList = Array.from(typingUsers);
-let text = '';
-
-if (usersList.length === 1) text = `${usersList[0]} is typing`;
-else if (usersList.length === 2) text = `${usersList[0]} and ${usersList[1]} are typing`;
-else text = `${usersList.length} people are typing`;
-
-container.innerHTML = `
-   <div class="typing-indicator">
-     <div class="typing-dots">
-       <span></span>
-       <span></span>
-       <span></span>
-     </div>
-     <span class="typing-text">${text}</span>
-   </div>
- `;
-
-messagesBox.scrollTo({ top: messagesBox.scrollHeight, behavior: 'smooth' });
-}
-
-function setupMessageActions() {
-console.log('✨ Message actions setup');
-}
-
-async function deleteMessage(messageId) {
-if (!confirm('Delete this message?')) return;
-
-try {
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '0.5';
-messageEl.style.pointerEvents = 'none';
-}
-
-await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-if (messageEl) {
-messageEl.style.animation = 'fadeOut 0.3s ease';
-setTimeout(() => messageEl.remove(), 300);
-}
-
-showMessage('🗑️ Message deleted', 'success');
-} catch(error) {
-console.error('Delete error:', error);
-showMessage('❌ Failed to delete', 'error');
-
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '1';
-messageEl.style.pointerEvents = 'auto';
-}
-}
-}
-
-function updateMessageStatus(messageId, status) {
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (!messageEl) return;
-
-let statusIcon = messageEl.querySelector('.message-status');
-if (!statusIcon) {
-statusIcon = document.createElement('span');
-statusIcon.className = 'message-status';
-const timeSpan = messageEl.querySelector('.message-time');
-if (timeSpan) timeSpan.appendChild(statusIcon);
-}
-
-statusIcon.className = `message-status ${status}`;
-statusIcon.textContent = status === 'sending' ? '⏳' : status === 'sent' ? '✓' : '✓✓';
-}
-
-function setupConnectionMonitor() {
-if (!socket) return;
-
-socket.on('connect', () => {
-connectionStatus = 'connected';
-updateConnectionStatus();
-});
-
-socket.on('disconnect', () => {
-connectionStatus = 'disconnected';
-updateConnectionStatus();
-});
-
-socket.on('reconnect', () => {
-connectionStatus = 'connected';
-updateConnectionStatus();
-setTimeout(() => loadCommunityMessages(), 500);
-});
-}
-
-function updateConnectionStatus() {
-let banner = document.querySelector('.connection-status');
-const chatSection = document.getElementById('chatSection');
-
-if (connectionStatus === 'disconnected') {
-if (!banner && chatSection) {
-banner = document.createElement('div');
-banner.className = 'connection-status';
-chatSection.prepend(banner);
-}
-if (banner) banner.textContent = '⚠️ Disconnected - Reconnecting...';
-} else {
-if (banner) {
-banner.classList.add('connected');
-banner.textContent = '✅ Connected';
-setTimeout(() => banner.remove(), 2000);
-}
-}
-}
-
-function setupMessageOptimization() {
-let messageQueue = [];
-let updateTimeout = null;
-
-window.queueMessageUpdate = function(message) {
-messageQueue.push(message);
-clearTimeout(updateTimeout);
-updateTimeout = setTimeout(() => {
-messageQueue.forEach(msg => appendMessageToChat(msg));
-messageQueue = [];
-}, 100);
-};
-}
-
-function setupInfiniteScroll() {
-const messagesEl = document.getElementById('chatMessages');
-if (!messagesEl) return;
-
-messagesEl.addEventListener('scroll', async () => {
-if (messagesEl.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
-isLoadingMessages = true;
-const oldHeight = messagesEl.scrollHeight;
-
-try {
-const data = await apiCall(`/api/community/messages?page=${currentMessagePage + 1}`, 'GET');
-
-if (data.messages && data.messages.length > 0) {
-currentMessagePage++;
-data.messages.reverse().forEach(msg => {
-const messageEl = document.createElement('div');
-messageEl.innerHTML = renderMessage(msg);
-messagesEl.insertBefore(messageEl.firstChild, messagesEl.firstChild);
-});
-
-const newHeight = messagesEl.scrollHeight;
-messagesEl.scrollTop = newHeight - oldHeight;
-} else {
-hasMoreMessages = false;
-}
-} catch(error) {
-console.error('Load more messages:', error);
-} finally {
-isLoadingMessages = false;
-}
-}
-});
-}
-
-function renderMessage(msg) {
-const isOwn = msg.sender_id === (currentUser && currentUser.id);
-const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
-
-let html = `<div class="chat-message ${isOwn ? 'own' : 'other'}" id="msg-${messageId}">`;
-if (!isOwn) html += `<div class="sender">@${escapeHtml(sender)}</div>`;
-html += `
-   <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
-   <div class="message-footer">
-     <span class="message-time">${timeLabel}</span>
-     <div class="message-actions">
-       <button class="message-action-btn" onclick="addReactionToMessage('${messageId}')" title="React">❤️</button>
-       <button class="message-action-btn" onclick="copyMessageText('${messageId}')" title="Copy">📋</button>
-       ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${messageId}')" title="Delete">🗑️</button>` : ''}
-     </div>
-   </div>
- `;
-html += createReactionBar(messageId, msg.message_reactions || []);
-html += '</div>';
-
-return html;
-}
-
-function playMessageSound(type) {
-const sounds = {
-send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav',
-notification: 'https://assets.mixkit.co/active_storage/sfx/2358/2358.wav'
-};
-
-const audio = new Audio(sounds[type]);
-audio.volume = 0.2;
-audio.play().catch(() => {});
-}
-
-function setupReactionSystem() {
-console.log('✨ Reactions ready');
-}
-
-function setupTypingIndicator() {
-console.log('✨ Typing indicator ready');
-}
-
-function addMessageToUI(message) {
-appendMessageToChat(message);
-}
-
-function setupEnhancedSocketListeners() {
-if (!socket) return;
-
-socket.on('new_message', (message) => {
-if (window.queueMessageUpdate) queueMessageUpdate(message);
-else appendMessageToChat(message);
-});
-
-socket.on('user_typing', (data) => {
-if (data.username && currentUser && data.username !== currentUser.username) {
-showTypingIndicator(data.username);
-}
-});
-
-socket.on('user_stop_typing', (data) => {
-if (data.username) hideTypingIndicator(data.username);
-});
-
-socket.on('message_deleted', ({ id }) => {
-const messageEl = document.getElementById(`msg-${id}`);
-if (messageEl) {
-messageEl.style.animation = 'fadeOut 0.3s ease';
-setTimeout(() => messageEl.remove(), 300);
-}
-});
-}
-
-// Auto-initialize chat when section becomes visible
-document.addEventListener('DOMContentLoaded', () => {
-const observer = new MutationObserver((mutations) => {
-mutations.forEach((mutation) => {
-const chatSection = document.getElementById('chatSection');
-if (mutation.target === chatSection && 
-chatSection.style.display !== 'none' && 
-!chatSection.dataset.initialized) {
-chatSection.dataset.initialized = 'true';
-initializeEnhancedChat();
-setupEnhancedSocketListeners();
-console.log('🎉 Enhanced chat ready!');
-}
-});
-});
-
-const chatSection = document.getElementById('chatSection');
-if (chatSection) {
-observer.observe(chatSection, { 
-attributes: true, 
-attributeFilter: ['style'] 
-});
-}
-});
-
-function handleChatKeypress(e) {
-if (e.key === 'Enter' && !e.shiftKey) {
-e.preventDefault();
-sendEnhancedMessage();
-}
-}
-
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
-  if (!content) return;
-
-  try {
-    // Optimistic UI update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date()
-    };
-    
-    appendWhatsAppMessage(tempMsg);
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    await apiCall('/api/community/messages', 'POST', { content });
-    
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-  } catch(error) {
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
-function showMessageOptions(messageId, isOwn) {
-  const options = [
-    { icon: '📋', label: 'Copy', action: () => copyMessage(messageId) },
-    { icon: '↪️', label: 'Reply', action: () => replyToMessage(messageId) },
-    { icon: '⭐', label: 'Star', action: () => starMessage(messageId) }
-  ];
-
-  if (isOwn) {
-    options.push({ icon: '🗑️', label: 'Delete', action: () => deleteWhatsAppMessage(messageId) });
-  }
-
-  showContextMenu(options);
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
 
 // ========================================
-// COMMUNITIES & CHAT
+// FIXED COMMUNITY CHAT SYSTEM - REPLACED
+// Single unified implementation
+// ========================================
+
+// Chat State Variables
+let messageContainer = null;
+let chatMessages = [];
+let isLoadingMessages = false;
+let typingTimeout = null;
+let lastTypingTime = 0;
+
+// ========================================
+// LOAD COMMUNITIES PAGE
 // ========================================
 
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   if (!container) return;
 
-  if (!currentUser || !currentUser.communityJoined) {
+  if (!currentUser || !currentUser.college) {
     container.innerHTML = `
       <div class="community-guidance">
-        <p>🎓 Connect to college first!</p>
-        <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
+        <div class="guidance-icon">🎓</div>
+        <h2>Join Your College Community</h2>
+        <p>Connect with your college to access the community chat</p>
+        <button class="btn-primary" onclick="showPage('home')">Connect to College</button>
       </div>
     `;
     return;
   }
 
-  // Simple community card to open chat
+  // Show community chat interface
   container.innerHTML = `
-    <div class="community-card-wrapper">
-      <div class="community-card" onclick="openCommunityChat()">
-        <div class="community-icon">🎓</div>
-        <div class="community-info">
-          <h3>${currentUser.college}</h3>
-          <p>College Community Chat</p>
-          <div class="community-stats">
-            <span class="stat-badge">
-              <span class="online-dot"></span>
-              <span id="commOnlineCount">0</span> Online
-            </span>
-            <span class="stat-badge">💬 Community Chat</span>
+    <div class="community-chat-container">
+      <!-- Chat Header -->
+      <div class="community-chat-header">
+        <div class="chat-header-left">
+          <div class="college-avatar">🎓</div>
+          <div class="chat-header-info">
+            <h2>${escapeHtml(currentUser.college)}</h2>
+            <p class="online-status">
+              <span class="status-dot"></span>
+              <span id="onlineCount">0</span> members online
+            </p>
           </div>
         </div>
-        <div class="community-arrow">→</div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" onclick="refreshChat()" title="Refresh">🔄</button>
+          <button class="icon-btn" onclick="toggleChatInfo()" title="Info">ℹ️</button>
+        </div>
+      </div>
+
+      <!-- Connection Status Banner -->
+      <div id="connectionStatus" class="connection-status" style="display:none;"></div>
+
+      <!-- Messages Area -->
+      <div class="community-messages-container" id="chatMessagesContainer">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading messages...</p>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="typing-indicator" style="display:none;">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span id="typingText">Someone is typing...</span>
+      </div>
+
+      <!-- Input Area -->
+      <div class="community-input-area">
+        <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+        <div class="input-wrapper">
+          <textarea 
+            id="communityMessageInput" 
+            placeholder="Type a message..." 
+            rows="1"
+            maxlength="1000"
+            onkeydown="handleChatKeypress(event)"
+            oninput="handleChatInput(event)"
+          ></textarea>
+        </div>
+        <button class="send-btn" onclick="sendMessage()" title="Send" id="sendButton">
+          <span class="send-icon">📤</span>
+        </button>
       </div>
     </div>
   `;
-  
-  // Update online count
-  updateOnlineCount();
+
+  // Initialize chat
+  initializeCommunityChat();
 }
-  
-// ==========================================
-// WHATSAPP MESSAGE FUNCTIONS
-// ==========================================
 
-async function loadWhatsAppMessages() {
+// ========================================
+// INITIALIZE COMMUNITY CHAT
+// ========================================
+
+async function initializeCommunityChat() {
+  console.log('🚀 Initializing community chat...');
+
+  // Get message container
+  messageContainer = document.getElementById('chatMessagesContainer');
+  if (!messageContainer) {
+    console.error('❌ Message container not found');
+    return;
+  }
+
+  // Initialize socket if not already connected
+  if (!socket || !socket.connected) {
+    initializeSocket();
+  } else {
+    // Rejoin college room
+    socket.emit('join_college', currentUser.college);
+  }
+
+  // Load messages
+  await loadMessages();
+
+  console.log('✅ Community chat initialized');
+}
+
+// ========================================
+// LOAD MESSAGES
+// ========================================
+
+async function loadMessages() {
+  if (isLoadingMessages) return;
+  isLoadingMessages = true;
+
   try {
-    const data = await apiCall('/api/community/messages', 'GET');
-    const messagesEl = document.getElementById('whatsappMessages');
+    console.log('📥 Loading messages...');
     
-    if (!messagesEl) return;
+    const token = getToken();
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
 
-    // Keep date separator
-    const dateSeparator = messagesEl.querySelector('.date-separator');
-    messagesEl.innerHTML = '';
-    if (dateSeparator) messagesEl.appendChild(dateSeparator);
+    const response = await fetch(`${API_URL}/api/community/messages`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('📦 Received data:', data);
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to load messages');
+    }
+
+    // Clear container
+    messageContainer.innerHTML = '';
+
+    // Check if no messages
     if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML += `
-        <div class="no-messages">
-          <div style="font-size:64px;margin-bottom:20px;">👋</div>
-          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-          <p style="color:#888;">Say hi to your college community</p>
+      messageContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <h3>No Messages Yet</h3>
+          <p>Be the first to start the conversation!</p>
         </div>
       `;
+      isLoadingMessages = false;
       return;
     }
 
-    data.messages.reverse().forEach(msg => appendWhatsAppMessage(msg));
-    scrollToBottom();
-    
-    // Update stats
-    updateChatStats(data.messages.length);
-  } catch(error) {
-    console.error('', error);
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    }
+    // Store messages
+    chatMessages = data.messages;
+
+    // Add date separator
+    const today = new Date().toDateString();
+    const dateSeparator = document.createElement('div');
+    dateSeparator.className = 'date-separator';
+    dateSeparator.innerHTML = `<span>Today - ${today}</span>`;
+    messageContainer.appendChild(dateSeparator);
+
+    // Display all messages
+    data.messages.forEach(msg => {
+      displayMessage(msg, true);
+    });
+
+    // Scroll to bottom
+    setTimeout(() => scrollToBottom(), 100);
+
+    console.log(`✅ Loaded ${data.messages.length} messages`);
+
+  } catch (error) {
+    console.error('❌ Load messages error:', error);
+    messageContainer.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h3>Failed to Load Messages</h3>
+        <p>${escapeHtml(error.message)}</p>
+        <button onclick="loadMessages()" class="btn-primary">Try Again</button>
+      </div>
+    `;
+  } finally {
+    isLoadingMessages = false;
+  }
+}
+
+// ========================================
+// DISPLAY MESSAGE
+// ========================================
+
+function displayMessage(message, skipScroll = false) {
+  if (!messageContainer) {
+    messageContainer = document.getElementById('chatMessagesContainer');
   }
 
-function appendWhatsAppMessage(msg) {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (!messagesEl) return;
-
-  const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
+  if (!messageContainer) {
+    console.error('❌ Message container not found');
+    return;
+  }
 
   // Check if message already exists
-  if (document.getElementById('wa-msg-' + messageId)) return;
+  const existingMsg = document.getElementById(`msg-${message.id}`);
+  if (existingMsg) {
+    console.log('⚠️ Message already exists:', message.id);
+    return;
+  }
 
-  const wrapper = document.createElement('div');
-  wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
-  wrapper.id = `wa-msg-${messageId}`;
+  // Remove empty state if present
+  const emptyState = messageContainer.querySelector('.empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
 
-  let messageHTML = '';
+  const isOwnMessage = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || message.sender_name || 'User';
   
-  // Add sender name for others
-  if (!isOwn) {
-    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
+  // Parse timestamp
+  let timestamp;
+  if (message.created_at) {
+    timestamp = new Date(message.created_at);
+  } else if (message.timestamp) {
+    timestamp = new Date(message.timestamp);
+  } else {
+    timestamp = new Date();
+  }
+
+  const timeStr = timestamp.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
+  // Create message element
+  const messageEl = document.createElement('div');
+  messageEl.className = `message ${isOwnMessage ? 'message-own' : 'message-other'}`;
+  messageEl.id = `msg-${message.id}`;
+
+  // Build message HTML
+  let html = '';
+
+  // Sender name (only for other users)
+  if (!isOwnMessage) {
+    html += `<div class="message-sender">@${escapeHtml(sender)}</div>`;
   }
 
   // Message bubble
-  messageHTML += `
+  html += `
     <div class="message-bubble">
-      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      <div class="message-text">${escapeHtml(message.content || message.text || '')}</div>
       <div class="message-meta">
-        <span class="message-time">${timeLabel}</span>
-        ${isOwn ? '<span class="message-status">✓✓</span>' : ''}
+        <span class="message-time">${timeStr}</span>
+        ${isOwnMessage ? '<span class="message-check">✓✓</span>' : ''}
       </div>
-      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
     </div>
   `;
 
-  // Message actions (on long press / click)
-  messageHTML += `
-    <div class="message-actions-menu" id="actions-${messageId}" style="display:none;">
-      <button onclick="replyToMessage('${messageId}')">↩️ Reply</button>
-      <button onclick="copyMessageText('${messageId}')">📋 Copy</button>
-      <button onclick="forwardMessage('${messageId}')">↪️ Forward</button>
-      ${isOwn ? `<button onclick="deleteWhatsAppMessage('${messageId}')" style="color:#ff6b6b;">🗑️ Delete</button>` : ''}
+  // Message actions (show on hover)
+  html += `
+    <div class="message-actions">
+      <button class="action-btn" onclick="reactToMessage('${message.id}')" title="React">❤️</button>
+      <button class="action-btn" onclick="copyMessage('${message.id}')" title="Copy">📋</button>
+      ${isOwnMessage ? `<button class="action-btn delete-btn" onclick="deleteMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
     </div>
   `;
 
-  wrapper.innerHTML = messageHTML;
-  
-  // Add long press / right click for actions
-  wrapper.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    showMessageActions(messageId);
-  });
-  
-  // Add long press for mobile
-  let pressTimer;
-  wrapper.addEventListener('touchstart', (e) => {
-    pressTimer = setTimeout(() => showMessageActions(messageId), 500);
-  });
-  wrapper.addEventListener('touchend', () => {
-    clearTimeout(pressTimer);
-  });
+  messageEl.innerHTML = html;
 
-  messagesEl.appendChild(wrapper);
-  scrollToBottom();
+  // Append to container
+  messageContainer.appendChild(messageEl);
 
-  if (!isOwn) playMessageSound('receive');
+  // Animate entrance
+  setTimeout(() => {
+    messageEl.classList.add('visible');
+  }, 10);
+
+  // Scroll to bottom
+  if (!skipScroll) {
+    setTimeout(() => scrollToBottom(), 50);
+  }
+
+  // Play sound for received messages
+  if (!isOwnMessage && !skipScroll) {
+    playMessageSound('receive');
+  }
 }
 
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
+// ========================================
+// SEND MESSAGE
+// ========================================
+
+async function sendMessage() {
+  const input = document.getElementById('communityMessageInput');
+  const content = input?.value?.trim();
+
   if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
     return;
   }
 
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
+  // Disable input and button
+  input.disabled = true;
+  const sendBtn = document.getElementById('sendButton');
+  if (sendBtn) sendBtn.disabled = true;
 
   try {
-    // Optimistic UI update
-    const tempMsg = {
+    // Create temp message for optimistic UI
+    const tempMessage = {
       id: 'temp-' + Date.now(),
-      content,
+      content: content,
       sender_id: currentUser.id,
-      users: currentUser,
+      users: { username: currentUser.username },
       timestamp: new Date(),
-      text: content
+      isTemp: true
     };
-    
-    appendWhatsAppMessage(tempMsg);
+
+    // Display immediately
+    displayMessage(tempMessage);
+
+    // Clear input
     input.value = '';
     input.style.height = 'auto';
 
     // Send to server
-    const response = await apiCall('/api/community/messages', 'POST', { content });
-    
-    if (response.success) {
-      playMessageSound('send');
-      
-      // Stop typing indicator
-      if (socket && currentUser.college) {
-        socket.emit('stop_typing', { 
-          collegeName: currentUser.college, 
-          username: currentUser.username 
-        });
-      }
-      
-      // Remove temp message and add real one
-      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
-      if (tempEl) tempEl.remove();
-      
-      if (response.message) {
-        appendWhatsAppMessage(response.message);
-      }
-    }
-  } catch(error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
-function handleTypingIndicator() {
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-    socket.emit('typing', { 
-      collegeName: currentUser.college, 
-      username: currentUser.username 
+    const token = getToken();
+    const response = await fetch(`${API_URL}/api/community/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content })
     });
-    lastTypingEmit = now;
-  }
 
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser && currentUser.college) {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to send message');
+    }
+
+    // Remove temp message
+    const tempEl = document.getElementById(`msg-${tempMessage.id}`);
+    if (tempEl) {
+      tempEl.remove();
+    }
+
+    // Display real message (will come via socket)
+    console.log('✅ Message sent:', data.message);
+
+    // Stop typing indicator
+    if (socket && currentUser.college) {
       socket.emit('stop_typing', { 
         collegeName: currentUser.college, 
         username: currentUser.username 
       });
     }
-  }, 3000);
-}
 
-function showMessageActions(messageId) {
-  // Hide all other action menus
-  document.querySelectorAll('.message-actions-menu').forEach(menu => {
-    menu.style.display = 'none';
-  });
-  
-  // Show this message's actions
-  const actionsMenu = document.getElementById(`actions-${messageId}`);
-  if (actionsMenu) {
-    actionsMenu.style.display = 'flex';
+    // Play send sound
+    playMessageSound('send');
+
+  } catch (error) {
+    console.error('❌ Send error:', error);
+    showMessage('Failed to send message: ' + error.message, 'error');
     
-    // Hide after 5 seconds
-    setTimeout(() => {
-      actionsMenu.style.display = 'none';
-    }, 5000);
-  }
-}
-
-async function deleteWhatsAppMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-    
-    const messageEl = document.getElementById(`wa-msg-${messageId}`);
-    if (messageEl) {
-      messageEl.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => messageEl.remove(), 300);
-    }
-    
-    showMessage('🗑️ Message deleted', 'success');
-  } catch(error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-function copyMessageText(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  
-  if (!text) return;
-
-  navigator.clipboard.writeText(text).then(() => {
-    showMessage('📋 Message copied!', 'success');
-  }).catch(() => {
-    showMessage('❌ Failed to copy', 'error');
-  });
-}
-
-function replyToMessage(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  const sender = messageEl?.querySelector('.message-sender-name')?.textContent || 'You';
-  
-  if (!text) return;
-  
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value = `@${sender}: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}\n\n`;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-  
-  showMessage(`↩️ Replying to ${sender}`, 'success');
-}
-
-function forwardMessage(messageId) {
-  showMessage('↪️ Forward feature coming soon!', 'success');
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-function updateChatStats(messageCount) {
-  const totalMessages = document.getElementById('totalMessages');
-  if (totalMessages) totalMessages.textContent = messageCount;
-}
-
-// ==========================================
-// EMOJI & STICKER PICKERS
-// ==========================================
-
-function openEmojiPicker() {
-  // Close any existing picker
-  const existing = document.getElementById('emojiPickerPopup');
-  if (existing) {
-    existing.remove();
-    return;
-  }
-
-  const picker = document.createElement('div');
-  picker.id = 'emojiPickerPopup';
-  picker.className = 'emoji-picker-popup';
-  picker.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:5000;';
-
-  const emojis = [
-    { cat: 'Smileys', items: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋'] },
-    { cat: 'Gestures', items: ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐','🖖','👋','🤝','🙏'] },
-    { cat: 'Hearts', items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟'] },
-    { cat: 'Objects', items: ['🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'] }
-  ];
-
-  let html = `
-    <div class="emoji-picker-header">
-      <input type="text" class="emoji-search" placeholder="Search emoji..." oninput="searchEmojis(this.value)">
-      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
-    </div>
-    <div class="emoji-categories" id="emojiCategories">
-  `;
-
-  emojis.forEach(category => {
-    html += `
-      <div class="emoji-category">
-        <div class="emoji-category-title">${category.cat}</div>
-        <div class="emoji-grid">
-          ${category.items.map(emoji => `
-            <div class="emoji-item" onclick="insertEmoji('${emoji}')">${emoji}</div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  });
-
-  html += '</div>';
-  picker.innerHTML = html;
-  document.body.appendChild(picker);
-}
-
-function closeEmojiPicker() {
-  const picker = document.getElementById('emojiPickerPopup');
-  if (picker) picker.remove();
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value += emoji;
+    // Re-populate input
+    input.value = content;
+  } finally {
+    // Re-enable input and button
+    input.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
     input.focus();
   }
-  closeEmojiPicker();
-}
-
-function searchEmojis(query) {
-  // Simple search implementation
-  const categories = document.querySelectorAll('.emoji-category');
-  categories.forEach(cat => {
-    const items = cat.querySelectorAll('.emoji-item');
-    let hasVisible = false;
-    items.forEach(item => {
-      // In real app, you'd have emoji names to search
-      item.style.display = 'flex';
-      hasVisible = true;
-    });
-    cat.style.display = hasVisible ? 'block' : 'none';
-  });
-}
-
-function openStickerPicker() {
-  showMessage('🎨 Sticker picker coming soon!', 'success');
-  
-  // Quick sticker selection
-  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚'];
-  const sticker = prompt('Quick sticker:\n' + stickers.join(' ') + '\n\nChoose one:');
-  
-  if (sticker && stickers.includes(sticker)) {
-    const input = document.getElementById('whatsappInput');
-    if (input) {
-      input.value += sticker;
-      input.focus();
-    }
-  }
-}
-
-function openAttachMenu() {
-  const menu = document.createElement('div');
-  menu.className = 'attach-menu-popup';
-  menu.style.cssText = 'position:fixed;bottom:80px;left:50px;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;z-index:5000;';
-  
-  menu.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;min-width:200px;">
-      <button onclick="attachPhoto()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📷</span>
-        <span>Photo</span>
-      </button>
-      <button onclick="attachVideo()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">🎥</span>
-        <span>Video</span>
-      </button>
-      <button onclick="attachDocument()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📄</span>
-        <span>Document</span>
-      </button>
-      <button onclick="menu.remove()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(239,68,68,0.2);border:2px solid rgba(239,68,68,0.3);border-radius:12px;cursor:pointer;color:#ff6b6b;font-weight:600;">
-        <span style="font-size:32px;">✕</span>
-        <span>Cancel</span>
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(menu);
-  
-  // Close on click outside
-  setTimeout(() => {
-    document.addEventListener('click', function closeMenu(e) {
-      if (!menu.contains(e.target) && !e.target.closest('.icon-btn')) {
-        menu.remove();
-        document.removeEventListener('click', closeMenu);
-      }
-    });
-  }, 100);
-}
-
-function attachPhoto() {
-  showMessage('📷 Photo attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
-}
-
-function attachVideo() {
-  showMessage('🎥 Video attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
-}
-
-function attachDocument() {
-  showMessage('📄 Document attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
 }
 
 // ========================================
+// DELETE MESSAGE
+// ========================================
+
+async function deleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+
+  try {
+    const token = getToken();
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Remove from UI
+      removeMessageFromUI(messageId);
+      showMessage('Message deleted', 'success');
+    }
+
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    showMessage('Failed to delete message', 'error');
+  }
+}
+
+// ========================================
+// MESSAGE ACTIONS
+// ========================================
+
+function reactToMessage(messageId) {
+  // Simple reaction - can be expanded
+  const emojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮'];
+  const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+  
+  showMessage(`Reacted with ${emoji}`, 'success');
+  
+  // TODO: Implement proper reaction system with API
+}
+
+function copyMessage(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (!messageEl) return;
+
+  const textEl = messageEl.querySelector('.message-text');
+  if (!textEl) return;
+
+  const text = textEl.textContent;
+  
+  navigator.clipboard.writeText(text).then(() => {
+    showMessage('Message copied', 'success');
+  }).catch(err => {
+    console.error('Copy failed:', err);
+    showMessage('Failed to copy', 'error');
+  });
+}
+
+function removeMessageFromUI(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (messageEl) {
+    messageEl.classList.add('removing');
+    setTimeout(() => messageEl.remove(), 300);
+  }
+}
+
+// ========================================
+// INPUT HANDLERS
+// ========================================
+
+function handleChatKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function handleChatInput(event) {
+  const textarea = event.target;
+  
+  // Auto-resize
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+
+  // Handle typing indicator
+  handleTypingIndicator();
+}
+
+function handleTypingIndicator() {
+  if (!socket || !currentUser || !currentUser.college) return;
+
+  const now = Date.now();
+  
+  // Throttle typing events to once per 3 seconds
+  if (now - lastTypingTime > 3000) {
+    socket.emit('user_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+    lastTypingTime = now;
+  }
+
+  // Clear existing timeout
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+
+  // Stop typing after 3 seconds of inactivity
+  typingTimeout = setTimeout(() => {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }, 3000);
+}
+
+// ========================================
+// TYPING INDICATOR
+// ========================================
+
+function showTypingIndicator(username) {
+  const indicator = document.getElementById('typingIndicator');
+  const text = document.getElementById('typingText');
+  
+  if (indicator && text) {
+    text.textContent = `${username} is typing...`;
+    indicator.style.display = 'flex';
+  }
+}
+
+function hideTypingIndicator(username) {
+  const indicator = document.getElementById('typingIndicator');
+  
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+}
+
+// ========================================
+// SOCKET.IO INTEGRATION
+// ========================================
+
+function setupEnhancedSocketListeners() {
+  if (!socket) return;
+
+  // New message received
+  socket.on('new_message', (message) => {
+    console.log('📨 New message:', message);
+    displayMessage(message);
+  });
+
+  // Message deleted
+  socket.on('message_deleted', ({ id }) => {
+    console.log('🗑️ Message deleted:', id);
+    removeMessageFromUI(id);
+  });
+
+  // User typing
+  socket.on('user_typing', ({ username }) => {
+    if (username !== currentUser?.username) {
+      showTypingIndicator(username);
+    }
+  });
+
+  // User stopped typing
+  socket.on('user_stop_typing', ({ username }) => {
+    hideTypingIndicator(username);
+  });
+
+  // Online count updated
+  socket.on('online_count', (count) => {
+    updateOnlineCount(count);
+  });
+
+  console.log('✅ Enhanced socket listeners set up');
+}
+
+function updateOnlineCount(count) {
+  const countEl = document.getElementById('onlineCount');
+  if (countEl) {
+    countEl.textContent = count || 0;
+  }
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+function scrollToBottom() {
+  if (messageContainer) {
+    messageContainer.scrollTo({
+      top: messageContainer.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+}
+
+function refreshChat() {
+  showMessage('Refreshing chat...', 'success');
+  loadMessages();
+}
+
+function openEmojiPicker() {
+  // Check if picker already exists
+  const existingPicker = document.querySelector('.emoji-picker-popup');
+  if (existingPicker) {
+    existingPicker.remove();
+    return;
+  }
+
+  const emojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','☺️','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','🔥','✨','🎉','🎊','🎈','🎁','🏆','🏅','🥇','🥈','🥉','⭐','🌟','💫','✅','✔️','👍','👎','👏','🙌','👐','🤝','💪','🙏'];
+  
+  const picker = document.createElement('div');
+  picker.className = 'emoji-picker-popup';
+  
+  emojis.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.style.cssText = `
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+      transition: all 0.2s;
+    `;
+    btn.onclick = () => {
+      const input = document.getElementById('communityMessageInput');
+      if (input) {
+        input.value += emoji;
+        input.focus();
+      }
+      picker.remove();
+    };
+    btn.onmouseenter = () => {
+      btn.style.background = 'rgba(79, 116, 163, 0.3)';
+      btn.style.transform = 'scale(1.2)';
+    };
+    btn.onmouseleave = () => {
+      btn.style.background = 'none';
+      btn.style.transform = 'scale(1)';
+    };
+    picker.appendChild(btn);
+  });
+  
+  // Close on click outside
+  setTimeout(() => {
+    document.addEventListener('click', function closePickerOutside(e) {
+      if (!picker.contains(e.target) && !e.target.classList.contains('icon-btn')) {
+        picker.remove();
+        document.removeEventListener('click', closePickerOutside);
+      }
+    });
+  }, 100);
+  
+  document.body.appendChild(picker);
+}
+
+function toggleChatInfo() {
+  showMessage('Chat info coming soon!', 'success');
+}
+
+function playMessageSound(type) {
+  // Simple sound feedback
+  try {
+    const audio = new Audio();
+    if (type === 'send') {
+      // Short beep for send
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } else {
+      // Different beep for receive
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+    }
+  } catch (e) {
+    // Audio API not supported, silently fail
+  }
+}
+
+// ========================================
+// END OF FIXED COMMUNITY CHAT SYSTEM
+// ========================================
+
 // COLLEGE VERIFICATION
 // ========================================
 
@@ -1849,6 +1481,72 @@ const messageEl = document.getElementById(`msg-${id}`);
 if (messageEl) messageEl.remove();
 }
 
+
+
+// ========================================
+// SOCKET.IO REAL-TIME (UPDATED)
+// ========================================
+
+function initializeSocket() {
+  // Don't reinitialize if already connected
+  if (socket && socket.connected) {
+    console.log('✅ Socket already connected');
+    if (currentUser?.college) {
+      socket.emit('join_college', currentUser.college);
+    }
+    // Setup listeners if not already done
+    setTimeout(() => setupEnhancedSocketListeners(), 100);
+    return;
+  }
+
+  console.log('🔌 Initializing socket connection...');
+  
+  socket = io(API_URL, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: 10
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Socket connected:', socket.id);
+    if (currentUser?.college) {
+      socket.emit('join_college', currentUser.college);
+      socket.emit('user_online', currentUser.id);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Socket disconnected');
+  });
+
+  socket.on('reconnect', () => {
+    console.log('🔄 Socket reconnected');
+    if (currentUser?.college) {
+      socket.emit('join_college', currentUser.college);
+    }
+  });
+
+  // Post-related socket events
+  socket.on('post_liked', (data) => {
+    const likeCount = document.querySelector(`#like-count-${data.postId}`);
+    if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
+  });
+
+  socket.on('post_commented', (data) => {
+    const commentCount = document.querySelector(`#comment-count-${data.postId}`);
+    if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
+  });
+
+  socket.on('post_shared', (data) => {
+    const shareCount = document.querySelector(`#share-count-${data.postId}`);
+    if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
+  });
+
+  // Setup enhanced listeners for chat
+  setTimeout(() => setupEnhancedSocketListeners(), 100);
+}
 
 // ========================================
 // PROFILE & SEARCH
@@ -4809,843 +4507,3 @@ let messageContainer = null;
 // ==========================================
 // INITIALIZE CHAT WHEN SECTION OPENS
 // ==========================================
-
-function openCommunityChat() {
-  if (!currentUser) {
-    showMessage('Please login first', 'error');
-    return;
-  }
-
-  if (!currentUser.community_joined || !currentUser.college) {
-    showJoinCommunityModal();
-    return;
-  }
-
-  // Show chat section
-  document.querySelectorAll('.main-section').forEach(s => s.style.display = 'none');
-  const chatSection = document.getElementById('chatSection');
-  if (chatSection) {
-    chatSection.style.display = 'block';
-    initializeCommunityChat();
-  }
-}
-
-async function initializeCommunityChat() {
-  console.log('🚀 Initializing community chat...');
-
-  // Set up message container reference
-  messageContainer = document.getElementById('chatMessages');
-  if (!messageContainer) {
-    console.error('❌ Chat messages container not found!');
-    return;
-  }
-
-  // Initialize socket connection
-  initializeSocket();
-
-  // Load existing messages
-  await loadCommunityMessages();
-
-  // Set up input handlers
-  setupChatInput();
-
-  // Set up emoji picker
-  setupEmojiPicker();
-
-  console.log('✅ Community chat initialized');
-}
-
-// ==========================================
-// SOCKET.IO CONNECTION
-// ==========================================
-
-function initializeSocket() {
-  if (socket && socket.connected) {
-    console.log('✅ Socket already connected');
-    socket.emit('join_college', currentUser.college);
-    return;
-  }
-
-  socket = io(API_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
-    updateConnectionStatus(true);
-    
-    if (currentUser && currentUser.college) {
-      socket.emit('join_college', currentUser.college);
-      socket.emit('user_online', currentUser.id);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
-    updateConnectionStatus(false);
-  });
-
-  socket.on('reconnect', () => {
-    console.log('🔄 Socket reconnected');
-    updateConnectionStatus(true);
-    if (currentUser && currentUser.college) {
-      socket.emit('join_college', currentUser.college);
-      loadCommunityMessages();
-    }
-  });
-
-  socket.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    addMessageToUI(message, false);
-  });
-
-  socket.on('message_deleted', ({ id }) => {
-    console.log('🗑️ Message deleted:', id);
-    removeMessageFromUI(id);
-  });
-
-  socket.on('online_count', (count) => {
-    updateOnlineCount(count);
-  });
-
-  socket.on('user_typing', ({ username }) => {
-    showTypingIndicator(username);
-  });
-
-  socket.on('user_stop_typing', ({ username }) => {
-    hideTypingIndicator(username);
-  });
-}
-
-function updateConnectionStatus(isConnected) {
-  const statusEl = document.getElementById('connectionStatus');
-  if (!statusEl) return;
-
-  if (isConnected) {
-    statusEl.innerHTML = '<span style="color:#51cf66;">● Connected</span>';
-  } else {
-    statusEl.innerHTML = '<span style="color:#ff6b6b;">● Disconnected</span>';
-  }
-}
-
-function updateOnlineCount(count) {
-  const countEl = document.getElementById('chatOnlineCount');
-  if (countEl) {
-    countEl.textContent = count || 0;
-  }
-}
-
-// ==========================================
-// LOAD MESSAGES FROM DATABASE
-// ==========================================
-
-async function loadCommunityMessages() {
-  if (isLoadingMessages) return;
-  isLoadingMessages = true;
-
-  try {
-    console.log('📥 Loading messages...');
-    
-    if (!messageContainer) {
-      messageContainer = document.getElementById('chatMessages');
-    }
-
-    // Show loading state
-    messageContainer.innerHTML = `
-      <div class="loading-messages-state">
-        <div class="spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-    console.log('📦 Received data:', data);
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        messageContainer.innerHTML = `
-          <div class="empty-chat-state">
-            <div class="empty-chat-icon">🏫</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with students from your college</p>
-            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
-          </div>
-        `;
-        return;
-      }
-    }
-
-    // Clear loading state
-    messageContainer.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      messageContainer.innerHTML = `
-        <div class="empty-chat-state">
-          <div class="empty-chat-icon">👋</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Store messages
-    chatMessages = data.messages;
-
-    // Add date separator
-    addDateSeparator();
-
-    // Display all messages in correct order
-    data.messages.forEach(msg => {
-      addMessageToUI(msg, true);
-    });
-
-    // Scroll to bottom
-    setTimeout(() => scrollToBottom(), 100);
-
-    console.log(`✅ Loaded ${data.messages.length} messages`);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    messageContainer.innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <h3>Failed to Load Messages</h3>
-        <p>${error.message}</p>
-        <button onclick="loadCommunityMessages()" class="btn-primary">Retry</button>
-      </div>
-    `;
-  } finally {
-    isLoadingMessages = false;
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendCommunityMessage() {
-  const input = document.getElementById('chatInput');
-  const content = input?.value?.trim();
-
-  if (!content) {
-    return;
-  }
-
-  if (!currentUser || !currentUser.community_joined) {
-    showMessage('Please join a community first', 'error');
-    return;
-  }
-
-  try {
-    // Create temporary message for immediate feedback
-    const tempId = 'temp-' + Date.now();
-    const tempMessage = {
-      id: tempId,
-      content: content,
-      sender_id: currentUser.id,
-      college_name: currentUser.college,
-      created_at: new Date().toISOString(),
-      users: {
-        username: currentUser.username,
-        profile_pic: currentUser.profile_pic
-      },
-      isTemp: true
-    };
-
-    // Add to UI immediately
-    addMessageToUI(tempMessage, false);
-
-    // Clear input
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ content })
-    });
-
-    const data = await response.json();
-
-    if (data.success && data.message) {
-      // Remove temporary message
-      removeMessageFromUI(tempId);
-      
-      // Add real message (if not already added by socket)
-      const messageExists = document.getElementById(`msg-${data.message.id}`);
-      if (!messageExists) {
-        addMessageToUI(data.message, false);
-      }
-
-      // Play send sound
-      playSound('send');
-
-      console.log('✅ Message sent:', data.message.id);
-    } else {
-      throw new Error(data.error || 'Failed to send message');
-    }
-
-  } catch (error) {
-    console.error('❌ Send error:', error);
-    showMessage('Failed to send message: ' + error.message, 'error');
-    
-    // Mark temp messages as failed
-    document.querySelectorAll('[id^="msg-temp-"]').forEach(el => {
-      el.style.opacity = '0.5';
-      el.style.border = '2px solid #ff6b6b';
-    });
-  }
-
-  // Stop typing indicator
-  if (socket && currentUser.college) {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI
-// ==========================================
-
-function addMessageToUI(message, skipScroll = false) {
-  if (!messageContainer) {
-    messageContainer = document.getElementById('chatMessages');
-  }
-
-  if (!messageContainer) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) {
-    console.log('⚠️ Message already exists:', message.id);
-    return;
-  }
-
-  // Remove empty state if present
-  const emptyState = messageContainer.querySelector('.empty-chat-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
-
-  const isOwnMessage = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  const timestamp = new Date(message.created_at || message.timestamp);
-  const timeStr = timestamp.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-
-  // Create message element
-  const messageEl = document.createElement('div');
-  messageEl.className = `chat-message ${isOwnMessage ? 'own-message' : 'other-message'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  let html = '';
-
-  // Add sender name for other users
-  if (!isOwnMessage) {
-    html += `<div class="message-sender">@${escapeHtml(sender)}</div>`;
-  }
-
-  // Message bubble
-  html += `
-    <div class="message-bubble">
-      <div class="message-content">${escapeHtml(message.content || message.text)}</div>
-      <div class="message-footer">
-        <span class="message-time">${timeStr}</span>
-        ${isOwnMessage ? '<span class="message-status">✓✓</span>' : ''}
-      </div>
-    </div>
-  `;
-
-  // Message actions
-  html += `
-    <div class="message-actions">
-      <button class="message-action-btn" onclick="reactToMessage('${message.id}')" title="React">
-        ❤️
-      </button>
-      <button class="message-action-btn" onclick="copyMessage('${message.id}')" title="Copy">
-        📋
-      </button>
-      ${isOwnMessage ? `
-        <button class="message-action-btn delete-btn" onclick="deleteMessage('${message.id}')" title="Delete">
-          🗑️
-        </button>
-      ` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-
-  // Append to container
-  messageContainer.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => {
-    messageEl.classList.add('message-visible');
-  }, 10);
-
-  // Scroll to bottom
-  if (!skipScroll) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Play receive sound for other users' messages
-  if (!isOwnMessage && !message.isTemp) {
-    playSound('receive');
-  }
-}
-
-// ==========================================
-// REMOVE MESSAGE FROM UI
-// ==========================================
-
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (messageEl) {
-    messageEl.style.animation = 'fadeOutMessage 0.3s ease-out';
-    setTimeout(() => messageEl.remove(), 300);
-  }
-}
-
-// ==========================================
-// DELETE MESSAGE
-// ==========================================
-
-async function deleteMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      removeMessageFromUI(messageId);
-      console.log('✅ Message deleted');
-    } else {
-      throw new Error(data.error);
-    }
-
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    showMessage('Failed to delete message', 'error');
-  }
-}
-
-// ==========================================
-// REACT TO MESSAGE
-// ==========================================
-
-async function reactToMessage(messageId) {
-  // Show emoji picker
-  showEmojiPickerForMessage(messageId);
-}
-
-function showEmojiPickerForMessage(messageId) {
-  // Remove any existing picker
-  const existingPicker = document.querySelector('.emoji-picker-popup');
-  if (existingPicker) {
-    existingPicker.remove();
-    return;
-  }
-
-  const picker = document.createElement('div');
-  picker.className = 'emoji-picker-popup';
-  picker.innerHTML = `
-    <div class="emoji-picker-header">
-      <span>React with emoji</span>
-      <button onclick="this.closest('.emoji-picker-popup').remove()">✕</button>
-    </div>
-    <div class="emoji-picker-grid">
-      ${['❤️', '👍', '😂', '😮', '😢', '🔥', '🎉', '👏', '💯', '⭐', '🙌', '🤝'].map(emoji => `
-        <button class="emoji-btn" onclick="addReactionToMessage('${messageId}', '${emoji}')">
-          ${emoji}
-        </button>
-      `).join('')}
-    </div>
-  `;
-
-  document.body.appendChild(picker);
-
-  // Close on outside click
-  setTimeout(() => {
-    document.addEventListener('click', function closePickerOnOutside(e) {
-      if (!picker.contains(e.target)) {
-        picker.remove();
-        document.removeEventListener('click', closePickerOnOutside);
-      }
-    });
-  }, 100);
-}
-
-async function addReactionToMessage(messageId, emoji) {
-  // Close picker
-  const picker = document.querySelector('.emoji-picker-popup');
-  if (picker) picker.remove();
-
-  try {
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}/react`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ emoji })
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      console.log('✅ Reaction added');
-    }
-
-  } catch (error) {
-    console.error('❌ React error:', error);
-  }
-}
-
-// ==========================================
-// COPY MESSAGE
-// ==========================================
-
-function copyMessage(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (!messageEl) return;
-
-  const content = messageEl.querySelector('.message-content')?.textContent;
-  if (!content) return;
-
-  navigator.clipboard.writeText(content).then(() => {
-    showMessage('Message copied!', 'success');
-  }).catch(() => {
-    showMessage('Failed to copy', 'error');
-  });
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTyping() {
-  if (!socket || !currentUser) return;
-
-  const now = Date.now();
-  if (now - (window.lastTypingEmit || 0) < 1000) return;
-
-  window.lastTypingEmit = now;
-
-  socket.emit('typing', {
-    collegeName: currentUser.college,
-    username: currentUser.username
-  });
-
-  // Auto-stop typing after 3 seconds
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }, 3000);
-}
-
-function showTypingIndicator(username) {
-  typingUsers.add(username);
-  updateTypingIndicator();
-}
-
-function hideTypingIndicator(username) {
-  typingUsers.delete(username);
-  updateTypingIndicator();
-}
-
-function updateTypingIndicator() {
-  let typingIndicatorEl = document.getElementById('typingIndicator');
-
-  if (!typingIndicatorEl) return;
-
-  if (typingUsers.size === 0) {
-    typingIndicatorEl.style.display = 'none';
-    return;
-  }
-
-  const usernames = Array.from(typingUsers);
-  let text = '';
-  
-  if (usernames.length === 1) {
-    text = `${usernames[0]} is typing...`;
-  } else if (usernames.length === 2) {
-    text = `${usernames[0]} and ${usernames[1]} are typing...`;
-  } else {
-    text = `${usernames.length} people are typing...`;
-  }
-
-  typingIndicatorEl.textContent = text;
-  typingIndicatorEl.style.display = 'block';
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupChatInput() {
-  const input = document.getElementById('chatInput');
-  if (!input) return;
-
-  // Auto-resize
-  input.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    handleTyping();
-  });
-
-  // Enter to send
-  input.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendCommunityMessage();
-    }
-  });
-}
-
-function handleChatKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendCommunityMessage();
-  }
-}
-
-// ==========================================
-// HELPER FUNCTIONS
-// ==========================================
-
-function scrollToBottom() {
-  if (!messageContainer) return;
-  
-  messageContainer.scrollTo({
-    top: messageContainer.scrollHeight,
-    behavior: 'smooth'
-  });
-}
-
-function addDateSeparator() {
-  if (!messageContainer) return;
-
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-
-  const separator = document.createElement('div');
-  separator.className = 'date-separator';
-  separator.innerHTML = `<span>${dateStr}</span>`;
-  messageContainer.appendChild(separator);
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function playSound(type) {
-  try {
-    const sounds = {
-      send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-      receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav'
-    };
-
-    if (sounds[type]) {
-      const audio = new Audio(sounds[type]);
-      audio.volume = 0.2;
-      audio.play().catch(() => {}); // Silently fail
-    }
-  } catch (error) {
-    // Ignore audio errors
-  }
-}
-
-function setupEmojiPicker() {
-  // Emoji picker is now shown on demand
-  console.log('✅ Emoji picker ready');
-}
-
-console.log('✅ Community chat module loaded');
-
-
-// ==========================================
-// CLOSE COMMUNITY CHAT FUNCTION
-// ==========================================
-function closeCommunityChat() {
-  const chatSection = document.getElementById('chatSection');
-  if (chatSection) {
-    chatSection.style.display = 'none';
-  }
-  // Don't need to show communities page as it's in the same section
-}
-
-function updateOnlineCount() {
-  // This will be called periodically to update online counts
-  if (socket && socket.connected) {
-    socket.emit('request_online_count');
-  }
-}
-
-// ==========================================
-// ENHANCED CHAT HELPERS
-// ==========================================
-
-// Add date separator to chat
-function addDateSeparator() {
-  if (!messageContainer) return;
-  
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-  
-  const separator = document.createElement('div');
-  separator.className = 'date-separator';
-  separator.innerHTML = `<span>${dateStr}</span>`;
-  
-  messageContainer.appendChild(separator);
-}
-
-// Escape HTML to prevent XSS
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// React to message
-function reactToMessage(messageId) {
-  console.log('React to:', messageId);
-  showMessage('Reactions coming soon! ❤️', 'success');
-}
-
-// Copy message content
-function copyMessage(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (messageEl) {
-    const content = messageEl.querySelector('.message-content').textContent;
-    navigator.clipboard.writeText(content).then(() => {
-      showMessage('Message copied! 📋', 'success');
-    });
-  }
-}
-
-// Delete message
-async function deleteMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-  
-  try {
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    const data = await response.json();
-    if (data.success) {
-      const messageEl = document.getElementById(`msg-${messageId}`);
-      if (messageEl) {
-        messageEl.style.opacity = '0';
-        messageEl.style.transform = 'scale(0.8)';
-        setTimeout(() => messageEl.remove(), 300);
-      }
-      showMessage('Message deleted', 'success');
-    }
-  } catch (error) {
-    console.error('Delete error:', error);
-    showMessage('Failed to delete message', 'error');
-  }
-}
-
-// Play sound effect
-function playSound(type) {
-  // Audio feedback (optional)
-  try {
-    const audio = new Audio();
-    if (type === 'send') {
-      // Subtle send sound
-      audio.volume = 0.3;
-    }
-  } catch (e) {
-    // Silent fail
-  }
-}
-
-// Remove message from UI
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(messageId);
-  if (messageEl) {
-    messageEl.remove();
-  }
-}
-
-// Enhanced scroll to bottom with smooth animation
-function scrollToBottom(smooth = true) {
-  if (messageContainer) {
-    messageContainer.scrollTo({
-      top: messageContainer.scrollHeight,
-      behavior: smooth ? 'smooth' : 'auto'
-    });
-  }
-}
-
-// Format relative time
-function getRelativeTime(timestamp) {
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now - then;
-  const diffMins = Math.floor(diffMs / 60000);
-  
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  
-  return then.toLocaleDateString();
-}
