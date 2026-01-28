@@ -380,8 +380,8 @@ Get Started Now →
 </div>
 </div>
 
-<input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
-<input type="password" id="loginPassword" class="password-input" placeholder="Password" required>
+<input type="text" id="loginEmail" class="auth-input" placeholder="Email or Reg Number" required>
+<input type="password" id="loginPassword" class="auth-input password-input" placeholder="Password" required>
 <button type="submit">Login</button>
 <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
 <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)" style="font-size:13px;">Forgot Password?</a></p>
@@ -436,9 +436,9 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<input type="text" id="signupName" placeholder="Full Name" required>
-<input type="email" id="signupEmail" placeholder="Email" required>
-<input type="text" id="signupReg" placeholder="Registration Number" required>
+<input type="text" id="signupName" class="auth-input" placeholder="Full Name" required>
+<input type="email" id="signupEmail" class="auth-input" placeholder="Email" required>
+<input type="text" id="signupReg" class="auth-input" placeholder="Registration Number" required>
 
 <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
 <div style="display:flex; gap:15px; margin-bottom:15px;">
@@ -456,8 +456,8 @@ Enter your email address and we'll send you a verification code.
 </label>
 </div>
 
-<input type="password" id="signupPass" class="password-input" placeholder="Password" required>
-<input type="password" id="signupConfirm" class="password-input" placeholder="Confirm Password" required>
+<input type="password" id="signupPass" class="auth-input password-input" placeholder="Password" required>
+<input type="password" id="signupConfirm" class="auth-input password-input" placeholder="Confirm Password" required>
 
 <button type="submit">Create Account</button>
 <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
@@ -1251,16 +1251,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize eye tracking for both login and signup forms
 function initEyeTracking() {
-  const loginTracker = document.getElementById('loginEyeTracker');
-  const signupTracker = document.getElementById('signupEyeTracker');
-  
-  if (loginTracker) {
-    setupEyeTracker(loginTracker, '#loginForm');
-  }
-  
-  if (signupTracker) {
-    setupEyeTracker(signupTracker, '#signupForm');
-  }
+  setTimeout(() => {
+    const loginTracker = document.getElementById('loginEyeTracker');
+    const signupTracker = document.getElementById('signupEyeTracker');
+    
+    if (loginTracker) {
+      setupEyeTracker(loginTracker, '#loginForm');
+    }
+    
+    if (signupTracker) {
+      setupEyeTracker(signupTracker, '#signupForm');
+    }
+  }, 100);
 }
 
 function setupEyeTracker(trackerElement, formSelector) {
@@ -1269,46 +1271,57 @@ function setupEyeTracker(trackerElement, formSelector) {
   const mouthPath = trackerElement.querySelector('.mouth-path');
   const form = document.querySelector(formSelector);
   
+  if (!leftPupil || !rightPupil || !mouthPath || !form) return;
+  
   let typingCount = 0;
   
   // Track mouse movement for eye following
-  document.addEventListener('mousemove', function(e) {
-    if (trackerElement.closest('form').style.display !== 'none') {
-      const rect = trackerElement.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-      const distance = Math.min(8, Math.hypot(e.clientX - centerX, e.clientY - centerY) / 20);
-      
-      const moveX = Math.cos(angle) * distance;
-      const moveY = Math.sin(angle) * distance;
-      
-      leftPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
-      rightPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
-    }
-  });
+  const handleMouseMove = function(e) {
+    const formStyle = window.getComputedStyle(form);
+    if (formStyle.display === 'none') return;
+    
+    const rect = trackerElement.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+    const distance = Math.min(6, Math.hypot(e.clientX - centerX, e.clientY - centerY) / 30);
+    
+    const moveX = Math.cos(angle) * distance;
+    const moveY = Math.sin(angle) * distance;
+    
+    leftPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    rightPupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+  };
+  
+  document.addEventListener('mousemove', handleMouseMove);
   
   // Track typing for smile animation
-  const passwordInputs = form.querySelectorAll('.password-input, input[type="password"]');
   const allInputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
   
   allInputs.forEach(input => {
     input.addEventListener('input', function() {
-      typingCount++;
+      typingCount = this.value.length;
       updateSmile(mouthPath, typingCount);
     });
     
     input.addEventListener('focus', function() {
-      typingCount = input.value.length;
+      typingCount = this.value.length;
+      updateSmile(mouthPath, typingCount);
+    });
+    
+    input.addEventListener('blur', function() {
+      typingCount = this.value.length;
       updateSmile(mouthPath, typingCount);
     });
   });
 }
 
 function updateSmile(mouthPath, count) {
+  if (!mouthPath) return;
+  
   // Gradually increase smile based on typing count
-  const smileIntensity = Math.min(count * 2, 40); // Max smile at 20 characters
+  const smileIntensity = Math.min(count * 1.5, 30); // Max smile at ~20 characters
   const curvature = 25 + smileIntensity;
   
   // Update SVG path for smile
@@ -1316,16 +1329,30 @@ function updateSmile(mouthPath, count) {
 }
 
 // Call initialization when DOM is ready
-document.addEventListener('DOMContentLoaded', initEyeTracking);
-
-// Re-initialize when auth popup is shown
-const originalShowAuthPopup = window.showAuthPopup;
-if (typeof originalShowAuthPopup === 'function') {
-  window.showAuthPopup = function() {
-    originalShowAuthPopup();
-    setTimeout(initEyeTracking, 100);
-  };
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initEyeTracking);
+} else {
+  initEyeTracking();
 }
+
+// Re-initialize when switching between login and signup
+window.addEventListener('load', function() {
+  // Watch for form visibility changes
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'style') {
+        initEyeTracking();
+      }
+    });
+  });
+  
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  
+  if (loginForm) observer.observe(loginForm, { attributes: true });
+  if (signupForm) observer.observe(signupForm, { attributes: true });
+});
+
 </script>
 
 </body>
