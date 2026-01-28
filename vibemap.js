@@ -5,332 +5,6 @@
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
-// Emoji Picker Functions
-let currentEmojiCategory = 'emotions';
-let emojiPickerVisible = false;
-
-function toggleEmojiPicker() {
-  const emojiPicker = document.getElementById('emojiPicker');
-  emojiPickerVisible = !emojiPickerVisible;
-  
-  if (emojiPickerVisible) {
-    emojiPicker.style.display = 'block';
-    loadEmojiCategory(currentEmojiCategory);
-  } else {
-    emojiPicker.style.display = 'none';
-  }
-}
-
-function showEmojiCategory(category) {
-  currentEmojiCategory = category;
-  
-  // Update active category button
-  const categoryButtons = document.querySelectorAll('.emoji-category');
-  categoryButtons.forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  loadEmojiCategory(category);
-}
-
-function loadEmojiCategory(category) {
-  const emojiGrid = document.getElementById('emojiGrid');
-  if (!emojiGrid) return;
-  
-  const emojis = stickerLibrary[category] || [];
-  
-  emojiGrid.innerHTML = '';
-  emojis.forEach(emoji => {
-    const emojiButton = document.createElement('button');
-    emojiButton.className = 'emoji-item';
-    if (emoji.type === 'gif') {
-      emojiButton.classList.add('gif');
-    } else if (emoji.type === 'sticker') {
-      emojiButton.classList.add('sticker');
-    }
-    emojiButton.textContent = emoji.emoji;
-    emojiButton.title = emoji.name;
-    emojiButton.onclick = () => insertEmoji(emoji.emoji, emoji.type);
-    emojiGrid.appendChild(emojiButton);
-  });
-}
-
-function insertEmoji(emoji, type = 'emoji') {
-  const chatInput = document.getElementById('chatInput');
-  if (!chatInput) return;
-  
-  const currentValue = chatInput.value;
-  const cursorPosition = chatInput.selectionStart;
-  let insertText = emoji;
-  
-  // Add special formatting for GIFs and stickers
-  if (type === 'gif') {
-    insertText = `[GIF:${emoji}]`;
-  } else if (type === 'sticker') {
-    insertText = `[STICKER:${emoji}]`;
-  }
-  
-  const newValue = currentValue.slice(0, cursorPosition) + insertText + currentValue.slice(cursorPosition);
-  
-  chatInput.value = newValue;
-  chatInput.focus();
-  
-  // Set cursor position after the inserted emoji
-  const newCursorPosition = cursorPosition + insertText.length;
-  chatInput.setSelectionRange(newCursorPosition, newCursorPosition);
-  
-  // Hide emoji picker after selection
-  toggleEmojiPicker();
-}
-
-// Close emoji picker when clicking outside
-document.addEventListener('click', function(event) {
-  const emojiPicker = document.getElementById('emojiPicker');
-  const emojiBtn = document.querySelector('.emoji-btn');
-  
-  if (emojiPickerVisible && 
-      !emojiPicker.contains(event.target) && 
-      !emojiBtn.contains(event.target)) {
-    emojiPicker.style.display = 'none';
-    emojiPickerVisible = false;
-  }
-});
-
-// Voice Recording Functions
-let voiceRecorder = null;
-let voiceRecordingStartTime = null;
-let voiceRecordingTimer = null;
-let voiceRecordingStream = null;
-let voiceAudioChunks = [];
-let isVoiceRecording = false;
-
-function toggleVoiceRecording() {
-  if (isVoiceRecording) {
-    stopVoiceRecording();
-  } else {
-    startVoiceRecording();
-  }
-}
-
-async function startVoiceRecording() {
-  try {
-    // Request microphone access
-    voiceRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    voiceRecorder = new MediaRecorder(voiceRecordingStream);
-    voiceAudioChunks = [];
-    
-    voiceRecorder.ondataavailable = (event) => {
-      voiceAudioChunks.push(event.data);
-    };
-    
-    voiceRecorder.onstop = () => {
-      const audioBlob = new Blob(voiceAudioChunks, { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      // Create voice message element
-      const voiceMessage = {
-        type: 'voice',
-        url: audioUrl,
-        duration: Math.floor((Date.now() - voiceRecordingStartTime) / 1000),
-        timestamp: new Date().toISOString()
-      };
-      
-      // Send voice message
-      sendVoiceMessage(voiceMessage);
-    };
-    
-    // Start recording
-    voiceRecorder.start();
-    voiceRecordingStartTime = Date.now();
-    isVoiceRecording = true;
-    
-    // Update UI
-    const voiceBtn = document.querySelector('.voice-btn');
-    const voiceRecorderEl = document.getElementById('voiceRecorder');
-    const voiceTimer = document.querySelector('.voice-timer');
-    
-    voiceBtn.classList.add('recording');
-    voiceRecorderEl.style.display = 'block';
-    
-    // Start timer
-    voiceRecordingTimer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - voiceRecordingStartTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      voiceTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }, 1000);
-    
-  } catch (error) {
-    console.error('Voice recording error:', error);
-    showMessage('🎤 Microphone access denied', 'error');
-  }
-}
-
-function stopVoiceRecording() {
-  if (voiceRecorder && voiceRecorder.state !== 'inactive') {
-    voiceRecorder.stop();
-  }
-  
-  if (voiceRecordingStream) {
-    voiceRecordingStream.getTracks().forEach(track => track.stop());
-  }
-  
-  if (voiceRecordingTimer) {
-    clearInterval(voiceRecordingTimer);
-  }
-  
-  // Reset UI
-  const voiceBtn = document.querySelector('.voice-btn');
-  const voiceRecorderEl = document.getElementById('voiceRecorder');
-  const voiceTimer = document.querySelector('.voice-timer');
-  
-  voiceBtn.classList.remove('recording');
-  voiceRecorderEl.style.display = 'none';
-  voiceTimer.textContent = '00:00';
-  
-  isVoiceRecording = false;
-}
-
-function cancelVoiceRecording() {
-  stopVoiceRecording();
-  voiceAudioChunks = [];
-}
-
-function sendVoiceMessage(voiceMessage) {
-  const chatMessages = document.getElementById('chatMessages');
-  if (!chatMessages) return;
-  
-  const messageEl = document.createElement('div');
-  messageEl.className = 'chat-message right';
-  
-  const durationMinutes = Math.floor(voiceMessage.duration / 60);
-  const durationSeconds = voiceMessage.duration % 60;
-  const durationText = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
-  
-  messageEl.innerHTML = `
-    <div class="text">
-      <div class="voice-message-player">
-        <button class="voice-play-btn" onclick="playVoiceMessage('${voiceMessage.url}', this)">▶️</button>
-        <div class="voice-info">
-          <div class="voice-duration">🎤 Voice message • ${durationText}</div>
-          <div class="voice-waveform">
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-          </div>
-        </div>
-      </div>
-      <audio src="${voiceMessage.url}" style="display:none;"></audio>
-    </div>
-    <div class="message-time">${formatTime(new Date(voiceMessage.timestamp))}</div>
-  `;
-  
-  chatMessages.appendChild(messageEl);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  
-  // Simulate sending to server
-  console.log('Voice message sent:', voiceMessage);
-}
-
-function playVoiceMessage(audioUrl, playBtn) {
-  const audioEl = playBtn.parentElement.nextElementSibling;
-  
-  if (audioEl.paused) {
-    // Stop any other playing audio
-    document.querySelectorAll('audio').forEach(audio => {
-      if (!audio.paused) {
-        audio.pause();
-        const otherBtn = audio.previousElementSibling.querySelector('.voice-play-btn');
-        if (otherBtn) otherBtn.textContent = '▶️';
-      }
-    });
-    
-    audioEl.play();
-    playBtn.textContent = '⏸️';
-    
-    audioEl.onended = () => {
-      playBtn.textContent = '▶️';
-    };
-  } else {
-    audioEl.pause();
-    playBtn.textContent = '▶️';
-  }
-}
-
-// Avatar Animation Functions
-function handleAvatarMove(event, avatarId) {
-  const avatar = document.getElementById(avatarId);
-  if (!avatar) return;
-  
-  const input = event.target;
-  const rect = input.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  
-  // Calculate position relative to input
-  const maxX = rect.width - 40;
-  const maxY = rect.height - 40;
-  
-  // Constrain movement within input bounds
-  const constrainedX = Math.max(0, Math.min(x - 20, maxX));
-  const constrainedY = Math.max(0, Math.min(y - 20, maxY));
-  
-  // Apply smooth movement
-  avatar.style.transform = `translate(${constrainedX - maxX}px, ${constrainedY - 20}px) scale(1.1)`;
-  avatar.style.transition = 'transform 0.1s ease-out';
-}
-
-function resetAvatar(avatarId) {
-  const avatar = document.getElementById(avatarId);
-  if (!avatar) return;
-  
-  avatar.style.transform = 'translateY(-50%) scale(1)';
-  avatar.style.transition = 'transform 0.3s ease-out';
-}
-
-function handleInputChange(inputId) {
-  const input = document.getElementById(inputId);
-  const avatarId = inputId + 'Avatar';
-  const avatar = document.getElementById(avatarId);
-  
-  if (!avatar) return;
-  
-  const value = input.value.trim();
-  const minLength = input.type === 'email' ? 5 : 6;
-  
-  // Remove existing states
-  avatar.classList.remove('happy', 'excited');
-  
-  if (value.length >= minLength) {
-    // Check if email is valid or password is strong enough
-    if (input.type === 'email' && value.includes('@') && value.includes('.')) {
-      avatar.classList.add('excited');
-      avatar.textContent = '🎉';
-    } else if (input.type === 'password' && value.length >= 8) {
-      avatar.classList.add('excited');
-      avatar.textContent = '🔥';
-    } else if (value.length >= minLength) {
-      avatar.classList.add('happy');
-      if (input.type === 'email') {
-        avatar.textContent = '😊';
-      } else if (input.type === 'password') {
-        avatar.textContent = '😄';
-      }
-    }
-  } else {
-    // Reset to original emoji
-    if (inputId.includes('Email')) {
-      avatar.textContent = inputId.includes('login') ? '👁️' : '📧';
-    } else if (inputId.includes('Password')) {
-      avatar.textContent = inputId.includes('login') ? '🔒' : '🔐';
-    } else if (inputId.includes('Confirm')) {
-      avatar.textContent = '✅';
-    }
-  }
-}
-
 // Global Variables
 let currentUser = null;
 let currentType = null;
@@ -452,54 +126,42 @@ other: [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 VibeXpert initializing...');
+console.log('🚀 VibeXpert initializing...');
 
-  const token = getToken();
-  const saved = localStorage.getItem('user');
+const token = getToken();
+const saved = localStorage.getItem('user');
 
-  if (token && saved) {
-    try {
-      currentUser = JSON.parse(saved);
-      
-      // Only show main page if user is properly authenticated
-      if (currentUser && currentUser.username) {
-        document.body.classList.add('logged-in');
-        const aboutPage = document.getElementById('aboutUsPage');
-        const mainPage = document.getElementById('mainPage');
-        const authPopup = document.getElementById('authPopup');
-        
-        // Hide login/about page and show main page
-        if (aboutPage) aboutPage.style.display = 'none';
-        if (mainPage) mainPage.style.display = 'block';
-        if (authPopup) authPopup.style.display = 'none';
-        
-        const userName = document.getElementById('userName');
-        if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-        
-        if (currentUser.college) {
-          updateLiveNotif(`Connected to ${currentUser.college}`);
-          initializeSocket();
-        }
-      } else {
-        // Invalid user data, show login
-        showAboutUsPage();
-      }
-    } catch(e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
-      showAboutUsPage();
-    }
-  } else {
-    showAboutUsPage();
-  }
+if (token && saved) {
+document.body.classList.add('logged-in');
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+if (aboutPage) aboutPage.style.display = 'none';
+if (mainPage) mainPage.style.display = 'block';
 
-  setupEventListeners();
-  initializeMusicPlayer();
-  updateLiveStats();
-  setInterval(updateLiveStats, 5000);
-  initializeSearchBar();
-  loadTrending();
-  console.log('✅ Initialized');
+try {
+currentUser = JSON.parse(saved);
+const userName = document.getElementById('userName');
+if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+if (currentUser.college) {
+updateLiveNotif(`Connected to ${currentUser.college}`);
+initializeSocket();
+}
+} catch(e) {
+console.error('Parse error:', e);
+localStorage.clear();
+showAboutUsPage();
+}
+} else {
+showAboutUsPage();
+}
+
+setupEventListeners();
+initializeMusicPlayer();
+updateLiveStats();
+setInterval(updateLiveStats, 5000);
+initializeSearchBar();
+loadTrending();
+console.log('✅ Initialized');
 });
 
 // ========================================
@@ -4501,25 +4163,6 @@ async function selectPlan(planType) {
     return;
   }
   
-  // Animal Avatar States - Dancing Monkeys and Friends
-  const animalAvatars = {
-    email: {
-      idle: '🐵',
-      happy: '🕺',
-      excited: '💃'
-    },
-    password: {
-      idle: '🐒',
-      happy: '🦍',
-      excited: '🦧'
-    },
-    confirm: {
-      idle: '🐵',
-      happy: '🕺',
-      excited: '💃'
-    }
-  };
-
   // Plan details
   const plans = {
     noble: {
