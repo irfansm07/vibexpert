@@ -4974,6 +4974,878 @@ function initWhatsAppFeatures() {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================================
+   COMMUNITY CHAT - JAVASCRIPT FUNCTIONS
+   Replace or add these functions to your vibemap.js
+   ============================================ */
+
+// ============ Global Variables ============
+let selectedMediaFile = null;
+let typingTimeout = null;
+let newMessagesCount = 0;
+let isAtBottom = true;
+let emojiPickerOpen = false;
+let attachMenuOpen = false;
+
+// Emoji data organized by categories
+const emojiData = {
+  smileys: ['😊', '😂', '🤣', '😍', '🥰', '😘', '😜', '😎', '🤔', '😅', '😇', '🙂', '😉', '😌', '😏', '😴'],
+  gestures: ['👍', '👎', '👏', '🙌', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👊', '✊', '🤛', '🤜', '🙏', '✋'],
+  people: ['👨', '👩', '👦', '👧', '👶', '👴', '👵', '🧑', '👱', '👨‍💼', '👩‍💼', '👨‍🎓', '👩‍🎓', '👨‍⚕️', '👩‍⚕️', '👨‍🏫'],
+  animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔'],
+  food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🥚', '🧀', '🥗', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱'],
+  travel: ['✈️', '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🏍️', '🛵'],
+  objects: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🥊', '🥋', '🎯', '⛳', '🎣', '🎮'],
+  symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖']
+};
+
+// ============ Initialize Chat ============
+function initializeCommunityChat() {
+  console.log('🚀 Initializing Community Chat...');
+  
+  // Load messages
+  loadCommunityMessages();
+  
+  // Setup event listeners
+  setupChatEventListeners();
+  
+  // Load emojis into picker
+  loadEmojiPicker('smileys');
+  
+  // Setup scroll detection
+  setupScrollDetection();
+  
+  // Update online count (if using socket)
+  updateOnlineCount();
+  
+  console.log('✅ Chat initialized');
+}
+
+// ============ Setup Event Listeners ============
+function setupChatEventListeners() {
+  const messageInput = document.getElementById('messageInput');
+  const messagesContainer = document.getElementById('messagesContainer');
+  
+  if (messageInput) {
+    // Auto-resize textarea
+    messageInput.addEventListener('input', () => {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = messageInput.scrollHeight + 'px';
+    });
+  }
+  
+  // Close pickers when clicking outside
+  document.addEventListener('click', (e) => {
+    const emojiPicker = document.getElementById('emojiPicker');
+    const attachMenu = document.getElementById('attachMenu');
+    
+    if (emojiPicker && !e.target.closest('.emoji-picker') && !e.target.closest('.emoji-btn')) {
+      closeEmojiPicker();
+    }
+    
+    if (attachMenu && !e.target.closest('.attach-menu') && !e.target.closest('.attach-btn')) {
+      closeAttachMenu();
+    }
+  });
+}
+
+// ============ Load Messages ============
+async function loadCommunityMessages() {
+  const messagesContainer = document.getElementById('messagesContainer');
+  
+  if (!messagesContainer) {
+    console.error('Messages container not found');
+    return;
+  }
+  
+  try {
+    console.log('📥 Loading messages...');
+    
+    // Show loading state
+    messagesContainer.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <h3>Loading messages...</h3>
+        <p>Please wait</p>
+      </div>
+    `;
+    
+    // Make API call
+    const data = await apiCall('/api/community/messages', 'GET');
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to load messages');
+    }
+    
+    // Clear container
+    messagesContainer.innerHTML = '';
+    
+    // Check if we have messages
+    if (!data.messages || data.messages.length === 0) {
+      messagesContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <h3>No messages yet</h3>
+          <p>Start the conversation with your community!</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Render messages
+    data.messages.forEach(message => {
+      renderMessage(message, false);
+    });
+    
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollToBottom(false);
+    }, 100);
+    
+    console.log(`✅ Loaded ${data.messages.length} messages`);
+    
+  } catch (error) {
+    console.error('❌ Error loading messages:', error);
+    messagesContainer.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <h3>Failed to load messages</h3>
+        <p>${error.message}</p>
+        <button onclick="loadCommunityMessages()" class="btn-primary" style="margin-top: 15px; padding: 10px 20px; background: linear-gradient(135deg, #4f74a3, #6a8fc4); border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// ============ Render Message ============
+function renderMessage(message, animate = true) {
+  const messagesContainer = document.getElementById('messagesContainer');
+  
+  if (!messagesContainer) return;
+  
+  // Check if message already exists
+  if (document.getElementById(`msg-${message.id}`)) return;
+  
+  // Remove empty state if present
+  const emptyState = messagesContainer.querySelector('.empty-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+  
+  const isOwn = message.sender_id === currentUser?.id;
+  const senderName = message.users?.username || message.sender_name || 'User';
+  const time = formatMessageTime(message.created_at);
+  
+  // Create message element
+  const messageEl = document.createElement('div');
+  messageEl.className = `message-bubble ${isOwn ? 'own' : ''}`;
+  messageEl.id = `msg-${message.id}`;
+  
+  let messageHTML = `
+    <div class="message-avatar">${isOwn ? '👤' : getAvatarEmoji(senderName)}</div>
+    <div class="message-content">
+      ${!isOwn ? `<div class="message-sender">${escapeHtml(senderName)}</div>` : ''}
+      <div class="message-text-wrapper">
+  `;
+  
+  // Add text content
+  if (message.content) {
+    messageHTML += `<p class="message-text">${escapeHtml(message.content)}</p>`;
+  }
+  
+  // Add media if present
+  if (message.media_url) {
+    if (message.media_type?.startsWith('image/')) {
+      messageHTML += `
+        <img src="${message.media_url}" 
+             class="message-image" 
+             alt="Image" 
+             onclick="openImageViewer('${message.media_url}')"
+             loading="lazy">
+      `;
+    } else if (message.media_type?.startsWith('video/')) {
+      messageHTML += `
+        <video src="${message.media_url}" 
+               class="message-image" 
+               controls 
+               style="max-width: 100%;">
+        </video>
+      `;
+    }
+  }
+  
+  messageHTML += `
+      </div>
+      <div class="message-time">${time}</div>
+      <div class="message-actions">
+        <button class="message-action-btn" onclick="reactToMessage('${message.id}', '❤️')" title="React">❤️</button>
+        <button class="message-action-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
+        ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
+      </div>
+    </div>
+  `;
+  
+  messageEl.innerHTML = messageHTML;
+  messagesContainer.appendChild(messageEl);
+  
+  // Animate if needed
+  if (animate) {
+    messageEl.style.opacity = '0';
+    messageEl.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      messageEl.style.transition = 'all 0.3s ease';
+      messageEl.style.opacity = '1';
+      messageEl.style.transform = 'translateY(0)';
+    }, 10);
+  }
+  
+  // Play sound for new messages from others
+  if (!isOwn && animate) {
+    playMessageSound();
+  }
+}
+
+// ============ Send Message ============
+async function sendMessage() {
+  const messageInput = document.getElementById('messageInput');
+  const content = messageInput?.value?.trim();
+  
+  if (!content && !selectedMediaFile) {
+    showMessage('⚠️ Please type a message or select media', 'error');
+    return;
+  }
+  
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+  
+  if (!currentUser.communityJoined || !currentUser.college) {
+    showMessage('⚠️ Please join your college community first', 'error');
+    return;
+  }
+  
+  try {
+    // Disable send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) sendBtn.disabled = true;
+    
+    showMessage('📤 Sending...', 'info');
+    
+    // Prepare form data
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (selectedMediaFile) {
+      formData.append('media', selectedMediaFile);
+    }
+    
+    // Send to server
+    const response = await apiCall('/api/community/messages', 'POST', formData);
+    
+    if (response.success) {
+      // Clear input
+      if (messageInput) {
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+      }
+      
+      // Clear media
+      clearImagePreview();
+      
+      // Update UI
+      updateCharCounter();
+      
+      // Add message to UI
+      if (response.message) {
+        renderMessage(response.message, true);
+        scrollToBottom(true);
+      }
+      
+      showMessage('✅ Message sent!', 'success');
+      
+      // Play send sound
+      playMessageSound('send');
+      
+    } else {
+      throw new Error(response.error || 'Failed to send message');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error sending message:', error);
+    showMessage('❌ Failed to send message: ' + error.message, 'error');
+    
+  } finally {
+    // Re-enable send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+
+// ============ Handle Input Changes ============
+function handleInputChange() {
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const charCounter = document.getElementById('charCounter');
+  
+  if (!messageInput) return;
+  
+  const content = messageInput.value;
+  const length = content.length;
+  
+  // Enable/disable send button
+  if (sendBtn) {
+    sendBtn.disabled = length === 0 && !selectedMediaFile;
+  }
+  
+  // Update character counter
+  updateCharCounter();
+  
+  // Show/hide counter when approaching limit
+  if (charCounter) {
+    if (length > 4500) {
+      charCounter.style.display = 'block';
+      if (length > 4900) {
+        charCounter.style.color = '#ef4444';
+      } else {
+        charCounter.style.color = '';
+      }
+    } else {
+      charCounter.style.display = 'none';
+    }
+  }
+  
+  // Handle typing indicator
+  handleTypingIndicator();
+}
+
+function updateCharCounter() {
+  const messageInput = document.getElementById('messageInput');
+  const charCount = document.getElementById('charCount');
+  
+  if (messageInput && charCount) {
+    charCount.textContent = messageInput.value.length;
+  }
+}
+
+// ============ Handle Key Press ============
+function handleKeyPress(event) {
+  // Send on Enter (without Shift)
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+// ============ Typing Indicator ============
+function handleTypingIndicator() {
+  // Clear existing timeout
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+  
+  // Emit typing event (if using sockets)
+  if (typeof socket !== 'undefined' && socket) {
+    socket.emit('typing', { 
+      userId: currentUser?.id, 
+      username: currentUser?.username 
+    });
+  }
+  
+  // Set timeout to stop typing
+  typingTimeout = setTimeout(() => {
+    if (typeof socket !== 'undefined' && socket) {
+      socket.emit('stopTyping', { userId: currentUser?.id });
+    }
+  }, 2000);
+}
+
+// ============ Scroll Functions ============
+function setupScrollDetection() {
+  const messagesContainer = document.getElementById('messagesContainer');
+  const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+  
+  if (!messagesContainer) return;
+  
+  messagesContainer.addEventListener('scroll', () => {
+    const isBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+    isAtBottom = isBottom;
+    
+    // Show/hide scroll button
+    if (scrollToBottomBtn) {
+      if (isBottom) {
+        scrollToBottomBtn.style.display = 'none';
+        newMessagesCount = 0;
+        updateNewMessagesBadge();
+      } else {
+        scrollToBottomBtn.style.display = 'flex';
+      }
+    }
+  });
+}
+
+function scrollToBottom(smooth = true) {
+  const messagesContainer = document.getElementById('messagesContainer');
+  
+  if (messagesContainer) {
+    messagesContainer.scrollTo({
+      top: messagesContainer.scrollHeight,
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+    
+    newMessagesCount = 0;
+    updateNewMessagesBadge();
+  }
+}
+
+function updateNewMessagesBadge() {
+  const badge = document.getElementById('newMessagesBadge');
+  
+  if (badge) {
+    if (newMessagesCount > 0) {
+      badge.textContent = newMessagesCount;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// ============ Emoji Picker ============
+function toggleEmojiPicker() {
+  const emojiPicker = document.getElementById('emojiPicker');
+  
+  if (!emojiPicker) return;
+  
+  if (emojiPickerOpen) {
+    closeEmojiPicker();
+  } else {
+    emojiPicker.style.display = 'block';
+    emojiPickerOpen = true;
+    closeAttachMenu();
+  }
+}
+
+function closeEmojiPicker() {
+  const emojiPicker = document.getElementById('emojiPicker');
+  
+  if (emojiPicker) {
+    emojiPicker.style.display = 'none';
+    emojiPickerOpen = false;
+  }
+}
+
+function loadEmojiPicker(category = 'smileys') {
+  const emojiGrid = document.getElementById('emojiGrid');
+  
+  if (!emojiGrid) return;
+  
+  const emojis = emojiData[category] || emojiData.smileys;
+  
+  emojiGrid.innerHTML = emojis.map(emoji => 
+    `<div class="emoji-item" onclick="insertEmoji('${emoji}')">${emoji}</div>`
+  ).join('');
+  
+  // Update active category button
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.category === category) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+function insertEmoji(emoji) {
+  const messageInput = document.getElementById('messageInput');
+  
+  if (messageInput) {
+    const cursorPos = messageInput.selectionStart;
+    const textBefore = messageInput.value.substring(0, cursorPos);
+    const textAfter = messageInput.value.substring(cursorPos);
+    
+    messageInput.value = textBefore + emoji + textAfter;
+    messageInput.focus();
+    
+    // Set cursor position after emoji
+    const newPos = cursorPos + emoji.length;
+    messageInput.setSelectionRange(newPos, newPos);
+    
+    // Trigger input event
+    handleInputChange();
+  }
+}
+
+// Setup emoji category buttons
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadEmojiPicker(btn.dataset.category);
+    });
+  });
+});
+
+// ============ Attach Menu ============
+function openAttachMenu() {
+  const attachMenu = document.getElementById('attachMenu');
+  
+  if (attachMenu) {
+    attachMenu.style.display = 'block';
+    attachMenuOpen = true;
+    closeEmojiPicker();
+  }
+}
+
+function closeAttachMenu() {
+  const attachMenu = document.getElementById('attachMenu');
+  
+  if (attachMenu) {
+    attachMenu.style.display = 'none';
+    attachMenuOpen = false;
+  }
+}
+
+function openImageUpload() {
+  document.getElementById('imageInput')?.click();
+  closeAttachMenu();
+}
+
+function openVideoUpload() {
+  document.getElementById('videoInput')?.click();
+  closeAttachMenu();
+}
+
+function openFileUpload() {
+  document.getElementById('fileInput')?.click();
+  closeAttachMenu();
+}
+
+// ============ Media Handling ============
+function handleImageSelect(event) {
+  const file = event.target.files[0];
+  
+  if (!file) return;
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showMessage('⚠️ Image must be less than 5MB', 'error');
+    return;
+  }
+  
+  selectedMediaFile = file;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImage = document.getElementById('previewImage');
+    
+    if (previewContainer && previewImage) {
+      previewImage.src = e.target.result;
+      previewContainer.style.display = 'block';
+    }
+    
+    // Enable send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) sendBtn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleVideoSelect(event) {
+  const file = event.target.files[0];
+  
+  if (!file) return;
+  
+  // Validate file size (max 20MB)
+  if (file.size > 20 * 1024 * 1024) {
+    showMessage('⚠️ Video must be less than 20MB', 'error');
+    return;
+  }
+  
+  selectedMediaFile = file;
+  showMessage('📹 Video selected: ' + file.name, 'success');
+  
+  // Enable send button
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  
+  if (!file) return;
+  
+  // Validate file size (max 10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    showMessage('⚠️ File must be less than 10MB', 'error');
+    return;
+  }
+  
+  selectedMediaFile = file;
+  showMessage('📄 File selected: ' + file.name, 'success');
+  
+  // Enable send button
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+function clearImagePreview() {
+  const previewContainer = document.getElementById('imagePreviewContainer');
+  const previewImage = document.getElementById('previewImage');
+  const imageInput = document.getElementById('imageInput');
+  
+  if (previewContainer) previewContainer.style.display = 'none';
+  if (previewImage) previewImage.src = '';
+  if (imageInput) imageInput.value = '';
+  
+  selectedMediaFile = null;
+  
+  // Update send button state
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn && messageInput) {
+    sendBtn.disabled = messageInput.value.trim().length === 0;
+  }
+}
+
+// ============ Message Actions ============
+async function deleteMessage(messageId) {
+  if (!confirm('Are you sure you want to delete this message?')) {
+    return;
+  }
+  
+  try {
+    const response = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    
+    if (response.success) {
+      // Remove message from UI
+      const messageEl = document.getElementById(`msg-${messageId}`);
+      if (messageEl) {
+        messageEl.style.opacity = '0';
+        messageEl.style.transform = 'translateX(-100%)';
+        setTimeout(() => messageEl.remove(), 300);
+      }
+      
+      showMessage('✅ Message deleted', 'success');
+    } else {
+      throw new Error(response.error || 'Failed to delete message');
+    }
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    showMessage('❌ Failed to delete message', 'error');
+  }
+}
+
+async function reactToMessage(messageId, emoji) {
+  try {
+    const response = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
+    
+    if (response.success) {
+      showMessage(`${emoji} Reacted!`, 'success');
+    }
+  } catch (error) {
+    console.error('Error reacting to message:', error);
+  }
+}
+
+function replyToMessage(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  const messageText = messageEl?.querySelector('.message-text')?.textContent;
+  const messageInput = document.getElementById('messageInput');
+  
+  if (messageInput && messageText) {
+    messageInput.value = `@reply: "${messageText.substring(0, 50)}..."\n\n`;
+    messageInput.focus();
+    handleInputChange();
+  }
+}
+
+// ============ Search & Info ============
+function searchInChat() {
+  const searchTerm = prompt('Search messages:');
+  
+  if (!searchTerm) return;
+  
+  const messages = document.querySelectorAll('.message-bubble');
+  let found = false;
+  
+  messages.forEach(msg => {
+    const text = msg.textContent.toLowerCase();
+    if (text.includes(searchTerm.toLowerCase())) {
+      msg.style.background = 'rgba(79, 116, 163, 0.3)';
+      msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      found = true;
+      
+      setTimeout(() => {
+        msg.style.background = '';
+      }, 2000);
+    }
+  });
+  
+  if (!found) {
+    showMessage('No messages found', 'info');
+  }
+}
+
+function toggleChatInfo() {
+  alert('Chat Info:\n\n' +
+        '📊 Community: ' + (currentUser?.college || 'Not joined') + '\n' +
+        '👥 Members: ' + (document.getElementById('onlineCount')?.textContent || '0') + ' online\n' +
+        '💬 Messages: ' + (document.querySelectorAll('.message-bubble').length || '0'));
+}
+
+// ============ Helper Functions ============
+function formatMessageTime(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+  
+  // Less than 1 minute
+  if (diff < 60000) {
+    return 'Just now';
+  }
+  
+  // Less than 1 hour
+  if (diff < 3600000) {
+    const mins = Math.floor(diff / 60000);
+    return `${mins}m ago`;
+  }
+  
+  // Same day
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // Yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  }
+  
+  // Older
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function getAvatarEmoji(username) {
+  const emojis = ['👨', '👩', '🧑', '👦', '👧', '🧒', '👶'];
+  const index = username.charCodeAt(0) % emojis.length;
+  return emojis[index];
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function playMessageSound(type = 'receive') {
+  // Optional: Add sound effects
+  // const audio = new Audio(type === 'send' ? '/sounds/send.mp3' : '/sounds/receive.mp3');
+  // audio.play();
+}
+
+function updateOnlineCount() {
+  // This would be updated via WebSocket in production
+  const onlineCount = document.getElementById('onlineCount');
+  if (onlineCount && currentUser) {
+    onlineCount.textContent = Math.floor(Math.random() * 50) + 10; // Demo value
+  }
+}
+
+function openImageViewer(imageUrl) {
+  window.open(imageUrl, '_blank');
+}
+
+// ============ Initialize when page loads ============
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if we're on the communities page
+  const communitiesSection = document.getElementById('communities');
+  
+  if (communitiesSection) {
+    // Initialize chat when communities page becomes visible
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.target.style.display !== 'none' && 
+            mutation.target.classList.contains('active')) {
+          initializeCommunityChat();
+        }
+      });
+    });
+    
+    observer.observe(communitiesSection, {
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+  }
+});
+
+// ============ Socket.IO Integration (if using) ============
+if (typeof io !== 'undefined') {
+  // Initialize socket connection
+  const socket = io();
+  
+  // Listen for new messages
+  socket.on('newMessage', (message) => {
+    renderMessage(message, true);
+    
+    if (!isAtBottom) {
+      newMessagesCount++;
+      updateNewMessagesBadge();
+    } else {
+      scrollToBottom(true);
+    }
+  });
+  
+  // Listen for typing events
+  socket.on('userTyping', (data) => {
+    if (data.userId !== currentUser?.id) {
+      const typingIndicator = document.getElementById('typingIndicator');
+      const typingUser = document.getElementById('typingUser');
+      
+      if (typingIndicator && typingUser) {
+        typingUser.textContent = data.username;
+        typingIndicator.style.display = 'flex';
+      }
+    }
+  });
+  
+  socket.on('userStoppedTyping', (data) => {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+      typingIndicator.style.display = 'none';
+    }
+  });
+  
+  // Listen for message deletions
+  socket.on('messageDeleted', (messageId) => {
+    const messageEl = document.getElementById(`msg-${messageId}`);
+    if (messageEl) {
+      messageEl.remove();
+    }
+  });
+}
+
+console.log('✅ Community Chat JavaScript Loaded');
 function searchChats() {
   const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
   const chatItems = document.querySelectorAll('.chat-item');
@@ -5306,3 +6178,4 @@ function editBio() {
 }
   
 console.log('✨ RealVibe features initialized!')
+
