@@ -1372,7 +1372,27 @@ console.log('✨ Typing indicator ready');
 }
 
 function addMessageToUI(message) {
-appendMessageToChat(message);
+// ✅ FIX: Insert message in correct time order
+messageEl.dataset.time = timestamp.toISOString();
+
+const allMessages = Array.from(messageContainer.children);
+
+let inserted = false;
+for (let existing of allMessages) {
+  const existingTime = new Date(existing.dataset.time || 0).getTime();
+  const newTime = timestamp.getTime();
+
+  if (newTime < existingTime) {
+    messageContainer.insertBefore(messageEl, existing);
+    inserted = true;
+    break;
+  }
+}
+
+if (!inserted) {
+  messageContainer.appendChild(messageEl);
+}
+
 }
 
 function setupEnhancedSocketListeners() {
@@ -5306,3 +5326,4 @@ function editBio() {
 }
   
 console.log('✨ RealVibe features initialized!')
+
