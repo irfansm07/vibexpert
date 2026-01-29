@@ -5570,7 +5570,7 @@ function updateTypingIndicator() {
 }
 
 // ==========================================
-// INPUT HANDLERS
+// UNIFIED CHAT INPUT HANDLERS
 // ==========================================
 
 function setupChatInput() {
@@ -5603,7 +5603,7 @@ function handleChatKeyPress(event) {
 function handleChatInput() {
   const input = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendButton');
-  
+
   if (input && sendBtn) {
     sendBtn.disabled = !input.value.trim();
   }
@@ -5672,4 +5672,5 @@ function setupEmojiPicker() {
 }
 
 console.log('✅ Community chat module loaded');
+
 
