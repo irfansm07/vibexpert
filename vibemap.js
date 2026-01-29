@@ -2324,7 +2324,17 @@ if (currentUser?.college) socket.emit('join_college', currentUser.college);
 socket.emit('user_online', currentUser.id);
 });
 
-socket.on('new_message', (message) => appendMessageToChat(message));
+socket.on('new_message', (message) => {
+  console.log("📨 New message received:", message);
+
+  // ✅ Prevent duplicates
+  const exists = document.getElementById(`msg-${message.id}`);
+  if (exists) return;
+
+  // ✅ Always insert message properly
+  appendMessageToChat(message);
+});
+
 socket.on('message_updated', (message) => updateMessageInChat(message));
 socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
 socket.on('online_count', (count) => updateOnlineCount(count));
@@ -5326,4 +5336,5 @@ function editBio() {
 }
   
 console.log('✨ RealVibe features initialized!')
+
 
