@@ -6049,124 +6049,336 @@ function setupEmojiPicker() {
 }
 
 // ==========================================
-// UNIFIED CHAT PLATFORM FUNCTIONS
+// AMAZING COMMUNITY CHAT SYSTEM
 // ==========================================
 
 let selectedMediaFile = null;
 let selectedMediaType = null;
+let isUserScrolling = false;
+let lastSeenMessageId = null;
+let unseenMessageCount = 0;
 
-function openPhotoPicker() {
+// Initialize amazing chat when communities page loads
+function initializeAmazingChat() {
+  console.log('🚀 Initializing Amazing Community Chat...');
+
+  // Set community name
+  if (currentUser?.college) {
+    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
+  }
+
+  // Initialize socket connection
+  initializeSocketConnection();
+
+  // Load messages
+  loadAmazingMessages();
+
+  // Set up input handlers
+  setupAmazingInput();
+
+  // Populate emoji and sticker panels
+  populateEmojiPanel();
+  populateStickerPanel();
+
+  console.log('✅ Amazing Chat Initialized');
+}
+
+// ==========================================
+// LOAD MESSAGES WITH UNSEEN TRACKING
+// ==========================================
+
+async function loadAmazingMessages() {
+  try {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+
+    // Show loading
+    container.innerHTML = `
+      <div class="loading-messages">
+        <div class="loading-spinner"></div>
+        <p>Loading messages...</p>
+      </div>
+    `;
+
+    const data = await apiCall('/api/community/messages', 'GET');
+
+    if (!data.success) {
+      if (data.needsJoinCommunity) {
+        container.innerHTML = `
+          <div class="join-community-prompt">
+            <div class="join-icon">🎓</div>
+            <h3>Join Your College Community</h3>
+            <p>Connect with fellow students and start chatting!</p>
+            <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
+          </div>
+        `;
+        return;
+      }
+      throw new Error(data.error || 'Failed to load messages');
+    }
+
+    // Clear loading
+    container.innerHTML = '';
+
+    if (!data.messages || data.messages.length === 0) {
+      container.innerHTML = `
+        <div class="no-messages">
+          <div class="no-messages-icon">💬</div>
+          <h3>No Messages Yet</h3>
+          <p>Be the first to start the conversation!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Display messages
+    data.messages.forEach(msg => {
+      addAmazingMessage(msg, true); // Skip scroll for initial load
+    });
+
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollToBottom();
+      markMessagesAsSeen();
+    }, 100);
+
+  } catch (error) {
+    console.error('❌ Load messages error:', error);
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+      container.innerHTML = `
+        <div class="error-state">
+          <div class="error-icon">⚠️</div>
+          <h3>Failed to Load Messages</h3>
+          <p>${error.message}</p>
+          <button onclick="loadAmazingMessages()" class="retry-btn">Retry</button>
+        </div>
+      `;
+    }
+  }
+}
+
+// ==========================================
+// ADD MESSAGE TO UI WITH REACTIONS
+// ==========================================
+
+function addAmazingMessage(message, skipScroll = false) {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+
+  // Check if message already exists
+  const existingMsg = document.getElementById(`msg-${message.id}`);
+  if (existingMsg) return;
+
+  // Remove empty state
+  const emptyState = container.querySelector('.no-messages');
+  if (emptyState) emptyState.remove();
+
+  const isOwn = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || 'User';
+  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  const messageEl = document.createElement('div');
+  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
+  messageEl.id = `msg-${message.id}`;
+
+  let html = `
+    <div class="message-avatar">
+      ${message.users?.profile_pic ?
+        `<img src="${message.users.profile_pic}" alt="${sender}">` :
+        '👤'
+      }
+    </div>
+    <div class="message-content-wrapper">
+      <div class="message-header">
+        <span class="message-sender">${isOwn ? 'You' : sender}</span>
+        <span class="message-time">${time}</span>
+      </div>
+      <div class="message-bubble">
+  `;
+
+  if (message.content) {
+    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
+  }
+
+  if (message.media_url) {
+    if (message.media_type?.startsWith('image/')) {
+      html += `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')">`;
+    } else if (message.media_type?.startsWith('video/')) {
+      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
+    }
+  }
+
+  html += `
+      </div>
+      <div class="message-actions">
+        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
+          ❤️ <span class="react-count">${message.reactions || 0}</span>
+        </button>
+        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
+        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  messageEl.innerHTML = html;
+  container.appendChild(messageEl);
+
+  // Animate entrance
+  setTimeout(() => messageEl.classList.add('visible'), 10);
+
+  // Scroll to bottom if not user scrolling
+  if (!skipScroll && !isUserScrolling) {
+    setTimeout(() => scrollToBottom(), 50);
+  }
+
+  // Update unseen count if message is new and user is not at bottom
+  if (!isOwn && !isAtBottom()) {
+    unseenMessageCount++;
+    updateUnseenIndicator();
+  }
+}
+
+// ==========================================
+// MESSAGE ACTIONS
+// ==========================================
+
+async function reactToMessage(messageId) {
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji: '❤️' });
+
+    if (data.success) {
+      // Update reaction count in UI
+      const reactBtn = document.querySelector(`#msg-${messageId} .react-btn .react-count`);
+      if (reactBtn) {
+        const currentCount = parseInt(reactBtn.textContent) || 0;
+        reactBtn.textContent = currentCount + 1;
+      }
+      showMessage('❤️ Reacted!', 'success');
+    }
+  } catch (error) {
+    console.error('Reaction error:', error);
+    showMessage('❌ Failed to react', 'error');
+  }
+}
+
+function replyToMessage(messageId) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value = `@reply to message: `;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+}
+
+async function deleteAmazingMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+
+    if (data.success) {
+      const messageEl = document.getElementById(`msg-${messageId}`);
+      if (messageEl) {
+        messageEl.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => messageEl.remove(), 300);
+      }
+      showMessage('🗑️ Message deleted', 'success');
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    showMessage('❌ Failed to delete', 'error');
+  }
+}
+
+// ==========================================
+// SEND MESSAGE
+// ==========================================
+
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const content = input?.value?.trim();
+
+  if (!content && !selectedMediaFile) {
+    showMessage('⚠️ Type a message or add media', 'error');
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (selectedMediaFile) {
+      formData.append('media', selectedMediaFile);
+    }
+
+    // Clear input immediately
+    if (input) input.value = '';
+    clearMediaPreview();
+
+    const data = await apiCall('/api/community/messages', 'POST', formData);
+
+    if (data.success && data.message) {
+      // Add to UI immediately
+      addAmazingMessage(data.message);
+
+      // Mark as seen since we just sent it
+      markMessagesAsSeen();
+
+      // Stop typing indicator
+      stopTyping();
+    }
+
+  } catch (error) {
+    console.error('Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+  }
+}
+
+// ==========================================
+// MEDIA SHARING
+// ==========================================
+
+function openGallery() {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
+  input.accept = 'image/*,video/*';
+  input.multiple = false;
 
   input.onchange = (e) => {
     const file = e.target.files[0];
-    if (file) handleMediaSelection(file, 'image');
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        showMessage('⚠️ File too large (max 10MB)', 'error');
+        return;
+      }
+      handleMediaSelection(file);
+    }
   };
 
   input.click();
 }
 
-function openEmojiPicker() {
-  // Close any existing picker
-  const existing = document.getElementById('emojiPickerPopup');
-  if (existing) {
-    existing.remove();
-    return;
-  }
-
-  const picker = document.createElement('div');
-  picker.id = 'emojiPickerPopup';
-  picker.className = 'emoji-picker-popup';
-  picker.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:5000;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;max-width:300px;';
-
-  const emojis = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
-    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨','😐',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
-    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
-  ];
-
-  let html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="color:#4f74a3;font-weight:600;">Choose Emoji</span>
-      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px;max-height:200px;overflow-y:auto;">
-  `;
-
-  emojis.forEach(emoji => {
-    html += `<button onclick="insertEmoji('${emoji}')" style="background:none;border:none;font-size:24px;cursor:pointer;padding:5px;border-radius:5px;">${emoji}</button>`;
-  });
-
-  html += '</div>';
-  picker.innerHTML = html;
-  document.body.appendChild(picker);
-}
-
-function closeEmojiPicker() {
-  const picker = document.getElementById('emojiPickerPopup');
-  if (picker) picker.remove();
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('unifiedInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPicker();
-}
-
-function openStickerPicker() {
-  showMessage('🎨 Sticker picker coming soon!', 'success');
-
-  // Quick sticker selection
-  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪'];
-  const sticker = prompt('Quick stickers:\n' + stickers.join(' ') + '\n\nChoose one:');
-
-  if (sticker && stickers.includes(sticker)) {
-    const input = document.getElementById('unifiedInput');
-    if (input) {
-      input.value += sticker;
-      input.focus();
-    }
-  }
-}
-
-function openExperienceShare() {
-  const input = document.getElementById('unifiedInput');
-  if (input) {
-    const experiencePrompt = "📝 Sharing my experience:\n\n";
-    input.value = experiencePrompt;
-    input.focus();
-    input.setSelectionRange(experiencePrompt.length, experiencePrompt.length);
-  }
-}
-
-function handleMediaSelection(file, type) {
-  if (file.size > 10 * 1024 * 1024) {
-    showMessage('⚠️ File too large (max 10MB)', 'error');
-    return;
-  }
-
+function handleMediaSelection(file) {
   selectedMediaFile = file;
-  selectedMediaType = type;
+  selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    const previewArea = document.getElementById('mediaPreviewArea');
+    const previewPanel = document.getElementById('mediaPreviewPanel');
     const previewContent = document.getElementById('previewContent');
 
-    if (previewArea && previewContent) {
-      if (type === 'image') {
-        previewContent.innerHTML = `<img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:10px;">`;
+    if (previewPanel && previewContent) {
+      if (selectedMediaType === 'image') {
+        previewContent.innerHTML = `<img src="${e.target.result}" class="preview-media">`;
       } else {
-        previewContent.innerHTML = `<video src="${e.target.result}" controls style="max-width:200px;max-height:200px;border-radius:10px;"></video>`;
+        previewContent.innerHTML = `<video src="${e.target.result}" controls class="preview-media"></video>`;
       }
-      previewArea.style.display = 'block';
+      previewPanel.style.display = 'flex';
     }
   };
 
@@ -6177,19 +6389,533 @@ function clearMediaPreview() {
   selectedMediaFile = null;
   selectedMediaType = null;
 
-  const previewArea = document.getElementById('mediaPreviewArea');
-  const previewContent = document.getElementById('previewContent');
-
-  if (previewArea) previewArea.style.display = 'none';
-  if (previewContent) previewContent.innerHTML = '';
+  const previewPanel = document.getElementById('mediaPreviewPanel');
+  if (previewPanel) previewPanel.style.display = 'none';
 }
 
-async function sendUnifiedMessage() {
-  const input = document.getElementById('unifiedInput');
+// ==========================================
+// EMOJI PANEL
+// ==========================================
+
+function openEmojiPanel() {
+  const panel = document.getElementById('emojiPanel');
+  if (panel) {
+    panel.style.display = 'block';
+    closeStickerPanel(); // Close sticker panel if open
+  }
+}
+
+function closeEmojiPanel() {
+  const panel = document.getElementById('emojiPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function populateEmojiPanel() {
+  const grid = document.getElementById('emojiGrid');
+  if (!grid) return;
+
+  const emojis = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
+    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
+    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
+    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
+  ];
+
+  let html = '';
+  emojis.forEach(emoji => {
+    html += `<button class="emoji-btn" onclick="insertEmoji('${emoji}')">${emoji}</button>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value += emoji;
+    input.focus();
+  }
+  closeEmojiPanel();
+}
+
+// ==========================================
+// STICKER PANEL
+// ==========================================
+
+function openStickerPanel() {
+  const panel = document.getElementById('stickerPanel');
+  if (panel) {
+    panel.style.display = 'block';
+    closeEmojiPanel(); // Close emoji panel if open
+  }
+}
+
+function closeStickerPanel() {
+  const panel = document.getElementById('stickerPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function populateStickerPanel() {
+  const grid = document.getElementById('stickerGrid');
+  if (!grid) return;
+
+  const stickers = [
+    '🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪',
+    '😎', '🤓', '🤠', '👻', '🎃', '🦄', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸'
+  ];
+
+  let html = '';
+  stickers.forEach(sticker => {
+    html += `<button class="sticker-btn" onclick="insertSticker('${sticker}')">${sticker}</button>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function insertSticker(sticker) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value += sticker;
+    input.focus();
+  }
+  closeStickerPanel();
+}
+
+// ==========================================
+// TYPING INDICATORS
+// ==========================================
+
+function handleTyping() {
+  const input = document.getElementById('messageInput');
+  if (!input || !socket || !currentUser) return;
+
+  const content = input.value.trim();
+
+  if (content.length > 0) {
+    socket.emit('typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  } else {
+    stopTyping();
+  }
+}
+
+function stopTyping() {
+  if (socket && currentUser) {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }
+}
+
+function showTypingIndicator(username) {
+  const indicator = document.getElementById('typingIndicators');
+  const textEl = document.getElementById('typingUsersText');
+
+  if (indicator && textEl) {
+    textEl.textContent = `${username} is typing...`;
+    indicator.style.display = 'flex';
+  }
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById('typingIndicators');
+  if (indicator) indicator.style.display = 'none';
+}
+
+// ==========================================
+// ONLINE MEMBERS
+// ==========================================
+
+function updateOnlineMembers(members) {
+  const countEl = document.getElementById('onlineCount');
+  const avatarsEl = document.getElementById('onlineAvatars');
+
+  if (countEl) countEl.textContent = members.length;
+
+  if (avatarsEl) {
+    let html = '';
+    members.slice(0, 5).forEach(member => {
+      html += `<div class="online-avatar" title="${member.username}">👤</div>`;
+    });
+    if (members.length > 5) {
+      html += `<div class="online-more">+${members.length - 5}</div>`;
+    }
+    avatarsEl.innerHTML = html;
+  }
+}
+
+// ==========================================
+// UNSEEN MESSAGES
+// ==========================================
+
+function isAtBottom() {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return true;
+
+  const threshold = 100; // pixels from bottom
+  return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+}
+
+function updateUnseenIndicator() {
+  const indicator = document.getElementById('unseenIndicator');
+  const countEl = document.getElementById('unseenCount');
+
+  if (indicator && countEl) {
+    if (unseenMessageCount > 0) {
+      countEl.textContent = unseenMessageCount;
+      indicator.style.display = 'flex';
+    } else {
+      indicator.style.display = 'none';
+    }
+  }
+}
+
+function markMessagesAsSeen() {
+  unseenMessageCount = 0;
+  updateUnseenIndicator();
+}
+
+function scrollToBottom() {
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    markMessagesAsSeen();
+  }
+}
+
+// ==========================================
+// INPUT HANDLERS
+// ==========================================
+
+function setupAmazingInput() {
+  const input = document.getElementById('messageInput');
+  if (!input) return;
+
+  input.addEventListener('input', function() {
+    // Auto-resize
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+
+    // Update send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+      sendBtn.disabled = !this.value.trim() && !selectedMediaFile;
+    }
+
+    // Handle typing
+    handleTyping();
+  });
+
+  // Handle scroll for unseen messages
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      isUserScrolling = true;
+      if (isAtBottom()) {
+        markMessagesAsSeen();
+      }
+    });
+  }
+}
+
+function handleMessageKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+// ==========================================
+// SEARCH MESSAGES
+// ==========================================
+
+function searchMessages() {
+  const query = prompt('Search messages:');
+  if (query) {
+    showMessage(`🔍 Searching for "${query}"`, 'success');
+    // Implement search functionality
+  }
+}
+
+// ==========================================
+// COMMUNITY INFO
+// ==========================================
+
+function showCommunityInfo() {
+  showMessage('ℹ️ Community info coming soon!', 'success');
+}
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function viewMedia(url) {
+  // Open media in lightbox or new window
+  window.open(url, '_blank');
+}
+
+// ==========================================
+// AMAZING COMMUNITY CHAT SYSTEM
+// ==========================================
+
+let selectedMediaFile = null;
+let selectedMediaType = null;
+let isUserScrolling = false;
+let lastSeenMessageId = null;
+let unseenMessageCount = 0;
+
+// Initialize amazing chat when communities page loads
+function initializeAmazingChat() {
+  console.log('🚀 Initializing Amazing Community Chat...');
+
+  // Set community name
+  if (currentUser?.college) {
+    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
+  }
+
+  // Initialize socket connection
+  initializeSocketConnection();
+
+  // Load messages
+  loadAmazingMessages();
+
+  // Set up input handlers
+  setupAmazingInput();
+
+  // Populate emoji and sticker panels
+  populateEmojiPanel();
+  populateStickerPanel();
+
+  console.log('✅ Amazing Chat Initialized');
+}
+
+// ==========================================
+// LOAD MESSAGES WITH UNSEEN TRACKING
+// ==========================================
+
+async function loadAmazingMessages() {
+  try {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+
+    // Show loading
+    container.innerHTML = `
+      <div class="loading-messages">
+        <div class="loading-spinner"></div>
+        <p>Loading messages...</p>
+      </div>
+    `;
+
+    const data = await apiCall('/api/community/messages', 'GET');
+
+    if (!data.success) {
+      if (data.needsJoinCommunity) {
+        container.innerHTML = `
+          <div class="join-community-prompt">
+            <div class="join-icon">🎓</div>
+            <h3>Join Your College Community</h3>
+            <p>Connect with fellow students and start chatting!</p>
+            <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
+          </div>
+        `;
+        return;
+      }
+      throw new Error(data.error || 'Failed to load messages');
+    }
+
+    // Clear loading
+    container.innerHTML = '';
+
+    if (!data.messages || data.messages.length === 0) {
+      container.innerHTML = `
+        <div class="no-messages">
+          <div class="no-messages-icon">💬</div>
+          <h3>No Messages Yet</h3>
+          <p>Be the first to start the conversation!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Display messages
+    data.messages.forEach(msg => {
+      addAmazingMessage(msg, true); // Skip scroll for initial load
+    });
+
+    // Scroll to bottom
+    setTimeout(() => {
+      scrollToBottom();
+      markMessagesAsSeen();
+    }, 100);
+
+  } catch (error) {
+    console.error('❌ Load messages error:', error);
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+      container.innerHTML = `
+        <div class="error-state">
+          <div class="error-icon">⚠️</div>
+          <h3>Failed to Load Messages</h3>
+          <p>${error.message}</p>
+          <button onclick="loadAmazingMessages()" class="retry-btn">Retry</button>
+        </div>
+      `;
+    }
+  }
+}
+
+// ==========================================
+// ADD MESSAGE TO UI WITH REACTIONS
+// ==========================================
+
+function addAmazingMessage(message, skipScroll = false) {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+
+  // Check if message already exists
+  const existingMsg = document.getElementById(`msg-${message.id}`);
+  if (existingMsg) return;
+
+  // Remove empty state
+  const emptyState = container.querySelector('.no-messages');
+  if (emptyState) emptyState.remove();
+
+  const isOwn = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || 'User';
+  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  const messageEl = document.createElement('div');
+  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
+  messageEl.id = `msg-${message.id}`;
+
+  let html = `
+    <div class="message-avatar">
+      ${message.users?.profile_pic ?
+        `<img src="${message.users.profile_pic}" alt="${sender}">` :
+        '👤'
+      }
+    </div>
+    <div class="message-content-wrapper">
+      <div class="message-header">
+        <span class="message-sender">${isOwn ? 'You' : sender}</span>
+        <span class="message-time">${time}</span>
+      </div>
+      <div class="message-bubble">
+  `;
+
+  if (message.content) {
+    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
+  }
+
+  if (message.media_url) {
+    if (message.media_type?.startsWith('image/')) {
+      html += `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')">`;
+    } else if (message.media_type?.startsWith('video/')) {
+      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
+    }
+  }
+
+  html += `
+      </div>
+      <div class="message-actions">
+        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
+          ❤️ <span class="react-count">${message.reactions || 0}</span>
+        </button>
+        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
+        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  messageEl.innerHTML = html;
+  container.appendChild(messageEl);
+
+  // Animate entrance
+  setTimeout(() => messageEl.classList.add('visible'), 10);
+
+  // Scroll to bottom if not user scrolling
+  if (!skipScroll && !isUserScrolling) {
+    setTimeout(() => scrollToBottom(), 50);
+  }
+
+  // Update unseen count if message is new and user is not at bottom
+  if (!isOwn && !isAtBottom()) {
+    unseenMessageCount++;
+    updateUnseenIndicator();
+  }
+}
+
+// ==========================================
+// MESSAGE ACTIONS
+// ==========================================
+
+async function reactToMessage(messageId) {
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji: '❤️' });
+
+    if (data.success) {
+      // Update reaction count in UI
+      const reactBtn = document.querySelector(`#msg-${messageId} .react-btn .react-count`);
+      if (reactBtn) {
+        const currentCount = parseInt(reactBtn.textContent) || 0;
+        reactBtn.textContent = currentCount + 1;
+      }
+      showMessage('❤️ Reacted!', 'success');
+    }
+  } catch (error) {
+    console.error('Reaction error:', error);
+    showMessage('❌ Failed to react', 'error');
+  }
+}
+
+function replyToMessage(messageId) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value = `@reply to message: `;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+}
+
+async function deleteAmazingMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+
+  try {
+    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+
+    if (data.success) {
+      const messageEl = document.getElementById(`msg-${messageId}`);
+      if (messageEl) {
+        messageEl.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => messageEl.remove(), 300);
+      }
+      showMessage('🗑️ Message deleted', 'success');
+    }
+  } catch (error) {
+    console.error('Delete error:', error);
+    showMessage('❌ Failed to delete', 'error');
+  }
+}
+
+// ==========================================
+// SEND MESSAGE
+// ==========================================
+
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
   const content = input?.value?.trim();
 
   if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Add message or media', 'error');
+    showMessage('⚠️ Type a message or add media', 'error');
     return;
   }
 
@@ -6199,30 +6925,27 @@ async function sendUnifiedMessage() {
   }
 
   try {
-    showMessage('📤 Sending...', 'success');
-
     const formData = new FormData();
     if (content) formData.append('content', content);
     if (selectedMediaFile) {
       formData.append('media', selectedMediaFile);
-      formData.append('mediaType', selectedMediaType);
     }
+
+    // Clear input immediately
+    if (input) input.value = '';
+    clearMediaPreview();
 
     const data = await apiCall('/api/community/messages', 'POST', formData);
 
-    if (data.success) {
-      showMessage('✅ Message sent!', 'success');
+    if (data.success && data.message) {
+      // Add to UI immediately
+      addAmazingMessage(data.message);
 
-      // Clear input and media
-      if (input) input.value = '';
-      clearMediaPreview();
+      // Mark as seen since we just sent it
+      markMessagesAsSeen();
 
-      // Add message to UI
-      if (data.message) {
-        addUnifiedMessageToUI(data.message);
-      }
-    } else {
-      throw new Error(data.error || 'Failed to send');
+      // Stop typing indicator
+      stopTyping();
     }
 
   } catch (error) {
@@ -6231,92 +6954,1462 @@ async function sendUnifiedMessage() {
   }
 }
 
-function handleUnifiedKeypress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendUnifiedMessage();
+// ==========================================
+// MEDIA SHARING
+// ==========================================
+
+function openGallery() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  input.multiple = false;
+
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        showMessage('⚠️ File too large (max 10MB)', 'error');
+        return;
+      }
+      handleMediaSelection(file);
+    }
+  };
+
+  input.click();
+}
+
+function handleMediaSelection(file) {
+  selectedMediaFile = file;
+  selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const previewPanel = document.getElementById('mediaPreviewPanel');
+    const previewContent = document.getElementById('previewContent');
+
+    if (previewPanel && previewContent) {
+      if (selectedMediaType === 'image') {
+        previewContent.innerHTML = `<img src="${e.target.result}" class="preview-media">`;
+      } else {
+        previewContent.innerHTML = `<video src="${e.target.result}" controls class="preview-media"></video>`;
+      }
+      previewPanel.style.display = 'flex';
+    }
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function clearMediaPreview() {
+  selectedMediaFile = null;
+  selectedMediaType = null;
+
+  const previewPanel = document.getElementById('mediaPreviewPanel');
+  if (previewPanel) previewPanel.style.display = 'none';
+}
+
+// ==========================================
+// EMOJI PANEL
+// ==========================================
+
+function openEmojiPanel() {
+  const panel = document.getElementById('emojiPanel');
+  if (panel) {
+    panel.style.display = 'block';
+    closeStickerPanel(); // Close sticker panel if open
   }
 }
 
-function addUnifiedMessageToUI(message) {
-  const messagesEl = document.getElementById('unifiedMessages');
-  if (!messagesEl) return;
+function closeEmojiPanel() {
+  const panel = document.getElementById('emojiPanel');
+  if (panel) panel.style.display = 'none';
+}
 
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+function populateEmojiPanel() {
+  const grid = document.getElementById('emojiGrid');
+  if (!grid) return;
 
-  const messageEl = document.createElement('div');
-  messageEl.className = `unified-message ${isOwn ? 'own' : 'other'}`;
+  const emojis = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
+    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
+    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
+    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
+  ];
 
-  let html = `
-    <div class="message-header">
-      <span class="sender-name">${isOwn ? 'You' : sender}</span>
-      <span class="message-time">${time}</span>
-    </div>
-    <div class="message-content">
-  `;
+  let html = '';
+  emojis.forEach(emoji => {
+    html += `<button class="emoji-btn" onclick="insertEmoji('${emoji}')">${emoji}</button>`;
+  });
 
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
+  grid.innerHTML = html;
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value += emoji;
+    input.focus();
   }
+  closeEmojiPanel();
+}
 
-  if (message.media && message.media.length > 0) {
-    message.media.forEach(media => {
-      if (media.type === 'image') {
-        html += `<img src="${media.url}" class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;">`;
-      } else if (media.type === 'video') {
-        html += `<video src="${media.url}" controls class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;"></video>`;
+// ==========================================
+// STICKER PANEL
+// ==========================================
+
+function openStickerPanel() {
+  const panel = document.getElementById('stickerPanel');
+  if (panel) {
+    panel.style.display = 'block';
+    closeEmojiPanel(); // Close emoji panel if open
+  }
+}
+
+function closeStickerPanel() {
+  const panel = document.getElementById('stickerPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function populateStickerPanel() {
+  const grid = document.getElementById('stickerGrid');
+  if (!grid) return;
+
+  const stickers = [
+    '🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪',
+    '😎', '🤓', '🤠', '👻', '🎃', '🦄', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸'
+  ];
+
+  let html = '';
+  stickers.forEach(sticker => {
+    html += `<button class="sticker-btn" onclick="insertSticker('${sticker}')">${sticker}</button>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function insertSticker(sticker) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    input.value += sticker;
+    input.focus();
+  }
+  closeStickerPanel();
+}
+
+// ==========================================
+// TYPING INDICATORS
+// ==========================================
+
+function handleTyping() {
+  const input = document.getElementById('messageInput');
+  if (!input || !socket || !currentUser) return;
+
+  const content = input.value.trim();
+
+  if (content.length > 0) {
+    socket.emit('typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  } else {
+    stopTyping();
+  }
+}
+
+function stopTyping() {
+  if (socket && currentUser) {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }
+}
+
+function showTypingIndicator(username) {
+  const indicator = document.getElementById('typingIndicators');
+  const textEl = document.getElementById('typingUsersText');
+
+  if (indicator && textEl) {
+    textEl.textContent = `${username} is typing...`;
+    indicator.style.display = 'flex';
+  }
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById('typingIndicators');
+  if (indicator) indicator.style.display = 'none';
+}
+
+// ==========================================
+// ONLINE MEMBERS
+// ==========================================
+
+function updateOnlineMembers(members) {
+  const countEl = document.getElementById('onlineCount');
+  const avatarsEl = document.getElementById('onlineAvatars');
+
+  if (countEl) countEl.textContent = members.length;
+
+  if (avatarsEl) {
+    let html = '';
+    members.slice(0, 5).forEach(member => {
+      html += `<div class="online-avatar" title="${member.username}">👤</div>`;
+    });
+    if (members.length > 5) {
+      html += `<div class="online-more">+${members.length - 5}</div>`;
+    }
+    avatarsEl.innerHTML = html;
+  }
+}
+
+// ==========================================
+// UNSEEN MESSAGES
+// ==========================================
+
+function isAtBottom() {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return true;
+
+  const threshold = 100; // pixels from bottom
+  return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+}
+
+function updateUnseenIndicator() {
+  const indicator = document.getElementById('unseenIndicator');
+  const countEl = document.getElementById('unseenCount');
+
+  if (indicator && countEl) {
+    if (unseenMessageCount > 0) {
+      countEl.textContent = unseenMessageCount;
+      indicator.style.display = 'flex';
+    } else {
+      indicator.style.display = 'none';
+    }
+  }
+}
+
+function markMessagesAsSeen() {
+  unseenMessageCount = 0;
+  updateUnseenIndicator();
+}
+
+function scrollToBottom() {
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    markMessagesAsSeen();
+  }
+}
+
+// ==========================================
+// INPUT HANDLERS
+// ==========================================
+
+function setupAmazingInput() {
+  const input = document.getElementById('messageInput');
+  if (!input) return;
+
+  input.addEventListener('input', function() {
+    // Auto-resize
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+
+    // Update send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+      sendBtn.disabled = !this.value.trim() && !selectedMediaFile;
+    }
+
+    // Handle typing
+    handleTyping();
+  });
+
+  // Handle scroll for unseen messages
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.addEventListener('scroll', function() {
+      isUserScrolling = true;
+      if (isAtBottom()) {
+        markMessagesAsSeen();
       }
     });
   }
-
-  html += `
-    </div>
-    <div class="message-actions">
-      <button onclick="reactToUnifiedMessage('${message.id}')">❤️</button>
-      <button onclick="replyToUnifiedMessage('${message.id}')">↩️</button>
-      ${isOwn ? `<button onclick="deleteUnifiedMessage('${message.id}')">🗑️</button>` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  messagesEl.appendChild(messageEl);
-
-  // Scroll to bottom
-  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
 }
 
-function reactToUnifiedMessage(messageId) {
-  showMessage('❤️ Reacted!', 'success');
-}
-
-function replyToUnifiedMessage(messageId) {
-  const input = document.getElementById('unifiedInput');
-  if (input) {
-    input.value = `@reply to message ${messageId}: `;
-    input.focus();
+function handleMessageKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
   }
 }
 
-function deleteUnifiedMessage(messageId) {
-  if (confirm('Delete this message?')) {
-    showMessage('🗑️ Message deleted', 'success');
-  }
-}
+// ==========================================
+// SEARCH MESSAGES
+// ==========================================
 
-function showChatInfo() {
-  showMessage('ℹ️ Chat info coming soon!', 'success');
-}
-
-function searchInChat() {
+function searchMessages() {
   const query = prompt('Search messages:');
   if (query) {
     showMessage(`🔍 Searching for "${query}"`, 'success');
+    // Implement search functionality
   }
 }
 
-console.log('✅ Unified chat platform ready');
+// ==========================================
+// COMMUNITY INFO
+// ==========================================
+
+function showCommunityInfo() {
+  showMessage('ℹ️ Community info coming soon!', 'success');
+}
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function viewMedia(url) {
+  // Open media in lightbox or new window
+  window.open(url, '_blank');
+}
+
+// ==========================================
+// INITIALIZE AMAZING CHAT ON PAGE LOAD
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize amazing chat when communities page becomes visible
+  const communitiesPage = document.getElementById('communities');
+  if (communitiesPage) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.target.style.display !== 'none') {
+          initializeAmazingChat();
+        }
+      });
+    });
+
+    observer.observe(communitiesPage, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+  }
+});
+
+console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ========================================
+// ENHANCED COMMUNITY CHAT SYSTEM
+// Append this to vibemap.js or include as separate script
+// ========================================
+
+// Additional Global Variables for Enhanced Chat
+let chatMessages = [];
+let chatOnlineMembers = [];
+let chatUnseenCount = 0;
+let chatIsAtBottom = true;
+let currentChatReplyMessage = null;
+let selectedChatReactionMessage = null;
+let selectedChatMediaFiles = [];
+
+// Enhanced Emoji Database (200+ emojis)
+const enhancedEmojiDatabase = [
+  '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇',
+  '🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚',
+  '😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔',
+  '🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥',
+  '😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮',
+  '🤧','🥵','🥶','😵','🤯','🤠','🥳','😎','🤓','🧐',
+  '😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦',
+  '😧','😨','😰','😥','😢','😭','😱','😖','😣','😞',
+  '😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿',
+  '💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖',
+  '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔',
+  '❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️',
+  '👋','🤚','🖐️','✋','🖖','👌','🤏','✌️','🤞','🤟',
+  '🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎',
+  '✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏',
+  '💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🦷',
+  '🎉','🎊','🎈','🎁','🎀','🏆','🥇','🥈','🥉','⚽',
+  '🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🏓',
+  '🔥','⭐','✨','💯','👏','🎯','💎','🌟','🎪','🎭'
+];
+
+// Enhanced Sticker Database
+const enhancedStickerDatabase = {
+  trending: ['🔥','⭐','✨','💯','👏','🎉','🎊','🥳','💪','🚀'],
+  emotions: ['😊','😂','😍','😢','😡','😱','🤔','😴','🥰','😎'],
+  animals: ['🐶','🐱','🐭','🐹','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷'],
+  celebration: ['🎉','🎊','🎈','🎁','🎂','🍰','🎆','🎇','✨','🎀','🎪','🎭']
+};
+
+// ========================================
+// INITIALIZE ENHANCED CHAT
+// ========================================
+
+function initializeEnhancedChat() {
+  console.log('🚀 Initializing Enhanced Community Chat...');
+  
+  // Populate emoji picker
+  populateEnhancedEmojis();
+  
+  // Populate sticker picker
+  populateEnhancedStickers('trending');
+  
+  // Setup scroll listener
+  setupChatScrollListener();
+  
+  // Load sample messages
+  loadSampleChatMessages();
+  
+  // Setup online members
+  setupSampleOnlineMembers();
+  
+  console.log('✅ Enhanced Chat Initialized!');
+}
+
+// ========================================
+// ENHANCED MESSAGE RENDERING
+// ========================================
+
+function renderEnhancedChatMessages() {
+  const container = document.getElementById('messagesWrapper');
+  if (!container) return;
+  
+  // Clear existing messages except date separator
+  const dateSeparator = container.querySelector('.date-separator');
+  container.innerHTML = '';
+  if (dateSeparator) {
+    container.appendChild(dateSeparator);
+  } else {
+    container.innerHTML = '<div class="date-separator"><span class="date-text">Today</span></div>';
+  }
+  
+  chatMessages.forEach(msg => {
+    const messageEl = createEnhancedMessageElement(msg);
+    container.appendChild(messageEl);
+  });
+  
+  if (chatIsAtBottom) {
+    scrollToBottomChat();
+  }
+}
+
+function createEnhancedMessageElement(message) {
+  const isOwn = message.userId === (currentUser?.id || 'current-user');
+  const messageItem = document.createElement('div');
+  messageItem.className = `message-item ${isOwn ? 'own' : 'other'}`;
+  messageItem.setAttribute('data-message-id', message.id);
+  
+  // Add context menu listener
+  messageItem.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showChatContextMenu(e, message);
+  });
+  
+  let html = '';
+  
+  // Avatar (only for other users)
+  if (!isOwn) {
+    html += `<div class="message-avatar">${message.userAvatar || '👤'}</div>`;
+  }
+  
+  html += '<div class="message-content-wrapper">';
+  
+  // Sender name (only for other users)
+  if (!isOwn) {
+    html += `<div class="message-sender-name">${message.userName}</div>`;
+  }
+  
+  html += '<div class="message-bubble">';
+  
+  // Reply preview
+  if (message.replyTo) {
+    html += `
+      <div class="message-reply-preview">
+        <div class="reply-preview-sender">${message.replyTo.userName}</div>
+        <div class="reply-preview-text">${escapeHtml(message.replyTo.text)}</div>
+      </div>
+    `;
+  }
+  
+  // Message text
+  if (message.text) {
+    html += `<div class="message-text">${escapeHtml(message.text)}</div>`;
+  }
+  
+  // Media
+  if (message.media && message.media.length > 0) {
+    html += renderChatMessageMedia(message.media);
+  }
+  
+  html += '</div>'; // Close message-bubble
+  
+  // Reactions
+  if (message.reactions && Object.keys(message.reactions).length > 0) {
+    html += '<div class="message-reactions">';
+    for (const [emoji, count] of Object.entries(message.reactions)) {
+      const userReacted = message.userReactions && message.userReactions.includes('current-user-' + emoji);
+      html += `
+        <div class="reaction-badge ${userReacted ? 'user-reacted' : ''}" 
+             onclick="toggleChatReaction('${message.id}', '${emoji}')">
+          <span class="reaction-emoji">${emoji}</span>
+          <span class="reaction-count">${count}</span>
+        </div>
+      `;
+    }
+    html += '</div>';
+  }
+  
+  // Message info
+  html += `
+    <div class="message-info">
+      <span class="message-time">${formatChatTime(message.timestamp)}</span>
+      ${isOwn ? '<span class="message-status"><span class="read-receipt read">✓✓</span></span>' : ''}
+    </div>
+  `;
+  
+  html += '</div>'; // Close message-content-wrapper
+  
+  // Avatar for own messages
+  if (isOwn) {
+    html += `<div class="message-avatar">${message.userAvatar || '👤'}</div>`;
+  }
+  
+  messageItem.innerHTML = html;
+  return messageItem;
+}
+
+function renderChatMessageMedia(media) {
+  if (!media || media.length === 0) return '';
+  
+  let html = '<div class="message-media">';
+  
+  if (media.length === 1) {
+    const item = media[0];
+    if (item.type === 'image') {
+      html += `<img src="${item.url}" class="message-image" onclick="openChatImageViewer('${item.url}', 0)" alt="Image">`;
+    } else if (item.type === 'video') {
+      html += `<video src="${item.url}" class="message-video" controls></video>`;
+    }
+  } else {
+    const gridClass = media.length === 2 ? 'grid-2' : 'grid-3';
+    html += `<div class="message-media-grid ${gridClass}">`;
+    media.forEach((item, index) => {
+      if (item.type === 'image') {
+        html += `<img src="${item.url}" onclick="openChatImageViewer('${item.url}', ${index})" alt="Image ${index + 1}">`;
+      }
+    });
+    html += '</div>';
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+function addChatMessageToUI(message) {
+  chatMessages.push(message);
+  const container = document.getElementById('messagesWrapper');
+  if (!container) return;
+  
+  // Remove welcome message if it exists
+  const welcomeMsg = container.querySelector('.welcome-message');
+  if (welcomeMsg) {
+    welcomeMsg.remove();
+  }
+  
+  const messageEl = createEnhancedMessageElement(message);
+  container.appendChild(messageEl);
+  
+  if (chatIsAtBottom) {
+    scrollToBottomChat();
+  } else {
+    chatUnseenCount++;
+    updateChatUnseenBadge();
+  }
+}
+
+// ========================================
+// SEND ENHANCED MESSAGE
+// ========================================
+
+function sendChatMessage() {
+  const input = document.getElementById('messageInput');
+  const text = input?.value.trim();
+  
+  if (!text && selectedChatMediaFiles.length === 0) {
+    return;
+  }
+  
+  const message = {
+    id: 'msg_' + Date.now(),
+    userId: currentUser?.id || 'current-user',
+    userName: currentUser?.name || 'You',
+    userAvatar: currentUser?.avatar || '👤',
+    text: text || '',
+    timestamp: Date.now(),
+    reactions: {},
+    userReactions: [],
+    media: selectedChatMediaFiles.map(file => ({
+      type: file.type.startsWith('image/') ? 'image' : 'video',
+      url: file.preview
+    }))
+  };
+  
+  // Add reply info if replying
+  if (currentChatReplyMessage) {
+    message.replyTo = {
+      id: currentChatReplyMessage.id,
+      userName: currentChatReplyMessage.userName,
+      text: currentChatReplyMessage.text
+    };
+  }
+  
+  // Emit to socket if connected
+  if (typeof socket !== 'undefined' && socket) {
+    socket.emit('send-message', message);
+  }
+  
+  // Add to UI
+  addChatMessageToUI(message);
+  
+  // Clear input and reset state
+  if (input) {
+    input.value = '';
+    input.style.height = 'auto';
+  }
+  selectedChatMediaFiles = [];
+  currentChatReplyMessage = null;
+  updateChatSendButton();
+  clearMediaPreview();
+  hideReplyPreview();
+}
+
+// ========================================
+// INPUT HANDLING
+// ========================================
+
+function handleInputChange() {
+  const input = document.getElementById('messageInput');
+  if (!input) return;
+  
+  const text = input.value.trim();
+  
+  // Auto-resize textarea
+  input.style.height = 'auto';
+  input.style.height = input.scrollHeight + 'px';
+  
+  // Update send button state
+  updateChatSendButton();
+  
+  // Handle typing indicator
+  if (text.length > 0 && typeof socket !== 'undefined' && socket) {
+    socket.emit('typing', {
+      userId: currentUser?.id || 'current-user',
+      userName: currentUser?.name || 'You',
+      userAvatar: currentUser?.avatar || '👤'
+    });
+  } else if (typeof socket !== 'undefined' && socket) {
+    socket.emit('stop-typing', { userId: currentUser?.id || 'current-user' });
+  }
+}
+
+function handleMessageKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendChatMessage();
+  }
+}
+
+function updateChatSendButton() {
+  const input = document.getElementById('messageInput');
+  const btn = document.getElementById('sendBtn');
+  if (!input || !btn) return;
+  
+  const text = input.value.trim();
+  btn.disabled = !text && selectedChatMediaFiles.length === 0;
+}
+
+// ========================================
+// UNSEEN MESSAGES & SCROLL
+// ========================================
+
+function setupChatScrollListener() {
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.addEventListener('scroll', () => {
+      const threshold = 100;
+      chatIsAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+      
+      if (chatIsAtBottom) {
+        chatUnseenCount = 0;
+        updateChatUnseenBadge();
+      }
+    });
+  }
+}
+
+function scrollToBottomChat() {
+  const container = document.getElementById('messagesContainer');
+  if (container) {
+    container.scrollTop = container.scrollHeight;
+    chatUnseenCount = 0;
+    updateChatUnseenBadge();
+    chatIsAtBottom = true;
+  }
+}
+
+function updateChatUnseenBadge() {
+  const badge = document.getElementById('unseenBadge');
+  const count = document.getElementById('unseenCount');
+  
+  if (badge && count) {
+    if (chatUnseenCount > 0) {
+      count.textContent = chatUnseenCount;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+// ========================================
+// REACTIONS
+// ========================================
+
+function showChatReactionPicker(messageId, event) {
+  const picker = document.getElementById('reactionPicker');
+  if (!picker) return;
+  
+  selectedChatReactionMessage = messageId;
+  
+  // Position picker near the message
+  picker.style.left = event.clientX + 'px';
+  picker.style.top = (event.clientY - 50) + 'px';
+  picker.style.display = 'block';
+  
+  // Hide picker when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', hideChatReactionPicker);
+  }, 100);
+}
+
+function hideChatReactionPicker() {
+  const picker = document.getElementById('reactionPicker');
+  if (picker) {
+    picker.style.display = 'none';
+  }
+  document.removeEventListener('click', hideChatReactionPicker);
+}
+
+function addReaction(emoji) {
+  if (!selectedChatReactionMessage) return;
+  
+  toggleChatReaction(selectedChatReactionMessage, emoji);
+  hideChatReactionPicker();
+}
+
+function toggleChatReaction(messageId, emoji) {
+  const message = chatMessages.find(m => m.id === messageId);
+  if (!message) return;
+  
+  const reactionKey = 'current-user-' + emoji;
+  
+  // Initialize reactions if not exists
+  if (!message.reactions) message.reactions = {};
+  if (!message.userReactions) message.userReactions = [];
+  
+  // Toggle reaction
+  if (message.userReactions.includes(reactionKey)) {
+    // Remove reaction
+    message.userReactions = message.userReactions.filter(r => r !== reactionKey);
+    message.reactions[emoji] = (message.reactions[emoji] || 1) - 1;
+    if (message.reactions[emoji] <= 0) {
+      delete message.reactions[emoji];
+    }
+  } else {
+    // Add reaction
+    message.userReactions.push(reactionKey);
+    message.reactions[emoji] = (message.reactions[emoji] || 0) + 1;
+  }
+  
+  // Emit to socket
+  if (typeof socket !== 'undefined' && socket) {
+    socket.emit('toggle-reaction', {
+      messageId,
+      userId: currentUser?.id || 'current-user',
+      emoji
+    });
+  }
+  
+  // Re-render the message
+  const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+  if (messageEl) {
+    const newEl = createEnhancedMessageElement(message);
+    messageEl.replaceWith(newEl);
+  }
+}
+
+// ========================================
+// REPLY FUNCTIONALITY
+// ========================================
+
+function replyToMessage() {
+  const menu = document.getElementById('messageContextMenu');
+  if (!menu) return;
+  
+  const messageId = menu.dataset.messageId;
+  const message = chatMessages.find(m => m.id === messageId);
+  
+  if (message) {
+    currentChatReplyMessage = message;
+    showReplyPreview(message);
+  }
+  
+  hideChatContextMenu();
+  document.getElementById('messageInput')?.focus();
+}
+
+function showReplyPreview(message) {
+  const preview = document.getElementById('replyPreview');
+  const toUser = document.getElementById('replyToUser');
+  const toMessage = document.getElementById('replyToMessage');
+  
+  if (preview && toUser && toMessage) {
+    toUser.textContent = message.userName;
+    toMessage.textContent = message.text.substring(0, 50) + (message.text.length > 50 ? '...' : '');
+    preview.style.display = 'flex';
+  }
+}
+
+function hideReplyPreview() {
+  const preview = document.getElementById('replyPreview');
+  if (preview) {
+    preview.style.display = 'none';
+  }
+}
+
+function cancelReply() {
+  currentChatReplyMessage = null;
+  hideReplyPreview();
+}
+
+// ========================================
+// MEDIA HANDLING
+// ========================================
+
+function openGallery() {
+  const input = document.getElementById('galleryInput');
+  if (input) {
+    input.click();
+  }
+}
+
+function handleGallerySelection(event) {
+  const files = Array.from(event.target.files);
+  
+  files.forEach(file => {
+    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedChatMediaFiles.push({
+          file: file,
+          type: file.type,
+          preview: e.target.result
+        });
+        updateMediaPreview();
+        updateChatSendButton();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // Clear input
+  event.target.value = '';
+}
+
+function updateMediaPreview() {
+  const panel = document.getElementById('mediaPreviewPanel');
+  const content = document.getElementById('previewContent');
+  
+  if (!panel || !content) return;
+  
+  if (selectedChatMediaFiles.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  
+  panel.style.display = 'block';
+  content.innerHTML = '';
+  
+  selectedChatMediaFiles.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    
+    if (item.type.startsWith('image/')) {
+      div.innerHTML = `
+        <img src="${item.preview}" alt="Preview ${index + 1}">
+        <button class="preview-remove" onclick="removeChatMediaFile(${index})">✕</button>
+      `;
+    } else if (item.type.startsWith('video/')) {
+      div.innerHTML = `
+        <video src="${item.preview}"></video>
+        <button class="preview-remove" onclick="removeChatMediaFile(${index})">✕</button>
+      `;
+    }
+    
+    content.appendChild(div);
+  });
+}
+
+function removeChatMediaFile(index) {
+  selectedChatMediaFiles.splice(index, 1);
+  updateMediaPreview();
+  updateChatSendButton();
+}
+
+function clearMediaPreview() {
+  selectedChatMediaFiles = [];
+  updateMediaPreview();
+}
+
+function openCameraCapture() {
+  alert('Camera feature - would open device camera in production');
+}
+
+// ========================================
+// EMOJI & STICKER PICKERS
+// ========================================
+
+function populateEnhancedEmojis() {
+  const grid = document.getElementById('emojiGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  enhancedEmojiDatabase.forEach(emoji => {
+    const div = document.createElement('div');
+    div.className = 'emoji-item';
+    div.textContent = emoji;
+    div.onclick = () => insertChatEmoji(emoji);
+    grid.appendChild(div);
+  });
+}
+
+function toggleEmojiPicker() {
+  const picker = document.getElementById('emojiPicker');
+  if (!picker) return;
+  
+  if (picker.style.display === 'none' || !picker.style.display) {
+    picker.style.display = 'block';
+    closeStickerPicker();
+  } else {
+    picker.style.display = 'none';
+  }
+}
+
+function closeEmojiPicker() {
+  const picker = document.getElementById('emojiPicker');
+  if (picker) {
+    picker.style.display = 'none';
+  }
+}
+
+function insertChatEmoji(emoji) {
+  const input = document.getElementById('messageInput');
+  if (input) {
+    const cursorPos = input.selectionStart;
+    const textBefore = input.value.substring(0, cursorPos);
+    const textAfter = input.value.substring(cursorPos);
+    input.value = textBefore + emoji + textAfter;
+    input.focus();
+    input.selectionStart = input.selectionEnd = cursorPos + emoji.length;
+    handleInputChange();
+  }
+}
+
+function filterEmojis(searchText) {
+  // In production, filter emojis by name
+  populateEnhancedEmojis();
+}
+
+function populateEnhancedStickers(category) {
+  const grid = document.getElementById('stickerGrid');
+  if (!grid) return;
+  
+  const stickers = enhancedStickerDatabase[category] || [];
+  
+  grid.innerHTML = '';
+  stickers.forEach(sticker => {
+    const div = document.createElement('div');
+    div.className = 'sticker-item';
+    div.textContent = sticker;
+    div.onclick = () => sendChatSticker(sticker);
+    grid.appendChild(div);
+  });
+}
+
+function toggleStickerPicker() {
+  const picker = document.getElementById('stickerPicker');
+  if (!picker) return;
+  
+  if (picker.style.display === 'none' || !picker.style.display) {
+    picker.style.display = 'block';
+    closeEmojiPicker();
+  } else {
+    picker.style.display = 'none';
+  }
+}
+
+function closeStickerPicker() {
+  const picker = document.getElementById('stickerPicker');
+  if (picker) {
+    picker.style.display = 'none';
+  }
+}
+
+function switchStickerCategory(category) {
+  // Update active button
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.category === category) {
+      btn.classList.add('active');
+    }
+  });
+  
+  populateEnhancedStickers(category);
+}
+
+function sendChatSticker(sticker) {
+  const message = {
+    id: 'msg_' + Date.now(),
+    userId: currentUser?.id || 'current-user',
+    userName: currentUser?.name || 'You',
+    userAvatar: currentUser?.avatar || '👤',
+    text: sticker,
+    timestamp: Date.now(),
+    reactions: {},
+    userReactions: [],
+    media: []
+  };
+  
+  if (typeof socket !== 'undefined' && socket) {
+    socket.emit('send-message', message);
+  }
+  
+  addChatMessageToUI(message);
+  closeStickerPicker();
+}
+
+// ========================================
+// ONLINE MEMBERS
+// ========================================
+
+function updateChatOnlineMembers(members) {
+  if (members) {
+    chatOnlineMembers = members;
+  }
+  
+  updateChatOnlineCount();
+  updateChatCarousel();
+  updateChatMembersList();
+}
+
+function updateChatOnlineCount() {
+  const countEl = document.getElementById('chatOnlineCount');
+  if (countEl) {
+    countEl.textContent = chatOnlineMembers.length;
+  }
+}
+
+function updateChatCarousel() {
+  const track = document.getElementById('carouselTrack');
+  if (!track) return;
+  
+  track.innerHTML = '';
+  chatOnlineMembers.slice(0, 10).forEach(member => {
+    const avatar = document.createElement('div');
+    avatar.className = 'member-avatar-small';
+    avatar.textContent = member.avatar || '👤';
+    avatar.title = member.name;
+    avatar.onclick = () => showChatMemberProfile(member);
+    track.appendChild(avatar);
+  });
+}
+
+function updateChatMembersList() {
+  const list = document.getElementById('membersList');
+  if (!list) return;
+  
+  list.innerHTML = '';
+  chatOnlineMembers.forEach(member => {
+    const item = document.createElement('div');
+    item.className = 'member-item';
+    item.innerHTML = `
+      <div class="member-item-avatar">
+        ${member.avatar || '👤'}
+        <div class="member-online-indicator"></div>
+      </div>
+      <div class="member-item-info">
+        <div class="member-item-name">${member.name}</div>
+        <div class="member-item-status">${member.status || 'Active now'}</div>
+      </div>
+    `;
+    item.onclick = () => showChatMemberProfile(member);
+    list.appendChild(item);
+  });
+}
+
+function toggleOnlineMembers() {
+  const modal = document.getElementById('onlineMembersModal');
+  if (modal) {
+    modal.style.display = 'block';
+  }
+}
+
+function closeOnlineMembersModal() {
+  const modal = document.getElementById('onlineMembersModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function filterMembers(searchText) {
+  const filtered = chatOnlineMembers.filter(member => 
+    member.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+  
+  const list = document.getElementById('membersList');
+  if (!list) return;
+  
+  list.innerHTML = '';
+  filtered.forEach(member => {
+    const item = document.createElement('div');
+    item.className = 'member-item';
+    item.innerHTML = `
+      <div class="member-item-avatar">
+        ${member.avatar || '👤'}
+        <div class="member-online-indicator"></div>
+      </div>
+      <div class="member-item-info">
+        <div class="member-item-name">${member.name}</div>
+        <div class="member-item-status">${member.status || 'Active now'}</div>
+      </div>
+    `;
+    item.onclick = () => showChatMemberProfile(member);
+    list.appendChild(item);
+  });
+}
+
+function showChatMemberProfile(member) {
+  alert(`Profile: ${member.name}\n${member.status}`);
+}
+
+// ========================================
+// IMAGE VIEWER
+// ========================================
+
+let chatViewerImages = [];
+let chatViewerIndex = 0;
+
+function openChatImageViewer(imageUrl, index) {
+  const modal = document.getElementById('imageViewerModal');
+  const img = document.getElementById('viewerImage');
+  const info = document.getElementById('viewerImageNumber');
+  
+  if (modal && img) {
+    chatViewerImages = [imageUrl];
+    chatViewerIndex = index;
+    
+    img.src = imageUrl;
+    if (info) {
+      info.textContent = `${chatViewerIndex + 1} / ${chatViewerImages.length}`;
+    }
+    
+    modal.style.display = 'block';
+  }
+}
+
+function closeImageViewer() {
+  const modal = document.getElementById('imageViewerModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function viewPreviousImage() {
+  if (chatViewerIndex > 0) {
+    chatViewerIndex--;
+    const img = document.getElementById('viewerImage');
+    const info = document.getElementById('viewerImageNumber');
+    if (img) img.src = chatViewerImages[chatViewerIndex];
+    if (info) info.textContent = `${chatViewerIndex + 1} / ${chatViewerImages.length}`;
+  }
+}
+
+function viewNextImage() {
+  if (chatViewerIndex < chatViewerImages.length - 1) {
+    chatViewerIndex++;
+    const img = document.getElementById('viewerImage');
+    const info = document.getElementById('viewerImageNumber');
+    if (img) img.src = chatViewerImages[chatViewerIndex];
+    if (info) info.textContent = `${chatViewerIndex + 1} / ${chatViewerImages.length}`;
+  }
+}
+
+// ========================================
+// CONTEXT MENU
+// ========================================
+
+function showChatContextMenu(event, message) {
+  const menu = document.getElementById('messageContextMenu');
+  if (!menu) return;
+  
+  menu.dataset.messageId = message.id;
+  menu.style.left = event.clientX + 'px';
+  menu.style.top = event.clientY + 'px';
+  menu.style.display = 'block';
+  
+  // Hide menu when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', hideChatContextMenu);
+  }, 100);
+}
+
+function hideChatContextMenu() {
+  const menu = document.getElementById('messageContextMenu');
+  if (menu) {
+    menu.style.display = 'none';
+  }
+  document.removeEventListener('click', hideChatContextMenu);
+}
+
+function reactToMessage() {
+  const menu = document.getElementById('messageContextMenu');
+  if (!menu) return;
+  
+  const messageId = menu.dataset.messageId;
+  showChatReactionPicker(messageId, event);
+  hideChatContextMenu();
+}
+
+function copyMessage() {
+  const menu = document.getElementById('messageContextMenu');
+  if (!menu) return;
+  
+  const messageId = menu.dataset.messageId;
+  const message = chatMessages.find(m => m.id === messageId);
+  
+  if (message && message.text) {
+    navigator.clipboard.writeText(message.text);
+    showChatToast('Message copied');
+  }
+  
+  hideChatContextMenu();
+}
+
+function forwardMessage() {
+  alert('Forward feature - would open forward modal');
+  hideChatContextMenu();
+}
+
+function deleteMessage() {
+  const menu = document.getElementById('messageContextMenu');
+  if (!menu) return;
+  
+  const messageId = menu.dataset.messageId;
+  const message = chatMessages.find(m => m.id === messageId);
+  
+  if (message && message.userId === (currentUser?.id || 'current-user')) {
+    if (confirm('Delete this message?')) {
+      // Emit delete event
+      if (typeof socket !== 'undefined' && socket) {
+        socket.emit('delete-message', { messageId });
+      }
+      
+      // Remove from UI
+      const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+      if (messageEl) {
+        messageEl.remove();
+      }
+      
+      // Remove from array
+      chatMessages = chatMessages.filter(m => m.id !== messageId);
+    }
+  }
+  
+  hideChatContextMenu();
+}
+
+// ========================================
+// SEARCH & INFO
+// ========================================
+
+function searchChatMessages() {
+  const searchText = prompt('Search messages:');
+  if (!searchText) return;
+  
+  const results = chatMessages.filter(m => 
+    m.text.toLowerCase().includes(searchText.toLowerCase())
+  );
+  
+  if (results.length > 0) {
+    alert(`Found ${results.length} messages`);
+  } else {
+    alert('No messages found');
+  }
+}
+
+function showCommunityInfo() {
+  alert(`Community: ${currentUser?.college || 'Your College'}\nMembers: ${chatOnlineMembers.length} online`);
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+function formatChatTime(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 60000) {
+    return 'Just now';
+  } else if (diff < 3600000) {
+    const mins = Math.floor(diff / 60000);
+    return `${mins}m ago`;
+  } else if (diff < 86400000) {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+}
+
+function showChatToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(79, 116, 163, 0.95);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 25px;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+// ========================================
+// SAMPLE DATA
+// ========================================
+
+function loadSampleChatMessages() {
+  chatMessages = [
+    {
+      id: 'msg1',
+      userId: 'user_123',
+      userName: 'Alice Johnson',
+      userAvatar: '👩',
+      text: 'Hey everyone! How\'s everyone doing today? 🎉',
+      timestamp: Date.now() - 3600000,
+      reactions: { '❤️': 3, '👍': 2 },
+      userReactions: [],
+      media: []
+    },
+    {
+      id: 'msg2',
+      userId: 'user_456',
+      userName: 'Bob Smith',
+      userAvatar: '👨',
+      text: 'Great! Just finished my assignment 📚',
+      timestamp: Date.now() - 3000000,
+      reactions: { '🎉': 2 },
+      userReactions: [],
+      media: []
+    },
+    {
+      id: 'msg3',
+      userId: 'user_789',
+      userName: 'Carol White',
+      userAvatar: '👧',
+      text: 'Anyone up for a study group this evening?',
+      timestamp: Date.now() - 1800000,
+      reactions: { '👍': 5 },
+      userReactions: [],
+      media: []
+    }
+  ];
+  
+  renderEnhancedChatMessages();
+}
+
+function setupSampleOnlineMembers() {
+  chatOnlineMembers = [
+    { id: 'user_123', name: 'Alice Johnson', avatar: '👩', status: 'Active now' },
+    { id: 'user_456', name: 'Bob Smith', avatar: '👨', status: 'Active now' },
+    { id: 'user_789', name: 'Carol White', avatar: '👧', status: 'Active now' },
+    { id: 'user_101', name: 'David Brown', avatar: '🧑', status: 'Active 5m ago' },
+    { id: 'user_102', name: 'Emma Davis', avatar: '👩', status: 'Active now' }
+  ];
+  
+  updateChatOnlineMembers();
+}
+
+// ========================================
+// AUTO-INITIALIZE
+// ========================================
+
+// Check if we're on the communities page and initialize
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const communitiesSection = document.getElementById('communities');
+      if (communitiesSection) {
+        initializeEnhancedChat();
+      }
+    }, 1000);
+  });
+} else {
+  setTimeout(() => {
+    const communitiesSection = document.getElementById('communities');
+    if (communitiesSection) {
+      initializeEnhancedChat();
+    }
+  }, 1000);
+}
+
+console.log('✅ Enhanced Community Chat Module Loaded!');
+console.log('🎉 Features: Unseen tracking, Reactions, Emoji/Stickers, Media sharing, Online members');
