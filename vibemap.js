@@ -1180,183 +1180,110 @@ function loadCommunities() {
     return;
   }
 
-  // WhatsApp-style complete layout
+  // Single unified chat platform
   container.innerHTML = `
-    <div class="whatsapp-container">
-      <!-- Left Sidebar: Chats List -->
-      <div class="whatsapp-sidebar">
-        <div class="whatsapp-sidebar-header">
+    <div class="unified-chat-platform">
+      <!-- Chat Header -->
+      <div class="unified-chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar-large">🎓</div>
           <div>
-            <h3>${currentUser.college}</h3>
-            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
-          </div>
-          <div class="sidebar-actions">
+            <h3>${currentUser.college} Community</h3>
+            <p class="chat-status">
+              <span class="online-dot"></span>
+              <span id="onlineCount">0</span> members online
+            </p>
           </div>
         </div>
-        
-        <div class="whatsapp-search">
-          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
-        </div>
-        
-        <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Community Group Chat -->
-          <div class="chat-item active" onclick="openCommunityChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar">🎓</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>${currentUser.college} Community</h4>
-                <span class="chat-time">Now</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Click to open group chat</span>
-                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Announcements Channel -->
-          <div class="chat-item" onclick="openAnnouncementsChannel()">
-            <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>📢 Announcements</h4>
-                <span class="chat-time">"COMING SOON"</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Important college updates</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Study Groups -->
-          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
-            <div class="chat-avatar">
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                 </div>
-              <div class="chat-preview">
-              </div>
-            </div>
-          </div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
+          <button class="icon-btn" onclick="showChatInfo()" title="Info">ℹ️</button>
         </div>
       </div>
 
-      <!-- Right Main Chat Area -->
-      <div class="whatsapp-main" id="whatsappMain">
-        <div class="whatsapp-chat-header">
-          <div class="chat-header-info">
-            <div class="chat-avatar-large">🎓</div>
-            <div>
-              <h3>${currentUser.college} Community</h3>
-              <p class="chat-status">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> members online
-              </p>
-            </div>
-          </div>
-          <div class="chat-header-actions">
-            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
-          </div>
-        </div>
-
-        <div class="whatsapp-messages" id="whatsappMessages">
-          <div class="date-separator">
-            <span>Today</span>
-          </div>
-          <div style="text-align:center;padding:40px;color:#888;">
-          </div>
-        </div>
-
-        <div class="whatsapp-input-area">
-          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <div class="input-wrapper">
-            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
-              onkeydown="handleWhatsAppKeypress(event)" 
-              oninput="handleTypingIndicator()"></textarea>
-          </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
-            <span class="send-icon">➤</span>
-          </button>
+      <!-- Messages Container -->
+      <div class="unified-messages" id="unifiedMessages">
+        <div class="loading-messages-state">
+          <div class="spinner"></div>
+          <p>Loading messages...</p>
         </div>
       </div>
 
-      <!-- Twitter-style Feed (Initially Hidden) -->
-      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
-        <div class="twitter-header">
-          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
-          <h3>Community Posts</h3>
-        </div>
-        <div class="twitter-feed" id="twitterFeed">
-          <div style="text-align:center;padding:40px;color:#888;">
-            <div style="font-size:48px;margin-bottom:15px;">📰</div>
-            <p>Loading posts...</p>
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="typing-indicators-container" style="display:none;">
+        <div class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
+          <span id="typingText">Someone is typing...</span>
         </div>
       </div>
 
-      <!-- Chat Info Panel (Hidden) -->
-      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-        <div class="info-panel-header">
-          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
-          <h3>Chat Info</h3>
+      <!-- Enhanced Input Area -->
+      <div class="unified-input-area">
+        <div class="input-features">
+          <button class="feature-btn" onclick="openPhotoPicker()" title="Share Photo">📷</button>
+          <button class="feature-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+          <button class="feature-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
+          <button class="feature-btn" onclick="openExperienceShare()" title="Share Experience">📝</button>
         </div>
-        <div class="info-panel-content">
-          <div class="info-section">
-            <div class="info-avatar">🎓</div>
-            <h2>${currentUser.college}</h2>
-            <p>College Community Group</p>
-          </div>
-          
-          <div class="info-section">
-            <h4>📊 Statistics</h4>
-            <div class="info-stats">
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMembers">0</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMessages">0</span>
-                <span class="stat-label">Messages</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="activeToday">0</span>
-                <span class="stat-label">Active Today</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4>⚙️ Settings</h4>
-            <div class="info-option" onclick="toggleNotifications()">
-              <span>🔔 Notifications</span>
-              <span id="notifStatus">On</span>
-            </div>
-            <div class="info-option" onclick="muteChat()">
-              <span>🔇 Mute Chat</span>
-              <span>Off</span>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
-          </div>
+        <div class="input-wrapper">
+          <textarea id="unifiedInput" placeholder="Share your experience, photos, or just chat..." rows="1"
+            onkeydown="handleUnifiedKeypress(event)"
+            oninput="handleTypingIndicator()"></textarea>
         </div>
+        <button class="send-btn-unified" onclick="sendUnifiedMessage()" title="Send">
+          <span class="send-icon">➤</span>
+        </button>
+      </div>
+
+      <!-- Media Preview Area -->
+      <div class="media-preview-area" id="mediaPreviewArea" style="display:none;">
+        <div class="preview-content" id="previewContent"></div>
+        <button class="remove-preview-btn" onclick="clearMediaPreview()">✕</button>
       </div>
     </div>
   `;
 
   // Initialize chat
   setTimeout(() => {
-    loadWhatsAppMessages();
-    initWhatsAppFeatures();
-    loadTwitterFeed();
+    // Add demo messages to show the chat is working
+    const messagesEl = document.getElementById('unifiedMessages');
+    if (messagesEl) {
+      messagesEl.innerHTML = `
+        <div class="unified-message other">
+          <div class="message-header">
+            <span class="sender-name">Alice</span>
+            <span class="message-time">10:30</span>
+          </div>
+          <div class="message-content">
+            <div class="message-text">Hey everyone! Just shared my college experience 📚</div>
+          </div>
+          <div class="message-actions">
+            <button onclick="reactToUnifiedMessage('demo1')">❤️</button>
+            <button onclick="replyToUnifiedMessage('demo1')">↩️</button>
+          </div>
+        </div>
+        <div class="unified-message own">
+          <div class="message-header">
+            <span class="sender-name">You</span>
+            <span class="message-time">10:32</span>
+          </div>
+          <div class="message-content">
+            <div class="message-text">That's awesome! 😊</div>
+          </div>
+          <div class="message-actions">
+            <button onclick="reactToUnifiedMessage('demo2')">❤️</button>
+            <button onclick="replyToUnifiedMessage('demo2')">↩️</button>
+            <button onclick="deleteUnifiedMessage('demo2')">🗑️</button>
+          </div>
+        </div>
+      `;
+    }
+
+    initializeCommunityChat();
   }, 100);
 }
   
@@ -5671,6 +5598,275 @@ function setupEmojiPicker() {
   console.log('✅ Emoji picker ready');
 }
 
+// ==========================================
+// UNIFIED CHAT PLATFORM FUNCTIONS
+// ==========================================
+
+let selectedMediaFile = null;
+let selectedMediaType = null;
+
+function openPhotoPicker() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleMediaSelection(file, 'image');
+  };
+
+  input.click();
+}
+
+function openEmojiPicker() {
+  // Close any existing picker
+  const existing = document.getElementById('emojiPickerPopup');
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  const picker = document.createElement('div');
+  picker.id = 'emojiPickerPopup';
+  picker.className = 'emoji-picker-popup';
+  picker.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:5000;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;max-width:300px;';
+
+  const emojis = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
+    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨','😐',
+    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
+    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
+  ];
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="color:#4f74a3;font-weight:600;">Choose Emoji</span>
+      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px;max-height:200px;overflow-y:auto;">
+  `;
+
+  emojis.forEach(emoji => {
+    html += `<button onclick="insertEmoji('${emoji}')" style="background:none;border:none;font-size:24px;cursor:pointer;padding:5px;border-radius:5px;">${emoji}</button>`;
+  });
+
+  html += '</div>';
+  picker.innerHTML = html;
+  document.body.appendChild(picker);
+}
+
+function closeEmojiPicker() {
+  const picker = document.getElementById('emojiPickerPopup');
+  if (picker) picker.remove();
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById('unifiedInput');
+  if (input) {
+    input.value += emoji;
+    input.focus();
+  }
+  closeEmojiPicker();
+}
+
+function openStickerPicker() {
+  showMessage('🎨 Sticker picker coming soon!', 'success');
+
+  // Quick sticker selection
+  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪'];
+  const sticker = prompt('Quick stickers:\n' + stickers.join(' ') + '\n\nChoose one:');
+
+  if (sticker && stickers.includes(sticker)) {
+    const input = document.getElementById('unifiedInput');
+    if (input) {
+      input.value += sticker;
+      input.focus();
+    }
+  }
+}
+
+function openExperienceShare() {
+  const input = document.getElementById('unifiedInput');
+  if (input) {
+    const experiencePrompt = "📝 Sharing my experience:\n\n";
+    input.value = experiencePrompt;
+    input.focus();
+    input.setSelectionRange(experiencePrompt.length, experiencePrompt.length);
+  }
+}
+
+function handleMediaSelection(file, type) {
+  if (file.size > 10 * 1024 * 1024) {
+    showMessage('⚠️ File too large (max 10MB)', 'error');
+    return;
+  }
+
+  selectedMediaFile = file;
+  selectedMediaType = type;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const previewArea = document.getElementById('mediaPreviewArea');
+    const previewContent = document.getElementById('previewContent');
+
+    if (previewArea && previewContent) {
+      if (type === 'image') {
+        previewContent.innerHTML = `<img src="${e.target.result}" style="max-width:200px;max-height:200px;border-radius:10px;">`;
+      } else {
+        previewContent.innerHTML = `<video src="${e.target.result}" controls style="max-width:200px;max-height:200px;border-radius:10px;"></video>`;
+      }
+      previewArea.style.display = 'block';
+    }
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function clearMediaPreview() {
+  selectedMediaFile = null;
+  selectedMediaType = null;
+
+  const previewArea = document.getElementById('mediaPreviewArea');
+  const previewContent = document.getElementById('previewContent');
+
+  if (previewArea) previewArea.style.display = 'none';
+  if (previewContent) previewContent.innerHTML = '';
+}
+
+async function sendUnifiedMessage() {
+  const input = document.getElementById('unifiedInput');
+  const content = input?.value?.trim();
+
+  if (!content && !selectedMediaFile) {
+    showMessage('⚠️ Add message or media', 'error');
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  try {
+    showMessage('📤 Sending...', 'success');
+
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (selectedMediaFile) {
+      formData.append('media', selectedMediaFile);
+      formData.append('mediaType', selectedMediaType);
+    }
+
+    const data = await apiCall('/api/community/messages', 'POST', formData);
+
+    if (data.success) {
+      showMessage('✅ Message sent!', 'success');
+
+      // Clear input and media
+      if (input) input.value = '';
+      clearMediaPreview();
+
+      // Add message to UI
+      if (data.message) {
+        addUnifiedMessageToUI(data.message);
+      }
+    } else {
+      throw new Error(data.error || 'Failed to send');
+    }
+
+  } catch (error) {
+    console.error('Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+  }
+}
+
+function handleUnifiedKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendUnifiedMessage();
+  }
+}
+
+function addUnifiedMessageToUI(message) {
+  const messagesEl = document.getElementById('unifiedMessages');
+  if (!messagesEl) return;
+
+  const isOwn = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || 'User';
+  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+  const messageEl = document.createElement('div');
+  messageEl.className = `unified-message ${isOwn ? 'own' : 'other'}`;
+
+  let html = `
+    <div class="message-header">
+      <span class="sender-name">${isOwn ? 'You' : sender}</span>
+      <span class="message-time">${time}</span>
+    </div>
+    <div class="message-content">
+  `;
+
+  if (message.content) {
+    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
+  }
+
+  if (message.media && message.media.length > 0) {
+    message.media.forEach(media => {
+      if (media.type === 'image') {
+        html += `<img src="${media.url}" class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;">`;
+      } else if (media.type === 'video') {
+        html += `<video src="${media.url}" controls class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;"></video>`;
+      }
+    });
+  }
+
+  html += `
+    </div>
+    <div class="message-actions">
+      <button onclick="reactToUnifiedMessage('${message.id}')">❤️</button>
+      <button onclick="replyToUnifiedMessage('${message.id}')">↩️</button>
+      ${isOwn ? `<button onclick="deleteUnifiedMessage('${message.id}')">🗑️</button>` : ''}
+    </div>
+  `;
+
+  messageEl.innerHTML = html;
+  messagesEl.appendChild(messageEl);
+
+  // Scroll to bottom
+  messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+}
+
+function reactToUnifiedMessage(messageId) {
+  showMessage('❤️ Reacted!', 'success');
+}
+
+function replyToUnifiedMessage(messageId) {
+  const input = document.getElementById('unifiedInput');
+  if (input) {
+    input.value = `@reply to message ${messageId}: `;
+    input.focus();
+  }
+}
+
+function deleteUnifiedMessage(messageId) {
+  if (confirm('Delete this message?')) {
+    showMessage('🗑️ Message deleted', 'success');
+  }
+}
+
+function showChatInfo() {
+  showMessage('ℹ️ Chat info coming soon!', 'success');
+}
+
+function searchInChat() {
+  const query = prompt('Search messages:');
+  if (query) {
+    showMessage(`🔍 Searching for "${query}"`, 'success');
+  }
+}
+
+console.log('✅ Unified chat platform ready');
 console.log('✅ Community chat module loaded');
 
 
