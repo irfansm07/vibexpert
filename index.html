@@ -1590,8 +1590,9 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
+
 <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
 // Global variables to store vanta instances
 let vantaGlobeEffect = null;
@@ -1599,73 +1600,62 @@ let vantaNetEffect = null;
 
 // Initialize Globe Background for Landing Page
 function initGlobeBackground() {
-  if (document.getElementById('vanta-globe-bg')) {
+if (document.getElementById('vanta-globe-bg')) {
     vantaGlobeEffect = VANTA.GLOBE({
-      el: "#vanta-globe-bg",
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: false,
-      minHeight: 200.00,
-      minWidth: 200.00,
-      scale: 1.00,
-      scaleMobile: 1.00,
-      color: 0x4f74a3,
-      color2: 0x8da4d3,
-      size: 1.20,
-    });
+    el: "#vanta-globe-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.00,
+    minWidth: 200.00,
+    scale: 1.00,
+    scaleMobile: 1.00,
+      color: 0x4f74a3,         // Your primary blue
+      color2: 0x8da4d3,        // Your light blue
+    size: 1.20,
+         });
     console.log('Globe background initialized');
-  }
+}
 }
 
 // Initialize NET Background for Main Page
 function initNetBackground() {
-  if (document.getElementById('vanta-net-bg')) {
+if (document.getElementById('vanta-net-bg')) {
     vantaNetEffect = VANTA.NET({
-      el: "#vanta-net-bg",
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: false,
-      minHeight: 200.00,
-      minWidth: 200.00,
-      scale: 1.00,
-      scaleMobile: 1.00,
-      color: 0x4f74a3,
-      points: 25.00,
-      maxDistance: 20.00,
-      spacing: 25.00
+    el: "#vanta-net-bg",
+    mouseControls: true,
+    touchControls: true,
+    gyroControls: false,
+    minHeight: 200.00,
+    minWidth: 200.00,
+    scale: 1.00,
+    scaleMobile: 1.00,
+      color: 0x4f74a3,         // Match your theme
+            points: 25.00,            // Network points
+      maxDistance: 20.00,       // Connection distance
+      spacing: 25.00            // Space between points
     });
-    console.log('NET background initialized');
-  }
+    console.log('NET background initialized'); }
 }
 
-// Destroy backgrounds
+// Destroy Globe Background
 function destroyGlobeBackground() {
-  if (vantaGlobeEffect) {
+if (vantaGlobeEffect) {
     vantaGlobeEffect.destroy();
     vantaGlobeEffect = null;
-  }
+    console.log('Globe background destroyed');
+}
 }
 
+// Destroy NET Background
 function destroyNetBackground() {
-  if (vantaNetEffect) {
+if (vantaNetEffect) {
     vantaNetEffect.destroy();
     vantaNetEffect = null;
-  }
+    console.log('NET background destroyed');
+}
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if on landing page
-  const aboutUsPage = document.getElementById('aboutUsPage');
-  const mainPage = document.getElementById('mainPage');
-  
-  if (aboutUsPage && aboutUsPage.style.display !== 'none') {
-    initGlobeBackground();
-  } else if (mainPage && mainPage.style.display !== 'none') {
-    initNetBackground();
-  }
-});
-</script>
-
-</body>
-</html>
+  // Check which page is visible and init appropria
