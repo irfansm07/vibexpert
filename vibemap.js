@@ -5,6 +5,332 @@
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
+// Emoji Picker Functions
+let currentEmojiCategory = 'emotions';
+let emojiPickerVisible = false;
+
+function toggleEmojiPicker() {
+  const emojiPicker = document.getElementById('emojiPicker');
+  emojiPickerVisible = !emojiPickerVisible;
+  
+  if (emojiPickerVisible) {
+    emojiPicker.style.display = 'block';
+    loadEmojiCategory(currentEmojiCategory);
+  } else {
+    emojiPicker.style.display = 'none';
+  }
+}
+
+function showEmojiCategory(category) {
+  currentEmojiCategory = category;
+  
+  // Update active category button
+  const categoryButtons = document.querySelectorAll('.emoji-category');
+  categoryButtons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  loadEmojiCategory(category);
+}
+
+function loadEmojiCategory(category) {
+  const emojiGrid = document.getElementById('emojiGrid');
+  if (!emojiGrid) return;
+  
+  const emojis = stickerLibrary[category] || [];
+  
+  emojiGrid.innerHTML = '';
+  emojis.forEach(emoji => {
+    const emojiButton = document.createElement('button');
+    emojiButton.className = 'emoji-item';
+    if (emoji.type === 'gif') {
+      emojiButton.classList.add('gif');
+    } else if (emoji.type === 'sticker') {
+      emojiButton.classList.add('sticker');
+    }
+    emojiButton.textContent = emoji.emoji;
+    emojiButton.title = emoji.name;
+    emojiButton.onclick = () => insertEmoji(emoji.emoji, emoji.type);
+    emojiGrid.appendChild(emojiButton);
+  });
+}
+
+function insertEmoji(emoji, type = 'emoji') {
+  const chatInput = document.getElementById('chatInput');
+  if (!chatInput) return;
+  
+  const currentValue = chatInput.value;
+  const cursorPosition = chatInput.selectionStart;
+  let insertText = emoji;
+  
+  // Add special formatting for GIFs and stickers
+  if (type === 'gif') {
+    insertText = `[GIF:${emoji}]`;
+  } else if (type === 'sticker') {
+    insertText = `[STICKER:${emoji}]`;
+  }
+  
+  const newValue = currentValue.slice(0, cursorPosition) + insertText + currentValue.slice(cursorPosition);
+  
+  chatInput.value = newValue;
+  chatInput.focus();
+  
+  // Set cursor position after the inserted emoji
+  const newCursorPosition = cursorPosition + insertText.length;
+  chatInput.setSelectionRange(newCursorPosition, newCursorPosition);
+  
+  // Hide emoji picker after selection
+  toggleEmojiPicker();
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', function(event) {
+  const emojiPicker = document.getElementById('emojiPicker');
+  const emojiBtn = document.querySelector('.emoji-btn');
+  
+  if (emojiPickerVisible && 
+      !emojiPicker.contains(event.target) && 
+      !emojiBtn.contains(event.target)) {
+    emojiPicker.style.display = 'none';
+    emojiPickerVisible = false;
+  }
+});
+
+// Voice Recording Functions
+let voiceRecorder = null;
+let voiceRecordingStartTime = null;
+let voiceRecordingTimer = null;
+let voiceRecordingStream = null;
+let voiceAudioChunks = [];
+let isVoiceRecording = false;
+
+function toggleVoiceRecording() {
+  if (isVoiceRecording) {
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+}
+
+async function startVoiceRecording() {
+  try {
+    // Request microphone access
+    voiceRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    voiceRecorder = new MediaRecorder(voiceRecordingStream);
+    voiceAudioChunks = [];
+    
+    voiceRecorder.ondataavailable = (event) => {
+      voiceAudioChunks.push(event.data);
+    };
+    
+    voiceRecorder.onstop = () => {
+      const audioBlob = new Blob(voiceAudioChunks, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create voice message element
+      const voiceMessage = {
+        type: 'voice',
+        url: audioUrl,
+        duration: Math.floor((Date.now() - voiceRecordingStartTime) / 1000),
+        timestamp: new Date().toISOString()
+      };
+      
+      // Send voice message
+      sendVoiceMessage(voiceMessage);
+    };
+    
+    // Start recording
+    voiceRecorder.start();
+    voiceRecordingStartTime = Date.now();
+    isVoiceRecording = true;
+    
+    // Update UI
+    const voiceBtn = document.querySelector('.voice-btn');
+    const voiceRecorderEl = document.getElementById('voiceRecorder');
+    const voiceTimer = document.querySelector('.voice-timer');
+    
+    voiceBtn.classList.add('recording');
+    voiceRecorderEl.style.display = 'block';
+    
+    // Start timer
+    voiceRecordingTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - voiceRecordingStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      voiceTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Voice recording error:', error);
+    showMessage('🎤 Microphone access denied', 'error');
+  }
+}
+
+function stopVoiceRecording() {
+  if (voiceRecorder && voiceRecorder.state !== 'inactive') {
+    voiceRecorder.stop();
+  }
+  
+  if (voiceRecordingStream) {
+    voiceRecordingStream.getTracks().forEach(track => track.stop());
+  }
+  
+  if (voiceRecordingTimer) {
+    clearInterval(voiceRecordingTimer);
+  }
+  
+  // Reset UI
+  const voiceBtn = document.querySelector('.voice-btn');
+  const voiceRecorderEl = document.getElementById('voiceRecorder');
+  const voiceTimer = document.querySelector('.voice-timer');
+  
+  voiceBtn.classList.remove('recording');
+  voiceRecorderEl.style.display = 'none';
+  voiceTimer.textContent = '00:00';
+  
+  isVoiceRecording = false;
+}
+
+function cancelVoiceRecording() {
+  stopVoiceRecording();
+  voiceAudioChunks = [];
+}
+
+function sendVoiceMessage(voiceMessage) {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+  
+  const messageEl = document.createElement('div');
+  messageEl.className = 'chat-message right';
+  
+  const durationMinutes = Math.floor(voiceMessage.duration / 60);
+  const durationSeconds = voiceMessage.duration % 60;
+  const durationText = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+  
+  messageEl.innerHTML = `
+    <div class="text">
+      <div class="voice-message-player">
+        <button class="voice-play-btn" onclick="playVoiceMessage('${voiceMessage.url}', this)">▶️</button>
+        <div class="voice-info">
+          <div class="voice-duration">🎤 Voice message • ${durationText}</div>
+          <div class="voice-waveform">
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+            <div class="waveform-bar"></div>
+          </div>
+        </div>
+      </div>
+      <audio src="${voiceMessage.url}" style="display:none;"></audio>
+    </div>
+    <div class="message-time">${formatTime(new Date(voiceMessage.timestamp))}</div>
+  `;
+  
+  chatMessages.appendChild(messageEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Simulate sending to server
+  console.log('Voice message sent:', voiceMessage);
+}
+
+function playVoiceMessage(audioUrl, playBtn) {
+  const audioEl = playBtn.parentElement.nextElementSibling;
+  
+  if (audioEl.paused) {
+    // Stop any other playing audio
+    document.querySelectorAll('audio').forEach(audio => {
+      if (!audio.paused) {
+        audio.pause();
+        const otherBtn = audio.previousElementSibling.querySelector('.voice-play-btn');
+        if (otherBtn) otherBtn.textContent = '▶️';
+      }
+    });
+    
+    audioEl.play();
+    playBtn.textContent = '⏸️';
+    
+    audioEl.onended = () => {
+      playBtn.textContent = '▶️';
+    };
+  } else {
+    audioEl.pause();
+    playBtn.textContent = '▶️';
+  }
+}
+
+// Avatar Animation Functions
+function handleAvatarMove(event, avatarId) {
+  const avatar = document.getElementById(avatarId);
+  if (!avatar) return;
+  
+  const input = event.target;
+  const rect = input.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  // Calculate position relative to input
+  const maxX = rect.width - 40;
+  const maxY = rect.height - 40;
+  
+  // Constrain movement within input bounds
+  const constrainedX = Math.max(0, Math.min(x - 20, maxX));
+  const constrainedY = Math.max(0, Math.min(y - 20, maxY));
+  
+  // Apply smooth movement
+  avatar.style.transform = `translate(${constrainedX - maxX}px, ${constrainedY - 20}px) scale(1.1)`;
+  avatar.style.transition = 'transform 0.1s ease-out';
+}
+
+function resetAvatar(avatarId) {
+  const avatar = document.getElementById(avatarId);
+  if (!avatar) return;
+  
+  avatar.style.transform = 'translateY(-50%) scale(1)';
+  avatar.style.transition = 'transform 0.3s ease-out';
+}
+
+function handleInputChange(inputId) {
+  const input = document.getElementById(inputId);
+  const avatarId = inputId + 'Avatar';
+  const avatar = document.getElementById(avatarId);
+  
+  if (!avatar) return;
+  
+  const value = input.value.trim();
+  const minLength = input.type === 'email' ? 5 : 6;
+  
+  // Remove existing states
+  avatar.classList.remove('happy', 'excited');
+  
+  if (value.length >= minLength) {
+    // Check if email is valid or password is strong enough
+    if (input.type === 'email' && value.includes('@') && value.includes('.')) {
+      avatar.classList.add('excited');
+      avatar.textContent = '🎉';
+    } else if (input.type === 'password' && value.length >= 8) {
+      avatar.classList.add('excited');
+      avatar.textContent = '🔥';
+    } else if (value.length >= minLength) {
+      avatar.classList.add('happy');
+      if (input.type === 'email') {
+        avatar.textContent = '😊';
+      } else if (input.type === 'password') {
+        avatar.textContent = '😄';
+      }
+    }
+  } else {
+    // Reset to original emoji
+    if (inputId.includes('Email')) {
+      avatar.textContent = inputId.includes('login') ? '👁️' : '📧';
+    } else if (inputId.includes('Password')) {
+      avatar.textContent = inputId.includes('login') ? '🔒' : '🔐';
+    } else if (inputId.includes('Confirm')) {
+      avatar.textContent = '✅';
+    }
+  }
+}
+
 // Global Variables
 let currentUser = null;
 let currentType = null;
@@ -126,42 +452,54 @@ other: [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 VibeXpert initializing...');
+  console.log('🚀 VibeXpert initializing...');
 
-const token = getToken();
-const saved = localStorage.getItem('user');
+  const token = getToken();
+  const saved = localStorage.getItem('user');
 
-if (token && saved) {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (mainPage) mainPage.style.display = 'block';
+  if (token && saved) {
+    try {
+      currentUser = JSON.parse(saved);
+      
+      // Only show main page if user is properly authenticated
+      if (currentUser && currentUser.username) {
+        document.body.classList.add('logged-in');
+        const aboutPage = document.getElementById('aboutUsPage');
+        const mainPage = document.getElementById('mainPage');
+        const authPopup = document.getElementById('authPopup');
+        
+        // Hide login/about page and show main page
+        if (aboutPage) aboutPage.style.display = 'none';
+        if (mainPage) mainPage.style.display = 'block';
+        if (authPopup) authPopup.style.display = 'none';
+        
+        const userName = document.getElementById('userName');
+        if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+        
+        if (currentUser.college) {
+          updateLiveNotif(`Connected to ${currentUser.college}`);
+          initializeSocket();
+        }
+      } else {
+        // Invalid user data, show login
+        showAboutUsPage();
+      }
+    } catch(e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    showAboutUsPage();
+  }
 
-try {
-currentUser = JSON.parse(saved);
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-if (currentUser.college) {
-updateLiveNotif(`Connected to ${currentUser.college}`);
-initializeSocket();
-}
-} catch(e) {
-console.error('Parse error:', e);
-localStorage.clear();
-showAboutUsPage();
-}
-} else {
-showAboutUsPage();
-}
-
-setupEventListeners();
-initializeMusicPlayer();
-updateLiveStats();
-setInterval(updateLiveStats, 5000);
-initializeSearchBar();
-loadTrending();
-console.log('✅ Initialized');
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+  initializeSearchBar();
+  loadTrending();
+  console.log('✅ Initialized');
 });
 
 // ========================================
@@ -1180,561 +1518,184 @@ function loadCommunities() {
     return;
   }
 
-  // Single unified chat platform
+  // WhatsApp-style complete layout
   container.innerHTML = `
-    <div class="unified-chat-platform">
-      <!-- Chat Header -->
-      <div class="unified-chat-header">
-        <div class="chat-header-info">
-          <div class="chat-avatar-large">🎓</div>
+    <div class="whatsapp-container">
+      <!-- Left Sidebar: Chats List -->
+      <div class="whatsapp-sidebar">
+        <div class="whatsapp-sidebar-header">
           <div>
-            <h3>${currentUser.college} Community</h3>
-            <p class="chat-status">
-              <span class="online-dot"></span>
-              <span id="onlineCount">0</span> members online
-            </p>
+            <h3>${currentUser.college}</h3>
+            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
+          </div>
+          <div class="sidebar-actions">
           </div>
         </div>
-        <div class="chat-header-actions">
-          <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-          <button class="icon-btn" onclick="showChatInfo()" title="Info">ℹ️</button>
+        
+        <div class="whatsapp-search">
+          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
         </div>
-      </div>
-
-      <!-- Messages Container -->
-      <div class="unified-messages" id="unifiedMessages">
-        <div class="loading-messages-state">
-          <div class="spinner"></div>
-          <p>Loading messages...</p>
-        </div>
-      </div>
-
-      <!-- Typing Indicator -->
-      <div id="typingIndicator" class="typing-indicators-container" style="display:none;">
-        <div class="typing-indicator">
-          <div class="typing-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+        
+        <div class="whatsapp-chats-list" id="chatsList">
+          <!-- Community Group Chat -->
+          <div class="chat-item active" onclick="openCommunityChat()">
+            <div class="chat-avatar">
+              <div class="group-avatar">🎓</div>
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                <h4>${currentUser.college} Community</h4>
+                <span class="chat-time">Now</span>
+              </div>
+              <div class="chat-preview">
+                <span class="preview-text">Click to open group chat</span>
+                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
+              </div>
+            </div>
           </div>
-          <span id="typingText">Someone is typing...</span>
+          
+          <!-- Announcements Channel -->
+          <div class="chat-item" onclick="openAnnouncementsChannel()">
+            <div class="chat-avatar">
+              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                <h4>📢 Announcements</h4>
+                <span class="chat-time">"COMING SOON"</span>
+              </div>
+              <div class="chat-preview">
+                <span class="preview-text">Important college updates</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Study Groups -->
+          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
+            <div class="chat-avatar">
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                 </div>
+              <div class="chat-preview">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Enhanced Input Area -->
-      <div class="unified-input-area">
-        <div class="input-features">
-          <button class="feature-btn" onclick="openPhotoPicker()" title="Share Photo">📷</button>
-          <button class="feature-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="feature-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <button class="feature-btn" onclick="openExperienceShare()" title="Share Experience">📝</button>
+      <!-- Right Main Chat Area -->
+      <div class="whatsapp-main" id="whatsappMain">
+        <div class="whatsapp-chat-header">
+          <div class="chat-header-info">
+            <div class="chat-avatar-large">🎓</div>
+            <div>
+              <h3>${currentUser.college} Community</h3>
+              <p class="chat-status">
+                <span class="online-dot"></span>
+                <span id="onlineCount">0</span> members online
+              </p>
+            </div>
+          </div>
+          <div class="chat-header-actions">
+            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
+            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
+          </div>
         </div>
-        <div class="input-wrapper">
-          <textarea id="unifiedInput" placeholder="Share your experience, photos, or just chat..." rows="1"
-            onkeydown="handleUnifiedKeypress(event)"
-            oninput="handleTypingIndicator()"></textarea>
+
+        <div class="whatsapp-messages" id="whatsappMessages">
+          <div class="date-separator">
+            <span>Today</span>
+          </div>
+          <div style="text-align:center;padding:40px;color:#888;">
+          </div>
         </div>
-        <button class="send-btn-unified" onclick="sendUnifiedMessage()" title="Send">
-          <span class="send-icon">➤</span>
-        </button>
+
+        <div class="whatsapp-input-area">
+          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
+          <div class="input-wrapper">
+            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
+              onkeydown="handleWhatsAppKeypress(event)" 
+              oninput="handleTypingIndicator()"></textarea>
+          </div>
+          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
+            <span class="send-icon">➤</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Media Preview Area -->
-      <div class="media-preview-area" id="mediaPreviewArea" style="display:none;">
-        <div class="preview-content" id="previewContent"></div>
-        <button class="remove-preview-btn" onclick="clearMediaPreview()">✕</button>
+      <!-- Twitter-style Feed (Initially Hidden) -->
+      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
+        <div class="twitter-header">
+          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
+          <h3>Community Posts</h3>
+        </div>
+        <div class="twitter-feed" id="twitterFeed">
+          <div style="text-align:center;padding:40px;color:#888;">
+            <div style="font-size:48px;margin-bottom:15px;">📰</div>
+            <p>Loading posts...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Info Panel (Hidden) -->
+      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
+        <div class="info-panel-header">
+          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
+          <h3>Chat Info</h3>
+        </div>
+        <div class="info-panel-content">
+          <div class="info-section">
+            <div class="info-avatar">🎓</div>
+            <h2>${currentUser.college}</h2>
+            <p>College Community Group</p>
+          </div>
+          
+          <div class="info-section">
+            <h4>📊 Statistics</h4>
+            <div class="info-stats">
+              <div class="info-stat-item">
+                <span class="stat-value" id="totalMembers">0</span>
+                <span class="stat-label">Members</span>
+              </div>
+              <div class="info-stat-item">
+                <span class="stat-value" id="totalMessages">0</span>
+                <span class="stat-label">Messages</span>
+              </div>
+              <div class="info-stat-item">
+                <span class="stat-value" id="activeToday">0</span>
+                <span class="stat-label">Active Today</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <h4>⚙️ Settings</h4>
+            <div class="info-option" onclick="toggleNotifications()">
+              <span>🔔 Notifications</span>
+              <span id="notifStatus">On</span>
+            </div>
+            <div class="info-option" onclick="muteChat()">
+              <span>🔇 Mute Chat</span>
+              <span>Off</span>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
 
-  // Initialize real-time chat
+  // Initialize chat
   setTimeout(() => {
-    initializeRealTimeChat();
+    loadWhatsAppMessages();
+    initWhatsAppFeatures();
+    loadTwitterFeed();
   }, 100);
-}
-
-// ==========================================
-// REAL-TIME CHAT INITIALIZATION
-// ==========================================
-
-async function initializeRealTimeChat() {
-  console.log('🚀 Initializing real-time chat...');
-
-  // Initialize Socket.IO connection
-  initializeSocketConnection();
-
-  // Load existing messages
-  await loadCommunityMessages();
-
-  // Set up input handlers
-  setupUnifiedChatInput();
-
-  // Update online count
-  updateOnlineCount();
-
-  console.log('✅ Real-time chat initialized');
-}
-
-// ==========================================
-// SOCKET.IO CONNECTION
-// ==========================================
-
-function initializeSocketConnection() {
-  if (socket && socket.connected) {
-    console.log('✅ Socket already connected');
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-    }
-    return;
-  }
-
-  socket = io(API_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-      socket.emit('user_online', currentUser.id);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
-    updateConnectionStatus(false);
-  });
-
-  socket.on('reconnect', () => {
-    console.log('🔄 Socket reconnected');
-    updateConnectionStatus(true);
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-      loadCommunityMessages();
-    }
-  });
-
-  socket.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    addRealTimeMessage(message);
-  });
-
-  socket.on('message_deleted', ({ id }) => {
-    console.log('🗑️ Message deleted:', id);
-    removeMessageFromUI(id);
-  });
-
-  socket.on('online_count', (count) => {
-    updateOnlineCount(count);
-  });
-
-  socket.on('user_typing', ({ username }) => {
-    if (username !== currentUser?.username) {
-      showTypingIndicator(username);
-    }
-  });
-
-  socket.on('user_stop_typing', ({ username }) => {
-    hideTypingIndicator(username);
-  });
-}
-
-function updateConnectionStatus(isConnected) {
-  const onlineCountEl = document.getElementById('onlineCount');
-  if (onlineCountEl) {
-    const currentCount = parseInt(onlineCountEl.textContent) || 0;
-    onlineCountEl.textContent = isConnected ? currentCount : '0';
-  }
-}
-
-function updateOnlineCount(count) {
-  const onlineCountEl = document.getElementById('onlineCount');
-  if (onlineCountEl) {
-    onlineCountEl.textContent = count || '0';
-  }
-}
-
-// ==========================================
-// LOAD MESSAGES FROM API
-// ==========================================
-
-async function loadCommunityMessages() {
-  try {
-    console.log('📥 Loading community messages...');
-
-    const messagesEl = document.getElementById('unifiedMessages');
-    if (!messagesEl) return;
-
-    // Show loading state
-    messagesEl.innerHTML = `
-      <div class="loading-messages-state">
-        <div class="spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const data = await apiCall('/api/community/messages', 'GET');
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        messagesEl.innerHTML = `
-          <div class="empty-chat-state">
-            <div class="empty-chat-icon">🏫</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with students from your college</p>
-            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
-          </div>
-        `;
-        return;
-      }
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear loading state
-    messagesEl.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML = `
-        <div class="empty-chat-state">
-          <div class="empty-chat-icon">👋</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Display all messages
-    data.messages.forEach(msg => {
-      addRealTimeMessage(msg, true); // Skip scroll for initial load
-    });
-
-    // Scroll to bottom after loading
-    setTimeout(() => {
-      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-    }, 100);
-
-    console.log(`✅ Loaded ${data.messages.length} messages`);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    const messagesEl = document.getElementById('unifiedMessages');
-    if (messagesEl) {
-      messagesEl.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h3>Failed to Load Messages</h3>
-          <p>${error.message}</p>
-          <button onclick="loadCommunityMessages()" class="btn-primary">Retry</button>
-        </div>
-      `;
-    }
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI
-// ==========================================
-
-function addRealTimeMessage(message, skipScroll = false) {
-  const messagesEl = document.getElementById('unifiedMessages');
-  if (!messagesEl) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`unified-msg-${message.id}`);
-  if (existingMsg) return;
-
-  // Remove empty state if present
-  const emptyState = messagesEl.querySelector('.empty-chat-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  const messageEl = document.createElement('div');
-  messageEl.className = `unified-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `unified-msg-${message.id}`;
-
-  let html = `
-    <div class="message-header">
-      <span class="sender-name">${isOwn ? 'You' : sender}</span>
-      <span class="message-time">${time}</span>
-    </div>
-    <div class="message-content">
-  `;
-
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
-  }
-
-  if (message.media_url) {
-    if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;" onclick="openMediaViewer('${message.media_url}')">`;
-    } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;"></video>`;
-    }
-  }
-
-  html += `
-    </div>
-    <div class="message-actions">
-      <button onclick="reactToUnifiedMessage('${message.id}')">❤️</button>
-      <button onclick="replyToUnifiedMessage('${message.id}')">↩️</button>
-      ${isOwn ? `<button onclick="deleteUnifiedMessage('${message.id}')">🗑️</button>` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  messagesEl.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => {
-    messageEl.classList.add('message-visible');
-  }, 10);
-
-  // Scroll to bottom
-  if (!skipScroll) {
-    setTimeout(() => {
-      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-    }, 50);
-  }
-
-  // Play receive sound for other users' messages
-  if (!isOwn) {
-    playMessageSound('receive');
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendUnifiedMessage() {
-  const input = document.getElementById('unifiedInput');
-  const content = input?.value?.trim();
-
-  if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Add message or media', 'error');
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  if (!currentUser.communityJoined || !currentUser.college) {
-    showMessage('⚠️ Join college community first', 'error');
-    return;
-  }
-
-  try {
-    showMessage('📤 Sending...', 'success');
-
-    const formData = new FormData();
-    if (content) formData.append('content', content);
-    if (selectedMediaFile) {
-      formData.append('media', selectedMediaFile);
-    }
-
-    const data = await apiCall('/api/community/messages', 'POST', formData);
-
-    if (data.success) {
-      showMessage('✅ Message sent!', 'success');
-
-      // Clear input and media
-      if (input) input.value = '';
-      clearMediaPreview();
-
-      // Add message to UI (if not already added by socket)
-      if (data.message) {
-        const messageExists = document.getElementById(`unified-msg-${data.message.id}`);
-        if (!messageExists) {
-          addRealTimeMessage(data.message);
-        }
-      }
-
-      // Play send sound
-      playMessageSound('send');
-
-      // Stop typing indicator
-      if (socket && currentUser.college) {
-        socket.emit('stop_typing', {
-          collegeName: currentUser.college,
-          username: currentUser.username
-        });
-      }
-    } else {
-      throw new Error(data.error || 'Failed to send');
-    }
-
-  } catch (error) {
-    console.error('❌ Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTypingIndicator() {
-  if (!socket || !currentUser || !currentUser.college) return;
-
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-    lastTypingEmit = now;
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
-    }
-  }, 3000);
-}
-
-function showTypingIndicator(username) {
-  typingUsers.add(username);
-  updateTypingDisplay();
-}
-
-function hideTypingIndicator(username) {
-  typingUsers.delete(username);
-  updateTypingDisplay();
-}
-
-function updateTypingDisplay() {
-  const typingIndicatorEl = document.getElementById('typingIndicator');
-
-  if (!typingIndicatorEl) return;
-
-  if (typingUsers.size === 0) {
-    typingIndicatorEl.style.display = 'none';
-    return;
-  }
-
-  const usernames = Array.from(typingUsers);
-  let text = '';
-
-  if (usernames.length === 1) {
-    text = `${usernames[0]} is typing...`;
-  } else if (usernames.length === 2) {
-    text = `${usernames[0]} and ${usernames[1]} are typing...`;
-  } else {
-    text = `${usernames.length} people are typing...`;
-  }
-
-  typingIndicatorEl.innerHTML = `
-    <div class="typing-indicator">
-      <div class="typing-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-      <span class="typingText">${text}</span>
-    </div>
-  `;
-  typingIndicatorEl.style.display = 'block';
-
-  // Scroll to bottom
-  const messagesEl = document.getElementById('unifiedMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupUnifiedChatInput() {
-  const input = document.getElementById('unifiedInput');
-  if (!input) return;
-
-  // Auto-resize
-  input.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    handleTypingIndicator();
-  });
-
-  // Enter to send
-  input.addEventListener('keydown', handleUnifiedKeypress);
-}
-
-// ==========================================
-// MESSAGE ACTIONS
-// ==========================================
-
-async function deleteUnifiedMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-    if (data.success) {
-      removeMessageFromUI(messageId);
-      showMessage('🗑️ Message deleted', 'success');
-    } else {
-      throw new Error(data.error);
-    }
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(`unified-msg-${messageId}`);
-  if (messageEl) {
-    messageEl.style.animation = 'fadeOut 0.3s ease-out';
-    setTimeout(() => messageEl.remove(), 300);
-  }
-}
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function playMessageSound(type) {
-  try {
-    const sounds = {
-      send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-      receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav'
-    };
-
-    if (sounds[type]) {
-      const audio = new Audio(sounds[type]);
-      audio.volume = 0.2;
-      audio.play().catch(() => {}); // Silently fail
-    }
-  } catch (error) {
-    // Ignore audio errors
-  }
-}
-
-
 }
   
 // ==========================================
@@ -4540,6 +4501,25 @@ async function selectPlan(planType) {
     return;
   }
   
+  // Animal Avatar States - Dancing Monkeys and Friends
+  const animalAvatars = {
+    email: {
+      idle: '🐵',
+      happy: '🕺',
+      excited: '💃'
+    },
+    password: {
+      idle: '🐒',
+      happy: '🦍',
+      excited: '🦧'
+    },
+    confirm: {
+      idle: '🐵',
+      happy: '🕺',
+      excited: '💃'
+    }
+  };
+
   // Plan details
   const plans = {
     noble: {
@@ -5325,3064 +5305,4 @@ function editBio() {
 
 }
   
-
-
-console.log('✨ RealVibe features initialized!');
-
-// ==========================================
-// FIXED COMMUNITY CHAT - COMPLETE SOLUTION
-// ==========================================
-
-// Additional chat-specific global variables (socket, currentUser, typingTimeout already declared globally)
-let chatMessages = [];
-let isLoadingMessages = false;
-let messageContainer = null;
-
-// ==========================================
-// INITIALIZE CHAT WHEN SECTION OPENS
-// ==========================================
-
-function openCommunityChat() {
-  if (!currentUser) {
-    showMessage('Please login first', 'error');
-    return;
-  }
-
-  if (!currentUser.community_joined || !currentUser.college) {
-    showJoinCommunityModal();
-    return;
-  }
-
-  // Show chat section
-  document.querySelectorAll('.main-section').forEach(s => s.style.display = 'none');
-  const chatSection = document.getElementById('chatSection');
-  if (chatSection) {
-    chatSection.style.display = 'block';
-    initializeCommunityChat();
-  }
-}
-
-async function initializeCommunityChat() {
-  console.log('🚀 Initializing community chat...');
-
-  // Set up message container reference
-  messageContainer = document.getElementById('chatMessages');
-  if (!messageContainer) {
-    console.error('❌ Chat messages container not found!');
-    return;
-  }
-
-  // Initialize socket connection
-  initializeSocket();
-
-  // Load existing messages
-  await loadCommunityMessages();
-
-  // Set up input handlers
-  setupChatInput();
-
-  // Set up emoji picker
-  setupEmojiPicker();
-
-  console.log('✅ Community chat initialized');
-}
-
-// ==========================================
-// SOCKET.IO CONNECTION
-// ==========================================
-
-function initializeSocket() {
-  if (socket && socket.connected) {
-    console.log('✅ Socket already connected');
-    socket.emit('join_college', currentUser.college);
-    return;
-  }
-
-  socket = io(API_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
-    updateConnectionStatus(true);
-    
-    if (currentUser && currentUser.college) {
-      socket.emit('join_college', currentUser.college);
-      socket.emit('user_online', currentUser.id);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
-    updateConnectionStatus(false);
-  });
-
-  socket.on('reconnect', () => {
-    console.log('🔄 Socket reconnected');
-    updateConnectionStatus(true);
-    if (currentUser && currentUser.college) {
-      socket.emit('join_college', currentUser.college);
-      loadCommunityMessages();
-    }
-  });
-
-  socket.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    addMessageToUI(message, false);
-  });
-
-  socket.on('message_deleted', ({ id }) => {
-    console.log('🗑️ Message deleted:', id);
-    removeMessageFromUI(id);
-  });
-
-  socket.on('online_count', (count) => {
-    updateOnlineCount(count);
-  });
-
-  socket.on('user_typing', ({ username }) => {
-    showTypingIndicator(username);
-  });
-
-  socket.on('user_stop_typing', ({ username }) => {
-    hideTypingIndicator(username);
-  });
-}
-
-function updateConnectionStatus(isConnected) {
-  const statusEl = document.getElementById('connectionStatus');
-  if (!statusEl) return;
-
-  if (isConnected) {
-    statusEl.innerHTML = '<span style="color:#51cf66;">● Connected</span>';
-  } else {
-    statusEl.innerHTML = '<span style="color:#ff6b6b;">● Disconnected</span>';
-  }
-}
-
-function updateOnlineCount(count) {
-  const countEl = document.getElementById('chatOnlineCount');
-  if (countEl) {
-    countEl.textContent = count || 0;
-  }
-}
-
-// ==========================================
-// LOAD MESSAGES FROM DATABASE
-// ==========================================
-
-async function loadCommunityMessages() {
-  if (isLoadingMessages) return;
-  isLoadingMessages = true;
-
-  try {
-    console.log('📥 Loading messages...');
-    
-    if (!messageContainer) {
-      messageContainer = document.getElementById('chatMessages');
-    }
-
-    // Show loading state
-    messageContainer.innerHTML = `
-      <div class="loading-messages-state">
-        <div class="spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-    console.log('📦 Received data:', data);
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        messageContainer.innerHTML = `
-          <div class="empty-chat-state">
-            <div class="empty-chat-icon">🏫</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with students from your college</p>
-            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
-          </div>
-        `;
-        return;
-      }
-    }
-
-    // Clear loading state
-    messageContainer.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      messageContainer.innerHTML = `
-        <div class="empty-chat-state">
-          <div class="empty-chat-icon">👋</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Store messages
-    chatMessages = data.messages;
-
-    // Add date separator
-    addDateSeparator();
-
-    // Display all messages in correct order
-    data.messages.forEach(msg => {
-      addMessageToUI(msg, true);
-    });
-
-    // Scroll to bottom
-    setTimeout(() => scrollToBottom(), 100);
-
-    console.log(`✅ Loaded ${data.messages.length} messages`);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    messageContainer.innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <h3>Failed to Load Messages</h3>
-        <p>${error.message}</p>
-        <button onclick="loadCommunityMessages()" class="btn-primary">Retry</button>
-      </div>
-    `;
-  } finally {
-    isLoadingMessages = false;
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendCommunityMessage() {
-  const input = document.getElementById('chatInput');
-  const content = input?.value?.trim();
-
-  if (!content) {
-    return;
-  }
-
-  if (!currentUser || !currentUser.community_joined) {
-    showMessage('Please join a community first', 'error');
-    return;
-  }
-
-  try {
-    // Create temporary message for immediate feedback
-    const tempId = 'temp-' + Date.now();
-    const tempMessage = {
-      id: tempId,
-      content: content,
-      sender_id: currentUser.id,
-      college_name: currentUser.college,
-      created_at: new Date().toISOString(),
-      users: {
-        username: currentUser.username,
-        profile_pic: currentUser.profile_pic
-      },
-      isTemp: true
-    };
-
-    // Add to UI immediately
-    addMessageToUI(tempMessage, false);
-
-    // Clear input
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ content })
-    });
-
-    const data = await response.json();
-
-    if (data.success && data.message) {
-      // Remove temporary message
-      removeMessageFromUI(tempId);
-      
-      // Add real message (if not already added by socket)
-      const messageExists = document.getElementById(`msg-${data.message.id}`);
-      if (!messageExists) {
-        addMessageToUI(data.message, false);
-      }
-
-      // Play send sound
-      playSound('send');
-
-      console.log('✅ Message sent:', data.message.id);
-    } else {
-      throw new Error(data.error || 'Failed to send message');
-    }
-
-  } catch (error) {
-    console.error('❌ Send error:', error);
-    showMessage('Failed to send message: ' + error.message, 'error');
-    
-    // Mark temp messages as failed
-    document.querySelectorAll('[id^="msg-temp-"]').forEach(el => {
-      el.style.opacity = '0.5';
-      el.style.border = '2px solid #ff6b6b';
-    });
-  }
-
-  // Stop typing indicator
-  if (socket && currentUser.college) {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI
-// ==========================================
-
-function addMessageToUI(message, skipScroll = false) {
-  if (!messageContainer) {
-    messageContainer = document.getElementById('chatMessages');
-  }
-
-  if (!messageContainer) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) {
-    console.log('⚠️ Message already exists:', message.id);
-    return;
-  }
-
-  // Remove empty state if present
-  const emptyState = messageContainer.querySelector('.empty-chat-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
-
-  const isOwnMessage = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  const timestamp = new Date(message.created_at || message.timestamp);
-  const timeStr = timestamp.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-
-  // Create message element
-  const messageEl = document.createElement('div');
-  messageEl.className = `chat-message ${isOwnMessage ? 'own-message' : 'other-message'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  let html = '';
-
-  // Add sender name for other users
-  if (!isOwnMessage) {
-    html += `<div class="message-sender">@${escapeHtml(sender)}</div>`;
-  }
-
-  // Message bubble
-  html += `
-    <div class="message-bubble">
-      <div class="message-content">${escapeHtml(message.content || message.text)}</div>
-      <div class="message-footer">
-        <span class="message-time">${timeStr}</span>
-        ${isOwnMessage ? '<span class="message-status">✓✓</span>' : ''}
-      </div>
-    </div>
-  `;
-
-  // Message actions
-  html += `
-    <div class="message-actions">
-      <button class="message-action-btn" onclick="reactToMessage('${message.id}')" title="React">
-        ❤️
-      </button>
-      <button class="message-action-btn" onclick="copyMessage('${message.id}')" title="Copy">
-        📋
-      </button>
-      ${isOwnMessage ? `
-        <button class="message-action-btn delete-btn" onclick="deleteMessage('${message.id}')" title="Delete">
-          🗑️
-        </button>
-      ` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-
-  // Append to container
-  messageContainer.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => {
-    messageEl.classList.add('message-visible');
-  }, 10);
-
-  // Scroll to bottom
-  if (!skipScroll) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Play receive sound for other users' messages
-  if (!isOwnMessage && !message.isTemp) {
-    playSound('receive');
-  }
-}
-
-// ==========================================
-// REMOVE MESSAGE FROM UI
-// ==========================================
-
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (messageEl) {
-    messageEl.style.animation = 'fadeOutMessage 0.3s ease-out';
-    setTimeout(() => messageEl.remove(), 300);
-  }
-}
-
-// ==========================================
-// DELETE MESSAGE
-// ==========================================
-
-async function deleteMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      removeMessageFromUI(messageId);
-      console.log('✅ Message deleted');
-    } else {
-      throw new Error(data.error);
-    }
-
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    showMessage('Failed to delete message', 'error');
-  }
-}
-
-// ==========================================
-// REACT TO MESSAGE
-// ==========================================
-
-async function reactToMessage(messageId) {
-  // Show emoji picker
-  showEmojiPickerForMessage(messageId);
-}
-
-function showEmojiPickerForMessage(messageId) {
-  // Remove any existing picker
-  const existingPicker = document.querySelector('.emoji-picker-popup');
-  if (existingPicker) {
-    existingPicker.remove();
-    return;
-  }
-
-  const picker = document.createElement('div');
-  picker.className = 'emoji-picker-popup';
-  picker.innerHTML = `
-    <div class="emoji-picker-header">
-      <span>React with emoji</span>
-      <button onclick="this.closest('.emoji-picker-popup').remove()">✕</button>
-    </div>
-    <div class="emoji-picker-grid">
-      ${['❤️', '👍', '😂', '😮', '😢', '🔥', '🎉', '👏', '💯', '⭐', '🙌', '🤝'].map(emoji => `
-        <button class="emoji-btn" onclick="addReactionToMessage('${messageId}', '${emoji}')">
-          ${emoji}
-        </button>
-      `).join('')}
-    </div>
-  `;
-
-  document.body.appendChild(picker);
-
-  // Close on outside click
-  setTimeout(() => {
-    document.addEventListener('click', function closePickerOnOutside(e) {
-      if (!picker.contains(e.target)) {
-        picker.remove();
-        document.removeEventListener('click', closePickerOnOutside);
-      }
-    });
-  }, 100);
-}
-
-async function addReactionToMessage(messageId, emoji) {
-  // Close picker
-  const picker = document.querySelector('.emoji-picker-popup');
-  if (picker) picker.remove();
-
-  try {
-    const token = localStorage.getItem('vibexpert_token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}/react`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ emoji })
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      console.log('✅ Reaction added');
-    }
-
-  } catch (error) {
-    console.error('❌ React error:', error);
-  }
-}
-
-// ==========================================
-// COPY MESSAGE
-// ==========================================
-
-function copyMessage(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (!messageEl) return;
-
-  const content = messageEl.querySelector('.message-content')?.textContent;
-  if (!content) return;
-
-  navigator.clipboard.writeText(content).then(() => {
-    showMessage('Message copied!', 'success');
-  }).catch(() => {
-    showMessage('Failed to copy', 'error');
-  });
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTyping() {
-  if (!socket || !currentUser) return;
-
-  const now = Date.now();
-  if (now - (window.lastTypingEmit || 0) < 1000) return;
-
-  window.lastTypingEmit = now;
-
-  socket.emit('typing', {
-    collegeName: currentUser.college,
-    username: currentUser.username
-  });
-
-  // Auto-stop typing after 3 seconds
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }, 3000);
-}
-
-function showTypingIndicator(username) {
-  typingUsers.add(username);
-  updateTypingIndicator();
-}
-
-function hideTypingIndicator(username) {
-  typingUsers.delete(username);
-  updateTypingIndicator();
-}
-
-function updateTypingIndicator() {
-  let typingIndicatorEl = document.getElementById('typingIndicator');
-
-  if (!typingIndicatorEl) return;
-
-  if (typingUsers.size === 0) {
-    typingIndicatorEl.style.display = 'none';
-    return;
-  }
-
-  const usernames = Array.from(typingUsers);
-  let text = '';
-  
-  if (usernames.length === 1) {
-    text = `${usernames[0]} is typing...`;
-  } else if (usernames.length === 2) {
-    text = `${usernames[0]} and ${usernames[1]} are typing...`;
-  } else {
-    text = `${usernames.length} people are typing...`;
-  }
-
-  typingIndicatorEl.textContent = text;
-  typingIndicatorEl.style.display = 'block';
-}
-
-// ==========================================
-// UNIFIED CHAT INPUT HANDLERS
-// ==========================================
-
-function setupChatInput() {
-  const input = document.getElementById('chatInput');
-  if (!input) return;
-
-  // Auto-resize
-  input.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    handleTyping();
-  });
-
-  // Enter to send
-  input.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendCommunityMessage();
-    }
-  });
-}
-
-function handleChatKeyPress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendCommunityMessage();
-  }
-}
-
-function handleChatInput() {
-  const input = document.getElementById('chatInput');
-  const sendBtn = document.getElementById('sendButton');
-
-  if (input && sendBtn) {
-    sendBtn.disabled = !input.value.trim();
-  }
-}
-
-function sendMessage() {
-  sendCommunityMessage();
-}
-
-// ==========================================
-// HELPER FUNCTIONS
-// ==========================================
-
-function scrollToBottom() {
-  if (!messageContainer) return;
-  
-  messageContainer.scrollTo({
-    top: messageContainer.scrollHeight,
-    behavior: 'smooth'
-  });
-}
-
-function addDateSeparator() {
-  if (!messageContainer) return;
-
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-
-  const separator = document.createElement('div');
-  separator.className = 'date-separator';
-  separator.innerHTML = `<span>${dateStr}</span>`;
-  messageContainer.appendChild(separator);
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function playSound(type) {
-  try {
-    const sounds = {
-      send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-      receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav'
-    };
-
-    if (sounds[type]) {
-      const audio = new Audio(sounds[type]);
-      audio.volume = 0.2;
-      audio.play().catch(() => {}); // Silently fail
-    }
-  } catch (error) {
-    // Ignore audio errors
-  }
-}
-
-function setupEmojiPicker() {
-  // Emoji picker is now shown on demand
-  console.log('✅ Emoji picker ready');
-}
-
-// ==========================================
-// AMAZING COMMUNITY CHAT SYSTEM
-// ==========================================
-
-let selectedMediaFile = null;
-let selectedMediaType = null;
-let isUserScrolling = false;
-let lastSeenMessageId = null;
-let unseenMessageCount = 0;
-
-// Initialize amazing chat when communities page loads
-function initializeAmazingChat() {
-  console.log('🚀 Initializing Amazing Community Chat...');
-
-  // Set community name
-  if (currentUser?.college) {
-    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
-  }
-
-  // Initialize socket connection
-  initializeSocketConnection();
-
-  // Load messages
-  loadAmazingMessages();
-
-  // Set up input handlers
-  setupAmazingInput();
-
-  // Populate emoji and sticker panels
-  populateEmojiPanel();
-  populateStickerPanel();
-
-  console.log('✅ Amazing Chat Initialized');
-}
-
-// ==========================================
-// LOAD MESSAGES WITH UNSEEN TRACKING
-// ==========================================
-
-async function loadAmazingMessages() {
-  try {
-    const container = document.getElementById('messagesContainer');
-    if (!container) return;
-
-    // Show loading
-    container.innerHTML = `
-      <div class="loading-messages">
-        <div class="loading-spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const data = await apiCall('/api/community/messages', 'GET');
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        container.innerHTML = `
-          <div class="join-community-prompt">
-            <div class="join-icon">🎓</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with fellow students and start chatting!</p>
-            <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
-          </div>
-        `;
-        return;
-      }
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear loading
-    container.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      container.innerHTML = `
-        <div class="no-messages">
-          <div class="no-messages-icon">💬</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Display messages
-    data.messages.forEach(msg => {
-      addAmazingMessage(msg, true); // Skip scroll for initial load
-    });
-
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollToBottom();
-      markMessagesAsSeen();
-    }, 100);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    const container = document.getElementById('messagesContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h3>Failed to Load Messages</h3>
-          <p>${error.message}</p>
-          <button onclick="loadAmazingMessages()" class="retry-btn">Retry</button>
-        </div>
-      `;
-    }
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI WITH REACTIONS
-// ==========================================
-
-function addAmazingMessage(message, skipScroll = false) {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) return;
-
-  // Remove empty state
-  const emptyState = container.querySelector('.no-messages');
-  if (emptyState) emptyState.remove();
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  const messageEl = document.createElement('div');
-  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  let html = `
-    <div class="message-avatar">
-      ${message.users?.profile_pic ?
-        `<img src="${message.users.profile_pic}" alt="${sender}">` :
-        '👤'
-      }
-    </div>
-    <div class="message-content-wrapper">
-      <div class="message-header">
-        <span class="message-sender">${isOwn ? 'You' : sender}</span>
-        <span class="message-time">${time}</span>
-      </div>
-      <div class="message-bubble">
-  `;
-
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
-  }
-
-  if (message.media_url) {
-    if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')">`;
-    } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
-    }
-  }
-
-  html += `
-      </div>
-      <div class="message-actions">
-        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
-          ❤️ <span class="react-count">${message.reactions || 0}</span>
-        </button>
-        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
-        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
-      </div>
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  container.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => messageEl.classList.add('visible'), 10);
-
-  // Scroll to bottom if not user scrolling
-  if (!skipScroll && !isUserScrolling) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Update unseen count if message is new and user is not at bottom
-  if (!isOwn && !isAtBottom()) {
-    unseenMessageCount++;
-    updateUnseenIndicator();
-  }
-}
-
-// ==========================================
-// MESSAGE ACTIONS
-// ==========================================
-
-async function reactToMessage(messageId) {
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji: '❤️' });
-
-    if (data.success) {
-      // Update reaction count in UI
-      const reactBtn = document.querySelector(`#msg-${messageId} .react-btn .react-count`);
-      if (reactBtn) {
-        const currentCount = parseInt(reactBtn.textContent) || 0;
-        reactBtn.textContent = currentCount + 1;
-      }
-      showMessage('❤️ Reacted!', 'success');
-    }
-  } catch (error) {
-    console.error('Reaction error:', error);
-    showMessage('❌ Failed to react', 'error');
-  }
-}
-
-function replyToMessage(messageId) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value = `@reply to message: `;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-}
-
-async function deleteAmazingMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-    if (data.success) {
-      const messageEl = document.getElementById(`msg-${messageId}`);
-      if (messageEl) {
-        messageEl.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => messageEl.remove(), 300);
-      }
-      showMessage('🗑️ Message deleted', 'success');
-    }
-  } catch (error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendMessage() {
-  const input = document.getElementById('messageInput');
-  const content = input?.value?.trim();
-
-  if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Type a message or add media', 'error');
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    if (content) formData.append('content', content);
-    if (selectedMediaFile) {
-      formData.append('media', selectedMediaFile);
-    }
-
-    // Clear input immediately
-    if (input) input.value = '';
-    clearMediaPreview();
-
-    const data = await apiCall('/api/community/messages', 'POST', formData);
-
-    if (data.success && data.message) {
-      // Add to UI immediately
-      addAmazingMessage(data.message);
-
-      // Mark as seen since we just sent it
-      markMessagesAsSeen();
-
-      // Stop typing indicator
-      stopTyping();
-    }
-
-  } catch (error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-// ==========================================
-// MEDIA SHARING
-// ==========================================
-
-function openGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = false;
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        showMessage('⚠️ File too large (max 10MB)', 'error');
-        return;
-      }
-      handleMediaSelection(file);
-    }
-  };
-
-  input.click();
-}
-
-function handleMediaSelection(file) {
-  selectedMediaFile = file;
-  selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const previewPanel = document.getElementById('mediaPreviewPanel');
-    const previewContent = document.getElementById('previewContent');
-
-    if (previewPanel && previewContent) {
-      if (selectedMediaType === 'image') {
-        previewContent.innerHTML = `<img src="${e.target.result}" class="preview-media">`;
-      } else {
-        previewContent.innerHTML = `<video src="${e.target.result}" controls class="preview-media"></video>`;
-      }
-      previewPanel.style.display = 'flex';
-    }
-  };
-
-  reader.readAsDataURL(file);
-}
-
-function clearMediaPreview() {
-  selectedMediaFile = null;
-  selectedMediaType = null;
-
-  const previewPanel = document.getElementById('mediaPreviewPanel');
-  if (previewPanel) previewPanel.style.display = 'none';
-}
-
-// ==========================================
-// EMOJI PANEL
-// ==========================================
-
-function openEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeStickerPanel(); // Close sticker panel if open
-  }
-}
-
-function closeEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateEmojiPanel() {
-  const grid = document.getElementById('emojiGrid');
-  if (!grid) return;
-
-  const emojis = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
-    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
-    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
-  ];
-
-  let html = '';
-  emojis.forEach(emoji => {
-    html += `<button class="emoji-btn" onclick="insertEmoji('${emoji}')">${emoji}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPanel();
-}
-
-// ==========================================
-// STICKER PANEL
-// ==========================================
-
-function openStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeEmojiPanel(); // Close emoji panel if open
-  }
-}
-
-function closeStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateStickerPanel() {
-  const grid = document.getElementById('stickerGrid');
-  if (!grid) return;
-
-  const stickers = [
-    '🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪',
-    '😎', '🤓', '🤠', '👻', '🎃', '🦄', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸'
-  ];
-
-  let html = '';
-  stickers.forEach(sticker => {
-    html += `<button class="sticker-btn" onclick="insertSticker('${sticker}')">${sticker}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertSticker(sticker) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += sticker;
-    input.focus();
-  }
-  closeStickerPanel();
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTyping() {
-  const input = document.getElementById('messageInput');
-  if (!input || !socket || !currentUser) return;
-
-  const content = input.value.trim();
-
-  if (content.length > 0) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  } else {
-    stopTyping();
-  }
-}
-
-function stopTyping() {
-  if (socket && currentUser) {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }
-}
-
-function showTypingIndicator(username) {
-  const indicator = document.getElementById('typingIndicators');
-  const textEl = document.getElementById('typingUsersText');
-
-  if (indicator && textEl) {
-    textEl.textContent = `${username} is typing...`;
-    indicator.style.display = 'flex';
-  }
-}
-
-function hideTypingIndicator() {
-  const indicator = document.getElementById('typingIndicators');
-  if (indicator) indicator.style.display = 'none';
-}
-
-// ==========================================
-// ONLINE MEMBERS
-// ==========================================
-
-function updateOnlineMembers(members) {
-  const countEl = document.getElementById('onlineCount');
-  const avatarsEl = document.getElementById('onlineAvatars');
-
-  if (countEl) countEl.textContent = members.length;
-
-  if (avatarsEl) {
-    let html = '';
-    members.slice(0, 5).forEach(member => {
-      html += `<div class="online-avatar" title="${member.username}">👤</div>`;
-    });
-    if (members.length > 5) {
-      html += `<div class="online-more">+${members.length - 5}</div>`;
-    }
-    avatarsEl.innerHTML = html;
-  }
-}
-
-// ==========================================
-// UNSEEN MESSAGES
-// ==========================================
-
-function isAtBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return true;
-
-  const threshold = 100; // pixels from bottom
-  return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-}
-
-function updateUnseenIndicator() {
-  const indicator = document.getElementById('unseenIndicator');
-  const countEl = document.getElementById('unseenCount');
-
-  if (indicator && countEl) {
-    if (unseenMessageCount > 0) {
-      countEl.textContent = unseenMessageCount;
-      indicator.style.display = 'flex';
-    } else {
-      indicator.style.display = 'none';
-    }
-  }
-}
-
-function markMessagesAsSeen() {
-  unseenMessageCount = 0;
-  updateUnseenIndicator();
-}
-
-function scrollToBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    markMessagesAsSeen();
-  }
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupAmazingInput() {
-  const input = document.getElementById('messageInput');
-  if (!input) return;
-
-  input.addEventListener('input', function() {
-    // Auto-resize
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-
-    // Update send button
-    const sendBtn = document.getElementById('sendBtn');
-    if (sendBtn) {
-      sendBtn.disabled = !this.value.trim() && !selectedMediaFile;
-    }
-
-    // Handle typing
-    handleTyping();
-  });
-
-  // Handle scroll for unseen messages
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.addEventListener('scroll', function() {
-      isUserScrolling = true;
-      if (isAtBottom()) {
-        markMessagesAsSeen();
-      }
-    });
-  }
-}
-
-function handleMessageKeypress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-// ==========================================
-// SEARCH MESSAGES
-// ==========================================
-
-function searchMessages() {
-  const query = prompt('Search messages:');
-  if (query) {
-    showMessage(`🔍 Searching for "${query}"`, 'success');
-    // Implement search functionality
-  }
-}
-
-// ==========================================
-// COMMUNITY INFO
-// ==========================================
-
-function showCommunityInfo() {
-  showMessage('ℹ️ Community info coming soon!', 'success');
-}
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function viewMedia(url) {
-  // Open media in lightbox or new window
-  window.open(url, '_blank');
-}
-
-// ==========================================
-// AMAZING COMMUNITY CHAT SYSTEM
-// ==========================================
-
-let selectedMediaFile = null;
-let selectedMediaType = null;
-let isUserScrolling = false;
-let lastSeenMessageId = null;
-let unseenMessageCount = 0;
-
-// Initialize amazing chat when communities page loads
-function initializeAmazingChat() {
-  console.log('🚀 Initializing Amazing Community Chat...');
-
-  // Set community name
-  if (currentUser?.college) {
-    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
-  }
-
-  // Initialize socket connection
-  initializeSocketConnection();
-
-  // Load messages
-  loadAmazingMessages();
-
-  // Set up input handlers
-  setupAmazingInput();
-
-  // Populate emoji and sticker panels
-  populateEmojiPanel();
-  populateStickerPanel();
-
-  console.log('✅ Amazing Chat Initialized');
-}
-
-// ==========================================
-// LOAD MESSAGES WITH UNSEEN TRACKING
-// ==========================================
-
-async function loadAmazingMessages() {
-  try {
-    const container = document.getElementById('messagesContainer');
-    if (!container) return;
-
-    // Show loading
-    container.innerHTML = `
-      <div class="loading-messages">
-        <div class="loading-spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const data = await apiCall('/api/community/messages', 'GET');
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        container.innerHTML = `
-          <div class="join-community-prompt">
-            <div class="join-icon">🎓</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with fellow students and start chatting!</p>
-            <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
-          </div>
-        `;
-        return;
-      }
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear loading
-    container.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      container.innerHTML = `
-        <div class="no-messages">
-          <div class="no-messages-icon">💬</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Display messages
-    data.messages.forEach(msg => {
-      addAmazingMessage(msg, true); // Skip scroll for initial load
-    });
-
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollToBottom();
-      markMessagesAsSeen();
-    }, 100);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    const container = document.getElementById('messagesContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h3>Failed to Load Messages</h3>
-          <p>${error.message}</p>
-          <button onclick="loadAmazingMessages()" class="retry-btn">Retry</button>
-        </div>
-      `;
-    }
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI WITH REACTIONS
-// ==========================================
-
-function addAmazingMessage(message, skipScroll = false) {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) return;
-
-  // Remove empty state
-  const emptyState = container.querySelector('.no-messages');
-  if (emptyState) emptyState.remove();
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  const messageEl = document.createElement('div');
-  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  let html = `
-    <div class="message-avatar">
-      ${message.users?.profile_pic ?
-        `<img src="${message.users.profile_pic}" alt="${sender}">` :
-        '👤'
-      }
-    </div>
-    <div class="message-content-wrapper">
-      <div class="message-header">
-        <span class="message-sender">${isOwn ? 'You' : sender}</span>
-        <span class="message-time">${time}</span>
-      </div>
-      <div class="message-bubble">
-  `;
-
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
-  }
-
-  if (message.media_url) {
-    if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')">`;
-    } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
-    }
-  }
-
-  html += `
-      </div>
-      <div class="message-actions">
-        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
-          ❤️ <span class="react-count">${message.reactions || 0}</span>
-        </button>
-        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
-        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
-      </div>
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  container.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => messageEl.classList.add('visible'), 10);
-
-  // Scroll to bottom if not user scrolling
-  if (!skipScroll && !isUserScrolling) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Update unseen count if message is new and user is not at bottom
-  if (!isOwn && !isAtBottom()) {
-    unseenMessageCount++;
-    updateUnseenIndicator();
-  }
-}
-
-// ==========================================
-// MESSAGE ACTIONS
-// ==========================================
-
-async function reactToMessage(messageId) {
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji: '❤️' });
-
-    if (data.success) {
-      // Update reaction count in UI
-      const reactBtn = document.querySelector(`#msg-${messageId} .react-btn .react-count`);
-      if (reactBtn) {
-        const currentCount = parseInt(reactBtn.textContent) || 0;
-        reactBtn.textContent = currentCount + 1;
-      }
-      showMessage('❤️ Reacted!', 'success');
-    }
-  } catch (error) {
-    console.error('Reaction error:', error);
-    showMessage('❌ Failed to react', 'error');
-  }
-}
-
-function replyToMessage(messageId) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value = `@reply to message: `;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-}
-
-async function deleteAmazingMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-    if (data.success) {
-      const messageEl = document.getElementById(`msg-${messageId}`);
-      if (messageEl) {
-        messageEl.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => messageEl.remove(), 300);
-      }
-      showMessage('🗑️ Message deleted', 'success');
-    }
-  } catch (error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendMessage() {
-  const input = document.getElementById('messageInput');
-  const content = input?.value?.trim();
-
-  if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Type a message or add media', 'error');
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    if (content) formData.append('content', content);
-    if (selectedMediaFile) {
-      formData.append('media', selectedMediaFile);
-    }
-
-    // Clear input immediately
-    if (input) input.value = '';
-    clearMediaPreview();
-
-    const data = await apiCall('/api/community/messages', 'POST', formData);
-
-    if (data.success && data.message) {
-      // Add to UI immediately
-      addAmazingMessage(data.message);
-
-      // Mark as seen since we just sent it
-      markMessagesAsSeen();
-
-      // Stop typing indicator
-      stopTyping();
-    }
-
-  } catch (error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-// ==========================================
-// MEDIA SHARING
-// ==========================================
-
-function openGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = false;
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        showMessage('⚠️ File too large (max 10MB)', 'error');
-        return;
-      }
-      handleMediaSelection(file);
-    }
-  };
-
-  input.click();
-}
-
-function handleMediaSelection(file) {
-  selectedMediaFile = file;
-  selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const previewPanel = document.getElementById('mediaPreviewPanel');
-    const previewContent = document.getElementById('previewContent');
-
-    if (previewPanel && previewContent) {
-      if (selectedMediaType === 'image') {
-        previewContent.innerHTML = `<img src="${e.target.result}" class="preview-media">`;
-      } else {
-        previewContent.innerHTML = `<video src="${e.target.result}" controls class="preview-media"></video>`;
-      }
-      previewPanel.style.display = 'flex';
-    }
-  };
-
-  reader.readAsDataURL(file);
-}
-
-function clearMediaPreview() {
-  selectedMediaFile = null;
-  selectedMediaType = null;
-
-  const previewPanel = document.getElementById('mediaPreviewPanel');
-  if (previewPanel) previewPanel.style.display = 'none';
-}
-
-// ==========================================
-// EMOJI PANEL
-// ==========================================
-
-function openEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeStickerPanel(); // Close sticker panel if open
-  }
-}
-
-function closeEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateEmojiPanel() {
-  const grid = document.getElementById('emojiGrid');
-  if (!grid) return;
-
-  const emojis = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
-    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
-    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
-  ];
-
-  let html = '';
-  emojis.forEach(emoji => {
-    html += `<button class="emoji-btn" onclick="insertEmoji('${emoji}')">${emoji}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPanel();
-}
-
-// ==========================================
-// STICKER PANEL
-// ==========================================
-
-function openStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeEmojiPanel(); // Close emoji panel if open
-  }
-}
-
-function closeStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateStickerPanel() {
-  const grid = document.getElementById('stickerGrid');
-  if (!grid) return;
-
-  const stickers = [
-    '🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪',
-    '😎', '🤓', '🤠', '👻', '🎃', '🦄', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸'
-  ];
-
-  let html = '';
-  stickers.forEach(sticker => {
-    html += `<button class="sticker-btn" onclick="insertSticker('${sticker}')">${sticker}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertSticker(sticker) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += sticker;
-    input.focus();
-  }
-  closeStickerPanel();
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTyping() {
-  const input = document.getElementById('messageInput');
-  if (!input || !socket || !currentUser) return;
-
-  const content = input.value.trim();
-
-  if (content.length > 0) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  } else {
-    stopTyping();
-  }
-}
-
-function stopTyping() {
-  if (socket && currentUser) {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }
-}
-
-function showTypingIndicator(username) {
-  const indicator = document.getElementById('typingIndicators');
-  const textEl = document.getElementById('typingUsersText');
-
-  if (indicator && textEl) {
-    textEl.textContent = `${username} is typing...`;
-    indicator.style.display = 'flex';
-  }
-}
-
-function hideTypingIndicator() {
-  const indicator = document.getElementById('typingIndicators');
-  if (indicator) indicator.style.display = 'none';
-}
-
-// ==========================================
-// ONLINE MEMBERS
-// ==========================================
-
-function updateOnlineMembers(members) {
-  const countEl = document.getElementById('onlineCount');
-  const avatarsEl = document.getElementById('onlineAvatars');
-
-  if (countEl) countEl.textContent = members.length;
-
-  if (avatarsEl) {
-    let html = '';
-    members.slice(0, 5).forEach(member => {
-      html += `<div class="online-avatar" title="${member.username}">👤</div>`;
-    });
-    if (members.length > 5) {
-      html += `<div class="online-more">+${members.length - 5}</div>`;
-    }
-    avatarsEl.innerHTML = html;
-  }
-}
-
-// ==========================================
-// UNSEEN MESSAGES
-// ==========================================
-
-function isAtBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return true;
-
-  const threshold = 100; // pixels from bottom
-  return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-}
-
-function updateUnseenIndicator() {
-  const indicator = document.getElementById('unseenIndicator');
-  const countEl = document.getElementById('unseenCount');
-
-  if (indicator && countEl) {
-    if (unseenMessageCount > 0) {
-      countEl.textContent = unseenMessageCount;
-      indicator.style.display = 'flex';
-    } else {
-      indicator.style.display = 'none';
-    }
-  }
-}
-
-function markMessagesAsSeen() {
-  unseenMessageCount = 0;
-  updateUnseenIndicator();
-}
-
-function scrollToBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    markMessagesAsSeen();
-  }
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupAmazingInput() {
-  const input = document.getElementById('messageInput');
-  if (!input) return;
-
-  input.addEventListener('input', function() {
-    // Auto-resize
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-
-    // Update send button
-    const sendBtn = document.getElementById('sendBtn');
-    if (sendBtn) {
-      sendBtn.disabled = !this.value.trim() && !selectedMediaFile;
-    }
-
-    // Handle typing
-    handleTyping();
-  });
-
-  // Handle scroll for unseen messages
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.addEventListener('scroll', function() {
-      isUserScrolling = true;
-      if (isAtBottom()) {
-        markMessagesAsSeen();
-      }
-    });
-  }
-}
-
-function handleMessageKeypress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-// ==========================================
-// SEARCH MESSAGES
-// ==========================================
-
-function searchMessages() {
-  const query = prompt('Search messages:');
-  if (query) {
-    showMessage(`🔍 Searching for "${query}"`, 'success');
-    // Implement search functionality
-  }
-}
-
-// ==========================================
-// COMMUNITY INFO
-// ==========================================
-
-function showCommunityInfo() {
-  showMessage('ℹ️ Community info coming soon!', 'success');
-}
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function viewMedia(url) {
-  // Open media in lightbox or new window
-  window.open(url, '_blank');
-}
-
-// ==========================================
-// INITIALIZE AMAZING CHAT ON PAGE LOAD
-// ==========================================
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize amazing chat when communities page becomes visible
-  const communitiesPage = document.getElementById('communities');
-  if (communitiesPage) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.target.style.display !== 'none') {
-          initializeAmazingChat();
-        }
-      });
-    });
-
-    observer.observe(communitiesPage, {
-      attributes: true,
-      attributeFilter: ['style']
-    });
-  }
-});
-
-console.log('✅ Amazing Community Chat System Ready');
-console.log('✅ Community chat module loaded');
-
-
-
-// ========================================
-// REDESIGNED COMMUNITY CHAT SYSTEM - JAVASCRIPT
-// Modern, Feature-Rich Chat Implementation
-// ========================================
-
-// Chat State Management
-const chatSystemState = {
-  socket: null,
-  currentUser: null,
-  messages: [],
-  onlineUsers: [],
-  typingUsers: new Set(),
-  replyToMessage: null,
-  selectedMedia: [],
-  isRecording: false,
-  mediaRecorder: null,
-  audioChunks: [],
-  recordingStartTime: null,
-  connectionStatus: 'disconnected',
-  unreadCount: 0,
-  isAtBottom: true,
-  emojiCategories: {
-    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑'],
-    gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌'],
-    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🦇', '🐺'],
-    food: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶', '🥒', '🥬', '🥦', '🍄'],
-    activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🪁', '🏹', '🎣', '🥊', '🥋', '🎽'],
-    objects: ['⌚', '📱', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '💾', '💿', '📀', '📹', '📷', '📸', '📼', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '🧭'],
-    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️']
-  }
-};
-
-// Initialize chat system when community page is shown
-function initializeChatSystemNew() {
-  console.log('🚀 Initializing New Chat System...');
-  
-  const userStr = localStorage.getItem('user');
-  if (!userStr) {
-    console.error('❌ No user found');
-    return;
-  }
-  
-  try {
-    chatSystemState.currentUser = JSON.parse(userStr);
-    initializeSocketNew();
-    setupChatEventListenersNew();
-    loadMessagesNew();
-    updateCollegeInfoNew();
-    console.log('✅ Chat System Initialized');
-  } catch (error) {
-    console.error('❌ Initialization Error:', error);
-  }
-}
-
-// Socket Connection
-function initializeSocketNew() {
-  if (!chatSystemState.currentUser || !chatSystemState.currentUser.college) {
-    console.error('❌ Cannot initialize socket: No user or college');
-    return;
-  }
-
-  try {
-    chatSystemState.socket = io(API_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5
-    });
-
-    chatSystemState.socket.on('connect', () => {
-      console.log('🔌 Socket Connected');
-      updateConnectionStatusNew('connected');
-      chatSystemState.socket.emit('join_college', chatSystemState.currentUser.college);
-      chatSystemState.socket.emit('user_online', chatSystemState.currentUser.id);
-    });
-
-    chatSystemState.socket.on('disconnect', () => {
-      console.log('🔌 Socket Disconnected');
-      updateConnectionStatusNew('disconnected');
-    });
-
-    chatSystemState.socket.on('reconnect', () => {
-      console.log('🔌 Socket Reconnected');
-      updateConnectionStatusNew('connected');
-      chatSystemState.socket.emit('join_college', chatSystemState.currentUser.college);
-    });
-
-    chatSystemState.socket.on('new_message', (message) => {
-      console.log('📨 New Message:', message);
-      appendMessageNew(message);
-      if (!chatSystemState.isAtBottom) {
-        chatSystemState.unreadCount++;
-        updateUnreadBadgeNew();
-      }
-    });
-
-    chatSystemState.socket.on('message_deleted', ({ id }) => {
-      console.log('🗑️ Message Deleted:', id);
-      removeMessageNew(id);
-    });
-
-    chatSystemState.socket.on('online_count', (count) => {
-      console.log('👥 Online Count:', count);
-      updateOnlineCountNew(count);
-    });
-
-    chatSystemState.socket.on('user_typing', ({ username }) => {
-      handleUserTypingNew(username);
-    });
-
-    chatSystemState.socket.on('user_stop_typing', ({ username }) => {
-      handleUserStopTypingNew(username);
-    });
-
-  } catch (error) {
-    console.error('❌ Socket Error:', error);
-    updateConnectionStatusNew('error');
-  }
-}
-
-function updateConnectionStatusNew(status) {
-  chatSystemState.connectionStatus = status;
-  const dot = document.getElementById('connectionDot');
-  const text = document.getElementById('connectionText');
-  
-  if (!dot || !text) return;
-  
-  dot.className = 'status-dot';
-  
-  switch(status) {
-    case 'connected':
-      text.textContent = 'Connected';
-      break;
-    case 'connecting':
-      dot.classList.add('connecting');
-      text.textContent = 'Connecting...';
-      break;
-    case 'disconnected':
-      dot.classList.add('disconnected');
-      text.textContent = 'Disconnected';
-      break;
-    case 'error':
-      dot.classList.add('disconnected');
-      text.textContent = 'Connection Error';
-      break;
-  }
-}
-
-// Event Listeners
-function setupChatEventListenersNew() {
-  const messageInput = document.getElementById('messageInputChat');
-  const messagesArea = document.getElementById('messagesArea');
-  
-  if (messageInput) {
-    messageInput.addEventListener('input', handleInputChangeChat);
-    messageInput.addEventListener('keydown', handleKeyPressChat);
-  }
-  
-  if (messagesArea) {
-    messagesArea.addEventListener('scroll', handleScrollChat);
-  }
-  
-  document.addEventListener('click', (e) => {
-    const contextMenu = document.getElementById('messageContextMenuChat');
-    if (contextMenu && !contextMenu.contains(e.target)) {
-      contextMenu.style.display = 'none';
-    }
-  });
-}
-
-function handleInputChangeChat() {
-  const input = document.getElementById('messageInputChat');
-  const sendBtn = document.getElementById('sendBtnChat');
-  const charCount = document.getElementById('charCountChat');
-  
-  if (!input || !sendBtn) return;
-  
-  const value = input.value.trim();
-  sendBtn.disabled = value.length === 0;
-  
-  if (charCount) {
-    charCount.textContent = `${input.value.length}/5000`;
-  }
-  
-  input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-  
-  emitTypingNew();
-}
-
-function handleKeyPressChat(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessageChat();
-  }
-}
-
-function handleScrollChat() {
-  const messagesArea = document.getElementById('messagesArea');
-  if (!messagesArea) return;
-  
-  const scrollTop = messagesArea.scrollTop;
-  const scrollHeight = messagesArea.scrollHeight;
-  const clientHeight = messagesArea.clientHeight;
-  
-  chatSystemState.isAtBottom = (scrollHeight - scrollTop - clientHeight) < 100;
-  
-  const scrollBtn = document.getElementById('scrollBottomBtn');
-  if (scrollBtn) {
-    scrollBtn.style.display = chatSystemState.isAtBottom ? 'none' : 'flex';
-  }
-  
-  if (chatSystemState.isAtBottom && chatSystemState.unreadCount > 0) {
-    chatSystemState.unreadCount = 0;
-    updateUnreadBadgeNew();
-  }
-}
-
-// Message Handling
-async function loadMessagesNew() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to load messages');
-    
-    const data = await response.json();
-    chatSystemState.messages = data.messages || [];
-    
-    const wrapper = document.getElementById('messagesWrapper');
-    if (wrapper) {
-      wrapper.innerHTML = '';
-      chatSystemState.messages.forEach(msg => appendMessageNew(msg, false));
-      scrollToBottomChat();
-    }
-    
-  } catch (error) {
-    console.error('❌ Load Messages Error:', error);
-    showNotificationChat('Failed to load messages', 'error');
-  }
-}
-
-function appendMessageNew(message, animate = true) {
-  const wrapper = document.getElementById('messagesWrapper');
-  if (!wrapper) return;
-  
-  const welcomeMsg = wrapper.querySelector('.welcome-message');
-  if (welcomeMsg) welcomeMsg.remove();
-  
-  if (document.getElementById(`msg-${message.id}`)) return;
-  
-  const isOwn = message.sender === chatSystemState.currentUser.username;
-  
-  const messageEl = document.createElement('div');
-  messageEl.className = `message-wrapper ${isOwn ? 'own' : ''}`;
-  messageEl.id = `msg-${message.id}`;
-  if (animate) messageEl.style.animation = 'slideInMessage 0.3s ease-out';
-  
-  messageEl.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    showMessageContextMenuChat(e, message.id);
-  });
-  
-  let html = '';
-  
-  if (!isOwn) {
-    html += `<div class="message-avatar">${message.sender ? message.sender.charAt(0).toUpperCase() : '👤'}</div>`;
-  }
-  
-  html += '<div class="message-content">';
-  html += `<div class="message-header">
-    ${!isOwn ? `<span class="message-sender">${escapeHtmlChat(message.sender)}</span>` : ''}
-    <span class="message-time">${formatTimeChat(message.timestamp)}</span>
-  </div>`;
-  
-  html += '<div class="message-bubble">';
-  
-  if (message.reply_to) {
-    html += `<div class="reply-preview-in-message">
-      <div class="reply-preview-name">${escapeHtmlChat(message.reply_to.sender)}</div>
-      <div class="reply-preview-text">${escapeHtmlChat(message.reply_to.content)}</div>
-    </div>`;
-  }
-  
-  html += `<div class="message-text">${escapeHtmlChat(message.content)}</div>`;
-  
-  if (message.media_url) {
-    html += renderMessageMediaNew(message.media_url, message.media_type);
-  }
-  
-  html += '</div>';
-  
-  if (message.reactions && message.reactions.length > 0) {
-    html += renderReactionsNew(message.reactions, message.id);
-  }
-  
-  html += `<div class="message-actions">
-    <button class="message-action-btn" onclick="showReactionPickerNew('${message.id}')" title="React">❤️</button>
-    <button class="message-action-btn" onclick="replyToMessageByIdNew('${message.id}')" title="Reply">↩️</button>
-    <button class="message-action-btn" onclick="copyMessageTextNew('${message.id}')" title="Copy">📋</button>
-    ${isOwn ? `<button class="message-action-btn" onclick="deleteMessageByIdNew('${message.id}')" title="Delete">🗑️</button>` : ''}
-  </div>`;
-  
-  html += '</div>';
-  
-  if (isOwn) {
-    html += `<div class="message-avatar">${chatSystemState.currentUser.username.charAt(0).toUpperCase()}</div>`;
-  }
-  
-  messageEl.innerHTML = html;
-  wrapper.appendChild(messageEl);
-  
-  if (chatSystemState.isAtBottom) {
-    scrollToBottomChat();
-  }
-  
-  if (!chatSystemState.messages.find(m => m.id === message.id)) {
-    chatSystemState.messages.push(message);
-  }
-}
-
-function renderMessageMediaNew(url, type) {
-  if (type && type.startsWith('image')) {
-    return `<div class="message-media">
-      <img src="${url}" class="message-image" onclick="openImageViewer('${url}')" alt="Image">
-    </div>`;
-  } else if (type && type.startsWith('video')) {
-    return `<div class="message-media">
-      <video class="message-video" controls><source src="${url}" type="${type}"></video>
-    </div>`;
-  } else {
-    const fileName = url.split('/').pop();
-    return `<div class="message-file" onclick="window.open('${url}', '_blank')">
-      <div class="file-icon">📄</div>
-      <div class="file-info">
-        <div class="file-name">${fileName}</div>
-        <div class="file-size">Unknown size</div>
-      </div>
-    </div>`;
-  }
-}
-
-function renderReactionsNew(reactions, messageId) {
-  const grouped = {};
-  reactions.forEach(r => {
-    if (!grouped[r.emoji]) grouped[r.emoji] = [];
-    grouped[r.emoji].push(r.username);
-  });
-  
-  let html = '<div class="message-reactions">';
-  
-  Object.entries(grouped).forEach(([emoji, users]) => {
-    const isReacted = users.includes(chatSystemState.currentUser.username);
-    html += `<div class="reaction-pill ${isReacted ? 'reacted' : ''}" 
-         onclick="toggleReactionNew('${messageId}', '${emoji}')" 
-         title="${users.join(', ')}">
-      <span class="reaction-emoji">${emoji}</span>
-      <span class="reaction-count">${users.length}</span>
-    </div>`;
-  });
-  
-  html += '</div>';
-  return html;
-}
-
-function removeMessageNew(messageId) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (messageEl) {
-    messageEl.style.animation = 'fadeOut 0.3s ease-out';
-    setTimeout(() => messageEl.remove(), 300);
-  }
-  
-  chatSystemState.messages = chatSystemState.messages.filter(m => m.id !== messageId);
-}
-
-async function sendMessageChat() {
-  const input = document.getElementById('messageInputChat');
-  if (!input) return;
-  
-  const content = input.value.trim();
-  if (!content && chatSystemState.selectedMedia.length === 0) return;
-  
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No auth token');
-    
-    const messageData = {
-      content: content,
-      reply_to: chatSystemState.replyToMessage ? chatSystemState.replyToMessage.id : null
-    };
-    
-    if (chatSystemState.selectedMedia.length > 0) {
-      const formData = new FormData();
-      formData.append('content', content);
-      if (messageData.reply_to) formData.append('reply_to', messageData.reply_to);
-      
-      chatSystemState.selectedMedia.forEach(file => {
-        formData.append('media', file);
-      });
-      
-      const response = await fetch(`${API_URL}/api/community/messages-with-media`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-      
-      if (!response.ok) throw new Error('Failed to send message with media');
-      
-    } else {
-      const response = await fetch(`${API_URL}/api/community/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(messageData)
-      });
-      
-      if (!response.ok) throw new Error('Failed to send message');
-    }
-    
-    input.value = '';
-    input.style.height = 'auto';
-    document.getElementById('sendBtnChat').disabled = true;
-    
-    clearMediaPreviewChat();
-    cancelReply();
-    
-    if (chatSystemState.socket) {
-      chatSystemState.socket.emit('stop_typing', {
-        collegeName: chatSystemState.currentUser.college,
-        username: chatSystemState.currentUser.username
-      });
-    }
-    
-  } catch (error) {
-    console.error('❌ Send Message Error:', error);
-    showNotificationChat('Failed to send message', 'error');
-  }
-}
-
-async function deleteMessageByIdNew(messageId) {
-  if (!confirm('Delete this message?')) return;
-  
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) throw new Error('Failed to delete message');
-    
-    removeMessageNew(messageId);
-    showNotificationChat('Message deleted', 'success');
-    
-  } catch (error) {
-    console.error('❌ Delete Error:', error);
-    showNotificationChat('Failed to delete message', 'error');
-  }
-}
-
-// Typing Indicators
-let typingTimeoutNew = null;
-let lastTypingEmitNew = 0;
-
-function emitTypingNew() {
-  if (!chatSystemState.socket || !chatSystemState.currentUser) return;
-  
-  const now = Date.now();
-  if (now - lastTypingEmitNew < 2000) return;
-  
-  lastTypingEmitNew = now;
-  chatSystemState.socket.emit('typing', {
-    collegeName: chatSystemState.currentUser.college,
-    username: chatSystemState.currentUser.username
-  });
-  
-  clearTimeout(typingTimeoutNew);
-  typingTimeoutNew = setTimeout(() => {
-    chatSystemState.socket.emit('stop_typing', {
-      collegeName: chatSystemState.currentUser.college,
-      username: chatSystemState.currentUser.username
-    });
-  }, 3000);
-}
-
-function handleUserTypingNew(username) {
-  if (username === chatSystemState.currentUser.username) return;
-  chatSystemState.typingUsers.add(username);
-  updateTypingIndicatorNew();
-}
-
-function handleUserStopTypingNew(username) {
-  chatSystemState.typingUsers.delete(username);
-  updateTypingIndicatorNew();
-}
-
-function updateTypingIndicatorNew() {
-  const indicator = document.getElementById('typingIndicator');
-  const nameEl = document.getElementById('typingName');
-  
-  if (!indicator || !nameEl) return;
-  
-  if (chatSystemState.typingUsers.size === 0) {
-    indicator.style.display = 'none';
-  } else {
-    indicator.style.display = 'block';
-    const users = Array.from(chatSystemState.typingUsers);
-    
-    if (users.length === 1) {
-      nameEl.textContent = users[0];
-    } else if (users.length === 2) {
-      nameEl.textContent = `${users[0]} and ${users[1]}`;
-    } else {
-      nameEl.textContent = `${users.length} people`;
-    }
-    
-    if (chatSystemState.isAtBottom) scrollToBottomChat();
-  }
-}
-
-// Media Handling
-function openMediaPickerChat() {
-  document.getElementById('mediaFileInputChat').click();
-}
-
-function openFilePickerChat() {
-  document.getElementById('documentFileInputChat').click();
-}
-
-function handleMediaFilesChat(files) {
-  Array.from(files).forEach(file => {
-    if (chatSystemState.selectedMedia.length >= 5) {
-      showNotificationChat('Maximum 5 files allowed', 'warning');
-      return;
-    }
-    chatSystemState.selectedMedia.push(file);
-  });
-  updateMediaPreviewChat();
-}
-
-function handleDocumentFilesChat(files) {
-  handleMediaFilesChat(files);
-}
-
-function updateMediaPreviewChat() {
-  const preview = document.getElementById('mediaPreviewChat');
-  const items = document.getElementById('previewItemsChat');
-  
-  if (!preview || !items) return;
-  
-  if (chatSystemState.selectedMedia.length === 0) {
-    preview.style.display = 'none';
-    return;
-  }
-  
-  preview.style.display = 'block';
-  items.innerHTML = '';
-  
-  chatSystemState.selectedMedia.forEach((file, index) => {
-    const item = document.createElement('div');
-    item.className = 'preview-item';
-    
-    if (file.type.startsWith('image/')) {
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      item.appendChild(img);
-    } else if (file.type.startsWith('video/')) {
-      const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      item.appendChild(video);
-    } else {
-      item.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:rgba(79,116,163,0.2);">📄</div>`;
-    }
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'preview-item-remove';
-    removeBtn.textContent = '×';
-    removeBtn.onclick = () => {
-      chatSystemState.selectedMedia.splice(index, 1);
-      updateMediaPreviewChat();
-    };
-    
-    item.appendChild(removeBtn);
-    items.appendChild(item);
-  });
-}
-
-function clearMediaPreviewChat() {
-  chatSystemState.selectedMedia = [];
-  const preview = document.getElementById('mediaPreviewChat');
-  if (preview) preview.style.display = 'none';
-}
-
-// Voice Recording
-async function startVoiceRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    chatSystemState.mediaRecorder = new MediaRecorder(stream);
-    chatSystemState.audioChunks = [];
-    chatSystemState.recordingStartTime = Date.now();
-    
-    chatSystemState.mediaRecorder.ondataavailable = (event) => {
-      chatSystemState.audioChunks.push(event.data);
-    };
-    
-    chatSystemState.mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(chatSystemState.audioChunks, { type: 'audio/webm' });
-      await sendVoiceMessageBlobNew(audioBlob);
-      stream.getTracks().forEach(track => track.stop());
-    };
-    
-    chatSystemState.mediaRecorder.start();
-    chatSystemState.isRecording = true;
-    
-    document.getElementById('inputWrapperChat').style.display = 'none';
-    document.getElementById('voiceRecordingUI').style.display = 'flex';
-    
-    updateRecordingTimeNew();
-    
-  } catch (error) {
-    console.error('❌ Voice Recording Error:', error);
-    showNotificationChat('Microphone access denied', 'error');
-  }
-}
-
-function updateRecordingTimeNew() {
-  if (!chatSystemState.isRecording) return;
-  
-  const elapsed = Math.floor((Date.now() - chatSystemState.recordingStartTime) / 1000);
-  const minutes = Math.floor(elapsed / 60);
-  const seconds = elapsed % 60;
-  
-  const timeEl = document.getElementById('recordingTime');
-  if (timeEl) {
-    timeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-  
-  setTimeout(updateRecordingTimeNew, 1000);
-}
-
-function cancelVoiceRecording() {
-  if (chatSystemState.mediaRecorder && chatSystemState.isRecording) {
-    chatSystemState.mediaRecorder.stop();
-    chatSystemState.isRecording = false;
-  }
-  
-  document.getElementById('inputWrapperChat').style.display = 'flex';
-  document.getElementById('voiceRecordingUI').style.display = 'none';
-}
-
-function sendVoiceMessage() {
-  if (chatSystemState.mediaRecorder && chatSystemState.isRecording) {
-    chatSystemState.mediaRecorder.stop();
-    chatSystemState.isRecording = false;
-  }
-  
-  document.getElementById('inputWrapperChat').style.display = 'flex';
-  document.getElementById('voiceRecordingUI').style.display = 'none';
-}
-
-async function sendVoiceMessageBlobNew(blob) {
-  try {
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('voice', blob, 'voice-message.webm');
-    formData.append('content', '🎤 Voice message');
-    
-    const response = await fetch(`${API_URL}/api/community/messages-with-media`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-    
-    if (!response.ok) throw new Error('Failed to send voice message');
-    
-    showNotificationChat('Voice message sent', 'success');
-    
-  } catch (error) {
-    console.error('❌ Send Voice Error:', error);
-    showNotificationChat('Failed to send voice message', 'error');
-  }
-}
-
-// Emoji Picker
-function openEmojiPickerChat() {
-  const modal = document.getElementById('emojiPickerModalChat');
-  if (!modal) return;
-  
-  modal.style.display = 'flex';
-  renderEmojiGridChat('smileys');
-}
-
-function closeEmojiPickerChat() {
-  const modal = document.getElementById('emojiPickerModalChat');
-  if (modal) modal.style.display = 'none';
-}
-
-function switchEmojiCategoryChat(category) {
-  document.querySelectorAll('.emoji-cat-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  document.querySelector(`[data-category="${category}"]`).classList.add('active');
-  
-  renderEmojiGridChat(category);
-}
-
-function renderEmojiGridChat(category) {
-  const grid = document.getElementById('emojiGridChat');
-  if (!grid) return;
-  
-  const emojis = chatSystemState.emojiCategories[category] || [];
-  
-  grid.innerHTML = emojis.map(emoji => 
-    `<div class="emoji-item" onclick="insertEmojiChat('${emoji}')">${emoji}</div>`
-  ).join('');
-}
-
-function insertEmojiChat(emoji) {
-  const input = document.getElementById('messageInputChat');
-  if (!input) return;
-  
-  input.value += emoji;
-  handleInputChangeChat();
-  input.focus();
-  closeEmojiPickerChat();
-}
-
-function filterEmojisChat(query) {
-  if (!query) {
-    renderEmojiGridChat('smileys');
-    return;
-  }
-  
-  const grid = document.getElementById('emojiGridChat');
-  if (!grid) return;
-  
-  const allEmojis = Object.values(chatSystemState.emojiCategories).flat();
-  grid.innerHTML = allEmojis.slice(0, 50).map(emoji => 
-    `<div class="emoji-item" onclick="insertEmojiChat('${emoji}')">${emoji}</div>`
-  ).join('');
-}
-
-function openGifPickerChat() {
-  const modal = document.getElementById('gifPickerModalChat');
-  if (!modal) return;
-  
-  modal.style.display = 'flex';
-  searchGifsChat('trending');
-}
-
-function closeGifPickerChat() {
-  const modal = document.getElementById('gifPickerModalChat');
-  if (modal) modal.style.display = 'none';
-}
-
-function searchGifsChat(query) {
-  const grid = document.getElementById('gifGridChat');
-  if (!grid) return;
-  
-  grid.innerHTML = '<div class="gif-loading">GIF search coming soon...</div>';
-}
-
-// Reactions
-async function toggleReactionNew(messageId, emoji) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_URL}/api/community/messages/${messageId}/react`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ emoji })
-    });
-    
-    if (!response.ok) throw new Error('Failed to toggle reaction');
-    
-    const data = await response.json();
-    updateMessageReactionsNew(messageId, data.reactions);
-    
-  } catch (error) {
-    console.error('❌ Reaction Error:', error);
-  }
-}
-
-function updateMessageReactionsNew(messageId, reactions) {
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (!messageEl) return;
-  
-  const reactionsContainer = messageEl.querySelector('.message-reactions');
-  if (reactionsContainer) {
-    reactionsContainer.outerHTML = renderReactionsNew(reactions, messageId);
-  } else {
-    const bubble = messageEl.querySelector('.message-bubble');
-    if (bubble) {
-      bubble.insertAdjacentHTML('afterend', renderReactionsNew(reactions, messageId));
-    }
-  }
-}
-
-function showReactionPickerNew(messageId) {
-  const commonEmojis = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
-  
-  const messageEl = document.getElementById(`msg-${messageId}`);
-  if (!messageEl) return;
-  
-  const picker = document.createElement('div');
-  picker.className = 'quick-reaction-picker';
-  picker.style.cssText = 'position:absolute;background:#1a1f2e;padding:8px;border-radius:20px;display:flex;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5);z-index:100;';
-  
-  commonEmojis.forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.textContent = emoji;
-    btn.style.cssText = 'background:none;border:none;font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:all 0.2s;';
-    btn.onclick = () => {
-      toggleReactionNew(messageId, emoji);
-      picker.remove();
-    };
-    btn.onmouseenter = () => btn.style.background = 'rgba(79,116,163,0.2)';
-    btn.onmouseleave = () => btn.style.background = 'none';
-    picker.appendChild(btn);
-  });
-  
-  messageEl.style.position = 'relative';
-  messageEl.appendChild(picker);
-  
-  setTimeout(() => picker.remove(), 5000);
-}
-
-// Reply
-function replyToMessageByIdNew(messageId) {
-  const message = chatSystemState.messages.find(m => m.id === messageId);
-  if (!message) return;
-  
-  chatSystemState.replyToMessage = message;
-  
-  const preview = document.getElementById('replyPreview');
-  const nameEl = document.getElementById('replyToName');
-  const textEl = document.getElementById('replyToText');
-  
-  if (preview && nameEl && textEl) {
-    preview.style.display = 'block';
-    nameEl.textContent = message.sender;
-    textEl.textContent = message.content.substring(0, 100);
-  }
-  
-  document.getElementById('messageInputChat')?.focus();
-}
-
-function cancelReply() {
-  chatSystemState.replyToMessage = null;
-  const preview = document.getElementById('replyPreview');
-  if (preview) preview.style.display = 'none';
-}
-
-// Context Menu
-function showMessageContextMenuChat(event, messageId) {
-  const menu = document.getElementById('messageContextMenuChat');
-  if (!menu) return;
-  
-  menu.style.display = 'block';
-  menu.style.left = event.pageX + 'px';
-  menu.style.top = event.pageY + 'px';
-  
-  menu.dataset.messageId = messageId;
-}
-
-function replyToMessageChat() {
-  const menu = document.getElementById('messageContextMenuChat');
-  const messageId = menu?.dataset.messageId;
-  if (messageId) {
-    replyToMessageByIdNew(messageId);
-    menu.style.display = 'none';
-  }
-}
-
-function copyMessageChat() {
-  const menu = document.getElementById('messageContextMenuChat');
-  const messageId = menu?.dataset.messageId;
-  if (messageId) {
-    copyMessageTextNew(messageId);
-    menu.style.display = 'none';
-  }
-}
-
-function copyMessageTextNew(messageId) {
-  const message = chatSystemState.messages.find(m => m.id === messageId);
-  if (!message) return;
-  
-  navigator.clipboard.writeText(message.content).then(() => {
-    showNotificationChat('Message copied', 'success');
-  }).catch(err => {
-    console.error('Copy failed:', err);
-  });
-}
-
-function pinMessageChat() {
-  const menu = document.getElementById('messageContextMenuChat');
-  if (menu) menu.style.display = 'none';
-  showNotificationChat('Pin feature coming soon', 'info');
-}
-
-function reportMessageChat() {
-  const menu = document.getElementById('messageContextMenuChat');
-  if (menu) menu.style.display = 'none';
-  
-  if (confirm('Report this message as inappropriate?')) {
-    showNotificationChat('Message reported', 'success');
-  }
-}
-
-function deleteMessageChat() {
-  const menu = document.getElementById('messageContextMenuChat');
-  const messageId = menu?.dataset.messageId;
-  if (messageId) {
-    deleteMessageByIdNew(messageId);
-    menu.style.display = 'none';
-  }
-}
-
-// UI Helpers
-function updateCollegeInfoNew() {
-  const nameEl = document.getElementById('collegeChatName');
-  const locationEl = document.getElementById('collegeLocationChat');
-  
-  if (nameEl && chatSystemState.currentUser.college) {
-    nameEl.textContent = chatSystemState.currentUser.college;
-  }
-  
-  if (locationEl) {
-    locationEl.textContent = 'Community Chat';
-  }
-}
-
-function updateOnlineCountNew(count) {
-  const countEl = document.getElementById('onlineCountSidebar');
-  if (countEl) {
-    countEl.textContent = count;
-  }
-}
-
-function updateUnreadBadgeNew() {
-  const badge = document.getElementById('newMessagesBadge');
-  if (!badge) return;
-  
-  if (chatSystemState.unreadCount > 0) {
-    badge.textContent = chatSystemState.unreadCount > 99 ? '99+' : chatSystemState.unreadCount;
-    badge.style.display = 'flex';
-  } else {
-    badge.style.display = 'none';
-  }
-}
-
-function scrollToBottomChat() {
-  const messagesArea = document.getElementById('messagesArea');
-  if (!messagesArea) return;
-  
-  messagesArea.scrollTo({
-    top: messagesArea.scrollHeight,
-    behavior: 'smooth'
-  });
-}
-
-function toggleChatSidebar() {
-  const sidebar = document.querySelector('.chat-sidebar');
-  if (sidebar) {
-    sidebar.classList.toggle('active');
-  }
-}
-
-function toggleChatInfo() {
-  const panel = document.getElementById('chatInfoPanel');
-  if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  }
-}
-
-function searchInChat() {
-  showNotificationChat('Search feature coming soon', 'info');
-}
-
-function openChatSettings() {
-  showNotificationChat('Settings feature coming soon', 'info');
-}
-
-function showChatRules() {
-  alert('Community Chat Rules:\n\n1. Be respectful\n2. No spam\n3. No harassment\n4. Keep it college-appropriate\n5. Have fun!');
-}
-
-function showChatStats() {
-  showNotificationChat('Statistics feature coming soon', 'info');
-}
-
-function toggleNotifications() {
-  showNotificationChat('Notification settings coming soon', 'info');
-}
-
-function loadMoreMessages() {
-  showNotificationChat('Load more coming soon', 'info');
-}
-
-// Utilities
-function escapeHtmlChat(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function formatTimeChat(timestamp) {
-  const date = new Date(timestamp);
-  const now = new Date();
-  
-  if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + 
-           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-}
-
-function showNotificationChat(message, type = 'info') {
-  const notif = document.createElement('div');
-  notif.className = 'chat-notification ' + type;
-  notif.textContent = message;
-  notif.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#4ade80' : '#4f74a3'};
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 10000;
-    animation: slideInRight 0.3s ease-out;
-  `;
-  
-  document.body.appendChild(notif);
-  
-  setTimeout(() => {
-    notif.style.animation = 'slideOutRight 0.3s ease-out';
-    setTimeout(() => notif.remove(), 300);
-  }, 3000);
-}
-
-// Initialize when community page is shown
-document.addEventListener('DOMContentLoaded', function() {
-  const communitySection = document.getElementById('communities');
-  if (communitySection) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.target.style.display !== 'none') {
-          initializeChatSystemNew();
-        }
-      });
-    });
-
-    observer.observe(communitySection, { 
-      attributes: true, 
-      attributeFilter: ['style'] 
-    });
-  }
-});
-
-console.log('✅ New Chat System Scripts Loaded');
+console.log('✨ RealVibe features initialized!')
