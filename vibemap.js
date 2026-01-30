@@ -1478,33 +1478,54 @@ console.log('✨ Message actions setup');
 }
 
 async function deleteMessage(messageId) {
-if (!confirm('Delete this message?')) return;
+  if (!confirm('Delete this message?')) return;
 
-try {
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '0.5';
-messageEl.style.pointerEvents = 'none';
-}
+  try {
+    const messageEl = document.getElementById(`msg-${messageId}`);
+    if (messageEl) {
+      messageEl.style.opacity = '0.5';
+      messageEl.style.pointerEvents = 'none';
+    }
 
-await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
+    // Get current user for authentication
+    const currentUser = getCurrentUser();
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (currentUser && currentUser.token) {
+      headers['Authorization'] = `Bearer ${currentUser.token}`;
+    }
 
-if (messageEl) {
-messageEl.style.animation = 'fadeOut 0.3s ease';
-setTimeout(() => messageEl.remove(), 300);
-}
+    const response = await fetch(`/api/community/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: headers
+    });
 
-showMessage('🗑️ Message deleted', 'success');
-} catch(error) {
-console.error('Delete error:', error);
-showMessage('❌ Failed to delete', 'error');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete message');
+    }
 
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '1';
-messageEl.style.pointerEvents = 'auto';
-}
-}
+    if (messageEl) {
+      messageEl.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => messageEl.remove(), 300);
+    }
+
+    console.log('Message deleted successfully');
+    
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    
+    // Restore message if deletion failed
+    const messageEl = document.getElementById(`msg-${messageId}`);
+    if (messageEl) {
+      messageEl.style.opacity = '1';
+      messageEl.style.pointerEvents = 'auto';
+    }
+    
+    alert('Failed to delete message: ' + error.message);
+  }
 }
 
 function updateMessageStatus(messageId, status) {
