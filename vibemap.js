@@ -8718,28 +8718,33 @@ function getFallbackCommunityData(collegeType) {
 // Function to load real community messages from your backend
 async function loadRealCommunityMessages(collegeType, communityId) {
   try {
-    console.log('Loading REAL messages for college:', collegeType);
+    console.log('=== DEBUG: Loading REAL messages for college:', collegeType);
     
     // Get current user with proper authentication
     const currentUser = getCurrentUser();
+    console.log('Current user for message loading:', currentUser);
     
-    // Try authenticated request first
-    if (currentUser && currentUser.token) {
-      console.log('Trying authenticated request...');
-      
-      const response = await fetch('/api/community/messages', {
+    // First, let's test if the backend endpoint exists and works
+    console.log('Testing backend endpoint...');
+    
+    try {
+      const testResponse = await fetch('/api/community/messages', {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
+          'Content-Type': 'application/json'
         }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded REAL messages from backend (authenticated):', data);
+      console.log('Backend test response status:', testResponse.status);
+      console.log('Backend test response headers:', [...testResponse.headers.entries()]);
+      
+      if (testResponse.ok) {
+        const data = await testResponse.json();
+        console.log('Backend test response data:', data);
         
         if (data.success && data.messages) {
+          console.log('✅ Found real messages from backend:', data.messages.length);
+          
           const formattedMessages = data.messages.map(msg => ({
             id: msg.id,
             sender: msg.users?.username || msg.senderName || 'Unknown User',
@@ -8750,45 +8755,24 @@ async function loadRealCommunityMessages(collegeType, communityId) {
             senderId: msg.sender_id
           }));
           
+          console.log('✅ Formatted messages:', formattedMessages);
           return formattedMessages;
+        } else {
+          console.log('❌ Backend returned no messages:', data);
         }
+      } else {
+        const errorText = await testResponse.text();
+        console.log('❌ Backend error response:', testResponse.status, errorText);
       }
+    } catch (backendError) {
+      console.log('❌ Backend call failed:', backendError);
     }
     
-    // If no token or auth failed, try unauthenticated request (for testing)
-    console.log('Trying unauthenticated request for testing...');
-    
-    const unauthResponse = await fetch('/api/community/messages', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (unauthResponse.ok) {
-      const data = await unauthResponse.json();
-      console.log('Loaded messages (unauthenticated):', data);
-      
-      if (data.success && data.messages) {
-        const formattedMessages = data.messages.map(msg => ({
-          id: msg.id,
-          sender: msg.users?.username || msg.senderName || 'Unknown User',
-          message: msg.content || msg.message,
-          time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          avatar: msg.users?.profile_pic || msg.avatar || `https://picsum.photos/seed/${msg.users?.username || 'user'}/36/36`,
-          isCurrentUser: msg.sender_id === userCollegeData?.userId,
-          senderId: msg.sender_id
-        }));
-        
-        return formattedMessages;
-      }
-    }
-    
-    console.log('Backend calls failed, using sample messages');
+    console.log('❌ All backend attempts failed, using sample messages');
     return getSampleMessages(collegeType);
     
   } catch (error) {
-    console.error('Error loading REAL messages:', error);
+    console.error('❌ Error loading REAL messages:', error);
     return getSampleMessages(collegeType);
   }
 }
