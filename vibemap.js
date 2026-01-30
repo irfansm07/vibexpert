@@ -1812,44 +1812,90 @@ function scrollToBottom() {
 // ========================================
 
 function loadCommunities() {
-  // Initialize real community chat
-  initializeRealCommunityChat();
-}
+  const container = document.getElementById('communitiesContainer');
+  if (!container) return;
 
-async function initializeRealCommunityChat() {
-  console.log('🚀 Initializing REAL community chat...');
-  
-  const userStr = localStorage.getItem('user');
-  if (!userStr) {
-    showJoinCommunityPrompt();
+  if (!currentUser || !currentUser.communityJoined) {
+    container.innerHTML = `
+      <div class="community-guidance">
+        <p>🎓 Connect to college first!</p>
+        <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
+      </div>
+    `;
     return;
   }
-  
-  try {
-    currentUser = JSON.parse(userStr);
-    
-    if (!currentUser.communityJoined || !currentUser.college) {
-      showJoinCommunityPrompt();
-      return;
-    }
-    
-    messageContainer = document.getElementById('unifiedMessages');
-    if (!messageContainer) {
-      console.error('❌ Message container not found');
-      return;
-    }
-    
-    initializeSocketConnection();
-    await loadRealMessages();
-    setupChatInput();
-    updateCommunityHeader();
-    
-    console.log('✅ Real community chat initialized');
-    
-  } catch (error) {
-    console.error('❌ Error initializing chat:', error);
-    showErrorState('Failed to initialize chat');
-  }
+
+  // Single unified chat platform
+  container.innerHTML = `
+    <div class="unified-chat-platform">
+      <!-- Chat Header -->
+      <div class="unified-chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar-large">🎓</div>
+          <div>
+            <h3>${currentUser.college} Community</h3>
+            <p class="chat-status">
+              <span class="online-dot"></span>
+              <span id="onlineCount">0</span> members online
+            </p>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
+          <button class="icon-btn" onclick="showChatInfo()" title="Info">ℹ️</button>
+        </div>
+      </div>
+
+      <!-- Messages Container -->
+      <div class="unified-messages" id="unifiedMessages">
+        <div class="loading-messages-state">
+          <div class="spinner"></div>
+          <p>Loading messages...</p>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator" class="typing-indicators-container" style="display:none;">
+        <div class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span id="typingText">Someone is typing...</span>
+        </div>
+      </div>
+
+      <!-- Enhanced Input Area -->
+      <div class="unified-input-area">
+        <div class="input-features">
+          <button class="feature-btn" onclick="openPhotoPicker()" title="Share Photo">📷</button>
+          <button class="feature-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+          <button class="feature-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
+          <button class="feature-btn" onclick="openExperienceShare()" title="Share Experience">📝</button>
+        </div>
+        <div class="input-wrapper">
+          <textarea id="unifiedInput" placeholder="Share your experience, photos, or just chat..." rows="1"
+            onkeydown="handleUnifiedKeypress(event)"
+            oninput="handleTypingIndicator()"></textarea>
+        </div>
+        <button class="send-btn-unified" onclick="sendUnifiedMessage()" title="Send">
+          <span class="send-icon">➤</span>
+        </button>
+      </div>
+
+      <!-- Media Preview Area -->
+      <div class="media-preview-area" id="mediaPreviewArea" style="display:none;">
+        <div class="preview-content" id="previewContent"></div>
+        <button class="remove-preview-btn" onclick="clearMediaPreview()">✕</button>
+      </div>
+    </div>
+  `;
+
+  // Initialize real-time chat
+  setTimeout(() => {
+    initializeRealTimeChat();
+  }, 100);
 }
 
 // ==========================================
@@ -1961,41 +2007,43 @@ function updateOnlineCount(count) {
 // LOAD MESSAGES FROM API
 // ==========================================
 
-async function loadRealMessages() {
+async function loadCommunityMessages() {
   try {
-    console.log('📥 Loading real messages from backend...');
-    
-    messageContainer.innerHTML = `
+    console.log('📥 Loading community messages...');
+
+    const messagesEl = document.getElementById('unifiedMessages');
+    if (!messagesEl) return;
+
+    // Show loading state
+    messagesEl.innerHTML = `
       <div class="loading-messages-state">
         <div class="spinner"></div>
         <p>Loading messages...</p>
       </div>
     `;
-    
-    const token = localStorage.getItem('authToken');
-    
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    
+
+    const data = await apiCall('/api/community/messages', 'GET');
+
     if (!data.success) {
       if (data.needsJoinCommunity) {
-        showJoinCommunityPrompt();
+        messagesEl.innerHTML = `
+          <div class="empty-chat-state">
+            <div class="empty-chat-icon">🏫</div>
+            <h3>Join Your College Community</h3>
+            <p>Connect with students from your college</p>
+            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
+          </div>
+        `;
         return;
       }
       throw new Error(data.error || 'Failed to load messages');
     }
-    
-    messageContainer.innerHTML = '';
-    
+
+    // Clear loading state
+    messagesEl.innerHTML = '';
+
     if (!data.messages || data.messages.length === 0) {
-      messageContainer.innerHTML = `
+      messagesEl.innerHTML = `
         <div class="empty-chat-state">
           <div class="empty-chat-icon">👋</div>
           <h3>No Messages Yet</h3>
@@ -2004,20 +2052,6 @@ async function loadRealMessages() {
       `;
       return;
     }
-    
-    data.messages.forEach(msg => {
-      addRealMessageToUI(msg, true);
-    });
-    
-    setTimeout(() => scrollToBottom(), 100);
-    
-    console.log(`✅ Loaded ${data.messages.length} real messages`);
-    
-  } catch (error) {
-    console.error('❌ Error loading messages:', error);
-    showErrorState('Failed to load messages: ' + error.message);
-  }
-}
 
     // Display all messages
     data.messages.forEach(msg => {
@@ -2051,106 +2085,144 @@ async function loadRealMessages() {
 // ADD MESSAGE TO UI
 // ==========================================
 
-function addRealMessageToUI(message, skipScroll = false) {
-  const existingMsg = document.getElementById(`msg-${message.id}`);
+function addRealTimeMessage(message, skipScroll = false) {
+  const messagesEl = document.getElementById('unifiedMessages');
+  if (!messagesEl) return;
+
+  // Check if message already exists
+  const existingMsg = document.getElementById(`unified-msg-${message.id}`);
   if (existingMsg) return;
-  
-  const emptyState = messageContainer.querySelector('.empty-chat-state');
-  if (emptyState) emptyState.remove();
-  
-  const isOwnMessage = message.sender_id === currentUser.id;
-  const sender = message.users?.username || 'User';
-  const senderPic = message.users?.profile_pic || null;
-  
-  const timestamp = new Date(message.created_at);
-  const timeStr = timestamp.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  
+
+  // Remove empty state if present
+  const emptyState = messagesEl.querySelector('.empty-chat-state');
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  const isOwn = message.sender_id === currentUser?.id;
+  const sender = message.users?.username || message.sender_name || 'User';
+  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
   const messageEl = document.createElement('div');
-  messageEl.className = `unified-message ${isOwnMessage ? 'own' : 'other'}`;
-  messageEl.id = `msg-${message.id}`;
-  
+  messageEl.className = `unified-message ${isOwn ? 'own' : 'other'}`;
+  messageEl.id = `unified-msg-${message.id}`;
+
   let html = `
     <div class="message-header">
-      <span class="sender-name">${isOwnMessage ? 'You' : sender}</span>
-      <span class="message-time">${timeStr}</span>
+      <span class="sender-name">${isOwn ? 'You' : sender}</span>
+      <span class="message-time">${time}</span>
     </div>
     <div class="message-content">
   `;
-  
+
   if (message.content) {
     html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
   }
-  
+
   if (message.media_url) {
     if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media">`;
+      html += `<img src="${message.media_url}" class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;" onclick="openMediaViewer('${message.media_url}')">`;
     } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
+      html += `<video src="${message.media_url}" controls class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;"></video>`;
     }
   }
-  
-  html += `</div>`;
+
   html += `
+    </div>
     <div class="message-actions">
-      <button onclick="reactToMessage('${message.id}')">❤️</button>
-      <button onclick="replyToMessage('${message.id}')">↩️</button>
-      ${isOwnMessage ? `<button onclick="deleteMessage('${message.id}')">🗑️</button>` : ''}
+      <button onclick="reactToUnifiedMessage('${message.id}')">❤️</button>
+      <button onclick="replyToUnifiedMessage('${message.id}')">↩️</button>
+      ${isOwn ? `<button onclick="deleteUnifiedMessage('${message.id}')">🗑️</button>` : ''}
     </div>
   `;
-  
+
   messageEl.innerHTML = html;
-  messageContainer.appendChild(messageEl);
-  
-  setTimeout(() => messageEl.classList.add('message-visible'), 10);
-  if (!skipScroll) setTimeout(() => scrollToBottom(), 50);
+  messagesEl.appendChild(messageEl);
+
+  // Animate entrance
+  setTimeout(() => {
+    messageEl.classList.add('message-visible');
+  }, 10);
+
+  // Scroll to bottom
+  if (!skipScroll) {
+    setTimeout(() => {
+      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+    }, 50);
+  }
+
+  // Play receive sound for other users' messages
+  if (!isOwn) {
+    playMessageSound('receive');
+  }
 }
 
 // ==========================================
 // SEND MESSAGE
 // ==========================================
 
-async function sendRealMessage() {
+async function sendUnifiedMessage() {
   const input = document.getElementById('unifiedInput');
   const content = input?.value?.trim();
-  
-  if (!content) return;
-  
+
+  if (!content && !selectedMediaFile) {
+    showMessage('⚠️ Add message or media', 'error');
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  if (!currentUser.communityJoined || !currentUser.college) {
+    showMessage('⚠️ Join college community first', 'error');
+    return;
+  }
+
   try {
-    const token = localStorage.getItem('authToken');
-    
-    const response = await fetch(`${API_URL}/api/community/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ content })
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to send message');
+    showMessage('📤 Sending...', 'success');
+
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (selectedMediaFile) {
+      formData.append('media', selectedMediaFile);
     }
-    
-    input.value = '';
-    input.style.height = 'auto';
-    
-    if (socket) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
+
+    const data = await apiCall('/api/community/messages', 'POST', formData);
+
+    if (data.success) {
+      showMessage('✅ Message sent!', 'success');
+
+      // Clear input and media
+      if (input) input.value = '';
+      clearMediaPreview();
+
+      // Add message to UI (if not already added by socket)
+      if (data.message) {
+        const messageExists = document.getElementById(`unified-msg-${data.message.id}`);
+        if (!messageExists) {
+          addRealTimeMessage(data.message);
+        }
+      }
+
+      // Play send sound
+      playMessageSound('send');
+
+      // Stop typing indicator
+      if (socket && currentUser.college) {
+        socket.emit('stop_typing', {
+          collegeName: currentUser.college,
+          username: currentUser.username
+        });
+      }
+    } else {
+      throw new Error(data.error || 'Failed to send');
     }
-    
-    console.log('✅ Message sent successfully');
-    
+
   } catch (error) {
-    console.error('❌ Error sending message:', error);
-    showMessage('Failed to send message', 'error');
+    console.error('❌ Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
   }
 }
 
@@ -5962,13 +6034,13 @@ async function initializeCommunityChat() {
 // SOCKET.IO CONNECTION
 // ==========================================
 
-function initializeSocketConnection() {
+function initializeSocket() {
   if (socket && socket.connected) {
     console.log('✅ Socket already connected');
     socket.emit('join_college', currentUser.college);
     return;
   }
-  
+
   socket = io(API_URL, {
     transports: ['websocket', 'polling'],
     reconnection: true,
@@ -5976,46 +6048,49 @@ function initializeSocketConnection() {
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 10
   });
-  
+
   socket.on('connect', () => {
     console.log('✅ Socket connected:', socket.id);
-    socket.emit('join_college', currentUser.college);
-    socket.emit('user_online', currentUser.id);
     updateConnectionStatus(true);
+    
+    if (currentUser && currentUser.college) {
+      socket.emit('join_college', currentUser.college);
+      socket.emit('user_online', currentUser.id);
+    }
   });
-  
+
   socket.on('disconnect', () => {
     console.log('❌ Socket disconnected');
     updateConnectionStatus(false);
   });
-  
+
   socket.on('reconnect', () => {
     console.log('🔄 Socket reconnected');
     updateConnectionStatus(true);
-    socket.emit('join_college', currentUser.college);
-    loadRealMessages();
+    if (currentUser && currentUser.college) {
+      socket.emit('join_college', currentUser.college);
+      loadCommunityMessages();
+    }
   });
-  
+
   socket.on('new_message', (message) => {
     console.log('📨 New message received:', message);
-    addRealMessageToUI(message);
+    addMessageToUI(message, false);
   });
-  
+
   socket.on('message_deleted', ({ id }) => {
     console.log('🗑️ Message deleted:', id);
     removeMessageFromUI(id);
   });
-  
+
   socket.on('online_count', (count) => {
     updateOnlineCount(count);
   });
-  
+
   socket.on('user_typing', ({ username }) => {
-    if (username !== currentUser.username) {
-      showTypingIndicator(username);
-    }
+    showTypingIndicator(username);
   });
-  
+
   socket.on('user_stop_typing', ({ username }) => {
     hideTypingIndicator(username);
   });
@@ -7656,55 +7731,9 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function showJoinCommunityPrompt() {
-  if (messageContainer) {
-    messageContainer.innerHTML = `
-      <div class="join-community-prompt">
-        <div class="join-icon">🎓</div>
-        <h3>Join Your College Community</h3>
-        <p>Connect with fellow students from your college</p>
-        <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
-      </div>
-    `;
-  }
-}
-
-function showErrorState(message) {
-  if (messageContainer) {
-    messageContainer.innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <h3>Error</h3>
-        <p>${message}</p>
-        <button onclick="loadRealMessages()" class="retry-btn">Retry</button>
-      </div>
-    `;
-  }
-}
-
-function updateConnectionStatus(isConnected) {
-  const statusEl = document.getElementById('connectionStatus');
-  if (statusEl) {
-    statusEl.innerHTML = isConnected ? 
-      '<span style="color:#10b981;">● Connected</span>' : 
-      '<span style="color:#ef4444;">● Disconnected</span>';
-  }
-}
-
-function updateOnlineCount(count) {
-  const elements = document.querySelectorAll('.online-count');
-  elements.forEach(el => {
-    el.textContent = count || 0;
-  });
-}
-
-function scrollToBottom() {
-  if (messageContainer) {
-    messageContainer.scrollTo({
-      top: messageContainer.scrollHeight,
-      behavior: 'smooth'
-    });
-  }
+function viewMedia(url) {
+  // Open media in lightbox or new window
+  window.open(url, '_blank');
 }
 
 // ==========================================
@@ -9465,6 +9494,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
-
 
 
