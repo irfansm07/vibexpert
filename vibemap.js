@@ -1733,10 +1733,6 @@ function playMessageSound(type) {
     // Ignore audio errors
   }
 }
-
-
-}
-  
 // ==========================================
 // WHATSAPP MESSAGE FUNCTIONS
 // ==========================================
