@@ -545,633 +545,9 @@ createScrollProgressIndicator();
 window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ==========================================
-// MODERN LANDING PAGE FUNCTIONS
-// ==========================================
-
-function scrollToSection(sectionId) {
-const section = document.getElementById(sectionId);
-if (section) {
-section.scrollIntoView({ behavior: 'smooth' });
-}
-}
-
-function toggleMobileMenu() {
-const navMenu = document.querySelector('.nav-menu');
-if (navMenu) {
-navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
-}
-}
-
-// Enhanced scroll progress for modern nav
-function updateScrollProgress() {
-const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-const scrollHeight = document.documentElement.scrollHeight;
-const clientHeight = window.innerHeight;
-const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
-
-const progressFill = document.getElementById('scrollProgressFill');
-if (progressFill) progressFill.style.width = scrolled + '%';
-  
-// Update nav background based on scroll
-const nav = document.querySelector('.modern-nav');
-if (nav) {
-if (scrolled > 50) {
-nav.style.background = 'rgba(15, 25, 45, 0.98)';
-nav.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-} else {
-nav.style.background = 'rgba(15, 25, 45, 0.95)';
-nav.style.boxShadow = 'none';
-}
-}
-}
-
-// Initialize modern landing page
-function initializeModernLanding() {
-// Scroll progress
-window.addEventListener('scroll', updateScrollProgress);
-  
-// Animate stats on scroll
-const observerOptions = {
-threshold: 0.5,
-rootMargin: '0px 0px -50px 0px'
-};
-  
-const observer = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) {
-const statNumbers = entry.target.querySelectorAll('.stat-number');
-statNumbers.forEach(stat => {
-const target = parseInt(stat.getAttribute('data-count'));
-animateCounter(stat, 0, target, 2000);
-});
-}
-});
-}, observerOptions);
-  
-document.querySelectorAll('.stats-grid').forEach(grid => {
-observer.observe(grid);
-});
-  
-// Smooth reveal animations
-const revealObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) {
-entry.target.classList.add('revealed');
-}
-});
-}, { threshold: 0.1 });
-  
-document.querySelectorAll('.reveal-on-scroll').forEach(el => {
-revealObserver.observe(el);
-});
-}
-
-// Enhanced counter animation
-function animateCounter(element, start, end, duration) {
-const range = end - start;
-const increment = range / (duration / 16);
-let current = start;
-  
-const timer = setInterval(() => {
-current += increment;
-if (current >= end) {
-current = end;
-clearInterval(timer);
-}
-element.textContent = Math.floor(current).toLocaleString();
-}, 16);
-}
-
-// ==========================================
-// PREMIUM CHAT INTERFACE FUNCTIONS
-// ==========================================
-
-// Premium message handling
-function handlePremiumMessageKeypress(event) {
-  const input = document.getElementById('premiumMessageInput');
-  const sendBtn = document.getElementById('premiumSendBtn');
-  
-  if (input.value.trim()) {
-    sendBtn.disabled = false;
-  } else {
-    sendBtn.disabled = true;
-  }
-  
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendPremiumMessage();
-  }
-  
-  input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-}
-
-function sendPremiumMessage() {
-  const input = document.getElementById('premiumMessageInput');
-  const messageText = input.value.trim();
-  
-  if (!messageText) return;
-  
-  const messageElement = createPremiumMessage(messageText, 'sent');
-  const messagesContainer = document.getElementById('premiumMessages');
-  messagesContainer.appendChild(messageElement);
-  
-  input.value = '';
-  input.style.height = 'auto';
-  document.getElementById('premiumSendBtn').disabled = true;
-  
-  scrollToBottom();
-  
-  if (typeof sendMessage === 'function') {
-    sendMessage();
-  }
-}
-
-function createPremiumMessage(text, type = 'sent', sender = 'You', time = null) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `premium-message ${type}`;
-  messageDiv.style.cssText = `
-    display: flex;
-    margin-bottom: 16px;
-    max-width: 75%;
-    animation: premiumMessageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  `;
-  
-  const messageTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  if (type === 'received') {
-    messageDiv.style.marginRight = 'auto';
-    messageDiv.innerHTML = `
-      <div class="message-avatar" style="
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        margin-right: 12px;
-        flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-      ">👤</div>
-      <div class="message-content">
-        <div class="message-bubble" style="
-          background: rgba(30, 41, 59, 0.8);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(148, 163, 184, 0.1);
-          border-radius: 20px;
-          padding: 12px 16px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        ">
-          <div style="color: #f1f5f9; font-size: 15px; line-height: 1.4; word-wrap: break-word;">
-            ${escapeHtml(text)}
-          </div>
-        </div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">
-          ${sender} • ${messageTime}
-        </div>
-      </div>
-    `;
-  } else {
-    messageDiv.style.marginLeft = 'auto';
-    messageDiv.innerHTML = `
-      <div class="message-content" style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-        <div class="message-bubble" style="
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 20px;
-          padding: 12px 16px;
-          box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-          border-top-right-radius: 8px;
-        ">
-          <div style="color: white; font-size: 15px; line-height: 1.4; word-wrap: break-word;">
-            ${escapeHtml(text)}
-          </div>
-        </div>
-        <div style="color: #64748b; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-          ${messageTime} <span style="color: #10b981;">✓✓</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  return messageDiv;
-}
-
-// Enhanced emoji picker
-function togglePremiumEmojiPicker() {
-  const emojiPicker = document.getElementById('premiumEmojiPicker');
-  const isVisible = emojiPicker.style.display !== 'none';
-  
-  if (isVisible) {
-    emojiPicker.style.display = 'none';
-  } else {
-    emojiPicker.style.display = 'flex';
-    populatePremiumEmojiGrid();
-  }
-}
-
-function populatePremiumEmojiGrid() {
-  const emojiGrid = document.getElementById('premiumEmojiGrid');
-  if (!emojiGrid || emojiGrid.children.length > 0) return;
-  
-  const emojis = ['😀', '😂', '❤️', '👍', '🎉', '🔥', '😊', '👋', '😃', '😄', '😁', '😆', '😅', '🤣', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🦏', '🦇', '🐘', '🦛', '🦒', '🦘', '🦡', '🐆', '🦅', '🦉', '🦚', '🦜', '🍎', '🍏', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🌽', '🥕', '🥔', '🍠', '🥐', '🍞', '🥖', '🥨', '🧀', '🥚', '🍳', '🥞', '🥓', '🥩', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🌮', '🌯', '🥗', '🥘', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥟', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🎂', '🍰', '🧈', '🍫', '🍬', '🍭', '🍮', '🎵', '🎶', '🎙', '🎚', '🎛', '🎤', '🎧', '📻', '🎷', '🪕', '🎸', '🥁', '🪘', '🎺', '🎻', '🪗', '🎬', '🎥', '📺', '📷', '📸', '📹', '📼', '🔍', '🔎', '🕯', '💡', '🔦', '🏮', '🪔', '📔', '🕯', '🎆', '🎇', '🧨', '🎈', '🎉', '🎊', '🎋', '🎍', '🎎', '🎏', '🎐', '🎑', '🧧', '🎗', '🎟', '🎫', '🎖', '🏆', '🏅', '🥇', '🥈', '🥉', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '👀', '🎉', '🎊', '🎈', '🎁', '🎀', '🔥', '⭐', '✨', '💫', '☄️', '🌟', '💥', '💢'];
-  
-  emojis.forEach(emoji => {
-    const button = document.createElement('button');
-    button.textContent = emoji;
-    button.style.cssText = `
-      background: none;
-      border: none;
-      color: #e2e8f0;
-      padding: 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      aspect-ratio: 1;
-    `;
-    button.onclick = () => insertPremiumEmoji(emoji);
-    button.onmouseover = () => {
-      button.style.background = 'rgba(148, 163, 184, 0.1)';
-      button.style.transform = 'scale(1.2)';
-    };
-    button.onmouseout = () => {
-      button.style.background = 'none';
-      button.style.transform = 'scale(1)';
-    };
-    emojiGrid.appendChild(button);
-  });
-}
-
-function insertPremiumEmoji(emoji) {
-  const input = document.getElementById('premiumMessageInput');
-  const cursorPos = input.selectionStart;
-  const textBefore = input.value.substring(0, cursorPos);
-  const textAfter = input.value.substring(cursorPos);
-  
-  input.value = textBefore + emoji + textAfter;
-  input.focus();
-  input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-  
-  document.getElementById('premiumSendBtn').disabled = false;
-  togglePremiumEmojiPicker();
-}
-
-// Enhanced chat functions
-function attachFile() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*,video/*,audio/*,application/pdf,.doc,.docx,.txt';
-  fileInput.onchange = handleFileSelection;
-  fileInput.click();
-}
-
-function handleFileSelection(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const messageText = `📎 Shared ${file.type.startsWith('image/') ? 'an image' : file.type.startsWith('video/') ? 'a video' : file.type.startsWith('audio/') ? 'an audio file' : 'a file'}: ${file.name}`;
-  const messageElement = createPremiumMessage(messageText, 'sent');
-  
-  const messagesContainer = document.getElementById('premiumMessages');
-  messagesContainer.appendChild(messageElement);
-  scrollToBottom();
-}
-
-function openCamera() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*,video/*';
-  fileInput.capture = 'environment';
-  fileInput.onchange = handleFileSelection;
-  fileInput.click();
-}
-
-function toggleVoiceRecord() {
-  alert('Voice recording coming soon!');
-}
-
-function startVoiceCall() {
-  alert('Voice call coming soon!');
-}
-
-function startVideoCall() {
-  alert('Video call coming soon!');
-}
-
-function openChatSearch() {
-  alert('Chat search coming soon!');
-}
-
-function openChatMenu() {
-  alert('Chat menu coming soon!');
-}
-
-function showCommunityGuidelines() {
-  alert('Community guidelines coming soon!');
-}
-
-function showIntroduceYourself() {
-  const input = document.getElementById('premiumMessageInput');
-  input.value = "Hey everyone! I'm new here. Looking forward to connecting with fellow students! 🎓";
-  input.focus();
-  document.getElementById('premiumSendBtn').disabled = false;
-}
-
-function searchEmojis(query) {
-  const emojiGrid = document.getElementById('premiumEmojiGrid');
-  const buttons = emojiGrid.getElementsByTagName('button');
-  
-  for (let button of buttons) {
-    const emoji = button.textContent;
-    if (query && !emoji.includes(query)) {
-      button.style.display = 'none';
-    } else {
-      button.style.display = 'flex';
-    }
-  }
-}
-
-// Enhanced scroll detection
-document.addEventListener('DOMContentLoaded', function() {
-  const messagesContainer = document.getElementById('premiumMessages');
-  if (messagesContainer) {
-    messagesContainer.addEventListener('scroll', function() {
-      const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
-      const scrollBtn = document.getElementById('scrollToBottomBtn');
-      
-      if (scrollBtn) {
-        if (isAtBottom) {
-          scrollBtn.style.display = 'none';
-        } else {
-          scrollBtn.style.display = 'flex';
-        }
-      }
-    });
-  }
-});
-
-// Add premium message animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes premiumMessageSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-`;
-document.head.appendChild(style);
-
-// ==========================================
-// WHATSAPP-STYLE CHAT FUNCTIONS
-// ==========================================
-
-// WhatsApp-style message handling
-function handleWhatsAppKeypress(event) {
-  const input = document.getElementById('whatsappInput');
-  const sendBtn = document.getElementById('whatsappSendBtn');
-  
-  // Enable/disable send button based on input
-  if (input.value.trim()) {
-    sendBtn.disabled = false;
-  } else {
-    sendBtn.disabled = true;
-  }
-  
-  // Handle Enter key
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-}
-
-function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const messageText = input.value.trim();
-  
-  if (!messageText) return;
-  
-  // Create message element
-  const messageElement = createWhatsAppMessage(messageText, 'sent');
-  
-  // Add to messages container
-  const messagesContainer = document.getElementById('whatsappMessages');
-  messagesContainer.appendChild(messageElement);
-  
-  // Clear input
-  input.value = '';
-  input.style.height = 'auto';
-  document.getElementById('whatsappSendBtn').disabled = true;
-  
-  // Scroll to bottom
-  scrollToBottom();
-  
-  // Send to server (existing functionality)
-  if (typeof sendMessage === 'function') {
-    sendMessage();
-  }
-}
-
-function createWhatsAppMessage(text, type = 'sent', sender = 'You', time = null) {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `whatsapp-message ${type}`;
-  
-  const messageTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  
-  if (type === 'received') {
-    messageDiv.innerHTML = `
-      <div class="message-avatar">👤</div>
-      <div class="message-content">
-        <div class="message-bubble">
-          <div class="message-text">${escapeHtml(text)}</div>
-        </div>
-        <div class="message-time">
-          <span>${sender}</span>
-          <span>•</span>
-          <span>${messageTime}</span>
-        </div>
-      </div>
-    `;
-  } else {
-    messageDiv.innerHTML = `
-      <div class="message-content">
-        <div class="message-bubble">
-          <div class="message-text">${escapeHtml(text)}</div>
-        </div>
-        <div class="message-time">
-          <span>${messageTime}</span>
-          <span class="message-status">✓✓</span>
-        </div>
-      </div>
-    `;
-  }
-  
-  return messageDiv;
-}
-
-function handleTypingIndicator() {
-  const input = document.getElementById('whatsappInput');
-  
-  // Show typing indicator if user is typing
-  if (input.value.trim()) {
-    if (typeof handleTyping === 'function') {
-      handleTyping();
-    }
-  }
-}
-
-function toggleEmojiPicker() {
-  const emojiPicker = document.getElementById('emojiPicker');
-  const isVisible = emojiPicker.style.display !== 'none';
-  
-  if (isVisible) {
-    emojiPicker.style.display = 'none';
-  } else {
-    emojiPicker.style.display = 'flex';
-    populateEmojiGrid();
-  }
-}
-
-function populateEmojiGrid() {
-  const emojiGrid = document.getElementById('emojiGrid');
-  if (!emojiGrid || emojiGrid.children.length > 0) return;
-  
-  const emojis = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂',
-    '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩',
-    '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪',
-    '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨',
-    '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
-    '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
-    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙',
-    '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️',
-    '🖖', '👋', '🤙', '💪', '🙏', '🤝', '🙏', '✍️',
-    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
-    '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖',
-    '💘', '💝', '👀', '🎉', '🎊', '🎈', '🎁', '🎀',
-    '🔥', '⭐', '✨', '💫', '☄️', '🌟', '💥', '💢'
-  ];
-  
-  emojis.forEach(emoji => {
-    const button = document.createElement('button');
-    button.textContent = emoji;
-    button.onclick = () => insertEmoji(emoji);
-    emojiGrid.appendChild(button);
-  });
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('whatsappInput');
-  const cursorPos = input.selectionStart;
-  const textBefore = input.value.substring(0, cursorPos);
-  const textAfter = input.value.substring(cursorPos);
-  
-  input.value = textBefore + emoji + textAfter;
-  input.focus();
-  input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-  
-  // Enable send button
-  document.getElementById('whatsappSendBtn').disabled = false;
-  
-  // Close emoji picker
-  toggleEmojiPicker();
-}
-
-function attachMedia() {
-  // Create file input
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*,video/*,audio/*';
-  fileInput.onchange = handleMediaSelection;
-  fileInput.click();
-}
-
-function handleMediaSelection(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  // For now, just show a simple message
-  // In a real implementation, you'd upload and display the media
-  const messageText = `📎 Shared ${file.type.startsWith('image/') ? 'an image' : file.type.startsWith('video/') ? 'a video' : 'a file'}: ${file.name}`;
-  const messageElement = createWhatsAppMessage(messageText, 'sent');
-  
-  const messagesContainer = document.getElementById('whatsappMessages');
-  messagesContainer.appendChild(messageElement);
-  scrollToBottom();
-}
-
-function scrollToBottom() {
-  const messagesContainer = document.getElementById('whatsappMessages');
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  
-  // Hide scroll to bottom button
-  const scrollBtn = document.getElementById('scrollToBottom');
-  if (scrollBtn) {
-    scrollBtn.style.display = 'none';
-  }
-}
-
-function showScrollToBottomButton() {
-  const scrollBtn = document.getElementById('scrollToBottom');
-  if (scrollBtn) {
-    scrollBtn.style.display = 'flex';
-  }
-}
-
-function toggleChatSettings() {
-  // Placeholder for chat settings functionality
-  alert('Chat settings coming soon!');
-}
-
-function searchMessages() {
-  // Placeholder for message search functionality
-  const searchTerm = prompt('Search messages:');
-  if (searchTerm) {
-    alert(`Searching for: ${searchTerm}`);
-  }
-}
-
-function showCommunityInfo() {
-  // Placeholder for community info
-  alert('Community info coming soon!');
-}
-
-// Enhanced scroll detection
-document.addEventListener('DOMContentLoaded', function() {
-  const messagesContainer = document.getElementById('whatsappMessages');
-  if (messagesContainer) {
-    messagesContainer.addEventListener('scroll', function() {
-      const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
-      const scrollBtn = document.getElementById('scrollToBottom');
-      
-      if (scrollBtn) {
-        if (isAtBottom) {
-          scrollBtn.style.display = 'none';
-        } else {
-          scrollBtn.style.display = 'flex';
-        }
-      }
-    });
-  }
-});
-
-// ==========================================
+// ========================================
 // ENHANCED COMMUNITY CHAT
-// ==========================================
+// ========================================
 
 function initializeEnhancedChat() {
 if (chatInitialized) return;
@@ -2359,6 +1735,8 @@ function playMessageSound(type) {
 }
 
 
+}
+  
 // ==========================================
 // WHATSAPP MESSAGE FUNCTIONS
 // ==========================================
@@ -6671,7 +6049,7 @@ function setupEmojiPicker() {
 }
 
 // ==========================================
-// AMAZING COMMUNITY CHAT SYSTEM - ENHANCED
+// AMAZING COMMUNITY CHAT SYSTEM
 // ==========================================
 
 let selectedMediaFile = null;
@@ -6679,436 +6057,6 @@ let selectedMediaType = null;
 let isUserScrolling = false;
 let lastSeenMessageId = null;
 let unseenMessageCount = 0;
-let messageQueue = [];
-let isProcessingMessages = false;
-let typingIndicatorTimeout = null;
-
-// Enhanced message ordering system with error handling
-function addMessageToQueue(message) {
-  if (!message || !message.id) {
-    console.warn('Invalid message added to queue:', message);
-    return;
-  }
-  
-  // Prevent duplicate messages
-  if (messageQueue.some(m => m.id === message.id)) {
-    return;
-  }
-  
-  messageQueue.push(message);
-  
-  // Process queue with debounce for performance
-  clearTimeout(window.messageQueueTimeout);
-  window.messageQueueTimeout = setTimeout(processMessageQueue, 50);
-}
-
-async function processMessageQueue() {
-  if (isProcessingMessages || messageQueue.length === 0) return;
-  
-  isProcessingMessages = true;
-  
-  try {
-    // Sort messages by timestamp to ensure proper order
-    messageQueue.sort((a, b) => {
-      const timeA = new Date(a.created_at || a.timestamp).getTime();
-      const timeB = new Date(b.created_at || b.timestamp).getTime();
-      return timeA - timeB;
-    });
-    
-    while (messageQueue.length > 0) {
-      const message = messageQueue.shift();
-      
-      // Add timestamp if missing
-      if (message.created_at) {
-        message.timestamp = new Date(message.created_at).getTime();
-      } else {
-        message.timestamp = Date.now();
-      }
-      
-      await addMessageToUIOrdered(message);
-      
-      // Small delay to prevent UI blocking
-      await new Promise(resolve => setTimeout(resolve, 5));
-    }
-  } catch (error) {
-    console.error('Error processing message queue:', error);
-  } finally {
-    isProcessingMessages = false;
-    scrollToBottomSmooth();
-  }
-}
-
-// Enhanced UI message addition with performance optimizations
-async function addMessageToUIOrdered(message) {
-  const container = document.getElementById('messagesContainer');
-  if (!container) {
-    console.warn('Messages container not found');
-    return;
-  }
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) {
-    console.log('Message already exists:', message.id);
-    return;
-  }
-
-  // Remove empty state
-  const emptyState = container.querySelector('.no-messages');
-  if (emptyState) emptyState.remove();
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  const time = new Date(message.created_at || message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  // Create message element with performance optimizations
-  const messageEl = document.createElement('div');
-  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `msg-${message.id}`;
-  
-  // Use requestAnimationFrame for smooth animations
-  requestAnimationFrame(() => {
-    messageEl.style.opacity = '0';
-    messageEl.style.transform = 'translateY(20px)';
-  });
-
-  // Build message HTML efficiently
-  const avatarHtml = message.users?.profile_pic 
-    ? `<img src="${message.users.profile_pic}" alt="${sender}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-    : '';
-  
-  const avatarFallback = avatarHtml ? '<span style="display:none;">👤</span>' : '👤';
-
-  const mediaHtml = message.media_url 
-    ? message.media_type?.startsWith('image/') 
-      ? `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')" loading="lazy" onerror="this.style.display='none';">`
-      : message.media_type?.startsWith('video/')
-        ? `<video src="${message.media_url}" class="message-media" controls preload="metadata"></video>`
-        : ''
-    : '';
-
-  const contentHtml = message.content 
-    ? `<div class="message-text">${escapeHtml(message.content)}</div>` 
-    : '';
-
-  const reactionsHtml = message.reactions 
-    ? `<span class="react-count">${message.reactions}</span>` 
-    : '<span class="react-count">0</span>';
-
-  messageEl.innerHTML = `
-    <div class="message-avatar">
-      ${avatarHtml}
-      ${avatarFallback}
-    </div>
-    <div class="message-content-wrapper">
-      <div class="message-header">
-        <span class="message-sender">${isOwn ? 'You' : sender}</span>
-        <span class="message-time">${time}</span>
-      </div>
-      <div class="message-bubble">
-        ${contentHtml}
-        ${mediaHtml}
-      </div>
-      <div class="message-actions">
-        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
-          ❤️ ${reactionsHtml}
-        </button>
-        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
-        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
-      </div>
-    </div>
-  `;
-  
-  // Find correct position based on timestamp for proper ordering
-  const existingMessages = container.querySelectorAll('.amazing-message');
-  let insertBefore = null;
-  
-  for (const existingMsg of existingMessages) {
-    const existingId = existingMsg.id.replace('msg-', '');
-    const existingTimestamp = parseInt(existingId) || 0;
-    const currentTimestamp = parseInt(message.id) || message.timestamp;
-    
-    if (currentTimestamp < existingTimestamp) {
-      insertBefore = existingMsg;
-      break;
-    }
-  }
-  
-  // Insert message in correct position
-  if (insertBefore) {
-    container.insertBefore(messageEl, insertBefore);
-  } else {
-    container.appendChild(messageEl);
-  }
-
-  // Smooth animation with performance optimization
-  requestAnimationFrame(() => {
-    messageEl.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    messageEl.style.opacity = '1';
-    messageEl.style.transform = 'translateY(0)';
-  });
-
-  // Update unseen count if message is new and user is not at bottom
-  if (!isOwn && !isAtBottom()) {
-    unseenMessageCount++;
-    updateUnseenIndicator();
-  }
-  
-  // Cleanup old messages if too many (performance optimization)
-  cleanupOldMessages();
-}
-
-// Performance optimization: Remove very old messages to prevent memory issues
-function cleanupOldMessages() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return;
-  
-  const messages = container.querySelectorAll('.amazing-message');
-  const maxMessages = 500; // Keep last 500 messages
-  
-  if (messages.length > maxMessages) {
-    const toRemove = Array.from(messages).slice(0, messages.length - maxMessages);
-    toRemove.forEach(msg => msg.remove());
-  }
-}
-
-// Enhanced scroll with performance optimization
-function scrollToBottomSmooth() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return;
-  
-  // Use requestAnimationFrame for smooth scrolling
-  requestAnimationFrame(() => {
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth'
-    });
-  });
-}
-
-// Enhanced bottom detection with tolerance
-function isAtBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return true;
-  
-  const threshold = 100; // pixels from bottom
-  return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
-}
-
-// Enhanced unseen indicator with better UX
-function updateUnseenIndicator() {
-  const indicator = document.getElementById('unseenIndicator');
-  const count = document.getElementById('unseenCount');
-  
-  if (indicator && count) {
-    if (unseenMessageCount > 0) {
-      count.textContent = unseenMessageCount > 99 ? '99+' : unseenMessageCount;
-      indicator.style.display = 'flex';
-      
-      // Add pulse animation for new messages
-      if (!indicator.classList.contains('pulse')) {
-        indicator.classList.add('pulse');
-        setTimeout(() => indicator.classList.remove('pulse'), 1000);
-      }
-    } else {
-      indicator.style.display = 'none';
-    }
-  }
-}
-
-// Enhanced error handling for socket connections
-function initializeSocketConnection() {
-  if (socket && socket.connected) {
-    console.log('Socket already connected');
-    return;
-  }
-
-  try {
-    socket = io(API_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 10,
-      timeout: 20000
-    });
-
-    // Enhanced socket event handlers with error handling
-    socket.on('connect', () => {
-      console.log('✅ Socket connected:', socket.id);
-      if (currentUser?.college) {
-        socket.emit('join_college', currentUser.college);
-        socket.emit('user_online', currentUser.id);
-      }
-      updateConnectionStatus(true);
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.log('❌ Socket disconnected:', reason);
-      updateConnectionStatus(false);
-    });
-
-    socket.on('reconnect', () => {
-      console.log('🔄 Socket reconnected');
-      updateConnectionStatus(true);
-      if (currentUser?.college) {
-        socket.emit('join_college', currentUser.college);
-        loadAmazingMessages();
-      }
-    });
-
-    socket.on('new_message', (message) => {
-      if (message && message.id) {
-        addMessageToQueue(message);
-      }
-    });
-
-    socket.on('message_deleted', ({ id }) => {
-      if (id) {
-        const messageEl = document.getElementById(`msg-${id}`);
-        if (messageEl) {
-          messageEl.style.animation = 'fadeOut 0.3s ease-out';
-          setTimeout(() => messageEl.remove(), 300);
-        }
-      }
-    });
-
-    socket.on('online_count', (count) => {
-      updateOnlineCount(count);
-    });
-
-    socket.on('user_typing', ({ username }) => {
-      if (username && username !== currentUser?.username) {
-        showTypingIndicator(username);
-      }
-    });
-
-    socket.on('user_stop_typing', ({ username }) => {
-      if (username && username !== currentUser?.username) {
-        hideTypingIndicator(username);
-      }
-    });
-
-    socket.on('error', (error) => {
-      console.error('Socket error:', error);
-      updateConnectionStatus(false);
-    });
-
-  } catch (error) {
-    console.error('Failed to initialize socket:', error);
-    updateConnectionStatus(false);
-  }
-}
-
-// Enhanced connection status update
-function updateConnectionStatus(isConnected) {
-  const statusEl = document.getElementById('connectionStatus');
-  if (!statusEl) return;
-
-  const statusText = isConnected ? '🟢 Connected' : '🔴 Disconnected';
-  const statusClass = isConnected ? 'connected' : 'disconnected';
-  
-  statusEl.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
-  statusEl.className = `connection-status ${statusClass}`;
-}
-
-// Enhanced online count update
-function updateOnlineCount(count) {
-  const countEl = document.getElementById('onlineCount');
-  if (countEl) {
-    countEl.textContent = count || 0;
-  }
-}
-
-// Enhanced typing indicators with better UX
-function showTypingIndicator(username) {
-  clearTimeout(typingIndicatorTimeout);
-  
-  const indicator = document.getElementById('typingIndicators');
-  if (!indicator) return;
-  
-  if (!typingUsers.has(username)) {
-    typingUsers.add(username);
-  }
-  
-  updateTypingDisplay();
-  
-  // Auto-hide after 3 seconds of inactivity
-  typingIndicatorTimeout = setTimeout(() => {
-    typingUsers.delete(username);
-    updateTypingDisplay();
-  }, 3000);
-}
-
-function hideTypingIndicator(username) {
-  typingUsers.delete(username);
-  updateTypingDisplay();
-}
-
-function updateTypingDisplay() {
-  const indicator = document.getElementById('typingIndicators');
-  if (!indicator) return;
-
-  if (typingUsers.size === 0) {
-    indicator.style.display = 'none';
-    return;
-  }
-
-  const usernames = Array.from(typingUsers);
-  let text = '';
-  
-  if (usernames.length === 1) {
-    text = `${usernames[0]} is typing...`;
-  } else if (usernames.length === 2) {
-    text = `${usernames[0]} and ${usernames[1]} are typing...`;
-  } else {
-    text = `${usernames.length} people are typing...`;
-  }
-
-  indicator.innerHTML = `
-    <div class="typing-avatar">👤</div>
-    <div class="typing-content">
-      <div class="typing-dots">
-        <span></span><span></span><span></span>
-      </div>
-      <span id="typingUsersText">${text}</span>
-    </div>
-  `;
-  indicator.style.display = 'flex';
-}
-
-// Smooth scroll function
-function scrollToBottomSmooth() {
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.scrollTo({
-      top: container.scrollHeight,
-      behavior: 'smooth'
-    });
-  }
-}
-
-// Check if user is at bottom of chat
-function isAtBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return true;
-  
-  const threshold = 100; // pixels from bottom
-  return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
-}
-
-// Update unseen message indicator
-function updateUnseenIndicator() {
-  const indicator = document.getElementById('unseenIndicator');
-  const count = document.getElementById('unseenCount');
-  
-  if (indicator && count && unseenMessageCount > 0) {
-    count.textContent = unseenMessageCount;
-    indicator.style.display = 'flex';
-  } else if (indicator) {
-    indicator.style.display = 'none';
-  }
-}
 
 // Initialize amazing chat when communities page loads
 function initializeAmazingChat() {
@@ -7119,7 +6067,7 @@ function initializeAmazingChat() {
     document.getElementById('communityName').textContent = `${currentUser.college} Community`;
   }
 
-  // Initialize socket connection with enhanced handlers
+  // Initialize socket connection
   initializeSocketConnection();
 
   // Load messages
@@ -7718,6 +6666,12 @@ function viewMedia(url) {
 // ==========================================
 // AMAZING COMMUNITY CHAT SYSTEM
 // ==========================================
+
+let selectedMediaFile = null;
+let selectedMediaType = null;
+let isUserScrolling = false;
+let lastSeenMessageId = null;
+let unseenMessageCount = 0;
 
 // Initialize amazing chat when communities page loads
 function initializeAmazingChat() {
@@ -8328,204 +7282,6 @@ function viewMedia(url) {
 // INITIALIZE AMAZING CHAT ON PAGE LOAD
 // ==========================================
 
-// ==========================================
-// UNIFIED COMMUNITY CHAT FUNCTIONS
-// ==========================================
-
-// Initialize chat functionality
-function initializeAmazingChat() {
-  // Initialize chat input
-  const messageInput = document.getElementById('messageInput');
-  if (messageInput) {
-    messageInput.addEventListener('keypress', handleMessageKeyPress);
-  }
-  
-  // Load initial messages
-  loadInitialMessages();
-}
-
-// Load initial messages
-function loadInitialMessages() {
-  const messagesWrapper = document.querySelector('.messages-wrapper');
-  if (!messagesWrapper) return;
-  
-  // Initial sample messages
-  const initialMessages = [
-    { sender: 'Alex Kumar', message: 'Hey everyone! Just joined the community. Excited to connect with fellow CS students!', time: '2:30 PM' },
-    { sender: 'Sarah Johnson', message: 'Hi Alex! I\'m focusing on machine learning. Looking for internship opportunities if anyone knows of any!', time: '2:36 PM' },
-    { sender: 'Community Manager', message: 'Welcome to VibeXpert Community! 🎓 Feel free to share your thoughts and connect with fellow students!', time: '2:45 PM' }
-  ];
-  
-  const messageGroup = messagesWrapper.querySelector('.message-group');
-  if (messageGroup) {
-    // Clear existing messages except the first one
-    const existingMessages = messageGroup.querySelectorAll('.message-item');
-    for (let i = 1; i < existingMessages.length; i++) {
-      existingMessages[i].remove();
-    }
-    
-    // Add new messages
-    initialMessages.forEach((msg, index) => {
-      if (index > 0) { // Skip the first one as it's already in HTML
-        const messageElement = createMessageElement(msg.sender, msg.message, msg.time, 'received');
-        messageGroup.appendChild(messageElement);
-      }
-    });
-  }
-}
-
-// Create message element
-function createMessageElement(sender, message, time, type = 'received') {
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `message-item ${type}`;
-  
-  const avatarSeed = sender.toLowerCase().replace(' ', '-');
-  
-  messageDiv.innerHTML = `
-    <div class="message-avatar">
-      <img src="https://picsum.photos/seed/${avatarSeed}/36/36" alt="${sender}">
-    </div>
-    <div class="message-content">
-      <div class="message-meta">
-        <span class="sender-name">${sender}</span>
-        <span class="message-time">${time}</span>
-      </div>
-      <div class="message-bubble">
-        <p>${message}</p>
-      </div>
-    </div>
-  `;
-  
-  return messageDiv;
-}
-
-// Handle message key press
-function handleMessageKeyPress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-// Send message
-function sendMessage() {
-  const messageInput = document.getElementById('messageInput');
-  const messageText = messageInput.value.trim();
-  
-  if (!messageText) return;
-  
-  // Create and add message
-  const messageElement = createMessageElement('You', messageText, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 'sent');
-  const messageGroup = document.querySelector('.message-group');
-  if (messageGroup) {
-    messageGroup.appendChild(messageElement);
-    scrollToBottom();
-  }
-  
-  // Clear input
-  messageInput.value = '';
-  
-  // Simulate response
-  setTimeout(() => {
-    simulateResponse();
-  }, 1000 + Math.random() * 2000);
-}
-
-// Simulate response
-function simulateResponse() {
-  const responses = [
-    'Great point! Anyone else have thoughts on this?',
-    'That\'s interesting! Let me share my experience...',
-    'I agree with this perspective!',
-    'Thanks for sharing! Very helpful information.',
-    'Awesome! Totally agree with this!',
-    'That\'s so true! Happened with me too.',
-    'Great suggestion! Let\'s try this out.',
-    'Thanks for sharing! Very useful info!'
-  ];
-  
-  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-  const randomSender = ['Community Member', 'Student Helper', 'Campus Guide', 'VibeXpert Team'][Math.floor(Math.random() * 4)];
-  
-  const responseElement = createMessageElement(randomSender, randomResponse, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 'received');
-  const messageGroup = document.querySelector('.message-group');
-  if (messageGroup) {
-    messageGroup.appendChild(responseElement);
-    scrollToBottom();
-  }
-}
-
-// Scroll to bottom of messages
-function scrollToBottom() {
-  const messagesWrapper = document.querySelector('.messages-wrapper');
-  if (messagesWrapper) {
-    messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
-  }
-}
-
-// ==========================================
-// INITIALIZE AMAZING CHAT ON PAGE LOAD
-// ==========================================
-
-// Toggle chat info modal
-function toggleChatInfo() {
-  alert('Chat Info:\n\nVibeXpert Community\n👥 2,847 members\n🟢 342 online\n\nThis is a unified community chat where everyone can connect and share ideas!');
-}
-
-// Flip to posts section with enhanced animation
-function flipToPosts() {
-  const chatContainer = document.querySelector('.unified-chat-container');
-  const communitiesSection = document.getElementById('communities');
-  
-  // Add enhanced flip animation with scale and rotation
-  chatContainer.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-  chatContainer.style.transform = 'rotateY(180deg) scale(0.8)';
-  chatContainer.style.opacity = '0.5';
-  
-  // Add visual feedback during flip
-  chatContainer.style.boxShadow = '0 20px 60px rgba(79, 116, 163, 0.8)';
-  
-  // After flip animation, switch to posts section
-  setTimeout(() => {
-    // Hide communities and show posts
-    document.getElementById('communities').style.display = 'none';
-    document.getElementById('posts').style.display = 'block';
-    
-    // Update nav link
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.classList.remove('active');
-    });
-    const postsLink = document.querySelector('a[onclick*="posts"]');
-    if (postsLink) postsLink.classList.add('active');
-    
-    // Reset transform for next time with bounce effect
-    chatContainer.style.transform = 'rotateY(0deg) scale(1)';
-    chatContainer.style.opacity = '1';
-    chatContainer.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.4)';
-    
-    // Focus on post input with smooth scroll
-    setTimeout(() => {
-      const postInput = document.getElementById('postText');
-      if (postInput) {
-        postInput.focus();
-        postInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Add pulse animation to post input
-        postInput.style.animation = 'pulse 1s ease-in-out 2';
-      }
-    }, 300);
-  }, 800);
-}
-
-// Add pulse animation to CSS
-const flipStyle = document.createElement('style');
-flipStyle.textContent = `
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-`;
-document.head.appendChild(flipStyle);
-
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize amazing chat when communities page becomes visible
   const communitiesPage = document.getElementById('communities');
@@ -8549,3 +7305,1084 @@ console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
 
 
+
+// ========================================
+// REDESIGNED COMMUNITY CHAT SYSTEM - JAVASCRIPT
+// Modern, Feature-Rich Chat Implementation
+// ========================================
+
+// Chat State Management
+const chatSystemState = {
+  socket: null,
+  currentUser: null,
+  messages: [],
+  onlineUsers: [],
+  typingUsers: new Set(),
+  replyToMessage: null,
+  selectedMedia: [],
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  recordingStartTime: null,
+  connectionStatus: 'disconnected',
+  unreadCount: 0,
+  isAtBottom: true,
+  emojiCategories: {
+    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑'],
+    gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌'],
+    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🦇', '🐺'],
+    food: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶', '🥒', '🥬', '🥦', '🍄'],
+    activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🥅', '⛳', '🪁', '🏹', '🎣', '🥊', '🥋', '🎽'],
+    objects: ['⌚', '📱', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '💾', '💿', '📀', '📹', '📷', '📸', '📼', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '🧭'],
+    symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️']
+  }
+};
+
+// Initialize chat system when community page is shown
+function initializeChatSystemNew() {
+  console.log('🚀 Initializing New Chat System...');
+  
+  const userStr = localStorage.getItem('user');
+  if (!userStr) {
+    console.error('❌ No user found');
+    return;
+  }
+  
+  try {
+    chatSystemState.currentUser = JSON.parse(userStr);
+    initializeSocketNew();
+    setupChatEventListenersNew();
+    loadMessagesNew();
+    updateCollegeInfoNew();
+    console.log('✅ Chat System Initialized');
+  } catch (error) {
+    console.error('❌ Initialization Error:', error);
+  }
+}
+
+// Socket Connection
+function initializeSocketNew() {
+  if (!chatSystemState.currentUser || !chatSystemState.currentUser.college) {
+    console.error('❌ Cannot initialize socket: No user or college');
+    return;
+  }
+
+  try {
+    chatSystemState.socket = io(API_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
+    });
+
+    chatSystemState.socket.on('connect', () => {
+      console.log('🔌 Socket Connected');
+      updateConnectionStatusNew('connected');
+      chatSystemState.socket.emit('join_college', chatSystemState.currentUser.college);
+      chatSystemState.socket.emit('user_online', chatSystemState.currentUser.id);
+    });
+
+    chatSystemState.socket.on('disconnect', () => {
+      console.log('🔌 Socket Disconnected');
+      updateConnectionStatusNew('disconnected');
+    });
+
+    chatSystemState.socket.on('reconnect', () => {
+      console.log('🔌 Socket Reconnected');
+      updateConnectionStatusNew('connected');
+      chatSystemState.socket.emit('join_college', chatSystemState.currentUser.college);
+    });
+
+    chatSystemState.socket.on('new_message', (message) => {
+      console.log('📨 New Message:', message);
+      appendMessageNew(message);
+      if (!chatSystemState.isAtBottom) {
+        chatSystemState.unreadCount++;
+        updateUnreadBadgeNew();
+      }
+    });
+
+    chatSystemState.socket.on('message_deleted', ({ id }) => {
+      console.log('🗑️ Message Deleted:', id);
+      removeMessageNew(id);
+    });
+
+    chatSystemState.socket.on('online_count', (count) => {
+      console.log('👥 Online Count:', count);
+      updateOnlineCountNew(count);
+    });
+
+    chatSystemState.socket.on('user_typing', ({ username }) => {
+      handleUserTypingNew(username);
+    });
+
+    chatSystemState.socket.on('user_stop_typing', ({ username }) => {
+      handleUserStopTypingNew(username);
+    });
+
+  } catch (error) {
+    console.error('❌ Socket Error:', error);
+    updateConnectionStatusNew('error');
+  }
+}
+
+function updateConnectionStatusNew(status) {
+  chatSystemState.connectionStatus = status;
+  const dot = document.getElementById('connectionDot');
+  const text = document.getElementById('connectionText');
+  
+  if (!dot || !text) return;
+  
+  dot.className = 'status-dot';
+  
+  switch(status) {
+    case 'connected':
+      text.textContent = 'Connected';
+      break;
+    case 'connecting':
+      dot.classList.add('connecting');
+      text.textContent = 'Connecting...';
+      break;
+    case 'disconnected':
+      dot.classList.add('disconnected');
+      text.textContent = 'Disconnected';
+      break;
+    case 'error':
+      dot.classList.add('disconnected');
+      text.textContent = 'Connection Error';
+      break;
+  }
+}
+
+// Event Listeners
+function setupChatEventListenersNew() {
+  const messageInput = document.getElementById('messageInputChat');
+  const messagesArea = document.getElementById('messagesArea');
+  
+  if (messageInput) {
+    messageInput.addEventListener('input', handleInputChangeChat);
+    messageInput.addEventListener('keydown', handleKeyPressChat);
+  }
+  
+  if (messagesArea) {
+    messagesArea.addEventListener('scroll', handleScrollChat);
+  }
+  
+  document.addEventListener('click', (e) => {
+    const contextMenu = document.getElementById('messageContextMenuChat');
+    if (contextMenu && !contextMenu.contains(e.target)) {
+      contextMenu.style.display = 'none';
+    }
+  });
+}
+
+function handleInputChangeChat() {
+  const input = document.getElementById('messageInputChat');
+  const sendBtn = document.getElementById('sendBtnChat');
+  const charCount = document.getElementById('charCountChat');
+  
+  if (!input || !sendBtn) return;
+  
+  const value = input.value.trim();
+  sendBtn.disabled = value.length === 0;
+  
+  if (charCount) {
+    charCount.textContent = `${input.value.length}/5000`;
+  }
+  
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  
+  emitTypingNew();
+}
+
+function handleKeyPressChat(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessageChat();
+  }
+}
+
+function handleScrollChat() {
+  const messagesArea = document.getElementById('messagesArea');
+  if (!messagesArea) return;
+  
+  const scrollTop = messagesArea.scrollTop;
+  const scrollHeight = messagesArea.scrollHeight;
+  const clientHeight = messagesArea.clientHeight;
+  
+  chatSystemState.isAtBottom = (scrollHeight - scrollTop - clientHeight) < 100;
+  
+  const scrollBtn = document.getElementById('scrollBottomBtn');
+  if (scrollBtn) {
+    scrollBtn.style.display = chatSystemState.isAtBottom ? 'none' : 'flex';
+  }
+  
+  if (chatSystemState.isAtBottom && chatSystemState.unreadCount > 0) {
+    chatSystemState.unreadCount = 0;
+    updateUnreadBadgeNew();
+  }
+}
+
+// Message Handling
+async function loadMessagesNew() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    const response = await fetch(`${API_URL}/api/community/messages`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to load messages');
+    
+    const data = await response.json();
+    chatSystemState.messages = data.messages || [];
+    
+    const wrapper = document.getElementById('messagesWrapper');
+    if (wrapper) {
+      wrapper.innerHTML = '';
+      chatSystemState.messages.forEach(msg => appendMessageNew(msg, false));
+      scrollToBottomChat();
+    }
+    
+  } catch (error) {
+    console.error('❌ Load Messages Error:', error);
+    showNotificationChat('Failed to load messages', 'error');
+  }
+}
+
+function appendMessageNew(message, animate = true) {
+  const wrapper = document.getElementById('messagesWrapper');
+  if (!wrapper) return;
+  
+  const welcomeMsg = wrapper.querySelector('.welcome-message');
+  if (welcomeMsg) welcomeMsg.remove();
+  
+  if (document.getElementById(`msg-${message.id}`)) return;
+  
+  const isOwn = message.sender === chatSystemState.currentUser.username;
+  
+  const messageEl = document.createElement('div');
+  messageEl.className = `message-wrapper ${isOwn ? 'own' : ''}`;
+  messageEl.id = `msg-${message.id}`;
+  if (animate) messageEl.style.animation = 'slideInMessage 0.3s ease-out';
+  
+  messageEl.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showMessageContextMenuChat(e, message.id);
+  });
+  
+  let html = '';
+  
+  if (!isOwn) {
+    html += `<div class="message-avatar">${message.sender ? message.sender.charAt(0).toUpperCase() : '👤'}</div>`;
+  }
+  
+  html += '<div class="message-content">';
+  html += `<div class="message-header">
+    ${!isOwn ? `<span class="message-sender">${escapeHtmlChat(message.sender)}</span>` : ''}
+    <span class="message-time">${formatTimeChat(message.timestamp)}</span>
+  </div>`;
+  
+  html += '<div class="message-bubble">';
+  
+  if (message.reply_to) {
+    html += `<div class="reply-preview-in-message">
+      <div class="reply-preview-name">${escapeHtmlChat(message.reply_to.sender)}</div>
+      <div class="reply-preview-text">${escapeHtmlChat(message.reply_to.content)}</div>
+    </div>`;
+  }
+  
+  html += `<div class="message-text">${escapeHtmlChat(message.content)}</div>`;
+  
+  if (message.media_url) {
+    html += renderMessageMediaNew(message.media_url, message.media_type);
+  }
+  
+  html += '</div>';
+  
+  if (message.reactions && message.reactions.length > 0) {
+    html += renderReactionsNew(message.reactions, message.id);
+  }
+  
+  html += `<div class="message-actions">
+    <button class="message-action-btn" onclick="showReactionPickerNew('${message.id}')" title="React">❤️</button>
+    <button class="message-action-btn" onclick="replyToMessageByIdNew('${message.id}')" title="Reply">↩️</button>
+    <button class="message-action-btn" onclick="copyMessageTextNew('${message.id}')" title="Copy">📋</button>
+    ${isOwn ? `<button class="message-action-btn" onclick="deleteMessageByIdNew('${message.id}')" title="Delete">🗑️</button>` : ''}
+  </div>`;
+  
+  html += '</div>';
+  
+  if (isOwn) {
+    html += `<div class="message-avatar">${chatSystemState.currentUser.username.charAt(0).toUpperCase()}</div>`;
+  }
+  
+  messageEl.innerHTML = html;
+  wrapper.appendChild(messageEl);
+  
+  if (chatSystemState.isAtBottom) {
+    scrollToBottomChat();
+  }
+  
+  if (!chatSystemState.messages.find(m => m.id === message.id)) {
+    chatSystemState.messages.push(message);
+  }
+}
+
+function renderMessageMediaNew(url, type) {
+  if (type && type.startsWith('image')) {
+    return `<div class="message-media">
+      <img src="${url}" class="message-image" onclick="openImageViewer('${url}')" alt="Image">
+    </div>`;
+  } else if (type && type.startsWith('video')) {
+    return `<div class="message-media">
+      <video class="message-video" controls><source src="${url}" type="${type}"></video>
+    </div>`;
+  } else {
+    const fileName = url.split('/').pop();
+    return `<div class="message-file" onclick="window.open('${url}', '_blank')">
+      <div class="file-icon">📄</div>
+      <div class="file-info">
+        <div class="file-name">${fileName}</div>
+        <div class="file-size">Unknown size</div>
+      </div>
+    </div>`;
+  }
+}
+
+function renderReactionsNew(reactions, messageId) {
+  const grouped = {};
+  reactions.forEach(r => {
+    if (!grouped[r.emoji]) grouped[r.emoji] = [];
+    grouped[r.emoji].push(r.username);
+  });
+  
+  let html = '<div class="message-reactions">';
+  
+  Object.entries(grouped).forEach(([emoji, users]) => {
+    const isReacted = users.includes(chatSystemState.currentUser.username);
+    html += `<div class="reaction-pill ${isReacted ? 'reacted' : ''}" 
+         onclick="toggleReactionNew('${messageId}', '${emoji}')" 
+         title="${users.join(', ')}">
+      <span class="reaction-emoji">${emoji}</span>
+      <span class="reaction-count">${users.length}</span>
+    </div>`;
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+function removeMessageNew(messageId) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (messageEl) {
+    messageEl.style.animation = 'fadeOut 0.3s ease-out';
+    setTimeout(() => messageEl.remove(), 300);
+  }
+  
+  chatSystemState.messages = chatSystemState.messages.filter(m => m.id !== messageId);
+}
+
+async function sendMessageChat() {
+  const input = document.getElementById('messageInputChat');
+  if (!input) return;
+  
+  const content = input.value.trim();
+  if (!content && chatSystemState.selectedMedia.length === 0) return;
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No auth token');
+    
+    const messageData = {
+      content: content,
+      reply_to: chatSystemState.replyToMessage ? chatSystemState.replyToMessage.id : null
+    };
+    
+    if (chatSystemState.selectedMedia.length > 0) {
+      const formData = new FormData();
+      formData.append('content', content);
+      if (messageData.reply_to) formData.append('reply_to', messageData.reply_to);
+      
+      chatSystemState.selectedMedia.forEach(file => {
+        formData.append('media', file);
+      });
+      
+      const response = await fetch(`${API_URL}/api/community/messages-with-media`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) throw new Error('Failed to send message with media');
+      
+    } else {
+      const response = await fetch(`${API_URL}/api/community/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(messageData)
+      });
+      
+      if (!response.ok) throw new Error('Failed to send message');
+    }
+    
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('sendBtnChat').disabled = true;
+    
+    clearMediaPreviewChat();
+    cancelReply();
+    
+    if (chatSystemState.socket) {
+      chatSystemState.socket.emit('stop_typing', {
+        collegeName: chatSystemState.currentUser.college,
+        username: chatSystemState.currentUser.username
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ Send Message Error:', error);
+    showNotificationChat('Failed to send message', 'error');
+  }
+}
+
+async function deleteMessageByIdNew(messageId) {
+  if (!confirm('Delete this message?')) return;
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to delete message');
+    
+    removeMessageNew(messageId);
+    showNotificationChat('Message deleted', 'success');
+    
+  } catch (error) {
+    console.error('❌ Delete Error:', error);
+    showNotificationChat('Failed to delete message', 'error');
+  }
+}
+
+// Typing Indicators
+let typingTimeoutNew = null;
+let lastTypingEmitNew = 0;
+
+function emitTypingNew() {
+  if (!chatSystemState.socket || !chatSystemState.currentUser) return;
+  
+  const now = Date.now();
+  if (now - lastTypingEmitNew < 2000) return;
+  
+  lastTypingEmitNew = now;
+  chatSystemState.socket.emit('typing', {
+    collegeName: chatSystemState.currentUser.college,
+    username: chatSystemState.currentUser.username
+  });
+  
+  clearTimeout(typingTimeoutNew);
+  typingTimeoutNew = setTimeout(() => {
+    chatSystemState.socket.emit('stop_typing', {
+      collegeName: chatSystemState.currentUser.college,
+      username: chatSystemState.currentUser.username
+    });
+  }, 3000);
+}
+
+function handleUserTypingNew(username) {
+  if (username === chatSystemState.currentUser.username) return;
+  chatSystemState.typingUsers.add(username);
+  updateTypingIndicatorNew();
+}
+
+function handleUserStopTypingNew(username) {
+  chatSystemState.typingUsers.delete(username);
+  updateTypingIndicatorNew();
+}
+
+function updateTypingIndicatorNew() {
+  const indicator = document.getElementById('typingIndicator');
+  const nameEl = document.getElementById('typingName');
+  
+  if (!indicator || !nameEl) return;
+  
+  if (chatSystemState.typingUsers.size === 0) {
+    indicator.style.display = 'none';
+  } else {
+    indicator.style.display = 'block';
+    const users = Array.from(chatSystemState.typingUsers);
+    
+    if (users.length === 1) {
+      nameEl.textContent = users[0];
+    } else if (users.length === 2) {
+      nameEl.textContent = `${users[0]} and ${users[1]}`;
+    } else {
+      nameEl.textContent = `${users.length} people`;
+    }
+    
+    if (chatSystemState.isAtBottom) scrollToBottomChat();
+  }
+}
+
+// Media Handling
+function openMediaPickerChat() {
+  document.getElementById('mediaFileInputChat').click();
+}
+
+function openFilePickerChat() {
+  document.getElementById('documentFileInputChat').click();
+}
+
+function handleMediaFilesChat(files) {
+  Array.from(files).forEach(file => {
+    if (chatSystemState.selectedMedia.length >= 5) {
+      showNotificationChat('Maximum 5 files allowed', 'warning');
+      return;
+    }
+    chatSystemState.selectedMedia.push(file);
+  });
+  updateMediaPreviewChat();
+}
+
+function handleDocumentFilesChat(files) {
+  handleMediaFilesChat(files);
+}
+
+function updateMediaPreviewChat() {
+  const preview = document.getElementById('mediaPreviewChat');
+  const items = document.getElementById('previewItemsChat');
+  
+  if (!preview || !items) return;
+  
+  if (chatSystemState.selectedMedia.length === 0) {
+    preview.style.display = 'none';
+    return;
+  }
+  
+  preview.style.display = 'block';
+  items.innerHTML = '';
+  
+  chatSystemState.selectedMedia.forEach((file, index) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      item.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      item.appendChild(video);
+    } else {
+      item.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:rgba(79,116,163,0.2);">📄</div>`;
+    }
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'preview-item-remove';
+    removeBtn.textContent = '×';
+    removeBtn.onclick = () => {
+      chatSystemState.selectedMedia.splice(index, 1);
+      updateMediaPreviewChat();
+    };
+    
+    item.appendChild(removeBtn);
+    items.appendChild(item);
+  });
+}
+
+function clearMediaPreviewChat() {
+  chatSystemState.selectedMedia = [];
+  const preview = document.getElementById('mediaPreviewChat');
+  if (preview) preview.style.display = 'none';
+}
+
+// Voice Recording
+async function startVoiceRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    chatSystemState.mediaRecorder = new MediaRecorder(stream);
+    chatSystemState.audioChunks = [];
+    chatSystemState.recordingStartTime = Date.now();
+    
+    chatSystemState.mediaRecorder.ondataavailable = (event) => {
+      chatSystemState.audioChunks.push(event.data);
+    };
+    
+    chatSystemState.mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(chatSystemState.audioChunks, { type: 'audio/webm' });
+      await sendVoiceMessageBlobNew(audioBlob);
+      stream.getTracks().forEach(track => track.stop());
+    };
+    
+    chatSystemState.mediaRecorder.start();
+    chatSystemState.isRecording = true;
+    
+    document.getElementById('inputWrapperChat').style.display = 'none';
+    document.getElementById('voiceRecordingUI').style.display = 'flex';
+    
+    updateRecordingTimeNew();
+    
+  } catch (error) {
+    console.error('❌ Voice Recording Error:', error);
+    showNotificationChat('Microphone access denied', 'error');
+  }
+}
+
+function updateRecordingTimeNew() {
+  if (!chatSystemState.isRecording) return;
+  
+  const elapsed = Math.floor((Date.now() - chatSystemState.recordingStartTime) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  
+  const timeEl = document.getElementById('recordingTime');
+  if (timeEl) {
+    timeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  
+  setTimeout(updateRecordingTimeNew, 1000);
+}
+
+function cancelVoiceRecording() {
+  if (chatSystemState.mediaRecorder && chatSystemState.isRecording) {
+    chatSystemState.mediaRecorder.stop();
+    chatSystemState.isRecording = false;
+  }
+  
+  document.getElementById('inputWrapperChat').style.display = 'flex';
+  document.getElementById('voiceRecordingUI').style.display = 'none';
+}
+
+function sendVoiceMessage() {
+  if (chatSystemState.mediaRecorder && chatSystemState.isRecording) {
+    chatSystemState.mediaRecorder.stop();
+    chatSystemState.isRecording = false;
+  }
+  
+  document.getElementById('inputWrapperChat').style.display = 'flex';
+  document.getElementById('voiceRecordingUI').style.display = 'none';
+}
+
+async function sendVoiceMessageBlobNew(blob) {
+  try {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('voice', blob, 'voice-message.webm');
+    formData.append('content', '🎤 Voice message');
+    
+    const response = await fetch(`${API_URL}/api/community/messages-with-media`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) throw new Error('Failed to send voice message');
+    
+    showNotificationChat('Voice message sent', 'success');
+    
+  } catch (error) {
+    console.error('❌ Send Voice Error:', error);
+    showNotificationChat('Failed to send voice message', 'error');
+  }
+}
+
+// Emoji Picker
+function openEmojiPickerChat() {
+  const modal = document.getElementById('emojiPickerModalChat');
+  if (!modal) return;
+  
+  modal.style.display = 'flex';
+  renderEmojiGridChat('smileys');
+}
+
+function closeEmojiPickerChat() {
+  const modal = document.getElementById('emojiPickerModalChat');
+  if (modal) modal.style.display = 'none';
+}
+
+function switchEmojiCategoryChat(category) {
+  document.querySelectorAll('.emoji-cat-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`[data-category="${category}"]`).classList.add('active');
+  
+  renderEmojiGridChat(category);
+}
+
+function renderEmojiGridChat(category) {
+  const grid = document.getElementById('emojiGridChat');
+  if (!grid) return;
+  
+  const emojis = chatSystemState.emojiCategories[category] || [];
+  
+  grid.innerHTML = emojis.map(emoji => 
+    `<div class="emoji-item" onclick="insertEmojiChat('${emoji}')">${emoji}</div>`
+  ).join('');
+}
+
+function insertEmojiChat(emoji) {
+  const input = document.getElementById('messageInputChat');
+  if (!input) return;
+  
+  input.value += emoji;
+  handleInputChangeChat();
+  input.focus();
+  closeEmojiPickerChat();
+}
+
+function filterEmojisChat(query) {
+  if (!query) {
+    renderEmojiGridChat('smileys');
+    return;
+  }
+  
+  const grid = document.getElementById('emojiGridChat');
+  if (!grid) return;
+  
+  const allEmojis = Object.values(chatSystemState.emojiCategories).flat();
+  grid.innerHTML = allEmojis.slice(0, 50).map(emoji => 
+    `<div class="emoji-item" onclick="insertEmojiChat('${emoji}')">${emoji}</div>`
+  ).join('');
+}
+
+function openGifPickerChat() {
+  const modal = document.getElementById('gifPickerModalChat');
+  if (!modal) return;
+  
+  modal.style.display = 'flex';
+  searchGifsChat('trending');
+}
+
+function closeGifPickerChat() {
+  const modal = document.getElementById('gifPickerModalChat');
+  if (modal) modal.style.display = 'none';
+}
+
+function searchGifsChat(query) {
+  const grid = document.getElementById('gifGridChat');
+  if (!grid) return;
+  
+  grid.innerHTML = '<div class="gif-loading">GIF search coming soon...</div>';
+}
+
+// Reactions
+async function toggleReactionNew(messageId, emoji) {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/api/community/messages/${messageId}/react`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ emoji })
+    });
+    
+    if (!response.ok) throw new Error('Failed to toggle reaction');
+    
+    const data = await response.json();
+    updateMessageReactionsNew(messageId, data.reactions);
+    
+  } catch (error) {
+    console.error('❌ Reaction Error:', error);
+  }
+}
+
+function updateMessageReactionsNew(messageId, reactions) {
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (!messageEl) return;
+  
+  const reactionsContainer = messageEl.querySelector('.message-reactions');
+  if (reactionsContainer) {
+    reactionsContainer.outerHTML = renderReactionsNew(reactions, messageId);
+  } else {
+    const bubble = messageEl.querySelector('.message-bubble');
+    if (bubble) {
+      bubble.insertAdjacentHTML('afterend', renderReactionsNew(reactions, messageId));
+    }
+  }
+}
+
+function showReactionPickerNew(messageId) {
+  const commonEmojis = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
+  
+  const messageEl = document.getElementById(`msg-${messageId}`);
+  if (!messageEl) return;
+  
+  const picker = document.createElement('div');
+  picker.className = 'quick-reaction-picker';
+  picker.style.cssText = 'position:absolute;background:#1a1f2e;padding:8px;border-radius:20px;display:flex;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5);z-index:100;';
+  
+  commonEmojis.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.style.cssText = 'background:none;border:none;font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:all 0.2s;';
+    btn.onclick = () => {
+      toggleReactionNew(messageId, emoji);
+      picker.remove();
+    };
+    btn.onmouseenter = () => btn.style.background = 'rgba(79,116,163,0.2)';
+    btn.onmouseleave = () => btn.style.background = 'none';
+    picker.appendChild(btn);
+  });
+  
+  messageEl.style.position = 'relative';
+  messageEl.appendChild(picker);
+  
+  setTimeout(() => picker.remove(), 5000);
+}
+
+// Reply
+function replyToMessageByIdNew(messageId) {
+  const message = chatSystemState.messages.find(m => m.id === messageId);
+  if (!message) return;
+  
+  chatSystemState.replyToMessage = message;
+  
+  const preview = document.getElementById('replyPreview');
+  const nameEl = document.getElementById('replyToName');
+  const textEl = document.getElementById('replyToText');
+  
+  if (preview && nameEl && textEl) {
+    preview.style.display = 'block';
+    nameEl.textContent = message.sender;
+    textEl.textContent = message.content.substring(0, 100);
+  }
+  
+  document.getElementById('messageInputChat')?.focus();
+}
+
+function cancelReply() {
+  chatSystemState.replyToMessage = null;
+  const preview = document.getElementById('replyPreview');
+  if (preview) preview.style.display = 'none';
+}
+
+// Context Menu
+function showMessageContextMenuChat(event, messageId) {
+  const menu = document.getElementById('messageContextMenuChat');
+  if (!menu) return;
+  
+  menu.style.display = 'block';
+  menu.style.left = event.pageX + 'px';
+  menu.style.top = event.pageY + 'px';
+  
+  menu.dataset.messageId = messageId;
+}
+
+function replyToMessageChat() {
+  const menu = document.getElementById('messageContextMenuChat');
+  const messageId = menu?.dataset.messageId;
+  if (messageId) {
+    replyToMessageByIdNew(messageId);
+    menu.style.display = 'none';
+  }
+}
+
+function copyMessageChat() {
+  const menu = document.getElementById('messageContextMenuChat');
+  const messageId = menu?.dataset.messageId;
+  if (messageId) {
+    copyMessageTextNew(messageId);
+    menu.style.display = 'none';
+  }
+}
+
+function copyMessageTextNew(messageId) {
+  const message = chatSystemState.messages.find(m => m.id === messageId);
+  if (!message) return;
+  
+  navigator.clipboard.writeText(message.content).then(() => {
+    showNotificationChat('Message copied', 'success');
+  }).catch(err => {
+    console.error('Copy failed:', err);
+  });
+}
+
+function pinMessageChat() {
+  const menu = document.getElementById('messageContextMenuChat');
+  if (menu) menu.style.display = 'none';
+  showNotificationChat('Pin feature coming soon', 'info');
+}
+
+function reportMessageChat() {
+  const menu = document.getElementById('messageContextMenuChat');
+  if (menu) menu.style.display = 'none';
+  
+  if (confirm('Report this message as inappropriate?')) {
+    showNotificationChat('Message reported', 'success');
+  }
+}
+
+function deleteMessageChat() {
+  const menu = document.getElementById('messageContextMenuChat');
+  const messageId = menu?.dataset.messageId;
+  if (messageId) {
+    deleteMessageByIdNew(messageId);
+    menu.style.display = 'none';
+  }
+}
+
+// UI Helpers
+function updateCollegeInfoNew() {
+  const nameEl = document.getElementById('collegeChatName');
+  const locationEl = document.getElementById('collegeLocationChat');
+  
+  if (nameEl && chatSystemState.currentUser.college) {
+    nameEl.textContent = chatSystemState.currentUser.college;
+  }
+  
+  if (locationEl) {
+    locationEl.textContent = 'Community Chat';
+  }
+}
+
+function updateOnlineCountNew(count) {
+  const countEl = document.getElementById('onlineCountSidebar');
+  if (countEl) {
+    countEl.textContent = count;
+  }
+}
+
+function updateUnreadBadgeNew() {
+  const badge = document.getElementById('newMessagesBadge');
+  if (!badge) return;
+  
+  if (chatSystemState.unreadCount > 0) {
+    badge.textContent = chatSystemState.unreadCount > 99 ? '99+' : chatSystemState.unreadCount;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function scrollToBottomChat() {
+  const messagesArea = document.getElementById('messagesArea');
+  if (!messagesArea) return;
+  
+  messagesArea.scrollTo({
+    top: messagesArea.scrollHeight,
+    behavior: 'smooth'
+  });
+}
+
+function toggleChatSidebar() {
+  const sidebar = document.querySelector('.chat-sidebar');
+  if (sidebar) {
+    sidebar.classList.toggle('active');
+  }
+}
+
+function toggleChatInfo() {
+  const panel = document.getElementById('chatInfoPanel');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function searchInChat() {
+  showNotificationChat('Search feature coming soon', 'info');
+}
+
+function openChatSettings() {
+  showNotificationChat('Settings feature coming soon', 'info');
+}
+
+function showChatRules() {
+  alert('Community Chat Rules:\n\n1. Be respectful\n2. No spam\n3. No harassment\n4. Keep it college-appropriate\n5. Have fun!');
+}
+
+function showChatStats() {
+  showNotificationChat('Statistics feature coming soon', 'info');
+}
+
+function toggleNotifications() {
+  showNotificationChat('Notification settings coming soon', 'info');
+}
+
+function loadMoreMessages() {
+  showNotificationChat('Load more coming soon', 'info');
+}
+
+// Utilities
+function escapeHtmlChat(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatTimeChat(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + 
+           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function showNotificationChat(message, type = 'info') {
+  const notif = document.createElement('div');
+  notif.className = 'chat-notification ' + type;
+  notif.textContent = message;
+  notif.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#4ade80' : '#4f74a3'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  
+  document.body.appendChild(notif);
+  
+  setTimeout(() => {
+    notif.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => notif.remove(), 300);
+  }, 3000);
+}
+
+// Initialize when community page is shown
+document.addEventListener('DOMContentLoaded', function() {
+  const communitySection = document.getElementById('communities');
+  if (communitySection) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.target.style.display !== 'none') {
+          initializeChatSystemNew();
+        }
+      });
+    });
+
+    observer.observe(communitySection, { 
+      attributes: true, 
+      attributeFilter: ['style'] 
+    });
+  }
+});
+
+console.log('✅ New Chat System Scripts Loaded');
