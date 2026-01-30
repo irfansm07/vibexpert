@@ -8329,49 +8329,723 @@ function viewMedia(url) {
 // ==========================================
 
 // ==========================================
-// UNIFIED COMMUNITY CHAT FUNCTIONS
+// REAL COLLEGE COMMUNITY SYSTEM
 // ==========================================
 
-// Initialize chat functionality
-function initializeAmazingChat() {
+// Store user's college data
+let userCollegeData = null;
+
+// Function to check if user has already joined a community
+async function checkUserCommunityStatus() {
+  try {
+    // Get current logged-in user
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      return { hasCommunity: false, needsLogin: true };
+    }
+
+    // Check localStorage first for immediate response
+    const storedCommunity = localStorage.getItem('userCollegeData');
+    if (storedCommunity) {
+      userCollegeData = JSON.parse(storedCommunity);
+      return { 
+        hasCommunity: true, 
+        community: userCollegeData,
+        fromStorage: true 
+      };
+    }
+
+    // If not in storage, check backend
+    const response = await fetch('/api/user/community-status', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentUser.token || localStorage.getItem('authToken')}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.hasCommunity) {
+        userCollegeData = data.community;
+        localStorage.setItem('userCollegeData', JSON.stringify(userCollegeData));
+        return { 
+          hasCommunity: true, 
+          community: userCollegeData,
+          fromBackend: true 
+        };
+      }
+    }
+
+    return { hasCommunity: false, needsLogin: false };
+
+  } catch (error) {
+    console.error('Error checking community status:', error);
+    // If backend fails, don't show login - just check if user exists
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      return { hasCommunity: false, needsLogin: false };
+    }
+    return { hasCommunity: false, needsLogin: true, error: error.message };
+  }
+}
+
+// Function to get current user
+function getCurrentUser() {
+  // Try multiple sources for user data
+  const userData = localStorage.getItem('userData') || 
+                   sessionStorage.getItem('userData') ||
+                   localStorage.getItem('user') ||
+                   sessionStorage.getItem('user');
+  
+  if (userData) {
+    try {
+      return JSON.parse(userData);
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+    }
+  }
+  
+  // Check if user is logged in via other means (like your existing login system)
+  const userName = document.getElementById('userName');
+  if (userName && userName.textContent && userName.textContent !== 'User') {
+    return {
+      name: userName.textContent,
+      id: 'current_user',
+      token: localStorage.getItem('authToken') || sessionStorage.getItem('authToken')
+    };
+  }
+  
+  return null;
+}
+
+// Function to join college community
+async function joinCollegeCommunity(collegeType, collegeName) {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Please login to join a community');
+    }
+
+    const response = await fetch('/api/user/join-community', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentUser.token || localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify({
+        collegeType: collegeType,
+        collegeName: collegeName,
+        userId: currentUser.id || currentUser.userId
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to join community');
+    }
+
+    const data = await response.json();
+    
+    // Store community data
+    userCollegeData = {
+      collegeType: collegeType,
+      collegeName: collegeName,
+      communityId: data.communityId,
+      joinedAt: new Date().toISOString(),
+      members: data.members || 0,
+      onlineMembers: data.onlineMembers || 0
+    };
+
+    localStorage.setItem('userCollegeData', JSON.stringify(userCollegeData));
+
+    return {
+      success: true,
+      community: userCollegeData,
+      message: data.message || 'Successfully joined community!'
+    };
+
+  } catch (error) {
+    console.error('Error joining community:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Function to get real-time community data
+async function getRealTimeCommunityData(collegeType) {
+  try {
+    const response = await fetch(`/api/community/realtime-data/${collegeType}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        members: data.totalMembers,
+        onlineMembers: data.onlineMembers,
+        communityName: data.communityName,
+        avatar: data.avatar
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching real-time data:', error);
+  }
+
+  // Fallback data
+  return getFallbackCommunityData(collegeType);
+}
+
+// Fallback community data
+function getFallbackCommunityData(collegeType) {
+  const communities = {
+    'nit': {
+      members: 2847,
+      onlineMembers: 342,
+      communityName: 'NIT Community',
+      avatar: 'https://picsum.photos/seed/nit-community/48/48'
+    },
+    'iit': {
+      members: 2156,
+      onlineMembers: 287,
+      communityName: 'IIT Community', 
+      avatar: 'https://picsum.photos/seed/iit-community/48/48'
+    },
+    'vit': {
+      members: 1834,
+      onlineMembers: 198,
+      communityName: 'VIT Community',
+      avatar: 'https://picsum.photos/seed/vit-community/48/48'
+    },
+    'other': {
+      members: 3421,
+      onlineMembers: 456,
+      communityName: 'University Community',
+      avatar: 'https://picsum.photos/seed/university-community/48/48'
+    }
+  };
+  
+  return communities[collegeType] || communities['other'];
+}
+
+// Function to load real community messages from your database
+async function loadRealCommunityMessages(collegeType, communityId) {
+  try {
+    console.log('Loading messages for college:', collegeType);
+    
+    // Query your community_messages table
+    const { data: messages, error } = await supabase
+      .from('community_messages')
+      .select(`
+        id,
+        content,
+        created_at,
+        sender_id,
+        users!inner(username, profile_pic)
+      `)
+      .eq('college_name', collegeType.toUpperCase())
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error('Error loading messages:', error);
+      return getSampleMessages(collegeType);
+    }
+    
+    console.log('Loaded messages from database:', messages);
+    
+    // Transform the data to match the expected format
+    const formattedMessages = messages.map(msg => ({
+      id: msg.id,
+      sender: msg.users.username || 'Unknown User',
+      message: msg.content,
+      time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      avatar: msg.users.profile_pic || `https://picsum.photos/seed/${msg.users.username}/36/36`,
+      isCurrentUser: msg.sender_id === userCollegeData?.userId,
+      senderId: msg.sender_id
+    }));
+    
+    return formattedMessages;
+    
+  } catch (error) {
+    console.error('Error loading messages:', error);
+    return getSampleMessages(collegeType);
+  }
+}
+
+// Get sample messages for fallback
+function getSampleMessages(collegeType) {
+  const sampleMessages = {
+    'nit': [
+      { sender: 'Rahul Sharma', message: 'Hey NIT folks! Anyone preparing for GATE 2024?', time: '2:30 PM', avatar: 'https://picsum.photos/seed/rahul/36/36' },
+      { sender: 'Priya Patel', message: 'Yes! Started preparation last month. Which branch?', time: '2:32 PM', avatar: 'https://picsum.photos/seed/priya/36/36' },
+      { sender: 'Amit Kumar', message: 'CSE here. Looking for study partners!', time: '2:35 PM', avatar: 'https://picsum.photos/seed/amit/36/36' }
+    ],
+    'iit': [
+      { sender: 'Vikram Singh', message: 'IITians! Who\'s up for hackathon this weekend?', time: '3:15 PM', avatar: 'https://picsum.photos/seed/vikram/36/36' },
+      { sender: 'Ananya Reddy', message: 'Count me in! Which domain?', time: '3:18 PM', avatar: 'https://picsum.photos/seed/ananya/36/36' },
+      { sender: 'Karan Mehta', message: 'AI/ML track. Let\'s form a team!', time: '3:20 PM', avatar: 'https://picsum.photos/seed/karan/36/36' }
+    ],
+    'vit': [
+      { sender: 'Suresh Babu', message: 'VIT Bhopal peeps! Fest season incoming 🎉', time: '1:45 PM', avatar: 'https://picsum.photos/seed/suresh/36/36' },
+      { sender: 'Neha Gupta', message: 'Excited for TechnoVibes! Anyone participating?', time: '1:48 PM', avatar: 'https://picsum.photos/seed/nehagupta/36/36' },
+      { sender: 'Rohit Verma', message: 'Robotics competition here I come!', time: '1:50 PM', avatar: 'https://picsum.photos/seed/rohit/36/36' }
+    ],
+    'other': [
+      { sender: 'Student Leader', message: 'Welcome to University Community! 🎓', time: '12:00 PM', avatar: 'https://picsum.photos/seed/student/36/36' },
+      { sender: 'Campus Rep', message: 'Share your college experiences here!', time: '12:05 PM', avatar: 'https://picsum.photos/seed/campus/36/36' },
+      { sender: 'Alumni Member', message: 'Great to see active participation!', time: '12:10 PM', avatar: 'https://picsum.photos/seed/alumni/36/36' }
+    ]
+  };
+  
+  return sampleMessages[collegeType] || sampleMessages['other'];
+}
+
+// Function to send real message to your database
+async function sendRealMessage(messageText) {
+  try {
+    if (!userCollegeData) {
+      throw new Error('Not authenticated or no community');
+    }
+    
+    console.log('Sending message to database:', messageText);
+    
+    // Insert message into your community_messages table
+    const { data: messageData, error } = await supabase
+      .from('community_messages')
+      .insert({
+        sender_id: userCollegeData.userId,
+        college_name: userCollegeData.collegeType.toUpperCase(),
+        content: messageText
+      })
+      .select(`
+        id,
+        content,
+        created_at,
+        sender_id,
+        users!inner(username, profile_pic)
+      `)
+      .single();
+    
+    if (error) {
+      console.error('Error sending message:', error);
+      throw new Error('Failed to send message: ' + error.message);
+    }
+    
+    console.log('Message sent successfully:', messageData);
+    
+    // Return formatted message for immediate UI update
+    return {
+      success: true,
+      message: {
+        id: messageData.id,
+        sender: messageData.users.username || 'You',
+        message: messageText,
+        time: new Date(messageData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        avatar: messageData.users.profile_pic || `https://picsum.photos/seed/${messageData.users.username}/36/36`,
+        isCurrentUser: true,
+        senderId: messageData.sender_id
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// ==========================================
+// COMMUNITY CHAT INITIALIZATION
+// ==========================================
+
+// Initialize community chat system
+async function initializeCommunityChat() {
+  try {
+    console.log('=== DEBUG: Community Chat Initialization ===');
+    
+    // Check if user is already in a community (from your existing system)
+    const existingCommunity = checkExistingCommunity();
+    console.log('Existing community found:', existingCommunity);
+    
+    if (existingCommunity) {
+      // User is already in a community - go directly to their college chat
+      console.log('User already in community - loading directly');
+      await loadExistingCommunityChat(existingCommunity);
+      return;
+    }
+    
+    // If no existing community, check login status
+    const userName = document.getElementById('userName');
+    const isUserLoggedIn = userName && userName.textContent && userName.textContent !== 'User';
+    
+    console.log('User name in header:', userName?.textContent);
+    console.log('Is user logged in:', isUserLoggedIn);
+    
+    if (isUserLoggedIn) {
+      console.log('User logged in but no community - showing join message');
+      showJoinCommunityMessage();
+    } else {
+      console.log('User not logged in - showing login message');
+      showLoginRequiredMessage();
+    }
+    
+  } catch (error) {
+    console.error('Error initializing chat:', error);
+    showErrorMessage('Failed to load chat. Please refresh.');
+  }
+}
+
+// Check if user is already in a community (from your existing system)
+async function checkExistingCommunity() {
+  try {
+    // Get current user from Supabase auth
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      console.log('No authenticated user found');
+      return null;
+    }
+    
+    console.log('Found authenticated user:', user.id);
+    
+    // Query your users table to check community status
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('college, community_joined, username, email')
+      .eq('id', user.id)
+      .single();
+    
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return null;
+    }
+    
+    console.log('User data from database:', userData);
+    
+    if (userData && userData.community_joined && userData.college) {
+      return {
+        type: userData.college.toLowerCase(),
+        name: `${userData.college} Community`,
+        college: userData.college,
+        connected: true,
+        userId: user.id,
+        username: userData.username
+      };
+    }
+    
+    console.log('User not joined any community yet');
+    return null;
+    
+  } catch (error) {
+    console.error('Error checking existing community:', error);
+    return null;
+  }
+}
+
+// Load existing community chat directly
+async function loadExistingCommunityChat(communityData) {
+  console.log('Loading existing community chat:', communityData);
+  
+  // Map community types to proper names
+  const communityMapping = {
+    'vit': 'VIT Community',
+    'vitbhopal': 'VIT Bhopal Community',
+    'iit': 'IIT Community',
+    'nit': 'NIT Community',
+    'other': 'University Community'
+  };
+  
+  const collegeType = communityData.type.toLowerCase();
+  const communityName = communityMapping[collegeType] || communityData.name || 'University Community';
+  
+  // Set user college data for the chat system
+  userCollegeData = {
+    collegeType: collegeType,
+    collegeName: communityName,
+    communityId: communityData.id || `${collegeType}_community`,
+    joinedAt: communityData.joinedAt || new Date().toISOString(),
+    existingUser: true
+  };
+  
+  // Get real-time community data
+  const realTimeData = await getRealTimeCommunityData(collegeType);
+  
+  // Update community header with real data
+  updateCommunityHeader(realTimeData);
+  
+  // Load community messages
+  const messages = await loadRealCommunityMessages(collegeType, userCollegeData.communityId);
+  displayMessages(messages);
+  
   // Initialize chat input
+  initializeChatInput();
+  
+  // Start real-time updates
+  startRealTimeUpdates();
+  
+  console.log('Community chat loaded successfully for:', communityName);
+}
+
+// Show login required message
+function showLoginRequiredMessage() {
+  const communitiesSection = document.getElementById('communities');
+  communitiesSection.innerHTML = `
+    <div class="join-community-container">
+      <div class="join-community-card">
+        <div class="join-community-icon">🔐</div>
+        <h2>Login Required</h2>
+        <p>Please login to join your college community and start chatting with fellow students!</p>
+        <button class="join-community-btn" onclick="showLoginModal()">
+          🚀 Login Now
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Show join community message
+function showJoinCommunityMessage() {
+  const communitiesSection = document.getElementById('communities');
+  communitiesSection.innerHTML = `
+    <div class="join-community-container">
+      <div class="join-community-card">
+        <div class="join-community-icon">🎓</div>
+        <h2>Join Your College Community</h2>
+        <p>Select your college from the universities page to join your community chat and connect with fellow students!</p>
+        <div class="join-community-steps">
+          <div class="step">
+            <span class="step-number">1</span>
+            <span class="step-text">Go to Home</span>
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-text">Select Your University</span>
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <span class="step-text">Join Your College</span>
+          </div>
+          <div class="step">
+            <span class="step-number">4</span>
+            <span class="step-text">Start Chatting!</span>
+          </div>
+        </div>
+        <button class="join-community-btn" onclick="goToUniversities()">
+          🏠 Go to Universities
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Show error message
+function showErrorMessage(message) {
+  const communitiesSection = document.getElementById('communities');
+  communitiesSection.innerHTML = `
+    <div class="join-community-container">
+      <div class="join-community-card">
+        <div class="join-community-icon">⚠️</div>
+        <h2>Oops! Something went wrong</h2>
+        <p>${message}</p>
+        <button class="join-community-btn" onclick="location.reload()">
+          🔄 Refresh Page
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Load user's college chat
+async function loadUserCollegeChat(communityData) {
+  // Get real-time community data
+  const realTimeData = await getRealTimeCommunityData(communityData.collegeType);
+  
+  // Update community header with real data
+  updateCommunityHeader(realTimeData);
+  
+  // Load community messages
+  const messages = await loadRealCommunityMessages(communityData.collegeType, communityData.communityId);
+  displayMessages(messages);
+  
+  // Initialize chat input
+  initializeChatInput();
+  
+  // Start real-time updates
+  startRealTimeUpdates();
+}
+
+// Update community header with real data
+function updateCommunityHeader(realTimeData) {
+  const communityDetails = document.querySelector('.community-details h3');
+  const communityMembers = document.querySelector('.community-details p');
+  const communityAvatar = document.querySelector('.community-avatar img');
+  
+  if (communityDetails) communityDetails.textContent = realTimeData.communityName;
+  if (communityMembers) communityMembers.textContent = `${realTimeData.members.toLocaleString()} members • ${realTimeData.onlineMembers} online`;
+  if (communityAvatar) communityAvatar.src = realTimeData.avatar;
+}
+
+// Display messages in chat
+function displayMessages(messages) {
+  const messageGroup = document.querySelector('.message-group');
+  if (!messageGroup) return;
+  
+  messageGroup.innerHTML = '';
+  
+  messages.forEach(msg => {
+    const messageElement = createRealMessageElement(msg);
+    messageGroup.appendChild(messageElement);
+  });
+  
+  scrollToBottom();
+}
+
+// Create real message element
+function createRealMessageElement(msg) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message-item ${msg.isCurrentUser ? 'sent' : 'received'}`;
+  
+  messageDiv.innerHTML = `
+    <div class="message-avatar">
+      <img src="${msg.avatar || `https://picsum.photos/seed/${msg.sender}/36/36`}" alt="${msg.sender}">
+    </div>
+    <div class="message-content">
+      <div class="message-meta">
+        <span class="sender-name">${msg.sender}</span>
+        <span class="message-time">${msg.time}</span>
+      </div>
+      <div class="message-bubble">
+        <p>${msg.message}</p>
+      </div>
+    </div>
+  `;
+  
+  return messageDiv;
+}
+
+// Initialize chat input
+function initializeChatInput() {
   const messageInput = document.getElementById('messageInput');
   if (messageInput) {
     messageInput.addEventListener('keypress', handleMessageKeyPress);
   }
-  
-  // Load initial messages
-  loadInitialMessages();
 }
 
-// Load initial messages
-function loadInitialMessages() {
-  const messagesWrapper = document.querySelector('.messages-wrapper');
-  if (!messagesWrapper) return;
-  
-  // Initial sample messages
-  const initialMessages = [
-    { sender: 'Alex Kumar', message: 'Hey everyone! Just joined the community. Excited to connect with fellow CS students!', time: '2:30 PM' },
-    { sender: 'Sarah Johnson', message: 'Hi Alex! I\'m focusing on machine learning. Looking for internship opportunities if anyone knows of any!', time: '2:36 PM' },
-    { sender: 'Community Manager', message: 'Welcome to VibeXpert Community! 🎓 Feel free to share your thoughts and connect with fellow students!', time: '2:45 PM' }
-  ];
-  
-  const messageGroup = messagesWrapper.querySelector('.message-group');
-  if (messageGroup) {
-    // Clear existing messages except the first one
-    const existingMessages = messageGroup.querySelectorAll('.message-item');
-    for (let i = 1; i < existingMessages.length; i++) {
-      existingMessages[i].remove();
-    }
-    
-    // Add new messages
-    initialMessages.forEach((msg, index) => {
-      if (index > 0) { // Skip the first one as it's already in HTML
-        const messageElement = createMessageElement(msg.sender, msg.message, msg.time, 'received');
-        messageGroup.appendChild(messageElement);
-      }
-    });
+// Handle message key press
+function handleMessageKeyPress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendUserMessage();
   }
+}
+
+// Send user message
+async function sendUserMessage() {
+  const messageInput = document.getElementById('messageInput');
+  const messageText = messageInput.value.trim();
+  
+  if (!messageText) return;
+  
+  if (!userCollegeData) {
+    alert('Please join a community first!');
+    return;
+  }
+  
+  // Add message to UI immediately for better UX
+  const currentUser = getCurrentUser();
+  const tempMessage = {
+    sender: currentUser.name || 'You',
+    message: messageText,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    isCurrentUser: true,
+    avatar: `https://picsum.photos/seed/${currentUser.name || 'user'}/36/36`
+  };
+  
+  const messageElement = createRealMessageElement(tempMessage);
+  const messageGroup = document.querySelector('.message-group');
+  if (messageGroup) {
+    messageGroup.appendChild(messageElement);
+    scrollToBottom();
+  }
+  
+  // Clear input
+  messageInput.value = '';
+  
+  // Send to backend
+  const result = await sendRealMessage(messageText);
+  
+  if (!result.success) {
+    // Remove message if failed to send
+    messageElement.remove();
+    alert('Failed to send message: ' + result.error);
+  }
+}
+
+// Start real-time updates
+function startRealTimeUpdates() {
+  // Update online members count every 30 seconds
+  setInterval(async () => {
+    if (userCollegeData) {
+      const realTimeData = await getRealTimeCommunityData(userCollegeData.collegeType);
+      updateCommunityHeader(realTimeData);
+    }
+  }, 30000);
+  
+  // Poll for new messages every 5 seconds
+  setInterval(async () => {
+    if (userCollegeData) {
+      const messages = await loadRealCommunityMessages(userCollegeData.collegeType, userCollegeData.communityId);
+      const currentMessages = document.querySelectorAll('.message-item');
+      
+      // Only update if there are new messages
+      if (messages.length > currentMessages.length) {
+        displayMessages(messages);
+      }
+    }
+  }, 5000);
+}
+
+// Go to universities page
+function goToUniversities() {
+  showPage('home');
+}
+
+// Enhanced university selection
+async function selectUniversityForCommunity(collegeType) {
+  const collegeNames = {
+    'nit': 'National Institute of Technology',
+    'iit': 'Indian Institute of Technology', 
+    'vit': 'Vellore Institute of Technology',
+    'other': 'Other Universities'
+  };
+  
+  const collegeName = collegeNames[collegeType];
+  
+  try {
+    const result = await joinCollegeCommunity(collegeType, collegeName);
+    
+    if (result.success) {
+      alert(`🎓 Welcome to ${collegeName} Community!\n\nYou can now chat with fellow students from your college.\n\nNote: You cannot change your college community once joined.`);
+      
+      // Navigate to community chat
+      showPage('communities');
+    } else {
+      alert(`❌ Failed to join community: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('Error joining community:', error);
+    alert('❌ Failed to join community. Please try again.');
+  }
+}
+
+// Show login modal (placeholder - implement based on your existing login system)
+function showLoginModal() {
+  // Navigate to login page or show login modal
+  showPage('login');
 }
 
 // Create message element
@@ -8527,13 +9201,13 @@ flipStyle.textContent = `
 document.head.appendChild(flipStyle);
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize amazing chat when communities page becomes visible
+  // Initialize community chat when communities page becomes visible
   const communitiesPage = document.getElementById('communities');
   if (communitiesPage) {
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.target.style.display !== 'none') {
-          initializeAmazingChat();
+          initializeCommunityChat();
         }
       });
     });
