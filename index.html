@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>VibeXpert - Connect With Your College</title>
 <link rel="stylesheet" href="vibemap.css" />
-<script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
@@ -30,68 +30,104 @@
     ABOUT US LANDING PAGE (Keep as is - not changing)
     ======================================== -->
 <div id="aboutUsPage" class="about-us-page">
-    <!-- ✅ ADD THIS VANTA BACKGROUND CONTAINER -->
-<div id="vanta-globe-bg" class="vanta-globe-background"></div>
+    <!-- Enhanced Vanta Background -->
+    <div id="vanta-globe-bg" class="vanta-globe-background"></div>
+    
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress-bar">
+    <div class="scroll-progress-fill" id="scrollProgressFill"></div>
+    </div>
 
-<!-- Scroll Progress Bar -->
-<div class="scroll-progress-bar">
-<div class="scroll-progress-fill" id="scrollProgressFill"></div>
-</div>
+    <!-- Hero Section -->
+    <section class="about-hero">
+    <div class="about-hero-content">
+    <div class="about-logo-large">VibeXpert</div>
+    <h1 class="about-hero-title">Connect. Share. Vibe.</h1>
+    <p class="about-hero-subtitle">The Ultimate Social Platform for College Students</p>
+    <div class="about-scroll-indicator">
+    <span>Scroll to Explore</span>
+    <div class="scroll-arrow">↓</div>
+    </div>
+    </div>
+    <div class="about-hero-background">
+    <div class="floating-element" style="top: 10%; left: 10%;">🎓</div>
+    <div class="floating-element" style="top: 20%; right: 15%;">📚</div>
+    <div class="floating-element" style="bottom: 20%; left: 20%;">🎨</div>
+    <div class="floating-element" style="bottom: 15%; right: 10%;">🎵</div>
+    <div class="floating-element" style="top: 50%; left: 5%;">💬</div>
+    <div class="floating-element" style="top: 30%; right: 8%;">🚀</div>
+    </div>
+    </section>
 
-<!-- Hero Section -->
-<section class="about-hero">
-<div class="about-hero-content">
-<div class="about-logo-large">VibeXpert</div>
-<h1 class="about-hero-title">Connect. Share. Vibe.</h1>
-<p class="about-hero-subtitle">The Ultimate Social Platform for College Students</p>
-<div class="about-scroll-indicator">
-<span>Scroll to Explore</span>
-<div class="scroll-arrow">↓</div>
-</div>
-</div>
-<div class="about-hero-background">
-<div class="floating-element" style="top: 10%; left: 10%;">🎓</div>
-<div class="floating-element" style="top: 20%; right: 15%;">📚</div>
-<div class="floating-element" style="bottom: 20%; left: 20%;">🎨</div>
-<div class="floating-element" style="bottom: 15%; right: 10%;">🎵</div>
-<div class="floating-element" style="top: 50%; left: 5%;">💬</div>
-<div class="floating-element" style="top: 30%; right: 8%;">🚀</div>
-</div>
-</section>
+    <!-- What is VibeXpert -->
+    <section class="about-section">
+    <div class="about-container">
+    <h2 class="about-section-title">What is VibeXpert?</h2>
+    <div class="about-grid">
+    <div class="about-card reveal-on-scroll">
+    <div class="about-card-icon">🌐</div>
+    <h3>500+ Universities</h3>
+    <p>Connect with students from IITs, NITs, VITs, and universities across India</p>
+    </div>
+    <div class="about-card reveal-on-scroll">
+    <div class="about-card-icon">💬</div>
+    <h3>Real-Time Chat</h3>
+    <p>Engage in live conversations with your college community instantly</p>
+    </div>
+    <div class="about-card reveal-on-scroll">
+    <div class="about-card-icon">�</div>
+    <h3>Rich Media Sharing</h3>
+    <p>Share photos, videos, music, and stickers to express yourself</p>
+    </div>
+    <div class="about-card reveal-on-scroll">
+    <div class="about-card-icon">🏆</div>
+    <h3>Rewards System</h3>
+    <p>Earn points, unlock achievements, and climb the leaderboard</p>
+    </div>
+    </div>
+    </div>
+    </section>
 
-<!-- What is VibeXpert -->
-<section class="about-section">
-<div class="about-container">
-<h2 class="about-section-title">What is VibeXpert?</h2>
-<div class="about-grid">
-<div class="about-card reveal-on-scroll">
-<div class="about-card-icon">🌐</div>
-<h3>500+ Universities</h3>
-<p>Connect with students from IITs, NITs, VITs, and universities across India</p>
-</div>
-<div class="about-card reveal-on-scroll">
-<div class="about-card-icon">💬</div>
-<h3>Real-Time Chat</h3>
-<p>Engage in live conversations with your college community instantly</p>
-</div>
-<div class="about-card reveal-on-scroll">
-<div class="about-card-icon">📸</div>
-<h3>Rich Media Sharing</h3>
-<p>Share photos, videos, music, and stickers to express yourself</p>
-</div>
-<div class="about-card reveal-on-scroll">
-<div class="about-card-icon">🏆</div>
-<h3>Rewards System</h3>
-<p>Earn points, unlock achievements, and climb the leaderboard</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- Features Section -->
-<section class="about-section about-features-section">
-<div class="about-container">
-<h2 class="about-section-title">Powerful Features</h2>
+    <!-- Features Section -->
+    <section class="about-section about-features-section">
+    <div class="about-container">
+    <h2 class="about-section-title">Powerful Features</h2>
+    <div class="feature-showcase reveal-on-scroll">
+    <div class="feature-showcase-image">
+    <div class="feature-mockup">
+    <div class="mockup-header">
+    <span class="mockup-dot"></span>
+    <span class="mockup-dot"></span>
+    <span class="mockup-dot"></span>
+    </div>
+    <div class="mockup-content">
+    <div class="mockup-post">
+    <div class="mockup-avatar">👤</div>
+    <div class="mockup-text">
+    <div class="mockup-line"></div>
+    <div class="mockup-line short"></div>
+    </div>
+    </div>
+    <div class="mockup-image"></div>
+    <div class="mockup-actions">
+    <span>❤️</span>
+    <span>💬</span>
+    <span>🔄</span>
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="feature-showcase-text">
+    <h3>📱 Enhanced Post Creation</h3>
+    <ul>
+    <li>✨ Add photos, videos, and audio</li>
+    <li>🎵 Attach music from our library</li>
+    <li>🎨 Decorate with fun stickers</li>
+    <li>✂️ Crop and edit your media</li>
+    <li>🌐 Share to profile or community</li>
+    </ul>
+    </div>
+    </div>
 
 <div class="feature-showcase reveal-on-scroll">
 <div class="feature-showcase-image">
@@ -335,7 +371,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9feceaefeff0edebdfe9f6fdfae7effaedebb1fcf0f2">[email&#160;protected]</a></p>
+<p>📧 support@vibexpert.com</p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -610,374 +646,183 @@ Enter your email address and we'll send you a verification code.
 </div>
 <div id="collegeContainer" class="colleges"></div>
 <div id="pagination" class="pagination"></div>
-<button class="back-btn" onclick="backToUniversities()">← Back</button>
+<button class="back-btn" onclick="backToUniversities()"> Back</button>
 </section>
 
-<!-- COMMUNITIES -->
-
-<!-- COMMUNITIES - REDESIGNED CHAT SYSTEM -->
+<!-- COMMUNITIES - UNIFIED COMMUNITY CHAT -->
 <section id="communities" class="page" style="display:none;">
-  <div class="chat-main-container">
-    
-    <!-- Sidebar with Chat Info -->
-    <aside class="chat-sidebar">
-      <div class="sidebar-header">
-        <div class="college-badge">
-          <div class="college-icon">🎓</div>
-          <div class="college-details">
-            <h3 id="collegeChatName">Your College</h3>
-            <p id="collegeLocationChat">Loading...</p>
-          </div>
-        </div>
-      </div>
+<div class="unified-chat-container">
+<!-- Chat Header -->
+<div class="unified-chat-header">
+<div class="header-left">
+<button class="back-btn" onclick="backToUniversities()">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M19 12H5M12 19l-7-7 7-7"/>
+</svg>
+</button>
+<div class="community-info">
+<div class="community-avatar">
+<img src="https://picsum.photos/seed/vibexpert/40/40" alt="VibeXpert">
+<div class="status-indicator online"></div>
+</div>
+<div class="community-details">
+<h3>VibeXpert Community</h3>
+<p>2,847 members • 342 online</p>
+</div>
+</div>
+</div>
+<div class="header-right">
+<button class="header-action-btn" onclick="toggleChatInfo()" title="Chat Info">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="1"/>
+<circle cx="19" cy="12" r="1"/>
+<circle cx="5" cy="12" r="1"/>
+</svg>
+</button>
+<button class="header-action-btn" onclick="flipToPosts()" title="Create Post">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M12 2v20M17 7l-5-5-5 5M17 17l-5 5-5-5"/>
+</svg>
+</button>
+</div>
+</div>
 
-      <!-- Online Members List -->
-      <div class="online-members-section">
-        <div class="section-header">
-          <h4>🟢 Online Now</h4>
-          <span class="online-count" id="onlineCountSidebar">0</span>
-        </div>
-        <div class="members-list" id="onlineMembersList">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
+<!-- Messages Container -->
+<div class="unified-messages-container">
+<div class="messages-wrapper">
+<div class="date-separator">
+<div class="date-line"></div>
+<span class="date-text">Today</span>
+<div class="date-line"></div>
+</div>
 
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <button class="action-btn" onclick="showChatRules()">
-          <span class="action-icon">📜</span>
-          <span>Chat Rules</span>
-        </button>
-        <button class="action-btn" onclick="showChatStats()">
-          <span class="action-icon">📊</span>
-          <span>Statistics</span>
-        </button>
-        <button class="action-btn" onclick="toggleNotifications()">
-          <span class="action-icon" id="notifIcon">🔔</span>
-          <span id="notifText">Notifications</span>
-        </button>
-      </div>
+<div class="message-group">
+<div class="message-item received">
+<div class="message-avatar">
+<img src="https://picsum.photos/seed/alex/36/36" alt="Alex">
+</div>
+<div class="message-content">
+<div class="message-meta">
+<span class="sender-name">Alex Kumar</span>
+<span class="message-time">2:30 PM</span>
+</div>
+<div class="message-bubble">
+<p>Hey everyone! Just joined the community. Excited to connect with fellow CS students! </p>
+</div>
+</div>
+</div>
 
-      <!-- Chat Features Info -->
-      <div class="features-info">
-        <h4>💬 Chat Features</h4>
-        <ul class="feature-list">
-          <li>📸 Photo & Video Sharing</li>
-          <li>🎤 Voice Messages</li>
-          <li>📄 File Attachments</li>
-          <li>😊 Reactions & Emojis</li>
-          <li>💬 Reply to Messages</li>
-          <li>🔍 Search Messages</li>
-        </ul>
-      </div>
-    </aside>
+<div class="message-item sent">
+<div class="message-content">
+<div class="message-meta">
+<span class="message-time">2:32 PM</span>
+<span class="message-status double-check"></span>
+</div>
+<div class="message-bubble">
+<p>Welcome Alex! Great to have you here. What's your specialization?</p>
+</div>
+</div>
+</div>
 
-    <!-- Main Chat Area -->
-    <div class="chat-content">
-      
-      <!-- Chat Header -->
-      <header class="chat-header">
-        <div class="header-left">
-          <button class="mobile-menu-btn" onclick="toggleChatSidebar()">☰</button>
-          <div class="chat-title">
-            <h2>Community Chat</h2>
-            <div class="connection-status">
-              <span class="status-dot" id="connectionDot"></span>
-              <span id="connectionText">Connected</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="header-actions">
-          <button class="header-btn" onclick="searchInChat()" title="Search">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </button>
-          <button class="header-btn" onclick="toggleChatInfo()" title="Info">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-          </button>
-          <button class="header-btn" onclick="openChatSettings()" title="Settings">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 1v6m0 6v6m-9-9h6m6 0h6"></path>
-            </svg>
-          </button>
-        </div>
-      </header>
+<div class="message-item received">
+<div class="message-avatar">
+<img src="https://picsum.photos/seed/sarah/36/36" alt="Sarah">
+</div>
+<div class="message-content">
+<div class="message-meta">
+<span class="sender-name">Sarah Johnson</span>
+<span class="message-time">2:36 PM</span>
+</div>
+<div class="message-bubble">
+<p>Hi Alex! I'm focusing on machine learning. Looking for internship opportunities if anyone knows of any! </p>
+</div>
+</div>
+</div>
+</div>
 
-      <!-- Date Separator for Messages -->
-      <div class="date-separator" id="dateSeparator" style="display:none;">
-        <span>Today</span>
-      </div>
+<div class="typing-indicator-wrapper" id="typingIndicator" style="display:none;">
+<div class="typing-avatar">
+<img src="https://picsum.photos/seed/user/36/36" alt="User">
+</div>
+<div class="typing-indicator">
+<div class="typing-dots">
+<span></span>
+<span></span>
+<span></span>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-      <!-- Messages Container -->
-      <div class="messages-area" id="messagesArea">
-        <div class="messages-wrapper" id="messagesWrapper">
-          <!-- Messages will be dynamically loaded here -->
-          <div class="welcome-message">
-            <div class="welcome-icon">👋</div>
-            <h3>Welcome to Community Chat!</h3>
-            <p>Start a conversation with your college community</p>
-          </div>
-        </div>
+<!-- Input Container -->
+<div class="unified-input-container">
+<div class="input-wrapper">
+<button class="input-action-btn emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="10"/>
+<path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+<line x1="9" x2="9.01" y1="9" y2="9"/>
+<line x1="15" x2="15.01" y1="9" y2="9"/>
+</svg>
+</button>
+<div class="message-input-field">
+<textarea id="messageInput" placeholder="Type a message..." rows="1" onkeypress="handleMessageKeyPress(event)"></textarea>
+<button class="emoji-btn-right" onclick="toggleEmojiPicker()" title="Emoji">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="10"/>
+<path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+<line x1="9" x2="9.01" y1="9" y2="9"/>
+<line x1="15" x2="15.01" y1="9" y2="9"/>
+</svg>
+</button>
+</div>
+<button class="input-action-btn attach-btn" onclick="attachFile()" title="Attach File">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+</svg>
+</button>
+<button class="send-message-btn" onclick="sendMessage()" title="Send Message">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<line x1="22" x2="11" y1="2" y2="13"/>
+<polygon points="22 2 15 22 11 13 2 9 22 2"/>
+</svg>
+</button>
+</div>
+</div>
 
-        <!-- Load More Button -->
-        <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreMessages()" style="display:none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="17 11 12 6 7 11"></polyline>
-            <polyline points="17 18 12 13 7 18"></polyline>
-          </svg>
-          Load Earlier Messages
-        </button>
-
-        <!-- Scroll to Bottom Button -->
-        <button class="scroll-bottom-btn" id="scrollBottomBtn" onclick="scrollToBottomChat()" style="display:none;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="7 13 12 18 17 13"></polyline>
-            <polyline points="7 6 12 11 17 6"></polyline>
-          </svg>
-          <span class="new-messages-badge" id="newMessagesBadge">0</span>
-        </button>
-
-        <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typingIndicator" style="display:none;">
-          <div class="typing-bubble">
-            <div class="typing-avatar">👤</div>
-            <div class="typing-content">
-              <span class="typing-name" id="typingName">Someone</span>
-              <div class="typing-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reply Preview -->
-      <div class="reply-preview" id="replyPreview" style="display:none;">
-        <div class="reply-content">
-          <div class="reply-header">
-            <span>Replying to <strong id="replyToName"></strong></span>
-            <button onclick="cancelReply()" class="cancel-reply">×</button>
-          </div>
-          <div class="reply-text" id="replyToText"></div>
-        </div>
-      </div>
-
-      <!-- Media Preview Panel -->
-      <div class="media-preview-panel" id="mediaPreviewChat" style="display:none;">
-        <div class="preview-header">
-          <span>📎 Attachments</span>
-          <button onclick="clearMediaPreviewChat()">×</button>
-        </div>
-        <div class="preview-items" id="previewItemsChat"></div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="chat-input-container">
-        
-        <!-- Voice Recording UI -->
-        <div class="voice-recording-ui" id="voiceRecordingUI" style="display:none;">
-          <div class="recording-visualizer">
-            <div class="recording-wave">
-              <span></span><span></span><span></span>
-              <span></span><span></span><span></span>
-              <span></span><span></span><span></span>
-            </div>
-          </div>
-          <span class="recording-time" id="recordingTime">0:00</span>
-          <div class="recording-actions">
-            <button class="recording-btn cancel" onclick="cancelVoiceRecording()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
-            <button class="recording-btn pause" onclick="togglePauseRecording()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-              </svg>
-            </button>
-            <button class="recording-btn send" onclick="sendVoiceMessage()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Regular Input -->
-        <div class="input-wrapper-chat" id="inputWrapperChat">
-          <div class="input-actions">
-            <button class="input-btn" onclick="openEmojiPickerChat()" title="Emoji">
-              😊
-            </button>
-            <button class="input-btn" onclick="openMediaPickerChat()" title="Attach Media">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-            </button>
-            <button class="input-btn" onclick="openFilePickerChat()" title="Attach File">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                <polyline points="13 2 13 9 20 9"></polyline>
-              </svg>
-            </button>
-            <button class="input-btn" onclick="openGifPickerChat()" title="GIF">
-              GIF
-            </button>
-          </div>
-          
-          <div class="text-input-wrapper">
-            <textarea 
-              id="messageInputChat" 
-              placeholder="Type a message..." 
-              rows="1"
-              maxlength="5000"
-              oninput="handleInputChangeChat()"
-              onkeydown="handleKeyPressChat(event)"
-            ></textarea>
-            <span class="char-count" id="charCountChat">0/5000</span>
-          </div>
-
-          <div class="send-actions">
-            <button class="voice-btn" onclick="startVoiceRecording()" title="Voice Message">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-            <button class="send-btn" id="sendBtnChat" onclick="sendMessageChat()" disabled>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Info Panel (Optional) -->
-    <aside class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-      <div class="info-header">
-        <h3>Chat Information</h3>
-        <button onclick="toggleChatInfo()">×</button>
-      </div>
-      
-      <div class="info-content">
-        <div class="info-section">
-          <h4>📊 Today's Activity</h4>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-value" id="todayMessages">0</span>
-              <span class="stat-label">Messages</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-value" id="todayActiveUsers">0</span>
-              <span class="stat-label">Active Users</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h4>🔥 Most Active Members</h4>
-          <div class="top-members-list" id="topMembersList">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-
-        <div class="info-section">
-          <h4>📌 Pinned Messages</h4>
-          <div class="pinned-messages" id="pinnedMessages">
-            <p class="empty-state">No pinned messages</p>
-          </div>
-        </div>
-      </div>
-    </aside>
-  </div>
+<!-- Emoji Picker (Hidden by default) -->
+<div class="emoji-picker" id="emojiPicker" style="display:none;">
+<div class="emoji-picker-header">
+<span>Emojis</span>
+<button class="close-emoji-picker" onclick="toggleEmojiPicker()">×</button>
+</div>
+<div class="emoji-grid">
+<!-- Common emojis -->
+<span class="emoji-item" onclick="insertEmoji('😀')">😀</span>
+<span class="emoji-item" onclick="insertEmoji('😂')">😂</span>
+<span class="emoji-item" onclick="insertEmoji('❤️')">❤️</span>
+<span class="emoji-item" onclick="insertEmoji('👍')">👍</span>
+<span class="emoji-item" onclick="insertEmoji('🎉')">🎉</span>
+<span class="emoji-item" onclick="insertEmoji('🔥')">🔥</span>
+<span class="emoji-item" onclick="insertEmoji('💯')">💯</span>
+<span class="emoji-item" onclick="insertEmoji('🚀')">🚀</span>
+<span class="emoji-item" onclick="insertEmoji('💪')">💪</span>
+<span class="emoji-item" onclick="insertEmoji('🙏')">🙏</span>
+<span class="emoji-item" onclick="insertEmoji('😎')">😎</span>
+<span class="emoji-item" onclick="insertEmoji('🤔')">🤔</span>
+<span class="emoji-item" onclick="insertEmoji('👀')">👀</span>
+<span class="emoji-item" onclick="insertEmoji('🎯')">🎯</span>
+<span class="emoji-item" onclick="insertEmoji('⚡')">⚡</span>
+<span class="emoji-item" onclick="insertEmoji('🌟')">🌟</span>
+<span class="emoji-item" onclick="insertEmoji('💡')">💡</span>
+<span class="emoji-item" onclick="insertEmoji('🎓')">🎓</span>
+<span class="emoji-item" onclick="insertEmoji('💻')">💻</span>
+<span class="emoji-item" onclick="insertEmoji('📱')">📱</span>
+</div>
+</div>
+</div>
 </section>
-
-<!-- Emoji Picker Modal -->
-<div id="emojiPickerModalChat" class="modal" style="display:none;">
-  <div class="modal-content emoji-picker-content">
-    <div class="modal-header">
-      <h3>Pick an Emoji</h3>
-      <button class="close-btn" onclick="closeEmojiPickerChat()">×</button>
-    </div>
-    <div class="emoji-search">
-      <input type="text" id="emojiSearchChat" placeholder="Search emojis..." oninput="filterEmojisChat(this.value)">
-    </div>
-    <div class="emoji-categories">
-      <button class="emoji-cat-btn active" data-category="smileys" onclick="switchEmojiCategoryChat('smileys')">😊</button>
-      <button class="emoji-cat-btn" data-category="gestures" onclick="switchEmojiCategoryChat('gestures')">👋</button>
-      <button class="emoji-cat-btn" data-category="animals" onclick="switchEmojiCategoryChat('animals')">🐶</button>
-      <button class="emoji-cat-btn" data-category="food" onclick="switchEmojiCategoryChat('food')">🍕</button>
-      <button class="emoji-cat-btn" data-category="activities" onclick="switchEmojiCategoryChat('activities')">⚽</button>
-      <button class="emoji-cat-btn" data-category="objects" onclick="switchEmojiCategoryChat('objects')">💡</button>
-      <button class="emoji-cat-btn" data-category="symbols" onclick="switchEmojiCategoryChat('symbols')">❤️</button>
-    </div>
-    <div class="emoji-grid" id="emojiGridChat">
-      <!-- Dynamically populated -->
-    </div>
-  </div>
-</div>
-
-<!-- GIF Picker Modal -->
-<div id="gifPickerModalChat" class="modal" style="display:none;">
-  <div class="modal-content gif-picker-content">
-    <div class="modal-header">
-      <h3>Choose a GIF</h3>
-      <button class="close-btn" onclick="closeGifPickerChat()">×</button>
-    </div>
-    <div class="gif-search">
-      <input type="text" id="gifSearchChat" placeholder="Search GIFs..." oninput="searchGifsChat(this.value)">
-    </div>
-    <div class="gif-grid" id="gifGridChat">
-      <div class="gif-loading">Searching for GIFs...</div>
-    </div>
-  </div>
-</div>
-
-<!-- Message Context Menu -->
-<div id="messageContextMenuChat" class="context-menu" style="display:none;">
-  <button class="context-menu-item" onclick="replyToMessageChat()">
-    <span class="menu-icon">↩️</span>
-    Reply
-  </button>
-  <button class="context-menu-item" onclick="copyMessageChat()">
-    <span class="menu-icon">📋</span>
-    Copy
-  </button>
-  <button class="context-menu-item" onclick="pinMessageChat()">
-    <span class="menu-icon">📌</span>
-    Pin
-  </button>
-  <button class="context-menu-item" onclick="reportMessageChat()">
-    <span class="menu-icon">🚫</span>
-    Report
-  </button>
-  <button class="context-menu-item danger" onclick="deleteMessageChat()">
-    <span class="menu-icon">🗑️</span>
-    Delete
-  </button>
-</div>
-
-<!-- Hidden file inputs -->
-<input type="file" id="mediaFileInputChat" accept="image/*,video/*" multiple style="display:none" onchange="handleMediaFilesChat(this.files)">
-<input type="file" id="documentFileInputChat" accept=".pdf,.doc,.docx,.txt,.xlsx,.ppt,.pptx" style="display:none" onchange="handleDocumentFilesChat(this.files)">
-
 
 <!-- REALVIBE SECTION -->
 <section id="realvibe" class="page" style="display:none;">
@@ -1574,7 +1419,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="55262025253a272115233c37302d253027217b363a38">[email&#160;protected]</a></p>
+<p>📧 Email: support@vibexpert.com</p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1658,4 +1503,24 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropria
+  // Check which page is visible and init appropriate background
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+
+if (aboutPage && aboutPage.style.display !== 'none') {
+    initGlobeBackground();
+}
+
+if (mainPage && mainPage.style.display !== 'none') {
+    initNetBackground();
+}
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+destroyGlobeBackground();
+destroyNetBackground();
+});
+</script>
+
+</body>
