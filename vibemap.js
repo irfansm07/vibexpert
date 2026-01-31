@@ -1437,38 +1437,61 @@ sendEnhancedMessage();
 
 async function sendWhatsAppMessage() {
   const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
+  const content = input.value.trim();
   
   if (!content) return;
 
   try {
-    // Optimistic UI update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date()
+    // 1. Clear input immediately
+    input.value = '';
+    
+    // 2. Create unique temp ID
+    const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    
+    // 3. Show optimistic message
+    const tempMessage = {
+      id: tempId,
+      content: content,
+      user_id: currentUser.id,
+      users: {
+        username: currentUser.username,
+        avatar_url: currentUser.avatar_url
+      },
+      created_at: new Date().toISOString(),
+      isTemp: true // Mark as temporary
     };
     
-    appendWhatsAppMessage(tempMsg);
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    await apiCall('/api/community/messages', 'POST', { content });
+    appendWhatsAppMessage(tempMessage, true); // true = own message
     
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
+    // 4. Send to server
+    const response = await apiCall('/api/community/messages', 'POST', { 
+      content: content 
+    });
+    
+    if (response.success) {
+      // 5. Remove temp message
+      const tempElement = document.getElementById(`wa-msg-${tempId}`);
+      if (tempElement) {
+        tempElement.remove();
+      }
+      
+      // 6. Add real message from API response
+      appendWhatsAppMessage(response.message, true);
+      
+      console.log('✅ Message sent successfully');
     }
-  } catch(error) {
-    showMessage('❌ Failed to send', 'error');
+    
+  } catch (error) {
+    console.error('❌ Failed to send message:', error);
+    showMessage('Failed to send message', 'error');
+    
+    // Remove temp message on error
+    const tempElement = document.getElementById(`wa-msg-temp-${tempId}`);
+    if (tempElement) {
+      tempElement.remove();
+    }
   }
 }
-
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -5815,6 +5838,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
 
 
 
