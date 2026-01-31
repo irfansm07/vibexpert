@@ -1762,17 +1762,9 @@ async function loadWhatsAppMessages() {
     // Update stats
     updateChatStats(data.messages.length);
   } catch(error) {
-    console.error('❌ Failed to load messages:', error);
+    console.error('', error);
     const messagesEl = document.getElementById('whatsappMessages');
-    if (messagesEl) {
-      messagesEl.innerHTML = `
-        <div class="no-messages">
-          <div style="font-size:64px;margin-bottom:20px;">❌</div>
-          <h3 style="color:#ff6b6b;margin-bottom:10px;">Failed to load messages</h3>
-          <p style="color:#888;">Please check your connection and try again</p>
-          <button onclick="loadWhatsAppMessages()" style="margin-top:15px;padding:10px 20px;background:#4f74a3;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
-        </div>
-      `;
+    
     }
   }
 
@@ -5791,5 +5783,3 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
-}
-
