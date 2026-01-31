@@ -9173,3 +9173,207 @@ body.light-theme .twitter-text {
   color: #ff6b6b;
   font-size: 16px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ==========================================
+   CHAT SCROLLING & TYPING INDICATOR FIXES
+   Add these CSS rules to your vibemap.css file
+   ========================================== */
+
+/* Fix 1: Ensure chat messages scroll properly */
+.chat-messages {
+  padding: 35px;
+  max-height: 600px;
+  overflow-y: auto !important; /* Force scrolling */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: linear-gradient(180deg, rgba(79, 116, 163, 0.05) 0%, transparent 100%);
+  scroll-behavior: smooth;
+  position: relative;
+  /* Add these new properties */
+  min-height: 400px; /* Ensure minimum height */
+  flex: 1; /* Allow it to grow */
+}
+
+/* Fix 2: Ensure typing indicator stays visible */
+.typing-indicators-container {
+  padding: 15px 35px;
+  min-height: 50px;
+  position: sticky; /* Keep it at the bottom */
+  bottom: 0;
+  background: rgba(15, 25, 45, 0.95); /* Add background so it's visible */
+  z-index: 10; /* Ensure it's above messages */
+  border-top: 1px solid rgba(79, 116, 163, 0.2);
+}
+
+body.light-theme .typing-indicators-container {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Fix 3: Ensure chat box has proper height constraints */
+.chat-box {
+  background: rgba(15, 25, 45, 0.98);
+  border: 2px solid rgba(79, 116, 163, 0.4);
+  border-top: none;
+  border-radius: 0 0 25px 25px;
+  overflow: hidden;
+  backdrop-filter: blur(30px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  /* Add these properties */
+  max-height: calc(100vh - 300px); /* Prevent overflow */
+  min-height: 500px;
+}
+
+/* Fix 4: Ensure input area stays at bottom */
+.chat-input-box {
+  padding: 30px;
+  background: linear-gradient(180deg, rgba(79, 116, 163, 0.15), rgba(79, 116, 163, 0.08));
+  border-top: 2px solid rgba(79, 116, 163, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  backdrop-filter: blur(15px);
+  position: relative;
+  /* Add this */
+  flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+/* Fix 5: Auto-scroll to bottom helper class */
+.chat-messages.auto-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Fix 6: Improve scrollbar visibility */
+.chat-messages::-webkit-scrollbar {
+  width: 12px; /* Make it more visible */
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: rgba(79, 116, 163, 0.15);
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4f74a3, #8da4d3);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(15, 25, 45, 0.3);
+  min-height: 40px; /* Ensure it's grabbable */
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a7fb8, #9eb0d8);
+  box-shadow: 0 0 15px rgba(79, 116, 163, 0.6);
+}
+
+/* Fix 7: Mobile responsive fixes */
+@media (max-width: 768px) {
+  .chat-messages {
+    padding: 25px 20px;
+    max-height: 500px;
+    gap: 18px;
+  }
+  
+  .chat-box {
+    max-height: calc(100vh - 200px);
+    min-height: 400px;
+  }
+  
+  .typing-indicators-container {
+    padding: 10px 20px;
+  }
+  
+  .chat-input-box {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-messages {
+    max-height: 450px;
+    padding: 20px 15px;
+  }
+  
+  .chat-box {
+    max-height: calc(100vh - 150px);
+    min-height: 350px;
+  }
+}
+
+/* ==========================================
+   ADDITIONAL IMPROVEMENTS
+   ========================================== */
+
+/* Ensure messages don't overflow */
+.chat-message {
+  max-width: 75%;
+  position: relative;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Fix message text overflow */
+.message-text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap; /* Preserve line breaks */
+}
+
+/* Improve spacing at bottom of messages */
+.chat-messages::after {
+  content: '';
+  display: block;
+  height: 20px;
+  flex-shrink: 0;
+}
