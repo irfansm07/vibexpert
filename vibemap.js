@@ -1528,7 +1528,7 @@ function scrollToBottom() {
 // COMMUNITIES & CHAT
 // ========================================
 
-function loadCommunities() {
+function loadCommunitiesFixed() {
   const container = document.getElementById('communitiesContainer');
   if (!container) return;
 
@@ -1545,174 +1545,38 @@ function loadCommunities() {
   // WhatsApp-style complete layout
   container.innerHTML = `
     <div class="whatsapp-container">
-      <!-- Left Sidebar: Chats List -->
-      <div class="whatsapp-sidebar">
-        <div class="whatsapp-sidebar-header">
-          <div>
-            <h3>${currentUser.college}</h3>
-            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
-          </div>
-          <div class="sidebar-actions">
-          </div>
-        </div>
-        
-        <div class="whatsapp-search">
-          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
-        </div>
-        
-        <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Community Group Chat -->
-          <div class="chat-item active" onclick="openCommunityChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar">🎓</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>${currentUser.college} Community</h4>
-                <span class="chat-time">Now</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Click to open group chat</span>
-                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Announcements Channel -->
-          <div class="chat-item" onclick="openAnnouncementsChannel()">
-            <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>📢 Announcements</h4>
-                <span class="chat-time">"COMING SOON"</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Important college updates</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Study Groups -->
-          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
-            <div class="chat-avatar">
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                 </div>
-              <div class="chat-preview">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <!-- [Your existing HTML structure] -->
+      
       <!-- Right Main Chat Area -->
       <div class="whatsapp-main" id="whatsappMain">
-        <div class="whatsapp-chat-header">
-          <div class="chat-header-info">
-            <div class="chat-avatar-large">🎓</div>
-            <div>
-              <h3>${currentUser.college} Community</h3>
-              <p class="chat-status">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> members online
-              </p>
-            </div>
-          </div>
-          <div class="chat-header-actions">
-            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
-          </div>
-        </div>
+        <!-- [Your existing chat header HTML] -->
 
         <div class="whatsapp-messages" id="whatsappMessages">
           <div class="date-separator">
             <span>Today</span>
           </div>
           <div style="text-align:center;padding:40px;color:#888;">
+            <div style="font-size:48px;margin-bottom:15px;">⏳</div>
+            <p>Loading messages...</p>
           </div>
         </div>
 
-        <div class="whatsapp-input-area">
-          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <div class="input-wrapper">
-            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
-              onkeydown="handleWhatsAppKeypress(event)" 
-              oninput="handleTypingIndicator()"></textarea>
-          </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
-            <span class="send-icon">➤</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Twitter-style Feed (Initially Hidden) -->
-      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
-        <div class="twitter-header">
-          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
-          <h3>Community Posts</h3>
-        </div>
-        <div class="twitter-feed" id="twitterFeed">
-          <div style="text-align:center;padding:40px;color:#888;">
-            <div style="font-size:48px;margin-bottom:15px;">📰</div>
-            <p>Loading posts...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat Info Panel (Hidden) -->
-      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-        <div class="info-panel-header">
-          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
-          <h3>Chat Info</h3>
-        </div>
-        <div class="info-panel-content">
-          <div class="info-section">
-            <div class="info-avatar">🎓</div>
-            <h2>${currentUser.college}</h2>
-            <p>College Community Group</p>
-          </div>
-          
-          <div class="info-section">
-            <h4>📊 Statistics</h4>
-            <div class="info-stats">
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMembers">0</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMessages">0</span>
-                <span class="stat-label">Messages</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="activeToday">0</span>
-                <span class="stat-label">Active Today</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4>⚙️ Settings</h4>
-            <div class="info-option" onclick="toggleNotifications()">
-              <span>🔔 Notifications</span>
-              <span id="notifStatus">On</span>
-            </div>
-            <div class="info-option" onclick="muteChat()">
-              <span>🔇 Mute Chat</span>
-              <span>Off</span>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
-          </div>
-        </div>
+        <!-- [Your existing input area HTML] -->
       </div>
     </div>
   `;
+
+  // ✅ Initialize chat after DOM is ready
+  setTimeout(() => {
+    initializeCommunityChat();
+    
+    // Apply fixes if function exists
+    if (typeof initWhatsAppChatFixes === 'function') {
+      initWhatsAppChatFixes();
+    }
+  }, 100);
+}
+
 
   // Initialize chat
  setTimeout(() => {
@@ -1731,10 +1595,15 @@ function loadCommunities() {
 
 async function loadWhatsAppMessages() {
   try {
+    console.log('📥 Loading chat messages...');
+    
     const data = await apiCall('/api/community/messages', 'GET');
     const messagesEl = document.getElementById('whatsappMessages');
     
-    if (!messagesEl) return;
+    if (!messagesEl) {
+      console.error('❌ Messages container not found');
+      return;
+    }
 
     // Keep date separator
     const dateSeparator = messagesEl.querySelector('.date-separator');
@@ -1752,21 +1621,46 @@ async function loadWhatsAppMessages() {
       return;
     }
 
-    // ✅ CRITICAL FIX: Don't reverse - API returns in correct order (oldest first)
-    // Messages will append to bottom due to flex-direction: column
+    // ✅ CRITICAL FIX: Messages are already in correct order (oldest first)
+    // Backend returns them sorted by created_at ASC
     console.log(`📥 Loading ${data.messages.length} messages`);
-    data.messages.forEach(msg => appendWhatsAppMessage(msg));
+    
+    // Clear any existing message IDs tracking
+    const loadedMessageIds = new Set();
+    
+    data.messages.forEach(msg => {
+      // Prevent duplicates during initial load
+      if (!loadedMessageIds.has(msg.id)) {
+        loadedMessageIds.add(msg.id);
+        appendWhatsAppMessage(msg);
+      }
+    });
+    
     // ✅ Scroll to bottom after all messages loaded
     setTimeout(() => scrollToBottom(), 100);
     
     // Update stats
     updateChatStats(data.messages.length);
-  } catch(error) {
-    console.error('', error);
-    const messagesEl = document.getElementById('whatsappMessages');
     
+    console.log('✅ Messages loaded successfully');
+    
+  } catch(error) {
+    console.error('❌ Load messages error:', error);
+    const messagesEl = document.getElementById('whatsappMessages');
+    if (messagesEl) {
+      messagesEl.innerHTML = `
+        <div class="error-state" style="text-align:center;padding:40px;color:#ff6b6b;">
+          <div style="font-size:48px;margin-bottom:15px;">😔</div>
+          <p>Failed to load messages</p>
+          <button onclick="loadWhatsAppMessages()" style="margin-top:15px;padding:10px 20px;background:#4f74a3;color:white;border:none;border-radius:8px;cursor:pointer;">
+            🔄 Retry
+          </button>
+        </div>
+      `;
     }
   }
+}
+
 
 
 async function sendWhatsAppMessage() {
@@ -1832,9 +1726,9 @@ async function sendWhatsAppMessage() {
         tempEl.remove();
       }
       
-      // ✅ Add real message from API (NOT from socket)
-      console.log(`✅ Adding real: ${response.message.id}`);
-      appendWhatsAppMessage(response.message);
+      // ✅ Don't add real message here - it will come from Socket or already exists in DB
+      // When user refreshes, loadWhatsAppMessages will load it from DB
+      
     }
   } catch(error) {
     console.error('❌ Send error:', error);
@@ -1848,6 +1742,7 @@ async function sendWhatsAppMessage() {
     input.value = originalContent;
   }
 }
+
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -5409,7 +5304,7 @@ function appendWhatsAppMessage(msg) {
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
+  const messageTime = msg.timestamp || msg.created_at ? new Date(msg.timestamp || msg.created_at) : new Date();
   const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
 
@@ -5420,7 +5315,7 @@ function appendWhatsAppMessage(msg) {
     return;
   }
   
-  // ✅ Extra check: Don't show duplicates of same content within 3 seconds
+  // ✅ Extra check for own messages: Don't show duplicates within 3 seconds
   if (!msg.isTemp && isOwn) {
     const recentMessages = Array.from(messagesEl.querySelectorAll('.whatsapp-message.own'));
     const threeSecondsAgo = Date.now() - 3000;
@@ -5437,22 +5332,21 @@ function appendWhatsAppMessage(msg) {
     }
   }
 
-  // ✅ Remember if user was at bottom
+  // ✅ Remember scroll position
   const wasAtBottom = (messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 100);
 
   const wrapper = document.createElement('div');
   wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `wa-msg-${messageId}`;
-  wrapper.dataset.timestamp = Date.now(); // ✅ Add timestamp for duplicate detection
+  wrapper.dataset.timestamp = Date.now();
+  wrapper.dataset.messageId = messageId; // Store original message ID
 
   let messageHTML = '';
   
-  // Add sender name for others
   if (!isOwn) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
-  // Message bubble
   messageHTML += `
     <div class="message-bubble">
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
@@ -5464,15 +5358,23 @@ function appendWhatsAppMessage(msg) {
     </div>
   `;
 
+  // Add action buttons
+  if (isOwn) {
+    messageHTML += `
+      <div class="message-actions-menu" id="actions-${messageId}" style="display:none;">
+        <button onclick="deleteWhatsAppMessage('${messageId}')" title="Delete">🗑️</button>
+      </div>
+    `;
+  }
+
   wrapper.innerHTML = messageHTML;
   messagesEl.appendChild(wrapper);
 
-  // ✅ Smart scroll: only if user was already at bottom OR it's own message
+  // ✅ Smart scroll: only if at bottom OR own message
   if (isOwn || wasAtBottom) {
-    scrollToBottom();
+    setTimeout(() => scrollToBottom(), 50);
   }
 
-  // Play sound for received messages
   if (!isOwn && !msg.isTemp) {
     playMessageSound('receive');
   }
@@ -5598,10 +5500,22 @@ function setupWhatsAppSocketListeners() {
   socket.off('message_deleted');
 
   // New message received (only from OTHER users - backend excludes sender)
+function setupWhatsAppSocketListeners() {
+  if (!socket) return;
+
+  console.log('✅ Setting up WhatsApp Socket listeners');
+
+  // Remove old listeners to prevent duplicates
+  socket.off('new_message');
+  socket.off('user_typing');
+  socket.off('user_stop_typing');
+  socket.off('message_deleted');
+
+  // ✅ CRITICAL: Only append messages from OTHER users
   socket.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
+    console.log('📨 Socket: New message received:', message.id);
     
-    // ✅ Double-check it's not from current user (shouldn't happen with backend fix)
+    // Backend should already exclude sender, but double-check
     if (message.sender_id === currentUser?.id) {
       console.log('⚠️ Ignoring own message from socket');
       return;
@@ -5610,22 +5524,19 @@ function setupWhatsAppSocketListeners() {
     appendWhatsAppMessage(message);
   });
 
-  // User started typing
-  socket.off('user_typing').on('user_typing', (data) => {
+  socket.on('user_typing', (data) => {
     if (data.username && currentUser && data.username !== currentUser.username) {
-      showWhatsAppTypingIndicator(data.username);
+      showTypingIndicator(data.username);
     }
   });
 
-  // User stopped typing
-  socket.off('user_stop_typing').on('user_stop_typing', (data) => {
+  socket.on('user_stop_typing', (data) => {
     if (data.username) {
-      hideWhatsAppTypingIndicator(data.username);
+      hideTypingIndicator(data.username);
     }
   });
 
-  // Message deleted
-  socket.off('message_deleted').on('message_deleted', ({ id }) => {
+  socket.on('message_deleted', ({ id }) => {
     const messageEl = document.getElementById(`wa-msg-${id}`);
     if (messageEl) {
       messageEl.style.animation = 'fadeOut 0.3s ease';
@@ -5783,3 +5694,45 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function initializeCommunityChat() {
+  console.log('🎬 Initializing community chat...');
+  
+  // Load messages from database
+  loadWhatsAppMessages();
+  
+  // Setup socket listeners (if not already done)
+  if (socket && !socket.hasListeners('new_message')) {
+    setupWhatsAppSocketListeners();
+  }
+  
+  // Mark as initialized
+  const whatsappMain = document.getElementById('whatsappMain');
+  if (whatsappMain) {
+    whatsappMain.dataset.initialized = 'true';
+  }
+}
