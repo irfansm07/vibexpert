@@ -5309,3 +5309,453 @@ console.log('✨ RealVibe features initialized!')
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ========================================
+// WHATSAPP CHAT FIXES - JAVASCRIPT
+// Scrolling + Typing Indicator Solutions
+// ========================================
+
+/**
+ * INTEGRATION INSTRUCTIONS:
+ * 
+ * 1. Add these functions to your vibemap.js file
+ * 2. Call initWhatsAppChatFixes() when community chat loads
+ * 3. Update your existing Socket.IO listeners
+ */
+
+// ==========================================
+// SCROLL MANAGEMENT
+// ==========================================
+
+/**
+ * Scroll to bottom of WhatsApp messages
+ */
+function scrollWhatsAppToBottom(smooth = true) {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return;
+  
+  if (smooth) {
+    messagesEl.scrollTo({
+      top: messagesEl.scrollHeight,
+      behavior: 'smooth'
+    });
+  } else {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+}
+
+/**
+ * Check if user is at bottom of chat (within 100px threshold)
+ */
+function isWhatsAppAtBottom() {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return true;
+  
+  const threshold = 100;
+  const position = messagesEl.scrollTop + messagesEl.clientHeight;
+  const bottom = messagesEl.scrollHeight;
+  
+  return (bottom - position) < threshold;
+}
+
+/**
+ * Enhanced appendWhatsAppMessage with smart auto-scroll
+ */
+function appendWhatsAppMessageFixed(msg) {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return;
+
+  const isOwn = msg.sender_id === (currentUser && currentUser.id);
+  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
+  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
+
+  // Check if message already exists
+  if (document.getElementById('wa-msg-' + messageId)) return;
+
+  // Remember scroll position BEFORE adding message
+  const wasAtBottom = isWhatsAppAtBottom();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
+  wrapper.id = `wa-msg-${messageId}`;
+
+  let messageHTML = '';
+  
+  // Add sender name for others
+  if (!isOwn) {
+    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
+  }
+
+  // Message bubble
+  messageHTML += `
+    <div class="message-bubble">
+      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      <div class="message-meta">
+        <span class="message-time">${timeLabel}</span>
+        ${isOwn ? '<span class="message-status">✓✓</span>' : ''}
+      </div>
+      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
+    </div>
+  `;
+
+  wrapper.innerHTML = messageHTML;
+  messagesEl.appendChild(wrapper);
+
+  // Auto-scroll ONLY if:
+  // 1. User sent the message (isOwn)
+  // 2. User was already at bottom (wasAtBottom)
+  if (isOwn || wasAtBottom) {
+    scrollWhatsAppToBottom(true);
+  }
+
+  // Play sound for received messages
+  if (!isOwn) {
+    playMessageSound('receive');
+  }
+}
+
+// ==========================================
+// TYPING INDICATOR
+// ==========================================
+
+let typingUsersSet = new Set();
+let typingIndicatorTimeout = null;
+
+/**
+ * Show typing indicator for a user
+ */
+function showWhatsAppTypingIndicator(username) {
+  if (!username || username === currentUser?.username) return;
+  
+  typingUsersSet.add(username);
+  updateWhatsAppTypingDisplay();
+}
+
+/**
+ * Hide typing indicator for a user
+ */
+function hideWhatsAppTypingIndicator(username) {
+  typingUsersSet.delete(username);
+  updateWhatsAppTypingDisplay();
+}
+
+/**
+ * Update typing indicator display
+ */
+function updateWhatsAppTypingDisplay() {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return;
+
+  // Remove existing indicator
+  const existingIndicator = document.getElementById('typing-indicator');
+  if (existingIndicator) existingIndicator.remove();
+
+  // If no one is typing, exit
+  if (typingUsersSet.size === 0) return;
+
+  // Create typing indicator
+  const indicator = document.createElement('div');
+  indicator.id = 'typing-indicator';
+  indicator.className = 'whatsapp-typing-indicator';
+
+  const usersList = Array.from(typingUsersSet);
+  let text = '';
+
+  if (usersList.length === 1) {
+    text = `${usersList[0]} is typing`;
+  } else if (usersList.length === 2) {
+    text = `${usersList[0]} and ${usersList[1]} are typing`;
+  } else {
+    text = `${usersList.length} people are typing`;
+  }
+
+  indicator.innerHTML = `
+    <div class="typing-bubble">
+      <span>${text}</span>
+      <div class="typing-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  `;
+
+  messagesEl.appendChild(indicator);
+  
+  // Auto-scroll to show typing indicator
+  scrollWhatsAppToBottom(true);
+}
+
+/**
+ * Handle user typing in input
+ */
+function handleWhatsAppTyping() {
+  if (!socket || !currentUser || !currentUser.college) return;
+  
+  const now = Date.now();
+  
+  // Emit typing event (throttled to every 2 seconds)
+  if (!window.lastWhatsAppTypingEmit || (now - window.lastWhatsAppTypingEmit) > 2000) {
+    socket.emit('typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+    window.lastWhatsAppTypingEmit = now;
+  }
+
+  // Clear existing timeout
+  clearTimeout(typingIndicatorTimeout);
+
+  // Stop typing after 3 seconds of inactivity
+  typingIndicatorTimeout = setTimeout(() => {
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      username: currentUser.username
+    });
+  }, 3000);
+}
+
+// ==========================================
+// SOCKET.IO LISTENERS
+// ==========================================
+
+/**
+ * Setup Socket.IO listeners for WhatsApp chat
+ */
+function setupWhatsAppSocketListeners() {
+  if (!socket) return;
+
+  console.log('✅ Setting up WhatsApp Socket listeners');
+
+  // New message received
+  socket.off('new_message').on('new_message', (message) => {
+    console.log('📨 New message received:', message);
+    appendWhatsAppMessageFixed(message);
+  });
+
+  // User started typing
+  socket.off('user_typing').on('user_typing', (data) => {
+    if (data.username && currentUser && data.username !== currentUser.username) {
+      showWhatsAppTypingIndicator(data.username);
+    }
+  });
+
+  // User stopped typing
+  socket.off('user_stop_typing').on('user_stop_typing', (data) => {
+    if (data.username) {
+      hideWhatsAppTypingIndicator(data.username);
+    }
+  });
+
+  // Message deleted
+  socket.off('message_deleted').on('message_deleted', ({ id }) => {
+    const messageEl = document.getElementById(`wa-msg-${id}`);
+    if (messageEl) {
+      messageEl.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => messageEl.remove(), 300);
+    }
+  });
+}
+
+// ==========================================
+// ENHANCED SEND MESSAGE
+// ==========================================
+
+/**
+ * Enhanced sendWhatsAppMessage with proper handling
+ */
+async function sendWhatsAppMessageFixed() {
+  const input = document.getElementById('whatsappInput');
+  const content = input?.value.trim();
+  
+  if (!content) {
+    showMessage('⚠️ Message cannot be empty', 'error');
+    input?.focus();
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  try {
+    // Optimistic UI update
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      content,
+      sender_id: currentUser.id,
+      users: currentUser,
+      timestamp: new Date(),
+      text: content
+    };
+    
+    appendWhatsAppMessageFixed(tempMsg);
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Stop typing indicator immediately
+    if (socket && currentUser.college) {
+      socket.emit('stop_typing', { 
+        collegeName: currentUser.college, 
+        username: currentUser.username 
+      });
+    }
+
+    // Send to server
+    const response = await apiCall('/api/community/messages', 'POST', { content });
+    
+    if (response.success) {
+      playMessageSound('send');
+      
+      // Remove temp message
+      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
+      if (tempEl) tempEl.remove();
+      
+      // Real message will come via Socket.IO
+    }
+  } catch(error) {
+    console.error('Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+    
+    // Remove temp message on error
+    const tempEl = document.querySelector('[id^="wa-msg-temp-"]');
+    if (tempEl) tempEl.remove();
+  }
+}
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+
+/**
+ * Initialize all WhatsApp chat fixes
+ * Call this when community chat is loaded
+ */
+function initWhatsAppChatFixes() {
+  console.log('🔧 Initializing WhatsApp Chat Fixes...');
+
+  // Setup socket listeners
+  setupWhatsAppSocketListeners();
+
+  // Setup input handler
+  const input = document.getElementById('whatsappInput');
+  if (input) {
+    // Handle typing indicator
+    input.addEventListener('input', handleWhatsAppTyping);
+
+    // Handle Enter key
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendWhatsAppMessageFixed();
+      }
+    });
+
+    // Auto-resize textarea
+    input.addEventListener('input', (e) => {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+    });
+  }
+
+  // Override existing functions
+  window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
+  window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+
+  console.log('✅ WhatsApp Chat Fixes Initialized!');
+}
+
+// ==========================================
+// AUTO-INITIALIZATION
+// ==========================================
+
+// Initialize when community page is shown
+document.addEventListener('DOMContentLoaded', function() {
+  const communitiesPage = document.getElementById('communities');
+  
+  if (communitiesPage) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.target.style.display !== 'none') {
+          // Wait for WhatsApp chat to be rendered
+          setTimeout(() => {
+            const whatsappMain = document.getElementById('whatsappMain');
+            if (whatsappMain && !whatsappMain.dataset.fixesApplied) {
+              whatsappMain.dataset.fixesApplied = 'true';
+              initWhatsAppChatFixes();
+              
+              // Load messages after initialization
+              if (typeof loadWhatsAppMessages === 'function') {
+                loadWhatsAppMessages();
+              }
+            }
+          }, 100);
+        }
+      });
+    });
+    
+    observer.observe(communitiesPage, { 
+      attributes: true, 
+      attributeFilter: ['style'] 
+    });
+  }
+});
+
+// Export for manual initialization
+window.initWhatsAppChatFixes = initWhatsAppChatFixes;
+
+console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
+
