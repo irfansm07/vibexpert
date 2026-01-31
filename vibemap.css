@@ -9494,7 +9494,9 @@ body.light-theme .twitter-text {
 @media (max-width: 480px) {
   .whatsapp-messages {
     max-height: calc(100vh - 130px);
-    padding: 10px;
+    padding: 10px 10px 200px 10px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
   }
   
   .message-bubble {
