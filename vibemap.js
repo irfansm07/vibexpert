@@ -1768,6 +1768,59 @@ async function loadWhatsAppMessages() {
     }
   }
 
+function appendWhatsAppMessage(msg) {
+  const messagesEl = document.getElementById('whatsappMessages');
+  if (!messagesEl) return;
+
+  const isOwn = msg.sender_id === (currentUser && currentUser.id);
+  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
+  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
+
+  // Check if message already exists
+  if (document.getElementById('wa-msg-' + messageId)) return;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
+  wrapper.id = `wa-msg-${messageId}`;
+
+  let messageHTML = '';
+  
+  // Add sender name for others
+  if (!isOwn) {
+    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
+  }
+
+  // Message bubble
+  messageHTML += `
+    <div class="message-bubble">
+      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      <div class="message-meta">
+        <span class="message-time">${timeLabel}</span>
+       ${isOwn ? `<span class="message-status">${msg.isTemp ? '⏳' : '✓✓'}</span>` : ''}
+      </div>
+      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
+    </div>
+  `;
+
+  // Message actions (on long press / click)
+  messageHTML += `
+    <div class="message-actions-menu" id="actions-${messageId}" style="display:none;">
+      <button onclick="replyToMessage('${messageId}')">↩️ Reply</button>
+      <button onclick="copyMessageText('${messageId}')">📋 Copy</button>
+      <button onclick="forwardMessage('${messageId}')">↪️ Forward</button>
+      ${isOwn ? `<button onclick="deleteWhatsAppMessage('${messageId}')" style="color:#ff6b6b;">🗑️ Delete</button>` : ''}
+    </div>
+  `;
+
+  wrapper.innerHTML = messageHTML;
+  
+  // Add long press / right click for actions
+  wrapper.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showMessageActions(messageId);
+  });
   
   // Add long press for mobile
   let pressTimer;
@@ -1790,7 +1843,6 @@ async function sendWhatsAppMessage() {
   
   if (!content) {
     showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
     return;
   }
 
@@ -1799,12 +1851,12 @@ async function sendWhatsAppMessage() {
     return;
   }
 
-  // ✅ Clear input IMMEDIATELY
+  // ✅ 1. Clear input IMMEDIATELY
   const originalContent = content;
   input.value = '';
   input.style.height = 'auto';
 
-  // ✅ Create unique temp ID
+  // ✅ 2. Create unique temp ID
   const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
   
   const tempMessage = {
@@ -1821,7 +1873,7 @@ async function sendWhatsAppMessage() {
   };
 
   try {
-    // ✅ Show optimistic message
+    // ✅ 3. Show optimistic message
     appendWhatsAppMessage(tempMessage);
 
     // Stop typing indicator
@@ -1832,24 +1884,24 @@ async function sendWhatsAppMessage() {
       });
     }
 
-    // ✅ Send to server
+    // ✅ 4. Send to server
     const response = await apiCall('/api/community/messages', 'POST', { 
       content: originalContent 
     });
     
     if (response.success && response.message) {
-      playMessageSound('send');
-      
-      // ✅ Remove temp message
+      // ✅ 5. Remove temp message
       const tempEl = document.getElementById(`wa-msg-${tempId}`);
       if (tempEl) {
         console.log(`🗑️ Removing temp: ${tempId}`);
         tempEl.remove();
       }
       
-      // ✅ Add real message from API (NOT from socket)
+      // ✅ 6. Add real message from API (NOT from socket)
       console.log(`✅ Adding real: ${response.message.id}`);
       appendWhatsAppMessage(response.message);
+      
+      playMessageSound('send');
     }
   } catch(error) {
     console.error('❌ Send error:', error);
@@ -5798,9 +5850,4 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
-
-
-
-
-
 
