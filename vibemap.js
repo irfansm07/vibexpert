@@ -1691,13 +1691,16 @@ function loadCommunities() {
   `;
 
   // Initialize chat
-  setTimeout(() => {
+ setTimeout(() => {
+    if (typeof initWhatsAppChatFixes === 'function') {
+      initWhatsAppChatFixes();  // ← ADD ONLY THIS LINE
+    }
     loadWhatsAppMessages();
     initWhatsAppFeatures();
     loadTwitterFeed();
   }, 100);
 }
-  
+ 
 // ==========================================
 // WHATSAPP MESSAGE FUNCTIONS
 // ==========================================
@@ -5757,5 +5760,6 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
 
 
