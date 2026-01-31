@@ -1,3 +1,4 @@
+
 .hero p {
     font-size: 18px;
   }
@@ -590,6 +591,7 @@ footer,
     padding: 20px;
     max-height: 450px;
     gap: 15px;
+    overflow-y: auto;
   }
   
   .chat-message {
@@ -706,6 +708,7 @@ footer,
   .chat-messages {
     max-height: 400px;
     padding: 15px;
+    overflow-y: auto;
   }
   
   .chat-message {
@@ -8286,11 +8289,12 @@ body.light-theme .plan-features li {
 .whatsapp-container {
   display: grid;
   grid-template-columns: 350px 1fr;
-  height: calc(100vh - 200px);
-  background: rgba(15, 25, 45, 0.95);
-  border: 2px solid rgba(79, 116, 163, 0.3);
-  border-radius: 20px;
+  height: calc(100vh - 250px);
   overflow: hidden;
+  border-radius: 20px;
+  background: rgba(15, 25, 45, 0.95);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(79, 116, 163, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
@@ -9143,7 +9147,7 @@ body.light-theme .twitter-text {
 
 @media (max-width: 480px) {
   .whatsapp-container {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 200px);
   }
   
   .whatsapp-messages {
@@ -9230,7 +9234,7 @@ body.light-theme .twitter-text {
   flex: 1;
   overflow-y: auto !important;
   overflow-x: hidden;
-  padding: 20px;
+  padding: 20px 20px 200px 20px;
   display: flex;
   flex-direction: column;
   min-height: 400px;
