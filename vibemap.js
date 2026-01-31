@@ -5477,6 +5477,95 @@ console.log('✨ RealVibe features initialized!')
 
 
 
+  // ==========================================
+   // ENHANCED PROFILE BIO FUNCTIONS - COMPLETE
+   // ==========================================
+   
+   function editBio() {
+     const bioDisplay = document.getElementById('bioDisplay');
+     const bioEdit = document.getElementById('bioEdit');
+     const bioInput = document.getElementById('bioInput');
+     const bioCount = document.getElementById('bioCount');
+     
+     if (!bioDisplay || !bioEdit || !bioInput) return;
+
+     bioDisplay.style.display = 'none';
+     bioEdit.style.display = 'block';
+     bioInput.value = currentUser.bio || '';
+     
+     if (bioCount) {
+       bioCount.textContent = bioInput.value.length + '/150';
+     }
+     
+     bioInput.focus();
+   }
+
+   async function saveBio() {
+     const bioInput = document.getElementById('bioInput');
+     const bioText = document.getElementById('bioText');
+     const bioDisplay = document.getElementById('bioDisplay');
+     const bioEdit = document.getElementById('bioEdit');
+     
+     if (!bioInput) return;
+     
+     const newBio = bioInput.value.trim();
+     
+     try {
+       showMessage('💾 Saving bio...', 'success');
+       
+       const data = await apiCall('/api/user/bio', 'POST', { bio: newBio });
+       
+       if (data.success) {
+         currentUser.bio = newBio;
+         localStorage.setItem('user', JSON.stringify(currentUser));
+         
+         if (bioText) {
+           if (newBio) {
+             bioText.textContent = newBio;
+             bioText.style.color = '#e0e0e0';
+           } else {
+             bioText.textContent = 'Click to add bio...';
+             bioText.style.color = '#888';
+           }
+         }
+         
+         if (bioEdit) bioEdit.style.display = 'none';
+         if (bioDisplay) bioDisplay.style.display = 'block';
+         
+         showMessage('✅ Bio updated!', 'success');
+       }
+     } catch (error) {
+       console.error('Bio save error:', error);
+       showMessage('❌ Failed to save bio', 'error');
+     }
+   }
+
+   function cancelBioEdit() {
+     const bioDisplay = document.getElementById('bioDisplay');
+     const bioEdit = document.getElementById('bioEdit');
+     
+     if (bioEdit) bioEdit.style.display = 'none';
+     if (bioDisplay) bioDisplay.style.display = 'block';
+   }
+
+   function updateBioCount() {
+     const bioInput = document.getElementById('bioInput');
+     const bioCount = document.getElementById('bioCount');
+     
+     if (bioInput && bioCount) {
+       const length = bioInput.value.length;
+       bioCount.textContent = length + '/150';
+       
+       if (length > 150) {
+         bioCount.style.color = '#ff6b6b';
+       } else {
+         bioCount.style.color = '#888';
+       }
+     }
+   }
+   
+   console.log('✅ All VibeXpert functions loaded!');
+
 
 
 
@@ -5970,5 +6059,3 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
-
-
