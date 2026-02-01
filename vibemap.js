@@ -7305,87 +7305,80 @@ console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
 
 
-/* ==========================================
-   MOBILE RESPONSIVE JAVASCRIPT ENHANCEMENTS
-   VibeXpert Mobile Features
-   ========================================== */
 
-// Mobile Menu Toggle Functionality
-document.addEventListener('DOMContentLoaded', function() {
-  
-  // Create mobile menu toggle button if it doesn't exist
-  const header = document.querySelector('header');
-  const aside = document.querySelector('aside');
-  
-  if (header && aside && window.innerWidth <= 768) {
-    // Check if toggle doesn't already exist
-    if (!document.querySelector('.mobile-menu-toggle')) {
-      const mobileToggle = document.createElement('button');
-      mobileToggle.className = 'mobile-menu-toggle';
-      mobileToggle.innerHTML = '☰';
-      mobileToggle.setAttribute('aria-label', 'Toggle menu');
+// ==========================================
+// MOBILE RESPONSIVE ENHANCEMENTS
+// Added for mobile device support
+// ==========================================
+
+(function() {
+  'use strict';
+
+  // Mobile Menu Toggle
+  function initMobileMenu() {
+    const header = document.querySelector('header');
+    const aside = document.querySelector('aside');
+    
+    if (!header || !aside) return;
+    
+    if (window.innerWidth <= 768 && !document.querySelector('.mobile-menu-toggle')) {
+      const toggle = document.createElement('button');
+      toggle.className = 'mobile-menu-toggle';
+      toggle.innerHTML = '☰';
+      toggle.setAttribute('aria-label', 'Menu');
+      toggle.style.cssText = 'display:none;position:fixed;top:15px;left:15px;z-index:1001;background:rgba(79,116,163,0.8);border:none;color:white;font-size:24px;padding:10px 15px;border-radius:10px;cursor:pointer;';
       
-      // Insert at beginning of header
-      header.insertBefore(mobileToggle, header.firstChild);
+      document.body.appendChild(toggle);
       
-      // Toggle sidebar on mobile
-      mobileToggle.addEventListener('click', function() {
+      toggle.addEventListener('click', function() {
         aside.classList.toggle('mobile-open');
-        mobileToggle.innerHTML = aside.classList.contains('mobile-open') ? '✕' : '☰';
+        toggle.innerHTML = aside.classList.contains('mobile-open') ? '✕' : '☰';
       });
       
-      // Close sidebar when clicking outside
       document.addEventListener('click', function(e) {
-        if (aside.classList.contains('mobile-open') && 
-            !aside.contains(e.target) && 
-            !mobileToggle.contains(e.target)) {
+        if (aside.classList.contains('mobile-open') && !aside.contains(e.target) && !toggle.contains(e.target)) {
           aside.classList.remove('mobile-open');
-          mobileToggle.innerHTML = '☰';
+          toggle.innerHTML = '☰';
         }
       });
       
-      // Close sidebar when clicking a nav link
       const navLinks = aside.querySelectorAll('a, button');
       navLinks.forEach(link => {
         link.addEventListener('click', function() {
           if (window.innerWidth <= 768) {
             aside.classList.remove('mobile-open');
-            mobileToggle.innerHTML = '☰';
+            toggle.innerHTML = '☰';
           }
         });
       });
     }
-  }
-});
-
-// Optimize touch scrolling
-(function() {
-  if ('ontouchstart' in window) {
-    document.body.style.webkitOverflowScrolling = 'touch';
-  }
-})();
-
-// Prevent zoom on double-tap for specific elements
-document.addEventListener('DOMContentLoaded', function() {
-  let lastTouchEnd = 0;
-  document.addEventListener('touchend', function(event) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-      event.preventDefault();
-    }
-    lastTouchEnd = now;
-  }, false);
-});
-
-// Optimize modals for mobile
-function optimizeModalsForMobile() {
-  const modals = document.querySelectorAll('.modal');
-  
-  modals.forEach(modal => {
-    const modalBox = modal.querySelector('.modal-box');
     
-    if (modalBox && window.innerWidth <= 768) {
-      // Prevent body scroll when modal is open
+    updateMenuVisibility();
+  }
+
+  function updateMenuVisibility() {
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (!toggle) return;
+    
+    if (window.innerWidth <= 768) {
+      toggle.style.display = 'block';
+    } else {
+      toggle.style.display = 'none';
+      const aside = document.querySelector('aside');
+      if (aside) aside.classList.remove('mobile-open');
+    }
+  }
+
+  // Viewport Height Fix
+  function setViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+
+  // Optimize Modals for Mobile
+  function optimizeModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
       const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
           if (mutation.target.style.display !== 'none') {
@@ -7395,193 +7388,40 @@ function optimizeModalsForMobile() {
           }
         });
       });
-      
-      observer.observe(modal, {
-        attributes: true,
-        attributeFilter: ['style']
-      });
-    }
-  });
-}
-
-// Optimize emoji picker position on mobile
-function optimizeEmojiPickerMobile() {
-  const emojiPickers = document.querySelectorAll('.emoji-picker');
-  
-  emojiPickers.forEach(picker => {
-    if (window.innerWidth <= 768) {
-      // Ensure emoji picker doesn't go off-screen
-      const rect = picker.getBoundingClientRect();
-      
-      if (rect.right > window.innerWidth) {
-        picker.style.right = '10px';
-        picker.style.left = 'auto';
-      }
-      
-      if (rect.left < 0) {
-        picker.style.left = '10px';
-        picker.style.right = 'auto';
-      }
-    }
-  });
-}
-
-// Resize handler for responsive adjustments
-let resizeTimer;
-window.addEventListener('resize', function() {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(function() {
-    optimizeModalsForMobile();
-    optimizeEmojiPickerMobile();
-    
-    // Update mobile menu visibility
-    const aside = document.querySelector('aside');
-    const mobileToggle = document.querySelector('.mobile-menu-toggle');
-    
-    if (window.innerWidth > 768) {
-      if (aside) aside.classList.remove('mobile-open');
-      if (mobileToggle) mobileToggle.style.display = 'none';
-    } else {
-      if (mobileToggle) mobileToggle.style.display = 'block';
-    }
-  }, 250);
-});
-
-// Initialize mobile optimizations
-document.addEventListener('DOMContentLoaded', function() {
-  optimizeModalsForMobile();
-  optimizeEmojiPickerMobile();
-});
-
-// Smooth scroll behavior for mobile
-if ('scrollBehavior' in document.documentElement.style) {
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      const href = this.getAttribute('href');
-      if (href !== '#') {
-        const target = document.querySelector(href);
-        if (target) {
-          e.preventDefault();
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      }
-    });
-  });
-}
-
-// Optimize image loading on mobile
-if ('IntersectionObserver' in window && window.innerWidth <= 768) {
-  const imageObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        if (img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          observer.unobserve(img);
-        }
-      }
-    });
-  });
-
-  document.querySelectorAll('img[data-src]').forEach(img => {
-    imageObserver.observe(img);
-  });
-}
-
-// Handle orientation change
-window.addEventListener('orientationchange', function() {
-  // Close any open modals or overlays
-  document.querySelectorAll('.modal').forEach(modal => {
-    if (modal.style.display !== 'none') {
-      const closeBtn = modal.querySelector('.close');
-      if (closeBtn) closeBtn.click();
-    }
-  });
-  
-  // Reset any mobile-specific states
-  const aside = document.querySelector('aside');
-  const mobileToggle = document.querySelector('.mobile-menu-toggle');
-  
-  if (aside && aside.classList.contains('mobile-open')) {
-    aside.classList.remove('mobile-open');
-    if (mobileToggle) mobileToggle.innerHTML = '☰';
-  }
-});
-
-// Optimize touch interactions for post actions
-document.addEventListener('DOMContentLoaded', function() {
-  if ('ontouchstart' in window) {
-    // Add touch-specific class to body
-    document.body.classList.add('touch-device');
-    
-    // Optimize button touches
-    document.querySelectorAll('button, .clickable').forEach(element => {
-      element.addEventListener('touchstart', function() {
-        this.classList.add('touching');
-      });
-      
-      element.addEventListener('touchend', function() {
-        this.classList.remove('touching');
-      });
+      observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
     });
   }
-});
 
-// Prevent pull-to-refresh on certain containers
-document.addEventListener('DOMContentLoaded', function() {
-  const preventPullToRefresh = document.querySelectorAll('.chat-messages, .post-container');
-  
-  preventPullToRefresh.forEach(element => {
-    let startY = 0;
-    
-    element.addEventListener('touchstart', function(e) {
-      startY = e.touches[0].pageY;
-    }, { passive: true });
-    
-    element.addEventListener('touchmove', function(e) {
-      const y = e.touches[0].pageY;
-      const scrollTop = element.scrollTop;
-      
-      if (scrollTop <= 0 && y > startY) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-  });
-});
-
-// Optimize video playback on mobile
-document.addEventListener('DOMContentLoaded', function() {
-  if (window.innerWidth <= 768) {
-    document.querySelectorAll('video').forEach(video => {
-      // Disable autoplay on mobile to save data
-      video.removeAttribute('autoplay');
-      
-      // Add play button overlay for mobile
-      video.setAttribute('controls', 'true');
-      video.setAttribute('playsinline', 'true');
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      initMobileMenu();
+      setViewportHeight();
+      optimizeModals();
     });
+  } else {
+    initMobileMenu();
+    setViewportHeight();
+    optimizeModals();
   }
-});
 
-// Handle viewport height changes (especially for mobile keyboards)
-function setViewportHeight() {
-  const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
-}
+  // Handle resize and orientation changes
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      updateMenuVisibility();
+      setViewportHeight();
+    }, 250);
+  });
 
-window.addEventListener('resize', setViewportHeight);
-window.addEventListener('orientationchange', setViewportHeight);
-document.addEventListener('DOMContentLoaded', setViewportHeight);
+  window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+      setViewportHeight();
+      updateMenuVisibility();
+    }, 100);
+  });
 
-// Export functions for use in other scripts
-if (typeof window !== 'undefined') {
-  window.mobileOptimizations = {
-    optimizeModalsForMobile,
-    optimizeEmojiPickerMobile,
-    setViewportHeight
-  };
-}
+})();
+
+console.log('✅ Mobile responsive enhancements loaded');
