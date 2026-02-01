@@ -9647,3 +9647,53 @@ body.light-theme .twitter-text {
   }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ✅ MOBILE FIX: COMMUNITY CHAT SCROLL */
+@media (max-width: 768px) {
+
+  .community-chat-messages {
+    height: 70vh !important;             /* ensures scroll area exists */
+    overflow-y: auto !important;         /* enables vertical scrolling */
+    -webkit-overflow-scrolling: touch;   /* smooth scrolling on mobile */
+  }
+
+}
+
+
+
+/* ✅ MOBILE FIX: REWARD SYSTEM RESPONSIVE */
+@media (max-width: 768px) {
+
+  .reward-system-container,
+  .rewards-container {
+    display: flex !important;
+    flex-direction: column !important;   /* stack rewards vertically */
+    gap: 15px;
+    width: 100% !important;
+  }
+
+  .reward-card {
+    width: 95% !important;              /* prevents overflow */
+    margin: auto;
+  }
+
+}
