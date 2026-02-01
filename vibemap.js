@@ -6754,40 +6754,6 @@ function viewMedia(url) {
   window.open(url, '_blank');
 }
 
-// ==========================================
-// AMAZING COMMUNITY CHAT SYSTEM
-// ==========================================
-
-let selectedMediaFile = null;
-let selectedMediaType = null;
-let isUserScrolling = false;
-let lastSeenMessageId = null;
-let unseenMessageCount = 0;
-
-// Initialize amazing chat when communities page loads
-function initializeAmazingChat() {
-  console.log('🚀 Initializing Amazing Community Chat...');
-
-  // Set community name
-  if (currentUser?.college) {
-    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
-  }
-
-  // Initialize socket connection
-  initializeSocketConnection();
-
-  // Load messages
-  loadAmazingMessages();
-
-  // Set up input handlers
-  setupAmazingInput();
-
-  // Populate emoji and sticker panels
-  populateEmojiPanel();
-  populateStickerPanel();
-
-  console.log('✅ Amazing Chat Initialized');
-}
 
 // ==========================================
 // LOAD MESSAGES WITH UNSEEN TRACKING
@@ -7394,4 +7360,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
+
 
