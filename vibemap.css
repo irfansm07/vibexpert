@@ -6815,52 +6815,76 @@ body.light-theme .emoji-picker {
 
 @media (max-width: 480px) {
   .roadmap-title {
+    font-size: 28px;
+  }
+  
+  .milestone-level {
+    left: 60px;
+    width: calc(100% - 70px);
+  }
+  
+  .roadmap-wrapper {
+    min-height: 2000px;  /* ← INCREASED */
+  }
+}
+  
+  .milestone-level {
+    padding: 20px;
+  }
+  
+  .level-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .level-header h3 {
+    font-size: 20px;
+  }
+  
+  .level-header > div:first-child > div:first-child {
+    font-size: 40px;
+  }
+
+
+@media (max-width: 480px) {
+  .roadmap-title {
     font-size: 24px;
     margin-bottom: 30px;
   }
   
   .roadmap-wrapper {
     min-height: 2000px;
-    padding: 15px 10px;
+    padding: 15px;
   }
   
   .roadmap-path {
-    left: 20px;
+    left: 25px;
   }
   
   .roadmap-character {
-    left: -14px;
+    left: -9px;
     width: 50px;
     height: 50px;
     font-size: 28px;
   }
   
   .milestone-level {
-    left: 55px;
-    width: calc(100% - 65px);
+    left: 70px;
+    width: calc(100% - 85px);
     padding: 15px;
-  }
-  
-  .level-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .level-header > div:first-child > div:first-child {
-    font-size: 32px;
   }
   
   .level-header h3 {
     font-size: 18px;
   }
   
-  .level-header p {
-    font-size: 12px;
+  .level-header > div:first-child > div:first-child {
+    font-size: 32px;
   }
   
   .requirements, .rewards {
-    padding: 15px;
+    padding: 12px;
   }
   
   .requirements h4, .rewards h4 {
@@ -6868,16 +6892,12 @@ body.light-theme .emoji-picker {
   }
   
   .requirements li, .rewards li {
-    font-size: 13px;
-    padding: 8px 0;
+    font-size: 12px;
   }
 }
+
 /* ==========================================
    PROFILE AVATAR IN HEADER
-   ========================================== */
-/* ==========================================
-   PROFILE AVATAR IN HEADER
-   ========================================== */
    ========================================== */
 .profile-avatar-container {
   display: flex;
@@ -8575,7 +8595,6 @@ body.light-theme .chat-header-info h3 {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   background-image: 
     repeating-linear-gradient(
       45deg,
@@ -9134,6 +9153,90 @@ body.light-theme .twitter-text {
 }
 
 /* ==========================================
+
+/* ==========================================
+   COMMUNITY CHAT - FIXED LAYOUT
+   ========================================== */
+.amazing-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+  max-height: 800px;
+  background: rgba(5, 10, 20, 0.6);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.amazing-chat-header {
+  flex-shrink: 0;
+  padding: 20px;
+  background: rgba(10, 20, 35, 0.98);
+  border-bottom: 2px solid rgba(79, 116, 163, 0.2);
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.typing-indicators {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  background: rgba(10, 20, 35, 0.5);
+  border-top: 1px solid rgba(79, 116, 163, 0.1);
+}
+
+.amazing-input-area {
+  flex-shrink: 0;
+  padding: 15px 20px;
+  background: rgba(10, 20, 35, 0.98);
+  border-top: 2px solid rgba(79, 116, 163, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mobile responsiveness for community chat */
+@media (max-width: 768px) {
+  .amazing-chat-container {
+    height: calc(100vh - 120px);
+    max-height: none;
+  }
+  
+  .messages-container {
+    padding: 15px;
+  }
+  
+  .amazing-input-area {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .amazing-chat-container {
+    height: calc(100vh - 100px);
+    border-radius: 10px;
+  }
+  
+  .messages-container {
+    padding: 10px;
+  }
+  
+  .amazing-chat-header {
+    padding: 15px;
+  }
+  
+  .amazing-input-area {
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+}
    RESPONSIVE DESIGN
    ========================================== */
 
