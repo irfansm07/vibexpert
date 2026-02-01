@@ -1,3 +1,4 @@
+
 .hero p {
     font-size: 18px;
   }
@@ -590,6 +591,7 @@ footer,
     padding: 20px;
     max-height: 450px;
     gap: 15px;
+    overflow-y: auto;
   }
   
   .chat-message {
@@ -706,6 +708,7 @@ footer,
   .chat-messages {
     max-height: 400px;
     padding: 15px;
+    overflow-y: auto;
   }
   
   .chat-message {
@@ -8286,11 +8289,12 @@ body.light-theme .plan-features li {
 .whatsapp-container {
   display: grid;
   grid-template-columns: 350px 1fr;
-  height: calc(100vh - 200px);
-  background: rgba(15, 25, 45, 0.95);
-  border: 2px solid rgba(79, 116, 163, 0.3);
-  border-radius: 20px;
+  height: calc(100vh - 250px);
   overflow: hidden;
+  border-radius: 20px;
+  background: rgba(15, 25, 45, 0.95);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(79, 116, 163, 0.3);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
@@ -9143,7 +9147,7 @@ body.light-theme .twitter-text {
 
 @media (max-width: 480px) {
   .whatsapp-container {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 200px);
   }
   
   .whatsapp-messages {
@@ -9172,823 +9176,474 @@ body.light-theme .twitter-text {
   padding: 40px;
   color: #ff6b6b;
   font-size: 16px;
-}/* ==========================================
-   COMPREHENSIVE MOBILE RESPONSIVE IMPROVEMENTS
-   VibeXpert Mobile Optimization
-   ========================================== */
-
-/* ==========================================
-   BASE MOBILE OPTIMIZATIONS (All Devices)
-   ========================================== */
-   
-* {
-  box-sizing: border-box;
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-}
 
-body {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   WHATSAPP-STYLE CHAT FIXES
+   Fixes for scrolling and typing indicator
+   ======================================== */
+
+/* WhatsApp Messages Container - Fix Scrolling */
+.whatsapp-messages {
+  flex: 1;
+  overflow-y: auto !important;
   overflow-x: hidden;
-  width: 100%;
+  padding: 20px 20px 200px 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: calc(100vh - 200px);
+  background: #0a0e1a;
   position: relative;
 }
 
-img, video {
-  max-width: 100%;
-  height: auto;
+/* Ensure messages container is scrollable */
+.whatsapp-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100vh;
 }
 
-/* Improve touch targets for mobile */
-button, a, .clickable {
-  min-height: 44px;
-  min-width: 44px;
+/* Chat header - fixed height */
+.whatsapp-chat-header {
+  flex-shrink: 0;
+  height: 70px;
 }
 
-/* ==========================================
-   TABLET DEVICES (768px - 1024px)
-   ========================================== */
-@media (max-width: 1024px) {
-  .container {
-    padding: 0 20px;
-  }
+/* Input area - fixed at bottom */
+.whatsapp-input-area {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  background: rgba(15, 25, 45, 0.98);
+  z-index: 10;
+}
 
-  /* About Page Hero */
-  .about-hero-title {
-    font-size: 48px;
-  }
+/* Typing Indicator Container */
+.whatsapp-typing-indicator {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 25, 45, 0.95);
+  padding: 8px 15px;
+  border-top: 1px solid rgba(79, 116, 163, 0.2);
+  z-index: 5;
+  animation: slideUp 0.3s ease;
+}
 
-  .about-hero-subtitle {
-    font-size: 18px;
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
   }
-
-  /* Feature Showcases */
-  .feature-showcase {
-    flex-direction: column;
-    gap: 30px;
-  }
-
-  .feature-showcase-image,
-  .feature-showcase-text {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .feature-showcase-reverse {
-    flex-direction: column;
-  }
-
-  /* Stats Grid */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
-  }
-
-  /* Why Choose Grid */
-  .why-choose-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 25px;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-/* ==========================================
-   MOBILE DEVICES (Max-width: 768px)
-   ========================================== */
+/* Typing Bubble */
+.typing-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(79, 116, 163, 0.2);
+  padding: 8px 15px;
+  border-radius: 18px;
+  font-size: 14px;
+  color: #8da4d3;
+}
+
+/* Typing Dots Animation */
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: #4f74a3;
+  border-radius: 50%;
+  animation: typingDot 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* WhatsApp Message Styling */
+.whatsapp-message {
+  display: flex;
+  margin-bottom: 12px;
+  animation: messageSlideIn 0.3s ease;
+}
+
+@keyframes messageSlideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.whatsapp-message.own {
+  justify-content: flex-end;
+}
+
+.whatsapp-message.other {
+  justify-content: flex-start;
+}
+
+/* Message Bubble */
+.message-bubble {
+  position: relative;
+  max-width: 65%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.whatsapp-message.own .message-bubble {
+  background: linear-gradient(135deg, #4f74a3, #8da4d3);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.whatsapp-message.other .message-bubble {
+  background: rgba(30, 40, 60, 0.8);
+  color: #e0e0e0;
+  border-bottom-left-radius: 2px;
+}
+
+/* Sender Name */
+.message-sender-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4f74a3;
+  margin-bottom: 4px;
+}
+
+/* Message Text */
+.message-text {
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Message Meta (time + status) */
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.message-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.whatsapp-message.other .message-time {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.message-status {
+  font-size: 12px;
+  color: #53bdeb;
+}
+
+/* Scrollbar Styling */
+.whatsapp-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.whatsapp-messages::-webkit-scrollbar-track {
+  background: rgba(15, 25, 45, 0.5);
+}
+
+.whatsapp-messages::-webkit-scrollbar-thumb {
+  background: rgba(79, 116, 163, 0.4);
+  border-radius: 10px;
+}
+
+.whatsapp-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 116, 163, 0.6);
+}
+
+/* Date Separator */
+.date-separator {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.date-separator span {
+  background: rgba(79, 116, 163, 0.2);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #8da4d3;
+}
+
+/* No Messages State */
+.no-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #888;
+  text-align: center;
+}
+
+/* Loading State */
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+  color: #4f74a3;
+  font-size: 16px;
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .whatsapp-messages {
+    max-height: calc(100vh - 150px);
+    padding: 15px;
+  }
   
-  /* ========== GENERAL LAYOUT ========== */
-  .container, .about-container {
-    padding: 0 15px;
-    width: 100%;
+  .message-bubble {
+    max-width: 80%;
   }
-
-  /* ========== NAVIGATION ========== */
-  nav {
-    padding: 12px 15px;
-    flex-wrap: wrap;
-  }
-
-  nav .logo {
-    font-size: 20px;
-  }
-
-  nav button {
-    padding: 8px 16px;
+  
+  .typing-bubble {
     font-size: 13px;
   }
+}
 
-  /* ========== ABOUT/LANDING PAGE ========== */
-  .about-hero {
-    min-height: 85vh;
-    padding: 60px 20px 40px;
+@media (max-width: 480px) {
+  .whatsapp-messages {
+    max-height: calc(100vh - 130px);
+    padding: 10px;
+  }
+  
+  .message-bubble {
+    max-width: 85%;
+    font-size: 14px;
+  }
+}
+
+/* Smooth Scroll Behavior */
+.whatsapp-messages {
+  scroll-behavior: smooth;
+}
+
+/* Fix for message overflow */
+.message-text {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure typing indicator doesn't get hidden */
+.whatsapp-input-area {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ==========================================
+   ✅ GLOBAL MOBILE RESPONSIVE FIXES
+   ========================================== */
+
+@media (max-width: 768px) {
+
+  /* ✅ Prevent horizontal scroll */
+  body, html {
+    overflow-x: hidden;
+    width: 100%;
   }
 
+  /* ✅ Feature Showcase Stack */
+  .feature-showcase {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  /* ✅ Feature Reverse Fix */
+  .feature-showcase-reverse {
+    direction: ltr !important;
+  }
+
+  /* ✅ Emoji Picker Full Width */
+  .emoji-picker {
+    min-width: unset !important;
+    max-width: 95vw !important;
+    width: 95vw !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+  }
+
+  /* ✅ Emoji Grid Smaller */
+  .emoji-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  /* ✅ Emoji Popup Fix */
+  .emoji-picker-popup,
+  .gif-picker-popup {
+    width: 95% !important;
+    max-width: 95% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* ✅ GIF Picker Grid */
+  .gif-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ✅ Chat Input Box Stack */
+  .chat-input-box {
+    flex-direction: column !important;
+    gap: 10px;
+  }
+
+  .send-btn {
+    width: 100% !important;
+  }
+
+  /* ✅ Modal Fix */
+  .modal-box,
+  .auth-popup-content {
+    width: 95% !important;
+    padding: 20px !important;
+  }
+
+  /* ✅ Cards and Sections Padding */
+  .card,
+  .enhanced-post,
+  .about-card {
+    padding: 20px !important;
+  }
+
+}
+
+/* ✅ EXTRA SMALL PHONES */
+@media (max-width: 480px) {
+
+  /* ✅ Hero Text Resize */
   .about-hero-title {
-    font-size: 36px;
-    line-height: 1.2;
-  }
-
-  .about-hero-subtitle {
-    font-size: 16px;
-    margin: 15px 0 25px;
+    font-size: 26px !important;
   }
 
   .about-logo-large {
-    font-size: 28px;
-    margin-bottom: 15px;
+    font-size: 38px !important;
   }
 
-  /* Floating Elements - Reduce on mobile */
-  .floating-element {
-    font-size: 24px;
-    width: 40px;
-    height: 40px;
+  /* ✅ Emoji Picker Bottom Sheet Style */
+  .emoji-picker-popup,
+  .gif-picker-popup {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    transform: none !important;
   }
 
-  /* ========== SECTIONS ========== */
-  .about-section {
-    padding: 50px 0;
-  }
-
-  .about-section-title {
-    font-size: 32px;
-    margin-bottom: 30px;
-  }
-
-  /* About Grid */
-  .about-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .about-card {
-    padding: 25px;
-  }
-
-  .about-card-icon {
-    font-size: 40px;
-    margin-bottom: 15px;
-  }
-
-  .about-card h3 {
-    font-size: 20px;
-  }
-
-  .about-card p {
-    font-size: 14px;
-  }
-
-  /* ========== STATS SECTION ========== */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  .stat-number {
-    font-size: 36px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-  }
-
-  /* ========== WHY CHOOSE SECTION ========== */
-  .why-choose-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .why-choose-item {
-    padding: 25px;
-  }
-
-  .why-choose-icon {
-    font-size: 40px;
-  }
-
-  /* ========== FEATURE SHOWCASES ========== */
-  .feature-showcase,
-  .feature-showcase-reverse {
-    flex-direction: column;
-    gap: 25px;
-    padding: 0;
-  }
-
-  .feature-showcase-image,
-  .feature-showcase-text {
-    width: 100%;
-    text-align: left;
-  }
-
-  .feature-mockup {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .feature-showcase h3 {
-    font-size: 22px;
-    margin-bottom: 15px;
-  }
-
-  .feature-showcase ul {
-    padding-left: 20px;
-  }
-
-  .feature-showcase li {
-    font-size: 14px;
-    margin: 8px 0;
-  }
-
-  /* ========== CTA SECTION ========== */
-  .about-cta {
-    padding: 50px 20px;
-  }
-
-  .about-cta h2 {
-    font-size: 28px;
-  }
-
-  .about-cta p {
-    font-size: 16px;
-    margin: 15px 0 25px;
-  }
-
-  .cta-buttons {
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-  }
-
-  .cta-btn {
-    width: 100%;
-    padding: 15px 30px;
-    font-size: 16px;
-  }
-
-  /* ========== MAIN APP ========== */
-  
-  /* Header */
-  header {
-    padding: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  header h1 {
-    font-size: 20px;
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* Sidebar */
-  aside {
-    width: 100%;
-    position: fixed;
-    left: -100%;
-    top: 0;
-    height: 100vh;
-    z-index: 1000;
-    transition: left 0.3s ease;
-    max-width: 280px;
-  }
-
-  aside.mobile-open {
-    left: 0;
-  }
-
-  /* Mobile menu toggle */
-  .mobile-menu-toggle {
-    display: block;
-    background: rgba(79, 116, 163, 0.3);
-    border: none;
-    border-radius: 10px;
-    padding: 10px 15px;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-  }
-
-  /* Main Content */
-  main {
-    margin-left: 0;
-    padding: 15px;
-    width: 100%;
-  }
-
-  /* ========== POSTS ========== */
-  .post {
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 15px;
-  }
-
-  .post-header {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .post-avatar {
-    width: 40px;
-    height: 40px;
-  }
-
-  .post-author {
-    font-size: 14px;
-  }
-
-  .post-time {
-    font-size: 11px;
-  }
-
-  .post-text {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  .post-media img,
-  .post-media video {
-    border-radius: 12px;
-  }
-
-  .post-actions {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .post-action {
-    padding: 8px 15px;
-    font-size: 13px;
-  }
-
-  /* ========== POST CREATOR ========== */
-  .enhanced-post-creator {
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-
-  .post-textarea {
-    min-height: 100px;
-    font-size: 14px;
-    padding: 12px;
-  }
-
-  .post-features {
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-  }
-
-  .feature-btn {
-    flex: 1 1 calc(50% - 8px);
-    min-width: 0;
-    padding: 10px;
-    font-size: 12px;
-  }
-
-  .feature-btn span {
-    display: none;
-  }
-
-  .feature-btn::before {
-    margin-right: 0;
-  }
-
-  .post-button {
-    width: 100%;
-    padding: 12px;
-    font-size: 15px;
-  }
-
-  /* Media previews */
-  .media-preview-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  /* ========== MODALS ========== */
-  .modal {
-    padding: 10px;
-  }
-
-  .modal-box {
-    width: 95%;
-    max-width: 500px;
-    padding: 20px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  .modal-box h2 {
-    font-size: 22px;
-    margin-bottom: 15px;
-  }
-
-  /* ========== EMOJI PICKER ========== */
-  .emoji-picker {
-    min-width: 280px;
-    max-width: 90vw;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    bottom: 70px;
-  }
-
-  .emoji-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    max-height: 200px;
-  }
-
-  .emoji-item {
-    font-size: 20px;
-    padding: 8px;
-    min-height: 40px;
-  }
-
-  /* ========== CHAT ========== */
-  .chat-container {
-    height: calc(100vh - 120px);
-  }
-
-  .chat-messages {
-    padding: 15px;
-  }
-
-  .chat-message {
-    max-width: 85%;
-    padding: 10px 15px;
-    font-size: 14px;
-  }
-
-  .chat-input-container {
-    padding: 12px;
-    gap: 8px;
-  }
-
-  .chat-input-wrapper input {
-    padding: 12px 50px 12px 20px !important;
-    font-size: 14px !important;
-  }
-
-  .emoji-btn {
-    width: 35px;
-    height: 35px;
-    font-size: 16px;
-  }
-
-  /* ========== PROFILE ========== */
-  .profile-header {
-    flex-direction: column;
-    text-align: center;
-    padding: 20px;
-  }
-
-  .profile-avatar {
-    width: 80px;
-    height: 80px;
-    font-size: 40px;
-  }
-
-  .profile-info h2 {
-    font-size: 22px;
-  }
-
-  .profile-stats {
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-  }
-
-  .stat-item {
-    width: 100%;
-  }
-
-  /* ========== REWARDS/PRICING ========== */
-  .pricing-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .pricing-card {
-    padding: 25px;
-  }
-
-  .plan-price {
-    font-size: 32px;
-  }
-
-  .plan-features li {
-    font-size: 13px;
-    padding: 8px 0;
-  }
-
-  /* Roadmap */
-  .roadmap-container {
-    padding: 15px;
-  }
-
-  .milestone {
-    padding: 15px;
-  }
-
-  .milestone-number {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
-  }
-
-  .milestone-title {
-    font-size: 16px;
-  }
-
-  /* ========== FOOTER ========== */
-  footer {
-    padding: 20px 15px;
-    font-size: 13px;
-    text-align: center;
-  }
-
-  /* ========== BADGES & ACHIEVEMENTS ========== */
-  .badge-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-  }
-
-  .badge-item {
-    padding: 15px;
-  }
-
-  .badge-icon {
-    font-size: 36px;
-  }
-
-  /* ========== FORMS ========== */
-  input, textarea, select {
-    font-size: 16px !important; /* Prevents zoom on iOS */
-  }
-
-  .input-with-avatar input {
-    padding-right: 55px !important;
-    font-size: 14px !important;
-  }
-
-  .avatar-container {
-    right: 10px;
-  }
-
-  .input-avatar {
-    width: 35px;
-    height: 35px;
-    font-size: 20px;
-  }
-
-  /* ========== BUTTONS ========== */
-  button {
-    padding: 12px 20px;
-    font-size: 14px;
-  }
-
-  .btn-primary, .btn-secondary {
-    padding: 12px 24px;
-    font-size: 14px;
-  }
-
-  /* ========== NOTIFICATIONS ========== */
-  .live-activity-notif {
-    font-size: 12px;
-    padding: 8px 15px;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: 90%;
-  }
-
-  /* ========== SCROLL INDICATORS ========== */
-  .scroll-progress-bar {
-    height: 3px;
-  }
-
-  .about-scroll-indicator {
-    font-size: 13px;
-  }
-
-  .scroll-arrow {
-    font-size: 20px;
-  }
-}
-
-/* ==========================================
-   SMALL MOBILE DEVICES (Max-width: 480px)
-   ========================================== */
-@media (max-width: 480px) {
-  
-  /* ========== TYPOGRAPHY ========== */
-  .about-hero-title {
-    font-size: 28px;
-  }
-
-  .about-hero-subtitle {
-    font-size: 14px;
-  }
-
-  .about-section-title {
-    font-size: 26px;
-  }
-
-  /* ========== STATS ========== */
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .stat-number {
-    font-size: 32px;
-  }
-
-  /* ========== CARDS ========== */
-  .about-card,
-  .why-choose-item {
-    padding: 20px;
-  }
-
-  .about-card h3,
-  .why-choose-item h3 {
-    font-size: 18px;
-  }
-
-  /* ========== POST FEATURES ========== */
-  .feature-btn {
-    flex: 1 1 100%;
-    justify-content: center;
-  }
-
-  .media-preview-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* ========== EMOJI PICKER ========== */
-  .emoji-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .emoji-categories {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .emoji-category {
-    flex-shrink: 0;
-    padding: 8px 12px;
-    font-size: 18px;
-  }
-
-  /* ========== MODALS ========== */
-  .modal-box {
-    width: 98%;
-    padding: 15px;
-  }
-
-  .modal-box h2 {
-    font-size: 20px;
-  }
-
-  /* ========== PRICING CARDS ========== */
-  .plan-price {
-    font-size: 28px;
-  }
-
-  .plan-features {
-    font-size: 13px;
-  }
-
-  /* ========== CHAT MESSAGES ========== */
-  .chat-message {
-    max-width: 90%;
-    font-size: 13px;
-  }
-
-  /* ========== BADGES ========== */
-  .badge-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* ========== CTA BUTTONS ========== */
-  .cta-btn {
-    padding: 12px 24px;
-    font-size: 14px;
-  }
-
-  /* ========== FLOATING ELEMENTS ========== */
-  .floating-element {
-    font-size: 20px;
-    width: 35px;
-    height: 35px;
-  }
-
-  /* Hide some floating elements on very small screens */
-  .floating-element:nth-child(4),
-  .floating-element:nth-child(5),
-  .floating-element:nth-child(6) {
-    display: none;
-  }
-}
-
-/* ==========================================
-   LANDSCAPE MOBILE ORIENTATION
-   ========================================== */
-@media (max-height: 500px) and (orientation: landscape) {
-  .about-hero {
-    min-height: auto;
-    padding: 40px 20px;
-  }
-
-  .chat-container {
-    height: calc(100vh - 80px);
-  }
-
-  .modal-box {
-    max-height: 85vh;
-  }
-
-  .emoji-picker {
-    max-height: 70vh;
-  }
-}
-
-/* ==========================================
-   ACCESSIBILITY IMPROVEMENTS
-   ========================================== */
-   
-/* Focus visible for keyboard navigation */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ==========================================
-   TOUCH-SPECIFIC IMPROVEMENTS
-   ========================================== */
-@media (hover: none) and (pointer: coarse) {
-  /* Remove hover effects on touch devices */
-  .feature-btn:hover,
-  .emoji-item:hover,
-  .post-action:hover {
-    transform: none;
-  }
-
-  /* Add active state instead */
-  .feature-btn:active {
-    transform: scale(0.95);
-  }
-
-  .emoji-item:active {
-    transform: scale(1.1);
-  }
-
-  /* Better tap targets */
-  button, a {
-    min-height: 48px;
-    min-width: 48px;
-  }
-}
-
-/* ==========================================
-   SAFE AREA INSETS (for notched devices)
-   ========================================== */
-@supports (padding: max(0px)) {
-  body {
-    padding-left: max(0px, env(safe-area-inset-left));
-    padding-right: max(0px, env(safe-area-inset-right));
-  }
-
-  header, footer, nav {
-    padding-left: max(15px, env(safe-area-inset-left));
-    padding-right: max(15px, env(safe-area-inset-right));
-  }
-
-  aside {
-    padding-left: max(15px, env(safe-area-inset-left));
-  }
 }
