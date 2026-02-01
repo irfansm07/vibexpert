@@ -1736,37 +1736,50 @@ async function loadWhatsAppMessages() {
     
     if (!messagesEl) return;
 
-    // Keep date separator
-    const dateSeparator = messagesEl.querySelector('.date-separator');
-    messagesEl.innerHTML = '';
-    if (dateSeparator) messagesEl.appendChild(dateSeparator);
+    // ✅ FIXED: Only clear if this is the first load
+    const existingMessages = messagesEl.querySelectorAll('[id^="wa-msg-"]');
+    const isFirstLoad = existingMessages.length === 0;
+    
+    if (isFirstLoad) {
+      // Keep date separator on first load only
+      const dateSeparator = messagesEl.querySelector('.date-separator');
+      messagesEl.innerHTML = '';
+      if (dateSeparator) messagesEl.appendChild(dateSeparator);
+    }
 
     if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML += `
-        <div class="no-messages">
-          <div style="font-size:64px;margin-bottom:20px;">👋</div>
-          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-          <p style="color:#888;">Say hi to your college community</p>
-        </div>
-      `;
+      if (isFirstLoad) {
+        messagesEl.innerHTML += `
+          <div class="no-messages">
+            <div style="font-size:64px;margin-bottom:20px;">👋</div>
+            <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
+            <p style="color:#888;">Say hi to your college community</p>
+          </div>
+        `;
+      }
       return;
     }
 
-    // ✅ CRITICAL FIX: Don't reverse - API returns in correct order (oldest first)
-    // Messages will append to bottom due to flex-direction: column
+    // ✅ FIXED: Only append new messages that don't already exist
     console.log(`📥 Loading ${data.messages.length} messages`);
-    data.messages.forEach(msg => appendWhatsAppMessage(msg));
-    // ✅ Scroll to bottom after all messages loaded
-    setTimeout(() => scrollToBottom(), 100);
+    data.messages.forEach(msg => {
+      const msgExists = document.getElementById(`wa-msg-${msg.id}`);
+      if (!msgExists) {
+        appendWhatsAppMessage(msg);
+      }
+    });
+    
+    // ✅ Scroll to bottom only on first load
+    if (isFirstLoad) {
+      setTimeout(() => scrollToBottom(), 100);
+    }
     
     // Update stats
     updateChatStats(data.messages.length);
   } catch(error) {
-    console.error('', error);
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    }
+    console.error('Load messages error:', error);
   }
+}
 
 
 async function sendWhatsAppMessage() {
@@ -5783,3 +5796,4 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
