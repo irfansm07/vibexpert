@@ -9154,8 +9154,9 @@ body.light-theme .twitter-text {
 
 /* ==========================================
 
+
 /* ==========================================
-   COMMUNITY CHAT - FIXED LAYOUT
+   COMMUNITY CHAT - CORRECTED LAYOUT
    ========================================== */
 .amazing-chat-container {
   display: flex;
@@ -9167,6 +9168,7 @@ body.light-theme .twitter-text {
   overflow: hidden;
 }
 
+/* Header - fixed at top */
 .amazing-chat-header {
   flex-shrink: 0;
   padding: 20px;
@@ -9174,6 +9176,7 @@ body.light-theme .twitter-text {
   border-bottom: 2px solid rgba(79, 116, 163, 0.2);
 }
 
+/* Messages area - scrollable */
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -9185,13 +9188,15 @@ body.light-theme .twitter-text {
   gap: 15px;
 }
 
+/* Typing indicator - shows when someone is typing, positioned between messages and input */
 .typing-indicators {
   flex-shrink: 0;
   padding: 10px 20px;
   background: rgba(10, 20, 35, 0.5);
-  border-top: 1px solid rgba(79, 116, 163, 0.1);
+  /* When visible, it appears above input area */
 }
 
+/* Input area - ALWAYS VISIBLE, fixed at bottom */
 .amazing-input-area {
   flex-shrink: 0;
   padding: 15px 20px;
@@ -9216,6 +9221,10 @@ body.light-theme .twitter-text {
   .amazing-input-area {
     padding: 12px 15px;
   }
+  
+  .typing-indicators {
+    padding: 8px 15px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -9223,6 +9232,25 @@ body.light-theme .twitter-text {
     height: calc(100vh - 100px);
     border-radius: 10px;
   }
+  
+  .messages-container {
+    padding: 10px;
+  }
+  
+  .amazing-chat-header {
+    padding: 15px;
+  }
+  
+  .amazing-input-area {
+    padding: 10px;
+    flex-wrap: nowrap;
+  }
+  
+  .typing-indicators {
+    padding: 6px 10px;
+  }
+}
+
   
   .messages-container {
     padding: 10px;
