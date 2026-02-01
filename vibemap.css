@@ -9155,50 +9155,49 @@ body.light-theme .twitter-text {
 /* ==========================================
 
 
+
 /* ==========================================
-   COMMUNITY CHAT - CORRECTED LAYOUT
+   COMMUNITY CHAT - FINAL FIX
    ========================================== */
 .amazing-chat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px);
-  max-height: 800px;
+  height: 100vh;
+  max-height: 100vh;
   background: rgba(5, 10, 20, 0.6);
   border-radius: 20px;
   overflow: hidden;
+  position: relative;
 }
 
 /* Header - fixed at top */
 .amazing-chat-header {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   padding: 20px;
   background: rgba(10, 20, 35, 0.98);
   border-bottom: 2px solid rgba(79, 116, 163, 0.2);
 }
 
-/* Messages area - scrollable */
+/* Messages area - scrollable, takes remaining space between header and input */
 .messages-container {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  min-height: 0;
 }
 
-/* Typing indicator - shows when someone is typing, positioned between messages and input */
+/* Typing indicator - shows when someone is typing */
 .typing-indicators {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   padding: 10px 20px;
   background: rgba(10, 20, 35, 0.5);
-  /* When visible, it appears above input area */
 }
 
 /* Input area - ALWAYS VISIBLE, fixed at bottom */
 .amazing-input-area {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   padding: 15px 20px;
   background: rgba(10, 20, 35, 0.98);
   border-top: 2px solid rgba(79, 116, 163, 0.2);
@@ -9210,8 +9209,8 @@ body.light-theme .twitter-text {
 /* Mobile responsiveness for community chat */
 @media (max-width: 768px) {
   .amazing-chat-container {
-    height: calc(100vh - 120px);
-    max-height: none;
+    height: 100vh;
+    max-height: 100vh;
   }
   
   .messages-container {
@@ -9229,7 +9228,8 @@ body.light-theme .twitter-text {
 
 @media (max-width: 480px) {
   .amazing-chat-container {
-    height: calc(100vh - 100px);
+    height: 100vh;
+    max-height: 100vh;
     border-radius: 10px;
   }
   
@@ -9243,7 +9243,6 @@ body.light-theme .twitter-text {
   
   .amazing-input-area {
     padding: 10px;
-    flex-wrap: nowrap;
   }
   
   .typing-indicators {
@@ -9251,7 +9250,6 @@ body.light-theme .twitter-text {
   }
 }
 
-  
   .messages-container {
     padding: 10px;
   }
