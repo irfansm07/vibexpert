@@ -9157,13 +9157,14 @@ body.light-theme .twitter-text {
 
 
 /* ==========================================
-   COMMUNITY CHAT - FINAL FIX
+
+/* ==========================================
+   COMMUNITY CHAT - ABSOLUTE FIX
    ========================================== */
 .amazing-chat-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
+  height: calc(100vh - 80px);
   background: rgba(5, 10, 20, 0.6);
   border-radius: 20px;
   overflow: hidden;
@@ -9180,7 +9181,7 @@ body.light-theme .twitter-text {
 
 /* Messages area - scrollable, takes remaining space between header and input */
 .messages-container {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -9206,14 +9207,48 @@ body.light-theme .twitter-text {
   gap: 10px;
 }
 
+.amazing-input-area .input-features {
+  display: flex;
+  gap: 8px;
+}
+
+.amazing-input-area .input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.amazing-input-area .input-wrapper textarea {
+  width: 100%;
+  background: rgba(15, 25, 45, 0.8);
+  border: 2px solid rgba(79, 116, 163, 0.3);
+  border-radius: 12px;
+  padding: 12px 15px;
+  color: white;
+  resize: none;
+  font-size: 14px;
+}
+
+.amazing-input-area .send-btn {
+  flex: 0 0 auto;
+}
+
 /* Mobile responsiveness for community chat */
+@media (max-width: 1024px) {
+  .amazing-chat-container {
+    height: calc(100vh - 70px);
+  }
+}
+
 @media (max-width: 768px) {
   .amazing-chat-container {
-    height: 100vh;
-    max-height: 100vh;
+    height: calc(100vh - 60px);
   }
   
   .messages-container {
+    padding: 15px;
+  }
+  
+  .amazing-chat-header {
     padding: 15px;
   }
   
@@ -9228,8 +9263,7 @@ body.light-theme .twitter-text {
 
 @media (max-width: 480px) {
   .amazing-chat-container {
-    height: 100vh;
-    max-height: 100vh;
+    height: calc(100vh - 50px);
     border-radius: 10px;
   }
   
@@ -9238,11 +9272,17 @@ body.light-theme .twitter-text {
   }
   
   .amazing-chat-header {
-    padding: 15px;
+    padding: 12px;
   }
   
   .amazing-input-area {
     padding: 10px;
+    gap: 6px;
+  }
+  
+  .amazing-input-area .input-wrapper textarea {
+    padding: 10px 12px;
+    font-size: 13px;
   }
   
   .typing-indicators {
@@ -9250,13 +9290,6 @@ body.light-theme .twitter-text {
   }
 }
 
-  .messages-container {
-    padding: 10px;
-  }
-  
-  .amazing-chat-header {
-    padding: 15px;
-  }
   
   .amazing-input-area {
     padding: 10px;
