@@ -40,84 +40,6 @@ let currentMessagePage = 1;
 let lastMessageTime = Date.now();
 let connectionStatus = 'connected';
 let chatInitialized = false;
-let cachedMessages = []; // Store messages in memory for persistence
-
-// ========================================
-// MESSAGE PERSISTENCE FUNCTIONS
-// Add these functions after the global variables section
-// ========================================
-
-// Save chat messages to localStorage
-function saveChatMessages(messages) {
-  if (!currentUser || !currentUser.college) return;
-  try {
-    const storageKey = `chat_messages_${currentUser.college}`;
-    localStorage.setItem(storageKey, JSON.stringify({
-      messages: messages,
-      timestamp: Date.now(),
-      userId: currentUser.id
-    }));
-    cachedMessages = messages;
-    console.log(`💾 Saved ${messages.length} messages`);
-  } catch (error) {
-    console.error('Error saving messages:', error);
-  }
-}
-
-function loadCachedMessages() {
-  if (!currentUser || !currentUser.college) return [];
-  try {
-    const storageKey = `chat_messages_${currentUser.college}`;
-    const stored = localStorage.getItem(storageKey);
-    if (!stored) return [];
-    
-    const data = JSON.parse(stored);
-    const cacheAge = Date.now() - data.timestamp;
-    
-    // Expire cache after 24 hours
-    if (cacheAge > 24 * 60 * 60 * 1000) {
-      localStorage.removeItem(storageKey);
-      return [];
-    }
-    
-    console.log(`📥 Loaded ${data.messages.length} cached messages`);
-    return data.messages || [];
-  } catch (error) {
-    console.error('Error loading cached messages:', error);
-    return [];
-  }
-}
-
-function addMessageToCache(message) {
-  if (!currentUser || !currentUser.college) return;
-  try {
-    const existingIndex = cachedMessages.findIndex(m => m.id === message.id);
-    if (existingIndex >= 0) {
-      cachedMessages[existingIndex] = message;
-    } else {
-      cachedMessages.push(message);
-    }
-    // Keep only last 200 messages
-    if (cachedMessages.length > 200) {
-      cachedMessages = cachedMessages.slice(-200);
-    }
-    saveChatMessages(cachedMessages);
-  } catch (error) {
-    console.error('Error adding message to cache:', error);
-  }
-}
-
-function removeMessageFromCache(messageId) {
-  if (!currentUser || !currentUser.college) return;
-  try {
-    cachedMessages = cachedMessages.filter(m => m.id !== messageId);
-    saveChatMessages(cachedMessages);
-  } catch (error) {
-    console.error('Error removing message from cache:', error);
-  }
-}
-
-
 
 // Data
 const rewardsData = {
@@ -858,70 +780,6 @@ showMessage('❌ Failed to copy', 'error');
 });
 }
 
-function handleTypingIndicator() {
-const now = Date.now();
-if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-socket.emit('typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-lastTypingEmit = now;
-}
-
-clearTimeout(typingTimeout);
-typingTimeout = setTimeout(() => {
-if (socket && currentUser && currentUser.college) {
-socket.emit('stop_typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-}
-}, 3000);
-}
-
-function showTypingIndicator(username) {
-typingUsers.add(username);
-updateTypingDisplay();
-}
-
-function hideTypingIndicator(username) {
-typingUsers.delete(username);
-updateTypingDisplay();
-}
-
-function updateTypingDisplay() {
-let container = document.querySelector('.typing-indicators-container');
-const messagesBox = document.querySelector('.chat-messages');
-
-if (!container && messagesBox) {
-container = document.createElement('div');
-container.className = 'typing-indicators-container';
-messagesBox.appendChild(container);
-}
-
-if (!container) return;
-
-if (typingUsers.size === 0) {
-container.innerHTML = '';
-return;
-}
-
-const usersList = Array.from(typingUsers);
-let text = '';
-
-if (usersList.length === 1) text = `${usersList[0]} is typing`;
-else if (usersList.length === 2) text = `${usersList[0]} and ${usersList[1]} are typing`;
-else text = `${usersList.length} people are typing`;
-
-container.innerHTML = `
-   <div class="typing-indicator">
-     <div class="typing-dots">
-       <span></span>
-       <span></span>
-       <span></span>
-     </div>
-     <span class="typing-text">${text}</span>
-   </div>
  `;
 
 messagesBox.scrollTo({ top: messagesBox.scrollHeight, behavior: 'smooth' });
@@ -1091,36 +949,6 @@ html += '</div>';
 return html;
 }
 
-function playMessageSound(type) {
-const sounds = {
-send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav',
-notification: 'https://assets.mixkit.co/active_storage/sfx/2358/2358.wav'
-};
-
-const audio = new Audio(sounds[type]);
-audio.volume = 0.2;
-audio.play().catch(() => {});
-}
-
-function setupReactionSystem() {
-console.log('✨ Reactions ready');
-}
-
-function setupTypingIndicator() {
-console.log('✨ Typing indicator ready');
-}
-
-function addMessageToUI(message) {
-appendMessageToChat(message);
-}
-
-function setupEnhancedSocketListeners() {
-if (!socket) return;
-
-socket.on('new_message', (message) => {
-if (window.queueMessageUpdate) queueMessageUpdate(message);
-else appendMessageToChat(message);
 });
 
 socket.on('user_typing', (data) => {
@@ -1174,54 +1002,6 @@ sendEnhancedMessage();
 }
 }
 
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
-  if (!content) return;
-
-  try {
-    // Optimistic UI update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date()
-    };
-    
-    appendWhatsAppMessage(tempMsg);
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    await apiCall('/api/community/messages', 'POST', { content });
-    
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-  } catch(error) {
-    showMessage('❌ Failed to send', 'error');
-  }
-}
-
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
-function showMessageOptions(messageId, isOwn) {
-  const options = [
-    { icon: '📋', label: 'Copy', action: () => copyMessage(messageId) },
     { icon: '↪️', label: 'Reply', action: () => replyToMessage(messageId) },
     { icon: '⭐', label: 'Star', action: () => starMessage(messageId) }
   ];
@@ -1455,16 +1235,6 @@ async function loadCommunityMessages() {
       </div>
     `;
 
-    // Try to load cached messages first
-    const cached = loadCachedMessages();
-    if (cached && cached.length > 0) {
-      console.log('📦 Displaying cached messages while loading fresh data');
-      messagesEl.innerHTML = '';
-      cached.forEach(msg => {
-        addRealTimeMessage(msg, true);
-      });
-    }
-
     const data = await apiCall('/api/community/messages', 'GET');
 
     if (!data.success) {
@@ -1535,9 +1305,6 @@ function addRealTimeMessage(message, skipScroll = false) {
   // Check if message already exists
   const existingMsg = document.getElementById(`unified-msg-${message.id}`);
   if (existingMsg) return;
-
-  // Add message to cache
-  addMessageToCache(message);
 
   // Remove empty state if present
   const emptyState = messagesEl.querySelector('.empty-chat-state');
@@ -1676,71 +1443,6 @@ async function sendUnifiedMessage() {
 // TYPING INDICATORS
 // ==========================================
 
-function handleTypingIndicator() {
-  if (!socket || !currentUser || !currentUser.college) return;
-
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-    lastTypingEmit = now;
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
-    }
-  }, 3000);
-}
-
-function showTypingIndicator(username) {
-  typingUsers.add(username);
-  updateTypingDisplay();
-}
-
-function hideTypingIndicator(username) {
-  typingUsers.delete(username);
-  updateTypingDisplay();
-}
-
-function updateTypingDisplay() {
-  const typingIndicatorEl = document.getElementById('typingIndicator');
-
-  if (!typingIndicatorEl) return;
-
-  if (typingUsers.size === 0) {
-    typingIndicatorEl.style.display = 'none';
-    return;
-  }
-
-  const usernames = Array.from(typingUsers);
-  let text = '';
-
-  if (usernames.length === 1) {
-    text = `${usernames[0]} is typing...`;
-  } else if (usernames.length === 2) {
-    text = `${usernames[0]} and ${usernames[1]} are typing...`;
-  } else {
-    text = `${usernames.length} people are typing...`;
-  }
-
-  typingIndicatorEl.innerHTML = `
-    <div class="typing-indicator">
-      <div class="typing-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-      <span class="typingText">${text}</span>
-    </div>
-  `;
-  typingIndicatorEl.style.display = 'block';
 
   // Scroll to bottom
   const messagesEl = document.getElementById('unifiedMessages');
@@ -6754,6 +6456,40 @@ function viewMedia(url) {
   window.open(url, '_blank');
 }
 
+// ==========================================
+// AMAZING COMMUNITY CHAT SYSTEM
+// ==========================================
+
+let selectedMediaFile = null;
+let selectedMediaType = null;
+let isUserScrolling = false;
+let lastSeenMessageId = null;
+let unseenMessageCount = 0;
+
+// Initialize amazing chat when communities page loads
+function initializeAmazingChat() {
+  console.log('🚀 Initializing Amazing Community Chat...');
+
+  // Set community name
+  if (currentUser?.college) {
+    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
+  }
+
+  // Initialize socket connection
+  initializeSocketConnection();
+
+  // Load messages
+  loadAmazingMessages();
+
+  // Set up input handlers
+  setupAmazingInput();
+
+  // Populate emoji and sticker panels
+  populateEmojiPanel();
+  populateStickerPanel();
+
+  console.log('✅ Amazing Chat Initialized');
+}
 
 // ==========================================
 // LOAD MESSAGES WITH UNSEEN TRACKING
@@ -7362,3 +7098,4 @@ console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
 
 
+s
