@@ -5456,16 +5456,14 @@ function appendWhatsAppMessage(msg) {
   const wrapper = document.createElement('div');
   wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `wa-msg-${messageId}`;
-  wrapper.dataset.timestamp = Date.now(); // ✅ Add timestamp for duplicate detection
+  wrapper.dataset.timestamp = Date.now();
 
   let messageHTML = '';
   
-  // Add sender name for others
   if (!isOwn) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
-  // Message bubble
   messageHTML += `
     <div class="message-bubble">
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
@@ -5485,7 +5483,6 @@ function appendWhatsAppMessage(msg) {
     scrollToBottom();
   }
 
-  // Play sound for received messages
   if (!isOwn && !msg.isTemp) {
     playMessageSound('receive');
   }
@@ -5749,9 +5746,7 @@ function initWhatsAppChatFixes() {
     });
   }
 
-  // Override existing functions
-  window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
-  window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+
 
   console.log('✅ WhatsApp Chat Fixes Initialized!');
 }
@@ -5796,4 +5791,5 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
 
