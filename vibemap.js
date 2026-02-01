@@ -50,91 +50,73 @@ let cachedMessages = []; // Store messages in memory for persistence
 // Save chat messages to localStorage
 function saveChatMessages(messages) {
   if (!currentUser || !currentUser.college) return;
-  
   try {
     const storageKey = `chat_messages_${currentUser.college}`;
-    const dataToStore = {
+    localStorage.setItem(storageKey, JSON.stringify({
       messages: messages,
       timestamp: Date.now(),
       userId: currentUser.id
-    };
-    localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+    }));
     cachedMessages = messages;
-    console.log(`💾 Saved ${messages.length} messages to localStorage`);
+    console.log(`💾 Saved ${messages.length} messages`);
   } catch (error) {
-    console.error('❌ Error saving messages:', error);
+    console.error('Error saving messages:', error);
   }
 }
 
-// Load chat messages from localStorage
 function loadCachedMessages() {
   if (!currentUser || !currentUser.college) return [];
-  
   try {
     const storageKey = `chat_messages_${currentUser.college}`;
     const stored = localStorage.getItem(storageKey);
-    
     if (!stored) return [];
     
     const data = JSON.parse(stored);
-    
-    // Check if cache is too old (older than 24 hours)
     const cacheAge = Date.now() - data.timestamp;
-    const MAX_CACHE_AGE = 24 * 60 * 60 * 1000; // 24 hours
     
-    if (cacheAge > MAX_CACHE_AGE) {
-      console.log('🗑️ Cache expired, clearing old messages');
+    // Expire cache after 24 hours
+    if (cacheAge > 24 * 60 * 60 * 1000) {
       localStorage.removeItem(storageKey);
       return [];
     }
     
-    cachedMessages = data.messages || [];
-    console.log(`📥 Loaded ${cachedMessages.length} cached messages`);
-    return cachedMessages;
+    console.log(`📥 Loaded ${data.messages.length} cached messages`);
+    return data.messages || [];
   } catch (error) {
-    console.error('❌ Error loading cached messages:', error);
+    console.error('Error loading cached messages:', error);
     return [];
   }
 }
 
-// Add a new message to cache
 function addMessageToCache(message) {
   if (!currentUser || !currentUser.college) return;
-  
   try {
-    // Check if message already exists
     const existingIndex = cachedMessages.findIndex(m => m.id === message.id);
-    
     if (existingIndex >= 0) {
-      // Update existing message
       cachedMessages[existingIndex] = message;
     } else {
-      // Add new message
       cachedMessages.push(message);
     }
-    
-    // Keep only last 200 messages to prevent localStorage overflow
+    // Keep only last 200 messages
     if (cachedMessages.length > 200) {
       cachedMessages = cachedMessages.slice(-200);
     }
-    
     saveChatMessages(cachedMessages);
   } catch (error) {
-    console.error('❌ Error adding message to cache:', error);
+    console.error('Error adding message to cache:', error);
   }
 }
 
-// Remove a message from cache
 function removeMessageFromCache(messageId) {
   if (!currentUser || !currentUser.college) return;
-  
   try {
     cachedMessages = cachedMessages.filter(m => m.id !== messageId);
     saveChatMessages(cachedMessages);
   } catch (error) {
-    console.error('❌ Error removing message from cache:', error);
+    console.error('Error removing message from cache:', error);
   }
 }
+
 
 
 // Data
@@ -7412,3 +7394,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
+
