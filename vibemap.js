@@ -43,125 +43,133 @@ let chatInitialized = false;
 
 // Data
 const rewardsData = {
-dailyTasks: [
-{ id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
-{ id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
-{ id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
-{ id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
-],
-achievements: [
-{ id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
-{ id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
-{ id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
-{ id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
-]
+  dailyTasks: [
+    { id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
+    { id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
+    { id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
+    { id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
+  ],
+  achievements: [
+    { id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
+    { id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
+    { id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
+    { id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
+  ]
 };
 
 const musicLibrary = [
-{ id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
-{ id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
-{ id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
-{ id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
-{ id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
-{ id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
+  { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
+  { id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
+  { id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
+  { id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
+  { id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
+  { id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
 ];
 
 const stickerLibrary = {
-emotions: [
-{ id: 'happy', emoji: '😊', name: 'Happy' },
-{ id: 'laugh', emoji: '😂', name: 'Laugh' },
-{ id: 'love', emoji: '❤️', name: 'Love' },
-{ id: 'cool', emoji: '😎', name: 'Cool' },
-{ id: 'fire', emoji: '🔥', name: 'Fire' },
-{ id: 'star', emoji: '⭐', name: 'Star' }
-],
-animals: [
-{ id: 'cat', emoji: '🐱', name: 'Cat' },
-{ id: 'dog', emoji: '🐶', name: 'Dog' },
-{ id: 'panda', emoji: '🐼', name: 'Panda' },
-{ id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
-{ id: 'dragon', emoji: '🐉', name: 'Dragon' },
-{ id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
-],
-objects: [
-{ id: 'balloon', emoji: '🎈', name: 'Balloon' },
-{ id: 'gift', emoji: '🎁', name: 'Gift' },
-{ id: 'camera', emoji: '📷', name: 'Camera' },
-{ id: 'music', emoji: '🎵', name: 'Music' },
-{ id: 'book', emoji: '📚', name: 'Book' },
-{ id: 'computer', emoji: '💻', name: 'Computer' }
-]
+  emotions: [
+    { id: 'happy', emoji: '😊', name: 'Happy' },
+    { id: 'laugh', emoji: '😂', name: 'Laugh' },
+    { id: 'love', emoji: '❤️', name: 'Love' },
+    { id: 'cool', emoji: '😎', name: 'Cool' },
+    { id: 'fire', emoji: '🔥', name: 'Fire' },
+    { id: 'star', emoji: '⭐', name: 'Star' }
+  ],
+  animals: [
+    { id: 'cat', emoji: '🐱', name: 'Cat' },
+    { id: 'dog', emoji: '🐶', name: 'Dog' },
+    { id: 'panda', emoji: '🐼', name: 'Panda' },
+    { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+    { id: 'dragon', emoji: '🐉', name: 'Dragon' },
+    { id: 'butterfly', emoji: '🦋', name: 'Butterfly' }
+  ],
+  objects: [
+    { id: 'balloon', emoji: '🎈', name: 'Balloon' },
+    { id: 'gift', emoji: '🎁', name: 'Gift' },
+    { id: 'camera', emoji: '📷', name: 'Camera' },
+    { id: 'music', emoji: '🎵', name: 'Music' },
+    { id: 'book', emoji: '📚', name: 'Book' },
+    { id: 'computer', emoji: '💻', name: 'Computer' }
+  ]
 };
 
 const colleges = {
-nit: [
-    {name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal'},
-    {name: 'NIT Bhopal', email: '@gmail.com', location: 'Bhopal'},
-{name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela'},
-{name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal'},
-{name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy'},
-{name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal'}
-],
-iit: [
-{name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi'},
-{name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai'},
-{name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai'},
-{name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur'},
-{name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur'}
-],
-vit: [
-{name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal'},
-{name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore'},
-{name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai'}
-],
-other: [
-{name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi'},
-{name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai'},
-{name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani'}
-]
+  nit: [
+    { name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal' },
+    { name: 'NIT Bhopal', email: '@gmail.com', location: 'Bhopal' },
+    { name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela' },
+    { name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal' },
+    { name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy' },
+    { name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal' }
+  ],
+  iit: [
+    { name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi' },
+    { name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai' },
+    { name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai' },
+    { name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur' },
+    { name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur' }
+  ],
+  vit: [
+    { name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal' },
+    { name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore' },
+    { name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai' }
+  ],
+  other: [
+    { name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi' },
+    { name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai' },
+    { name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani' }
+  ]
 };
 
 // ========================================
 // INITIALIZATION
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function() {
-console.log('🚀 VibeXpert initializing...');
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('🚀 VibeXpert initializing...');
 
-const token = getToken();
-const saved = localStorage.getItem('user');
+  const token = getToken();
+  const saved = localStorage.getItem('user');
 
-if (token && saved) {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (mainPage) mainPage.style.display = 'block';
+  if (token && saved) {
+    document.body.classList.add('logged-in');
+    const aboutPage = document.getElementById('aboutUsPage');
+    const mainPage = document.getElementById('mainPage');
+    if (aboutPage) aboutPage.style.display = 'none';
+    if (mainPage) mainPage.style.display = 'block';
 
-try {
-currentUser = JSON.parse(saved);
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-if (currentUser.college) {
-updateLiveNotif(`Connected to ${currentUser.college}`);
-initializeSocket();
-}
-} catch(e) {
-console.error('Parse error:', e);
-localStorage.clear();
-showAboutUsPage();
-}
-} else {
-showAboutUsPage();
-}
+    try {
+      currentUser = JSON.parse(saved);
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      if (currentUser.college) {
+        updateLiveNotif(`Connected to ${currentUser.college}`);
+        initializeSocket();
+      }
+    } catch (e) {
+      console.error('Parse error:', e);
+      localStorage.clear();
+      showAboutUsPage();
+    }
+  } else {
+    showAboutUsPage();
+  }
 
-setupEventListeners();
-initializeMusicPlayer();
-updateLiveStats();
-setInterval(updateLiveStats, 5000);
-initializeSearchBar();
-loadTrending();
-console.log('✅ Initialized');
+  setupEventListeners();
+  initializeMusicPlayer();
+  updateLiveStats();
+  setInterval(updateLiveStats, 5000);
+
+  initializeSearchBar();
+  loadTrending();
+
+  // Restore last page
+  const lastPage = localStorage.getItem('vibexpert_last_page');
+  if (lastPage && currentUser) {
+    showPage(lastPage);
+  }
+
+  console.log('✅ Initialized');
 });
 
 // ========================================
@@ -169,151 +177,151 @@ console.log('✅ Initialized');
 // ========================================
 
 function showAboutUsPage() {
-document.body.classList.remove('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'block';
-if (mainPage) mainPage.style.display = 'none';
+  document.body.classList.remove('logged-in');
+  const aboutPage = document.getElementById('aboutUsPage');
+  const mainPage = document.getElementById('mainPage');
+  if (aboutPage) aboutPage.style.display = 'block';
+  if (mainPage) mainPage.style.display = 'none';
 
-initScrollProgress();
-initRevealOnScroll();
-initStatsCounter();
-initScrollDetection();
-createScrollProgressIndicator();
+  initScrollProgress();
+  initRevealOnScroll();
+  initStatsCounter();
+  initScrollDetection();
+  createScrollProgressIndicator();
 }
 
 function createScrollProgressIndicator() {
-if (scrollProgressIndicator) return;
-scrollProgressIndicator = document.createElement('div');
-scrollProgressIndicator.className = 'scroll-progress-indicator';
-scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
-document.body.appendChild(scrollProgressIndicator);
+  if (scrollProgressIndicator) return;
+  scrollProgressIndicator = document.createElement('div');
+  scrollProgressIndicator.className = 'scroll-progress-indicator';
+  scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
+  document.body.appendChild(scrollProgressIndicator);
 }
 
 function initScrollProgress() {
-window.addEventListener('scroll', updateScrollProgress);
+  window.addEventListener('scroll', updateScrollProgress);
 }
 
 function updateScrollProgress() {
-const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-const scrollHeight = document.documentElement.scrollHeight;
-const clientHeight = window.innerHeight;
-const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
 
-const progressFill = document.getElementById('scrollProgressFill');
-if (progressFill) progressFill.style.width = scrolled + '%';
+  const progressFill = document.getElementById('scrollProgressFill');
+  if (progressFill) progressFill.style.width = scrolled + '%';
 
-const scrollPercent = document.getElementById('scrollPercent');
-if (scrollPercent) scrollPercent.textContent = Math.round(scrolled) + '%';
+  const scrollPercent = document.getElementById('scrollPercent');
+  if (scrollPercent) scrollPercent.textContent = Math.round(scrolled) + '%';
 
-if (scrollProgressIndicator) {
-if (scrolled > 10 && scrolled < 95) scrollProgressIndicator.classList.add('show');
-else scrollProgressIndicator.classList.remove('show');
-}
+  if (scrollProgressIndicator) {
+    if (scrolled > 10 && scrolled < 95) scrollProgressIndicator.classList.add('show');
+    else scrollProgressIndicator.classList.remove('show');
+  }
 
-if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
-hasScrolledToBottom = true;
-scrollCheckEnabled = false;
-showAuthPopupAutomatic();
-}
+  if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
+    hasScrolledToBottom = true;
+    scrollCheckEnabled = false;
+    showAuthPopupAutomatic();
+  }
 }
 
 function initRevealOnScroll() {
-const revealElements = document.querySelectorAll('.reveal-on-scroll');
-const revealObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) entry.target.classList.add('revealed');
-});
-}, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
-revealElements.forEach(element => revealObserver.observe(element));
+  const revealElements = document.querySelectorAll('.reveal-on-scroll');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('revealed');
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+  revealElements.forEach(element => revealObserver.observe(element));
 }
 
 function initStatsCounter() {
-const statNumbers = document.querySelectorAll('.stat-number');
-let hasAnimated = false;
-const statsObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting && !hasAnimated) {
-hasAnimated = true;
-statNumbers.forEach(stat => {
-const target = parseInt(stat.getAttribute('data-count'));
-animateCounter(stat, 0, target, 2000);
-});
-}
-});
-}, { threshold: 0.5 });
-const statsSection = document.querySelector('.stats-grid');
-if (statsSection) statsObserver.observe(statsSection);
+  const statNumbers = document.querySelectorAll('.stat-number');
+  let hasAnimated = false;
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !hasAnimated) {
+        hasAnimated = true;
+        statNumbers.forEach(stat => {
+          const target = parseInt(stat.getAttribute('data-count'));
+          animateCounter(stat, 0, target, 2000);
+        });
+      }
+    });
+  }, { threshold: 0.5 });
+  const statsSection = document.querySelector('.stats-grid');
+  if (statsSection) statsObserver.observe(statsSection);
 }
 
 function animateCounter(element, start, end, duration) {
-const range = end - start;
-const increment = range / (duration / 30);
-let current = start;
-const timer = setInterval(() => {
-current += increment;
-if (current >= end) {
-current = end;
-clearInterval(timer);
-}
-element.textContent = Math.floor(current).toLocaleString();
-}, 16);
+  const range = end - start;
+  const increment = range / (duration / 30);
+  let current = start;
+  const timer = setInterval(() => {
+    current += increment;
+    if (current >= end) {
+      current = end;
+      clearInterval(timer);
+    }
+    element.textContent = Math.floor(current).toLocaleString();
+  }, 16);
 }
 
 function initScrollDetection() {
-window.addEventListener('scroll', checkScrollPosition);
+  window.addEventListener('scroll', checkScrollPosition);
 }
 
 function checkScrollPosition() {
-if (!scrollCheckEnabled || hasScrolledToBottom) return;
-const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-const scrollHeight = document.documentElement.scrollHeight;
-const clientHeight = window.innerHeight;
-const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
-if (scrollPercentage >= 95) {
-hasScrolledToBottom = true;
-scrollCheckEnabled = false;
-showAuthPopupAutomatic();
-}
+  if (!scrollCheckEnabled || hasScrolledToBottom) return;
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+  if (scrollPercentage >= 95) {
+    hasScrolledToBottom = true;
+    scrollCheckEnabled = false;
+    showAuthPopupAutomatic();
+  }
 }
 
 function showAuthPopupAutomatic() {
-console.log('🎉 User reached bottom');
-showAuthPopup();
-createConfetti();
+  console.log('🎉 User reached bottom');
+  showAuthPopup();
+  createConfetti();
 }
 
 function showAuthPopup() {
-const authPopup = document.getElementById('authPopup');
-if (authPopup) {
-authPopup.classList.add('show');
-authPopup.style.display = 'flex';
-document.body.style.overflow = 'hidden';
-if (scrollProgressIndicator) scrollProgressIndicator.classList.remove('show');
-}
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.classList.add('show');
+    authPopup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    if (scrollProgressIndicator) scrollProgressIndicator.classList.remove('show');
+  }
 }
 
 function closeAuthPopup() {
-const authPopup = document.getElementById('authPopup');
-if (authPopup) {
-authPopup.classList.remove('show');
-authPopup.style.display = 'none';
-document.body.style.overflow = 'auto';
-setTimeout(() => {
-scrollCheckEnabled = true;
-hasScrolledToBottom = false;
-}, 1000);
-}
+  const authPopup = document.getElementById('authPopup');
+  if (authPopup) {
+    authPopup.classList.remove('show');
+    authPopup.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    setTimeout(() => {
+      scrollCheckEnabled = true;
+      hasScrolledToBottom = false;
+    }, 1000);
+  }
 }
 
 function createConfetti() {
-const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
-for (let i = 0; i < 50; i++) {
-const confetti = document.createElement('div');
-confetti.style.cssText = `position:fixed;width:10px;height:10px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}%;top:-10px;opacity:${Math.random()};transform:rotate(${Math.random()*360}deg);animation:confettiFall ${2+Math.random()*3}s linear forwards;z-index:25000;pointer-events:none;`;
-document.body.appendChild(confetti);
-setTimeout(() => confetti.remove(), 5000);
-}
+  const colors = ['#667eea', '#f093fb', '#feca57', '#ff6b6b', '#4ecdc4'];
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.style.cssText = `position:fixed;width:10px;height:10px;background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}%;top:-10px;opacity:${Math.random()};transform:rotate(${Math.random() * 360}deg);animation:confettiFall ${2 + Math.random() * 3}s linear forwards;z-index:25000;pointer-events:none;`;
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 5000);
+  }
 }
 
 // ========================================
@@ -321,35 +329,35 @@ setTimeout(() => confetti.remove(), 5000);
 // ========================================
 
 function setupEventListeners() {
-document.addEventListener('click', function(e) {
-const optionsMenu = document.getElementById('optionsMenu');
-const optionsBtn = document.querySelector('.options-btn');
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const hamburgerBtn = document.querySelector('.hamburger-btn');
+  document.addEventListener('click', function (e) {
+    const optionsMenu = document.getElementById('optionsMenu');
+    const optionsBtn = document.querySelector('.options-btn');
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
 
-if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
-optionsMenu.style.display = 'none';
-}
-if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
-hamburgerMenu.style.display = 'none';
-}
+    if (optionsMenu && !optionsMenu.contains(e.target) && e.target !== optionsBtn && !optionsBtn?.contains(e.target)) {
+      optionsMenu.style.display = 'none';
+    }
+    if (hamburgerMenu && !hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn && !hamburgerBtn?.contains(e.target)) {
+      hamburgerMenu.style.display = 'none';
+    }
 
-const authPopup = document.getElementById('authPopup');
-const authOverlay = document.querySelector('.auth-popup-overlay');
-if (authPopup && authPopup.classList.contains('show') && e.target === authOverlay) {
-closeAuthPopup();
-}
+    const authPopup = document.getElementById('authPopup');
+    const authOverlay = document.querySelector('.auth-popup-overlay');
+    if (authPopup && authPopup.classList.contains('show') && e.target === authOverlay) {
+      closeAuthPopup();
+    }
 
-if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
-e.preventDefault();
-showAuthPopup();
-}
-});
+    if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
+      e.preventDefault();
+      showAuthPopup();
+    }
+  });
 }
 
 function initializeMusicPlayer() {
-window.musicPlayer = new Audio();
-window.musicPlayer.volume = 0.5;
+  window.musicPlayer = new Audio();
+  window.musicPlayer.volume = 0.5;
 }
 
 // ========================================
@@ -357,1607 +365,194 @@ window.musicPlayer.volume = 0.5;
 // ========================================
 
 function getToken() {
-return localStorage.getItem('authToken');
+  return localStorage.getItem('authToken');
 }
 
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
-const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000);
-const options = { method, headers: {}, signal: controller.signal };
-const token = getToken();
-if (token) options.headers['Authorization'] = `Bearer ${token}`;
-if (body && !(body instanceof FormData)) {
-options.headers['Content-Type'] = 'application/json';
-options.body = JSON.stringify(body);
-} else if (body instanceof FormData) {
-options.body = body;
-}
-try {
-const response = await fetch(`${API_URL}${endpoint}`, options);
-clearTimeout(timeoutId);
-const data = await response.json();
-if (!response.ok) throw new Error(data.error || 'Request failed');
-return data;
-} catch (error) {
-clearTimeout(timeoutId);
-if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
-await new Promise(r => setTimeout(r, 1000));
-return apiCall(endpoint, method, body, retries - 1);
-}
-throw error;
-}
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const options = { method, headers: {}, signal: controller.signal };
+  const token = getToken();
+  if (token) options.headers['Authorization'] = `Bearer ${token}`;
+  if (body && !(body instanceof FormData)) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  } else if (body instanceof FormData) {
+    options.body = body;
+  }
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    clearTimeout(timeoutId);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (retries > 0 && (error.name === 'AbortError' || error.message.includes('network'))) {
+      await new Promise(r => setTimeout(r, 1000));
+      return apiCall(endpoint, method, body, retries - 1);
+    }
+    throw error;
+  }
 }
 
 async function login(e) {
-e.preventDefault();
-const email = document.getElementById('loginEmail')?.value.trim();
-const password = document.getElementById('loginPassword')?.value;
-if(!email || !password) return showMessage('Fill all fields', 'error');
-try {
-showMessage('Logging in...', 'success');
-const data = await apiCall('/api/login', 'POST', { email, password });
-localStorage.setItem('authToken', data.token);
-localStorage.setItem('user', JSON.stringify(data.user));
-currentUser = data.user;
-currentUser.postCount = currentUser.postCount || 0;
-currentUser.commentCount = currentUser.commentCount || 0;
-currentUser.likeCount = currentUser.likeCount || 0;
-currentUser.daysActive = currentUser.daysActive || 1;
-currentUser.currentLevel = currentUser.currentLevel || 'wood';
-showMessage('✅ Login successful!', 'success');
-setTimeout(() => {
-document.body.classList.add('logged-in');
-const aboutPage = document.getElementById('aboutUsPage');
-const authPopup = document.getElementById('authPopup');
-const mainPage = document.getElementById('mainPage');
-if (aboutPage) aboutPage.style.display = 'none';
-if (authPopup) {
-authPopup.classList.remove('show');
-authPopup.style.display = 'none';
-}
-if (mainPage) mainPage.style.display = 'block';
-document.body.style.overflow = 'auto';
-if (scrollProgressIndicator) {
-scrollProgressIndicator.remove();
-scrollProgressIndicator = null;
-}
-const userName = document.getElementById('userName');
-if (userName) userName.textContent = 'Hi, ' + currentUser.username;
-const form = document.getElementById('loginForm');
-if (form) form.reset();
-loadPosts();
-if (currentUser.college) initializeSocket();
-}, 800);
-} catch(error) {
-showMessage('❌ Login failed: ' + error.message, 'error');
-}
+  e.preventDefault();
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const password = document.getElementById('loginPassword')?.value;
+  if (!email || !password) return showMessage('Fill all fields', 'error');
+  try {
+    showMessage('Logging in...', 'success');
+    const data = await apiCall('/api/login', 'POST', { email, password });
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    currentUser = data.user;
+    currentUser.postCount = currentUser.postCount || 0;
+    currentUser.commentCount = currentUser.commentCount || 0;
+    currentUser.likeCount = currentUser.likeCount || 0;
+    currentUser.daysActive = currentUser.daysActive || 1;
+    currentUser.currentLevel = currentUser.currentLevel || 'wood';
+    showMessage('✅ Login successful!', 'success');
+    setTimeout(() => {
+      document.body.classList.add('logged-in');
+      if (aboutPage) aboutPage.style.display = 'none';
+      if (authPopup) {
+        authPopup.classList.remove('show');
+        authPopup.style.display = 'none';
+      }
+      if (mainPage) mainPage.style.display = 'block';
+
+      // Restore last page or default to home
+      const lastPage = localStorage.getItem('vibexpert_last_page') || 'home';
+      showPage(lastPage);
+
+      document.body.style.overflow = 'auto';
+      if (scrollProgressIndicator) {
+        scrollProgressIndicator.remove();
+        scrollProgressIndicator = null;
+      }
+      const userName = document.getElementById('userName');
+      if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+      const form = document.getElementById('loginForm');
+      if (form) form.reset();
+      loadPosts();
+      if (currentUser.college) initializeSocket();
+    }, 800);
+  } catch (error) {
+    showMessage('❌ Login failed: ' + error.message, 'error');
+  }
 }
 
 async function signup(e) {
-e.preventDefault();
-const username = document.getElementById('signupName')?.value.trim();
-const email = document.getElementById('signupEmail')?.value.trim();
-const registrationNumber = document.getElementById('signupReg')?.value.trim();
-const password = document.getElementById('signupPass')?.value;
-const confirm = document.getElementById('signupConfirm')?.value;
-const gender = document.querySelector('input[name="gender"]:checked')?.value;
-if(!username || !email || !registrationNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
-if(!gender) return showMessage('Please select gender', 'error');
-if(password !== confirm) return showMessage('Passwords don\'t match', 'error');
-if(password.length < 6) return showMessage('Password min 6 characters', 'error');
-try {
-showMessage('Creating account...', 'success');
-await apiCall('/api/register', 'POST', { username, email, password, registrationNumber, gender });
-showMessage('🎉 Account created!', 'success');
-const form = document.getElementById('signupForm');
-if (form) form.reset();
-setTimeout(() => goLogin(null), 2000);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+  e.preventDefault();
+  const username = document.getElementById('signupName')?.value.trim();
+  const email = document.getElementById('signupEmail')?.value.trim();
+  const registrationNumber = document.getElementById('signupReg')?.value.trim();
+  const password = document.getElementById('signupPass')?.value;
+  const confirm = document.getElementById('signupConfirm')?.value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  if (!username || !email || !registrationNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
+  if (!gender) return showMessage('Please select gender', 'error');
+  if (password !== confirm) return showMessage('Passwords don\'t match', 'error');
+  if (password.length < 6) return showMessage('Password min 6 characters', 'error');
+  try {
+    showMessage('Creating account...', 'success');
+    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber, gender });
+    showMessage('🎉 Account created!', 'success');
+    const form = document.getElementById('signupForm');
+    if (form) form.reset();
+    setTimeout(() => goLogin(null), 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 function goSignup(e) {
-if (e) e.preventDefault();
-document.getElementById('loginForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'none';
-document.getElementById('signupForm').style.display = 'block';
+  if (e) e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
 }
 
 function goLogin(e) {
-if(e) e.preventDefault();
-document.getElementById('signupForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'none';
-document.getElementById('loginForm').style.display = 'block';
+  if (e) e.preventDefault();
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
 }
 
 function goForgotPassword(e) {
-e.preventDefault();
-document.getElementById('loginForm').style.display = 'none';
-document.getElementById('signupForm').style.display = 'none';
-document.getElementById('forgotPasswordForm').style.display = 'block';
+  e.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
 }
 
 async function handleForgotPassword(e) {
-e.preventDefault();
-const email = document.getElementById('resetEmail')?.value.trim();
-if (!email) return showMessage('⚠️ Enter email', 'error');
-try {
-showMessage('📧 Sending code...', 'success');
-await apiCall('/api/forgot-password', 'POST', { email });
-showMessage('✅ Check email', 'success');
-document.getElementById('resetEmailSection').style.display = 'none';
-document.getElementById('resetCodeSection').style.display = 'block';
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+  e.preventDefault();
+  const email = document.getElementById('resetEmail')?.value.trim();
+  if (!email) return showMessage('⚠️ Enter email', 'error');
+  try {
+    showMessage('📧 Sending code...', 'success');
+    await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ Check email', 'success');
+    document.getElementById('resetEmailSection').style.display = 'none';
+    document.getElementById('resetCodeSection').style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function verifyResetCode(e) {
-e.preventDefault();
-const email = document.getElementById('resetEmail')?.value.trim();
-const code = document.getElementById('resetCode')?.value.trim();
-const newPassword = document.getElementById('newPassword')?.value;
-const confirmPassword = document.getElementById('confirmNewPassword')?.value;
-if(!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
-if(!newPassword || !confirmPassword) return showMessage('⚠️ Enter password', 'error');
-if(newPassword !== confirmPassword) return showMessage('⚠️ Passwords don\'t match', 'error');
-if(newPassword.length < 6) return showMessage('⚠️ Min 6 characters', 'error');
-try {
-showMessage('🔐 Verifying...', 'success');
-await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
-showMessage('✅ Password reset!', 'success');
-document.getElementById('forgotPasswordForm').reset();
-document.getElementById('resetEmailSection').style.display = 'block';
-document.getElementById('resetCodeSection').style.display = 'none';
-setTimeout(() => goLogin(null), 2000);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+  e.preventDefault();
+  const email = document.getElementById('resetEmail')?.value.trim();
+  const code = document.getElementById('resetCode')?.value.trim();
+  const newPassword = document.getElementById('newPassword')?.value;
+  const confirmPassword = document.getElementById('confirmNewPassword')?.value;
+  if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
+  if (!newPassword || !confirmPassword) return showMessage('⚠️ Enter password', 'error');
+  if (newPassword !== confirmPassword) return showMessage('⚠️ Passwords don\'t match', 'error');
+  if (newPassword.length < 6) return showMessage('⚠️ Min 6 characters', 'error');
+  try {
+    showMessage('🔐 Verifying...', 'success');
+    await apiCall('/api/reset-password', 'POST', { email, code, newPassword });
+    showMessage('✅ Password reset!', 'success');
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('resetEmailSection').style.display = 'block';
+    document.getElementById('resetCodeSection').style.display = 'none';
+    setTimeout(() => goLogin(null), 2000);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function resendResetCode() {
-const email = document.getElementById('resetEmail')?.value.trim();
-if (!email) return showMessage('⚠️ Email required', 'error');
-try {
-showMessage('📧 Resending...', 'success');
-await apiCall('/api/forgot-password', 'POST', { email });
-showMessage('✅ New code sent!', 'success');
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+  const email = document.getElementById('resetEmail')?.value.trim();
+  if (!email) return showMessage('⚠️ Email required', 'error');
+  try {
+    showMessage('📧 Resending...', 'success');
+    await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ New code sent!', 'success');
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 function logout() {
-if (socket) {
-socket.disconnect();
-socket = null;
-}
-currentUser = null;
-localStorage.clear();
-document.body.classList.remove('logged-in');
-document.getElementById('aboutUsPage').style.display = 'block';
-document.getElementById('mainPage').style.display = 'none';
-showMessage('👋 Logged out', 'success');
-hasScrolledToBottom = false;
-scrollCheckEnabled = true;
-createScrollProgressIndicator();
-window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ========================================
-// ENHANCED COMMUNITY CHAT
-// ========================================
-
-function initializeEnhancedChat() {
-if (chatInitialized) return;
-chatInitialized = true;
-console.log('✨ Enhanced chat initializing');
-setupChatInputEnhancements();
-setupMessageActions();
-setupTypingIndicator();
-setupReactionSystem();
-setupConnectionMonitor();
-setupMessageOptimization();
-setupInfiniteScroll();
-}
-
-function setupChatInputEnhancements() {
-const chatInput = document.getElementById('chatInput');
-if (!chatInput) return;
-
-chatInput.addEventListener('input', function() {
-this.style.height = 'auto';
-this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-handleTypingIndicator();
-});
-
-chatInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter' && !e.shiftKey) {
-e.preventDefault();
-sendEnhancedMessage();
-}
-});
-}
-
-async function sendEnhancedMessage() {
-const chatInput = document.getElementById('chatInput');
-const content = chatInput?.value.trim();
-if (!content) return;
-
-try {
-const messageData = { 
-content, 
-timestamp: Date.now(), 
-tempId: 'temp-' + Date.now() 
-};
-
-addMessageToUI({ 
-id: messageData.tempId, 
-content, 
-sender_id: currentUser.id, 
-users: currentUser, 
-timestamp: new Date(), 
-status: 'sending' 
-});
-
-chatInput.value = '';
-chatInput.style.height = 'auto';
-
-await apiCall('/api/community/messages', 'POST', { content });
-updateMessageStatus(messageData.tempId, 'sent');
-playMessageSound('send');
-
-if (socket && currentUser.college) {
-socket.emit('stop_typing', { 
-collegeName: currentUser.college, 
-username: currentUser.username 
-});
-}
-} catch(error) {
-showMessage('❌ Failed to send', 'error');
-}
-}
-
-function appendMessageToChat(msg) {
-const messagesEl = document.getElementById('chatMessages');
-if (!messagesEl) return;
-
-const isOwn = msg.sender_id === (currentUser && currentUser.id);
-const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
-
-if (document.getElementById('msg-' + messageId)) return;
-
-const wrapper = document.createElement('div');
-wrapper.className = 'chat-message ' + (isOwn ? 'own' : 'other');
-wrapper.id = `msg-${messageId}`;
-
-let messageHTML = '';
-if (!isOwn) messageHTML += `<div class="sender">@${escapeHtml(sender)}</div>`;
-
-messageHTML += `
-   <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
-   <div class="message-footer">
-     <span class="message-time">${timeLabel}</span>
-     <div class="message-actions">
-       <button class="message-action-btn" onclick="addReactionToMessage('${messageId}')" title="React">❤️</button>
-       <button class="message-action-btn" onclick="copyMessageText('${messageId}')" title="Copy">📋</button>
-       ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${messageId}')" title="Delete">🗑️</button>` : ''}
-     </div>
-   </div>
- `;
-
-messageHTML += createReactionBar(messageId, msg.message_reactions || []);
-wrapper.innerHTML = messageHTML;
-messagesEl.appendChild(wrapper);
-messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-
-if (!isOwn) playMessageSound('receive');
-}
-
-function escapeHtml(unsafe) {
-if (!unsafe) return '';
-return String(unsafe)
-.replace(/&/g, "&amp;")
-.replace(/</g, "&lt;")
-.replace(/>/g, "&gt;")
-.replace(/"/g, "&quot;")
-.replace(/'/g, "&#039;");
-}
-
-function createReactionBar(messageId, reactions) {
-const reactionCounts = {};
-const userReacted = {};
-
-if (reactions && Array.isArray(reactions)) {
-reactions.forEach(r => {
-reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
-if (r.user_id && currentUser && r.user_id === currentUser.id) userReacted[r.emoji] = true;
-});
-}
-
-const defaultEmojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮'];
-const allEmojis = Array.from(new Set([...defaultEmojis, ...Object.keys(reactionCounts)]));
-
-let html = '<div class="reaction-bar">';
-allEmojis.forEach(emoji => {
-const count = reactionCounts[emoji] || 0;
-const selected = userReacted[emoji] ? 'selected' : '';
-html += `<div class="reaction-pill ${selected}" onclick="toggleReaction('${messageId}', '${emoji}')">
-     <span class="emoji">${emoji}</span>
-     ${count > 0 ? `<span class="reaction-count">${count}</span>` : ''}
-   </div>`;
-});
-html += `<div class="reaction-pill" onclick="showEmojiPickerForMessage('${messageId}')" title="Add reaction">✚</div></div>`;
-return html;
-}
-
-async function toggleReaction(messageId, emoji) {
-try {
-const pill = event.target.closest('.reaction-pill');
-const countSpan = pill.querySelector('.reaction-count');
-let count = parseInt(countSpan?.textContent) || 0;
-
-if (pill.classList.contains('selected')) {
-pill.classList.remove('selected');
-count = Math.max(0, count - 1);
-} else {
-pill.classList.add('selected');
-count = count + 1;
-}
-
-if (countSpan) {
-countSpan.textContent = count || '';
-} else if (count > 0) {
-const newCountSpan = document.createElement('span');
-newCountSpan.className = 'reaction-count';
-newCountSpan.textContent = count;
-pill.appendChild(newCountSpan);
-}
-
-await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
-} catch (err) {
-console.error('Reaction failed', err);
-showMessage('❌ Failed to add reaction', 'error');
-}
-}
-
-function showEmojiPickerForMessage(messageId) {
-document.querySelectorAll('.emoji-picker').forEach(e => e.remove());
-
-const picker = document.createElement('div');
-picker.className = 'emoji-picker';
-
-const emojis = ['❤️', '👍', '😂', '🔥', '🎉', '😮', '😢', '👏', '🤝', '🙌', '⭐', '💯'];
-emojis.forEach(emoji => {
-const btn = document.createElement('button');
-btn.textContent = emoji;
-btn.onclick = (e) => {
-e.stopPropagation();
-toggleReaction(messageId, emoji);
-picker.remove();
-};
-picker.appendChild(btn);
-});
-
-document.body.appendChild(picker);
-
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-const rect = messageEl.getBoundingClientRect();
-picker.style.position = 'fixed';
-picker.style.left = Math.max(10, rect.left) + 'px';
-picker.style.top = Math.max(10, rect.top - picker.offsetHeight - 10) + 'px';
-}
-
-setTimeout(() => {
-const closeHandler = (e) => {
-if (!picker.contains(e.target)) {
-picker.remove();
-document.removeEventListener('click', closeHandler);
-}
-};
-document.addEventListener('click', closeHandler);
-}, 10);
-}
-
-function addReactionToMessage(messageId) {
-showEmojiPickerForMessage(messageId);
-}
-
-function copyMessageText(messageId) {
-const messageEl = document.getElementById(`msg-${messageId}`);
-const text = messageEl?.querySelector('.text')?.textContent;
-if (!text) return;
-
-navigator.clipboard.writeText(text).then(() => {
-showMessage('📋 Message copied!', 'success');
-}).catch(() => {
-showMessage('❌ Failed to copy', 'error');
-});
-}
-
- `;
-
-messagesBox.scrollTo({ top: messagesBox.scrollHeight, behavior: 'smooth' });
-}
-
-function setupMessageActions() {
-console.log('✨ Message actions setup');
-}
-
-async function deleteMessage(messageId) {
-if (!confirm('Delete this message?')) return;
-
-try {
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '0.5';
-messageEl.style.pointerEvents = 'none';
-}
-
-await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-if (messageEl) {
-messageEl.style.animation = 'fadeOut 0.3s ease';
-setTimeout(() => messageEl.remove(), 300);
-}
-
-showMessage('🗑️ Message deleted', 'success');
-} catch(error) {
-console.error('Delete error:', error);
-showMessage('❌ Failed to delete', 'error');
-
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (messageEl) {
-messageEl.style.opacity = '1';
-messageEl.style.pointerEvents = 'auto';
-}
-}
-}
-
-function updateMessageStatus(messageId, status) {
-const messageEl = document.getElementById(`msg-${messageId}`);
-if (!messageEl) return;
-
-let statusIcon = messageEl.querySelector('.message-status');
-if (!statusIcon) {
-statusIcon = document.createElement('span');
-statusIcon.className = 'message-status';
-const timeSpan = messageEl.querySelector('.message-time');
-if (timeSpan) timeSpan.appendChild(statusIcon);
-}
-
-statusIcon.className = `message-status ${status}`;
-statusIcon.textContent = status === 'sending' ? '⏳' : status === 'sent' ? '✓' : '✓✓';
-}
-
-function setupConnectionMonitor() {
-if (!socket) return;
-
-socket.on('connect', () => {
-connectionStatus = 'connected';
-updateConnectionStatus();
-});
-
-socket.on('disconnect', () => {
-connectionStatus = 'disconnected';
-updateConnectionStatus();
-});
-
-socket.on('reconnect', () => {
-connectionStatus = 'connected';
-updateConnectionStatus();
-setTimeout(() => loadCommunityMessages(), 500);
-});
-}
-
-function updateConnectionStatus() {
-let banner = document.querySelector('.connection-status');
-const chatSection = document.getElementById('chatSection');
-
-if (connectionStatus === 'disconnected') {
-if (!banner && chatSection) {
-banner = document.createElement('div');
-banner.className = 'connection-status';
-chatSection.prepend(banner);
-}
-if (banner) banner.textContent = '⚠️ Disconnected - Reconnecting...';
-} else {
-if (banner) {
-banner.classList.add('connected');
-banner.textContent = '✅ Connected';
-setTimeout(() => banner.remove(), 2000);
-}
-}
-}
-
-function setupMessageOptimization() {
-let messageQueue = [];
-let updateTimeout = null;
-
-window.queueMessageUpdate = function(message) {
-messageQueue.push(message);
-clearTimeout(updateTimeout);
-updateTimeout = setTimeout(() => {
-messageQueue.forEach(msg => appendMessageToChat(msg));
-messageQueue = [];
-}, 100);
-};
-}
-
-function setupInfiniteScroll() {
-const messagesEl = document.getElementById('chatMessages');
-if (!messagesEl) return;
-
-messagesEl.addEventListener('scroll', async () => {
-if (messagesEl.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
-isLoadingMessages = true;
-const oldHeight = messagesEl.scrollHeight;
-
-try {
-const data = await apiCall(`/api/community/messages?page=${currentMessagePage + 1}`, 'GET');
-
-if (data.messages && data.messages.length > 0) {
-currentMessagePage++;
-data.messages.reverse().forEach(msg => {
-const messageEl = document.createElement('div');
-messageEl.innerHTML = renderMessage(msg);
-messagesEl.insertBefore(messageEl.firstChild, messagesEl.firstChild);
-});
-
-const newHeight = messagesEl.scrollHeight;
-messagesEl.scrollTop = newHeight - oldHeight;
-} else {
-hasMoreMessages = false;
-}
-} catch(error) {
-console.error('Load more messages:', error);
-} finally {
-isLoadingMessages = false;
-}
-}
-});
-}
-
-function renderMessage(msg) {
-const isOwn = msg.sender_id === (currentUser && currentUser.id);
-const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
-
-let html = `<div class="chat-message ${isOwn ? 'own' : 'other'}" id="msg-${messageId}">`;
-if (!isOwn) html += `<div class="sender">@${escapeHtml(sender)}</div>`;
-html += `
-   <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
-   <div class="message-footer">
-     <span class="message-time">${timeLabel}</span>
-     <div class="message-actions">
-       <button class="message-action-btn" onclick="addReactionToMessage('${messageId}')" title="React">❤️</button>
-       <button class="message-action-btn" onclick="copyMessageText('${messageId}')" title="Copy">📋</button>
-       ${isOwn ? `<button class="message-action-btn" onclick="deleteMessage('${messageId}')" title="Delete">🗑️</button>` : ''}
-     </div>
-   </div>
- `;
-html += createReactionBar(messageId, msg.message_reactions || []);
-html += '</div>';
-
-return html;
-}
-
-});
-
-socket.on('user_typing', (data) => {
-if (data.username && currentUser && data.username !== currentUser.username) {
-showTypingIndicator(data.username);
-}
-});
-
-socket.on('user_stop_typing', (data) => {
-if (data.username) hideTypingIndicator(data.username);
-});
-
-socket.on('message_deleted', ({ id }) => {
-const messageEl = document.getElementById(`msg-${id}`);
-if (messageEl) {
-messageEl.style.animation = 'fadeOut 0.3s ease';
-setTimeout(() => messageEl.remove(), 300);
-}
-});
-}
-
-// Auto-initialize chat when section becomes visible
-document.addEventListener('DOMContentLoaded', () => {
-const observer = new MutationObserver((mutations) => {
-mutations.forEach((mutation) => {
-const chatSection = document.getElementById('chatSection');
-if (mutation.target === chatSection && 
-chatSection.style.display !== 'none' && 
-!chatSection.dataset.initialized) {
-chatSection.dataset.initialized = 'true';
-initializeEnhancedChat();
-setupEnhancedSocketListeners();
-console.log('🎉 Enhanced chat ready!');
-}
-});
-});
-
-const chatSection = document.getElementById('chatSection');
-if (chatSection) {
-observer.observe(chatSection, { 
-attributes: true, 
-attributeFilter: ['style'] 
-});
-}
-});
-
-function handleChatKeypress(e) {
-if (e.key === 'Enter' && !e.shiftKey) {
-e.preventDefault();
-sendEnhancedMessage();
-}
-}
-
-    { icon: '↪️', label: 'Reply', action: () => replyToMessage(messageId) },
-    { icon: '⭐', label: 'Star', action: () => starMessage(messageId) }
-  ];
-
-  if (isOwn) {
-    options.push({ icon: '🗑️', label: 'Delete', action: () => deleteWhatsAppMessage(messageId) });
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
-
-  showContextMenu(options);
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-// ========================================
-// COMMUNITIES & CHAT
-// ========================================
-
-function loadCommunities() {
-  const container = document.getElementById('communitiesContainer');
-  if (!container) return;
-
-  if (!currentUser || !currentUser.communityJoined) {
-    container.innerHTML = `
-      <div class="community-guidance">
-        <p>🎓 Connect to college first!</p>
-        <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
-      </div>
-    `;
-    return;
-  }
-
-  // Single unified chat platform
-  container.innerHTML = `
-    <div class="unified-chat-platform">
-      <!-- Chat Header -->
-      <div class="unified-chat-header">
-        <div class="chat-header-info">
-          <div class="chat-avatar-large">🎓</div>
-          <div>
-            <h3>${currentUser.college} Community</h3>
-            <p class="chat-status">
-              <span class="online-dot"></span>
-              <span id="onlineCount">0</span> members online
-            </p>
-          </div>
-        </div>
-        <div class="chat-header-actions">
-          <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-          <button class="icon-btn" onclick="showChatInfo()" title="Info">ℹ️</button>
-        </div>
-      </div>
-
-      <!-- Messages Container -->
-      <div class="unified-messages" id="unifiedMessages">
-        <div class="loading-messages-state">
-          <div class="spinner"></div>
-          <p>Loading messages...</p>
-        </div>
-      </div>
-
-      <!-- Typing Indicator -->
-      <div id="typingIndicator" class="typing-indicators-container" style="display:none;">
-        <div class="typing-indicator">
-          <div class="typing-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <span id="typingText">Someone is typing...</span>
-        </div>
-      </div>
-
-      <!-- Enhanced Input Area -->
-      <div class="unified-input-area">
-        <div class="input-features">
-          <button class="feature-btn" onclick="openPhotoPicker()" title="Share Photo">📷</button>
-          <button class="feature-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="feature-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <button class="feature-btn" onclick="openExperienceShare()" title="Share Experience">📝</button>
-        </div>
-        <div class="input-wrapper">
-          <textarea id="unifiedInput" placeholder="Share your experience, photos, or just chat..." rows="1"
-            onkeydown="handleUnifiedKeypress(event)"
-            oninput="handleTypingIndicator()"></textarea>
-        </div>
-        <button class="send-btn-unified" onclick="sendUnifiedMessage()" title="Send">
-          <span class="send-icon">➤</span>
-        </button>
-      </div>
-
-      <!-- Media Preview Area -->
-      <div class="media-preview-area" id="mediaPreviewArea" style="display:none;">
-        <div class="preview-content" id="previewContent"></div>
-        <button class="remove-preview-btn" onclick="clearMediaPreview()">✕</button>
-      </div>
-    </div>
-  `;
-
-  // Initialize real-time chat
-  setTimeout(() => {
-    initializeRealTimeChat();
-  }, 100);
-}
-
-// ==========================================
-// REAL-TIME CHAT INITIALIZATION
-// ==========================================
-
-async function initializeRealTimeChat() {
-  console.log('🚀 Initializing real-time chat...');
-
-  // Initialize Socket.IO connection
-  initializeSocketConnection();
-
-  // Load existing messages
-  await loadCommunityMessages();
-
-  // Set up input handlers
-  setupUnifiedChatInput();
-
-  // Update online count
-  updateOnlineCount();
-
-  console.log('✅ Real-time chat initialized');
-}
-
-// ==========================================
-// SOCKET.IO CONNECTION
-// ==========================================
-
-function initializeSocketConnection() {
-  if (socket && socket.connected) {
-    console.log('✅ Socket already connected');
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-    }
-    return;
-  }
-
-  socket = io(API_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 10
-  });
-
-  socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-      socket.emit('user_online', currentUser.id);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
-    updateConnectionStatus(false);
-  });
-
-  socket.on('reconnect', () => {
-    console.log('🔄 Socket reconnected');
-    updateConnectionStatus(true);
-    if (currentUser?.college) {
-      socket.emit('join_college', currentUser.college);
-      loadCommunityMessages();
-    }
-  });
-
-  socket.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    addRealTimeMessage(message);
-  });
-
-  socket.on('message_deleted', ({ id }) => {
-    console.log('🗑️ Message deleted:', id);
-    removeMessageFromUI(id);
-  });
-
-  socket.on('online_count', (count) => {
-    updateOnlineCount(count);
-  });
-
-  socket.on('user_typing', ({ username }) => {
-    if (username !== currentUser?.username) {
-      showTypingIndicator(username);
-    }
-  });
-
-  socket.on('user_stop_typing', ({ username }) => {
-    hideTypingIndicator(username);
-  });
-}
-
-function updateConnectionStatus(isConnected) {
-  const onlineCountEl = document.getElementById('onlineCount');
-  if (onlineCountEl) {
-    const currentCount = parseInt(onlineCountEl.textContent) || 0;
-    onlineCountEl.textContent = isConnected ? currentCount : '0';
-  }
-}
-
-function updateOnlineCount(count) {
-  const onlineCountEl = document.getElementById('onlineCount');
-  if (onlineCountEl) {
-    onlineCountEl.textContent = count || '0';
-  }
-}
-
-// ==========================================
-// LOAD MESSAGES FROM API
-// ==========================================
-
-async function loadCommunityMessages() {
-  try {
-    console.log('📥 Loading community messages...');
-
-    const messagesEl = document.getElementById('unifiedMessages');
-    if (!messagesEl) return;
-
-    // Show loading state
-    messagesEl.innerHTML = `
-      <div class="loading-messages-state">
-        <div class="spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const data = await apiCall('/api/community/messages', 'GET');
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        messagesEl.innerHTML = `
-          <div class="empty-chat-state">
-            <div class="empty-chat-icon">🏫</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with students from your college</p>
-            <button onclick="showJoinCommunityModal()" class="btn-primary">Join Now</button>
-          </div>
-        `;
-        return;
-      }
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear loading state
-    messagesEl.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML = `
-        <div class="empty-chat-state">
-          <div class="empty-chat-icon">👋</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Display all messages
-    data.messages.forEach(msg => {
-      addRealTimeMessage(msg, true); // Skip scroll for initial load
-    });
-
-    // Scroll to bottom after loading
-    setTimeout(() => {
-      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-    }, 100);
-
-    console.log(`✅ Loaded ${data.messages.length} messages`);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    const messagesEl = document.getElementById('unifiedMessages');
-    if (messagesEl) {
-      messagesEl.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h3>Failed to Load Messages</h3>
-          <p>${error.message}</p>
-          <button onclick="loadCommunityMessages()" class="btn-primary">Retry</button>
-        </div>
-      `;
-    }
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI
-// ==========================================
-
-function addRealTimeMessage(message, skipScroll = false) {
-  const messagesEl = document.getElementById('unifiedMessages');
-  if (!messagesEl) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`unified-msg-${message.id}`);
-  if (existingMsg) return;
-
-  // Remove empty state if present
-  const emptyState = messagesEl.querySelector('.empty-chat-state');
-  if (emptyState) {
-    emptyState.remove();
-  }
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || message.sender_name || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  const messageEl = document.createElement('div');
-  messageEl.className = `unified-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `unified-msg-${message.id}`;
-
-  let html = `
-    <div class="message-header">
-      <span class="sender-name">${isOwn ? 'You' : sender}</span>
-      <span class="message-time">${time}</span>
-    </div>
-    <div class="message-content">
-  `;
-
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
-  }
-
-  if (message.media_url) {
-    if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;" onclick="openMediaViewer('${message.media_url}')">`;
-    } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media" style="max-width:300px;border-radius:10px;margin-top:10px;"></video>`;
-    }
-  }
-
-  html += `
-    </div>
-    <div class="message-actions">
-      <button onclick="reactToUnifiedMessage('${message.id}')">❤️</button>
-      <button onclick="replyToUnifiedMessage('${message.id}')">↩️</button>
-      ${isOwn ? `<button onclick="deleteUnifiedMessage('${message.id}')">🗑️</button>` : ''}
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  messagesEl.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => {
-    messageEl.classList.add('message-visible');
-  }, 10);
-
-  // Scroll to bottom
-  if (!skipScroll) {
-    setTimeout(() => {
-      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-    }, 50);
-  }
-
-  // Play receive sound for other users' messages
-  if (!isOwn) {
-    playMessageSound('receive');
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendUnifiedMessage() {
-  const input = document.getElementById('unifiedInput');
-  const content = input?.value?.trim();
-
-  if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Add message or media', 'error');
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  if (!currentUser.communityJoined || !currentUser.college) {
-    showMessage('⚠️ Join college community first', 'error');
-    return;
-  }
-
-  try {
-    showMessage('📤 Sending...', 'success');
-
-    const formData = new FormData();
-    if (content) formData.append('content', content);
-    if (selectedMediaFile) {
-      formData.append('media', selectedMediaFile);
-    }
-
-    const data = await apiCall('/api/community/messages', 'POST', formData);
-
-    if (data.success) {
-      showMessage('✅ Message sent!', 'success');
-
-      // Clear input and media
-      if (input) input.value = '';
-      clearMediaPreview();
-
-      // Add message to UI (if not already added by socket)
-      if (data.message) {
-        const messageExists = document.getElementById(`unified-msg-${data.message.id}`);
-        if (!messageExists) {
-          addRealTimeMessage(data.message);
-        }
-      }
-
-      // Play send sound
-      playMessageSound('send');
-
-      // Stop typing indicator
-      if (socket && currentUser.college) {
-        socket.emit('stop_typing', {
-          collegeName: currentUser.college,
-          username: currentUser.username
-        });
-      }
-    } else {
-      throw new Error(data.error || 'Failed to send');
-    }
-
-  } catch (error) {
-    console.error('❌ Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-
-  // Scroll to bottom
-  const messagesEl = document.getElementById('unifiedMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupUnifiedChatInput() {
-  const input = document.getElementById('unifiedInput');
-  if (!input) return;
-
-  // Auto-resize
-  input.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-    handleTypingIndicator();
-  });
-
-  // Enter to send
-  input.addEventListener('keydown', handleUnifiedKeypress);
-}
-
-// ==========================================
-// MESSAGE ACTIONS
-// ==========================================
-
-async function deleteUnifiedMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-    if (data.success) {
-      removeMessageFromUI(messageId);
-      showMessage('🗑️ Message deleted', 'success');
-    } else {
-      throw new Error(data.error);
-    }
-  } catch (error) {
-    console.error('❌ Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-function removeMessageFromUI(messageId) {
-  const messageEl = document.getElementById(`unified-msg-${messageId}`);
-  if (messageEl) {
-    messageEl.style.animation = 'fadeOut 0.3s ease-out';
-    setTimeout(() => messageEl.remove(), 300);
-  }
-}
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function playMessageSound(type) {
-  try {
-    const sounds = {
-      send: 'https://assets.mixkit.co/active_storage/sfx/2354/2354.wav',
-      receive: 'https://assets.mixkit.co/active_storage/sfx/2357/2357.wav'
-    };
-
-    if (sounds[type]) {
-      const audio = new Audio(sounds[type]);
-      audio.volume = 0.2;
-      audio.play().catch(() => {}); // Silently fail
-    }
-  } catch (error) {
-    // Ignore audio errors
-  }
-}
-
-
-}
-  
-// ==========================================
-// WHATSAPP MESSAGE FUNCTIONS
-// ==========================================
-
-async function loadWhatsAppMessages() {
-  try {
-    const data = await apiCall('/api/community/messages', 'GET');
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    if (!messagesEl) return;
-
-    // Keep date separator
-    const dateSeparator = messagesEl.querySelector('.date-separator');
-    messagesEl.innerHTML = '';
-    if (dateSeparator) messagesEl.appendChild(dateSeparator);
-
-    if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML += `
-        <div class="no-messages">
-          <div style="font-size:64px;margin-bottom:20px;">👋</div>
-          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-          <p style="color:#888;">Say hi to your college community</p>
-        </div>
-      `;
-      return;
-    }
-
-    data.messages.reverse().forEach(msg => appendWhatsAppMessage(msg));
-    scrollToBottom();
-    
-    // Update stats
-    updateChatStats(data.messages.length);
-  } catch(error) {
-    console.error('', error);
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    }
-  }
-
-function appendWhatsAppMessage(msg) {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (!messagesEl) return;
-
-  const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-  const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
-
-  // Check if message already exists
-  if (document.getElementById('wa-msg-' + messageId)) return;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
-  wrapper.id = `wa-msg-${messageId}`;
-
-  let messageHTML = '';
-  
-  // Add sender name for others
-  if (!isOwn) {
-    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
-  }
-
-  // Message bubble
-  messageHTML += `
-    <div class="message-bubble">
-      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
-      <div class="message-meta">
-        <span class="message-time">${timeLabel}</span>
-        ${isOwn ? '<span class="message-status">✓✓</span>' : ''}
-      </div>
-      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
-    </div>
-  `;
-
-  // Message actions (on long press / click)
-  messageHTML += `
-    <div class="message-actions-menu" id="actions-${messageId}" style="display:none;">
-      <button onclick="replyToMessage('${messageId}')">↩️ Reply</button>
-      <button onclick="copyMessageText('${messageId}')">📋 Copy</button>
-      <button onclick="forwardMessage('${messageId}')">↪️ Forward</button>
-      ${isOwn ? `<button onclick="deleteWhatsAppMessage('${messageId}')" style="color:#ff6b6b;">🗑️ Delete</button>` : ''}
-    </div>
-  `;
-
-  wrapper.innerHTML = messageHTML;
-  
-  // Add long press / right click for actions
-  wrapper.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    showMessageActions(messageId);
-  });
-  
-  // Add long press for mobile
-  let pressTimer;
-  wrapper.addEventListener('touchstart', (e) => {
-    pressTimer = setTimeout(() => showMessageActions(messageId), 500);
-  });
-  wrapper.addEventListener('touchend', () => {
-    clearTimeout(pressTimer);
-  });
-
-  messagesEl.appendChild(wrapper);
-  scrollToBottom();
-
-  if (!isOwn) playMessageSound('receive');
-}
-
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
-  if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  try {
-    // Optimistic UI update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date(),
-      text: content
-    };
-    
-    appendWhatsAppMessage(tempMsg);
-    input.value = '';
-    input.style.height = 'auto';
-
-    // Send to server
-    const response = await apiCall('/api/community/messages', 'POST', { content });
-    
-    if (response.success) {
-      playMessageSound('send');
-      
-      // Stop typing indicator
-      if (socket && currentUser.college) {
-        socket.emit('stop_typing', { 
-          collegeName: currentUser.college, 
-          username: currentUser.username 
-        });
-      }
-      
-      // Remove temp message and add real one
-      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
-      if (tempEl) tempEl.remove();
-      
-      if (response.message) {
-        appendWhatsAppMessage(response.message);
-      }
-    }
-  } catch(error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
-function handleTypingIndicator() {
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-    socket.emit('typing', { 
-      collegeName: currentUser.college, 
-      username: currentUser.username 
-    });
-    lastTypingEmit = now;
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-  }, 3000);
-}
-
-function showMessageActions(messageId) {
-  // Hide all other action menus
-  document.querySelectorAll('.message-actions-menu').forEach(menu => {
-    menu.style.display = 'none';
-  });
-  
-  // Show this message's actions
-  const actionsMenu = document.getElementById(`actions-${messageId}`);
-  if (actionsMenu) {
-    actionsMenu.style.display = 'flex';
-    
-    // Hide after 5 seconds
-    setTimeout(() => {
-      actionsMenu.style.display = 'none';
-    }, 5000);
-  }
-}
-
-async function deleteWhatsAppMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-    
-    const messageEl = document.getElementById(`wa-msg-${messageId}`);
-    if (messageEl) {
-      messageEl.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => messageEl.remove(), 300);
-    }
-    
-    showMessage('🗑️ Message deleted', 'success');
-  } catch(error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-function copyMessageText(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  
-  if (!text) return;
-
-  navigator.clipboard.writeText(text).then(() => {
-    showMessage('📋 Message copied!', 'success');
-  }).catch(() => {
-    showMessage('❌ Failed to copy', 'error');
-  });
-}
-
-function replyToMessage(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  const sender = messageEl?.querySelector('.message-sender-name')?.textContent || 'You';
-  
-  if (!text) return;
-  
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value = `@${sender}: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}\n\n`;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-  
-  showMessage(`↩️ Replying to ${sender}`, 'success');
-}
-
-function forwardMessage(messageId) {
-  showMessage('↪️ Forward feature coming soon!', 'success');
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-function updateChatStats(messageCount) {
-  const totalMessages = document.getElementById('totalMessages');
-  if (totalMessages) totalMessages.textContent = messageCount;
-}
-
-// ==========================================
-// EMOJI & STICKER PICKERS
-// ==========================================
-
-function openEmojiPicker() {
-  // Close any existing picker
-  const existing = document.getElementById('emojiPickerPopup');
-  if (existing) {
-    existing.remove();
-    return;
-  }
-
-  const picker = document.createElement('div');
-  picker.id = 'emojiPickerPopup';
-  picker.className = 'emoji-picker-popup';
-  picker.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:5000;';
-
-  const emojis = [
-    { cat: 'Smileys', items: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋'] },
-    { cat: 'Gestures', items: ['👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐','🖖','👋','🤝','🙏'] },
-    { cat: 'Hearts', items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟'] },
-    { cat: 'Objects', items: ['🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'] }
-  ];
-
-  let html = `
-    <div class="emoji-picker-header">
-      <input type="text" class="emoji-search" placeholder="Search emoji..." oninput="searchEmojis(this.value)">
-      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
-    </div>
-    <div class="emoji-categories" id="emojiCategories">
-  `;
-
-  emojis.forEach(category => {
-    html += `
-      <div class="emoji-category">
-        <div class="emoji-category-title">${category.cat}</div>
-        <div class="emoji-grid">
-          ${category.items.map(emoji => `
-            <div class="emoji-item" onclick="insertEmoji('${emoji}')">${emoji}</div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  });
-
-  html += '</div>';
-  picker.innerHTML = html;
-  document.body.appendChild(picker);
-}
-
-function closeEmojiPicker() {
-  const picker = document.getElementById('emojiPickerPopup');
-  if (picker) picker.remove();
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPicker();
-}
-
-function searchEmojis(query) {
-  // Simple search implementation
-  const categories = document.querySelectorAll('.emoji-category');
-  categories.forEach(cat => {
-    const items = cat.querySelectorAll('.emoji-item');
-    let hasVisible = false;
-    items.forEach(item => {
-      // In real app, you'd have emoji names to search
-      item.style.display = 'flex';
-      hasVisible = true;
-    });
-    cat.style.display = hasVisible ? 'block' : 'none';
-  });
-}
-
-function openStickerPicker() {
-  showMessage('🎨 Sticker picker coming soon!', 'success');
-  
-  // Quick sticker selection
-  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚'];
-  const sticker = prompt('Quick sticker:\n' + stickers.join(' ') + '\n\nChoose one:');
-  
-  if (sticker && stickers.includes(sticker)) {
-    const input = document.getElementById('whatsappInput');
-    if (input) {
-      input.value += sticker;
-      input.focus();
-    }
-  }
-}
-
-function openAttachMenu() {
-  const menu = document.createElement('div');
-  menu.className = 'attach-menu-popup';
-  menu.style.cssText = 'position:fixed;bottom:80px;left:50px;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;z-index:5000;';
-  
-  menu.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;min-width:200px;">
-      <button onclick="attachPhoto()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📷</span>
-        <span>Photo</span>
-      </button>
-      <button onclick="attachVideo()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">🎥</span>
-        <span>Video</span>
-      </button>
-      <button onclick="attachDocument()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📄</span>
-        <span>Document</span>
-      </button>
-      <button onclick="menu.remove()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(239,68,68,0.2);border:2px solid rgba(239,68,68,0.3);border-radius:12px;cursor:pointer;color:#ff6b6b;font-weight:600;">
-        <span style="font-size:32px;">✕</span>
-        <span>Cancel</span>
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(menu);
-  
-  // Close on click outside
-  setTimeout(() => {
-    document.addEventListener('click', function closeMenu(e) {
-      if (!menu.contains(e.target) && !e.target.closest('.icon-btn')) {
-        menu.remove();
-        document.removeEventListener('click', closeMenu);
-      }
-    });
-  }, 100);
-}
-
-function attachPhoto() {
-  showMessage('📷 Photo attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
-}
-
-function attachVideo() {
-  showMessage('🎥 Video attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
-}
-
-function attachDocument() {
-  showMessage('📄 Document attachment coming soon!', 'success');
-  document.querySelector('.attach-menu-popup')?.remove();
+  currentUser = null;
+  localStorage.clear();
+  document.body.classList.remove('logged-in');
+  document.getElementById('aboutUsPage').style.display = 'block';
+  document.getElementById('mainPage').style.display = 'none';
+  showMessage('👋 Logged out', 'success');
+  hasScrolledToBottom = false;
+  scrollCheckEnabled = true;
+  createScrollProgressIndicator();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ========================================
@@ -1965,86 +560,86 @@ function attachDocument() {
 // ========================================
 
 function selectUniversity(type) {
-currentType = type;
-currentPage = 1;
-allColleges = colleges[type];
+  currentType = type;
+  currentPage = 1;
+  allColleges = colleges[type];
 
-const titles = {
-nit: 'National Institutes of Technology', 
-iit: 'Indian Institutes of Technology', 
-vit: 'VIT Colleges', 
-other: 'Other Universities'
-};
+  const titles = {
+    nit: 'National Institutes of Technology',
+    iit: 'Indian Institutes of Technology',
+    vit: 'VIT Colleges',
+    other: 'Other Universities'
+  };
 
-const title = document.getElementById('collegeTitle');
-if (title) title.textContent = titles[type];
+  const title = document.getElementById('collegeTitle');
+  if (title) title.textContent = titles[type];
 
-const home = document.getElementById('home');
-const list = document.getElementById('collegeList');
+  const home = document.getElementById('home');
+  const list = document.getElementById('collegeList');
 
-if (home) home.style.display = 'none';
-if (list) list.style.display = 'block';
+  if (home) home.style.display = 'none';
+  if (list) list.style.display = 'block';
 
-showColleges();
+  showColleges();
 }
 
 function showColleges() {
-const list = allColleges;
-const start = (currentPage - 1) * ITEMS_PER_PAGE;
-const end = start + ITEMS_PER_PAGE;
-const page = list.slice(start, end);
+  const list = allColleges;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const page = list.slice(start, end);
 
-let html = '';
-page.forEach(c => {
-const isConnected = currentUser && currentUser.college === c.name;
-html += `
+  let html = '';
+  page.forEach(c => {
+    const isConnected = currentUser && currentUser.college === c.name;
+    html += `
      <div class="college-item">
        <h3>${c.name}</h3>
        <p>${c.location}</p>
-       ${isConnected ? 
-         '<button class="verified" disabled>✓ Connected</button>' : 
-         `<button onclick="openVerify('${c.name}','${c.email}')">Connect</button>`
-       }
+       ${isConnected ?
+        '<button class="verified" disabled>✓ Connected</button>' :
+        `<button onclick="openVerify('${c.name}','${c.email}')">Connect</button>`
+      }
      </div>
    `;
-});
+  });
 
-const container = document.getElementById('collegeContainer');
-if (container) container.innerHTML = html;
+  const container = document.getElementById('collegeContainer');
+  if (container) container.innerHTML = html;
 }
 
 function searchColleges() {
-const searchInput = document.getElementById('searchCollege');
-if (!searchInput) return;
+  const searchInput = document.getElementById('searchCollege');
+  if (!searchInput) return;
 
-const search = searchInput.value.toLowerCase();
-const filtered = colleges[currentType].filter(c => 
-c.name.toLowerCase().includes(search) || 
-c.location.toLowerCase().includes(search)
-);
+  const search = searchInput.value.toLowerCase();
+  const filtered = colleges[currentType].filter(c =>
+    c.name.toLowerCase().includes(search) ||
+    c.location.toLowerCase().includes(search)
+  );
 
-allColleges = filtered;
-currentPage = 1;
-showColleges();
+  allColleges = filtered;
+  currentPage = 1;
+  showColleges();
 }
 
 function backToUniversities() {
-const list = document.getElementById('collegeList');
-const home = document.getElementById('home');
+  const list = document.getElementById('collegeList');
+  const home = document.getElementById('home');
 
-if (list) list.style.display = 'none';
-if (home) home.style.display = 'block';
+  if (list) list.style.display = 'none';
+  if (home) home.style.display = 'block';
 }
 
 function openVerify(name, emailDomain) {
-if (currentUser && currentUser.college) {
-showMessage('⚠️ Already connected to ' + currentUser.college, 'error');
-return;
-}
+  if (currentUser && currentUser.college) {
+    showMessage('⚠️ Already connected to ' + currentUser.college, 'error');
+    return;
+  }
 
-currentVerifyCollege = {name, emailDomain};
+  currentVerifyCollege = { name, emailDomain };
 
-const modalHtml = `
+  const modalHtml = `
    <div class="modal-box">
      <span class="close" onclick="closeModal('verifyModal')">&times;</span>
      <h2>Verify College</h2>
@@ -2059,66 +654,66 @@ const modalHtml = `
    </div>
  `;
 
-const modal = document.getElementById('verifyModal');
-if (modal) {
-modal.innerHTML = modalHtml;
-modal.style.display = 'flex';
-}
+  const modal = document.getElementById('verifyModal');
+  if (modal) {
+    modal.innerHTML = modalHtml;
+    modal.style.display = 'flex';
+  }
 }
 
 async function requestVerificationCode() {
-const emailInput = document.getElementById('verifyEmail');
-if (!emailInput) return;
+  const emailInput = document.getElementById('verifyEmail');
+  if (!emailInput) return;
 
-const email = emailInput.value.trim();
-if (!email) return showMessage('⚠️ Enter email', 'error');
+  const email = emailInput.value.trim();
+  if (!email) return showMessage('⚠️ Enter email', 'error');
 
-if (!email.endsWith(currentVerifyCollege.emailDomain)) {
-return showMessage('⚠️ Must end with ' + currentVerifyCollege.emailDomain, 'error');
-}
+  if (!email.endsWith(currentVerifyCollege.emailDomain)) {
+    return showMessage('⚠️ Must end with ' + currentVerifyCollege.emailDomain, 'error');
+  }
 
-try {
-showMessage('📧 Sending code...', 'success');
-await apiCall('/api/college/request-verification', 'POST', {
-collegeName: currentVerifyCollege.name, 
-collegeEmail: email
-});
+  try {
+    showMessage('📧 Sending code...', 'success');
+    await apiCall('/api/college/request-verification', 'POST', {
+      collegeName: currentVerifyCollege.name,
+      collegeEmail: email
+    });
 
-showMessage('✅ Code sent to ' + email, 'success');
-const codeSection = document.getElementById('codeSection');
-if (codeSection) codeSection.style.display = 'block';
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+    showMessage('✅ Code sent to ' + email, 'success');
+    const codeSection = document.getElementById('codeSection');
+    if (codeSection) codeSection.style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function verifyCollegeCode() {
-const codeInput = document.getElementById('verifyCode');
-if (!codeInput) return;
+  const codeInput = document.getElementById('verifyCode');
+  if (!codeInput) return;
 
-const code = codeInput.value.trim();
-if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
+  const code = codeInput.value.trim();
+  if (!code || code.length !== 6) return showMessage('⚠️ Enter 6-digit code', 'error');
 
-try {
-showMessage('🔐 Verifying...', 'success');
-const data = await apiCall('/api/college/verify', 'POST', { code });
+  try {
+    showMessage('🔐 Verifying...', 'success');
+    const data = await apiCall('/api/college/verify', 'POST', { code });
 
-showMessage('🎉 ' + data.message, 'success');
-currentUser.college = data.college;
-currentUser.communityJoined = true;
-currentUser.badges = data.badges;
-localStorage.setItem('user', JSON.stringify(currentUser));
+    showMessage('🎉 ' + data.message, 'success');
+    currentUser.college = data.college;
+    currentUser.communityJoined = true;
+    currentUser.badges = data.badges;
+    localStorage.setItem('user', JSON.stringify(currentUser));
 
-closeModal('verifyModal');
-initializeSocket();
+    closeModal('verifyModal');
+    initializeSocket();
 
-setTimeout(() => {
-showPage('communities');
-updateLiveNotif('Connected to ' + data.college);
-}, 1500);
-} catch(error) {
-showMessage('❌ ' + error.message, 'error');
-}
+    setTimeout(() => {
+      showPage('communities');
+      updateLiveNotif('Connected to ' + data.college);
+    }, 1500);
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 // ========================================
@@ -2126,52 +721,52 @@ showMessage('❌ ' + error.message, 'error');
 // ========================================
 
 function initializeSocket() {
-if (socket) return;
+  if (socket) return;
 
-socket = io(API_URL);
+  socket = io(API_URL);
 
-socket.on('connect', () => {
-console.log('Socket connected');
-if (currentUser?.college) socket.emit('join_college', currentUser.college);
-socket.emit('user_online', currentUser.id);
-});
+  socket.on('connect', () => {
+    console.log('Socket connected');
+    if (currentUser?.college) socket.emit('join_college', currentUser.college);
+    socket.emit('user_online', currentUser.id);
+  });
 
-socket.on('new_message', (message) => appendMessageToChat(message));
-socket.on('message_updated', (message) => updateMessageInChat(message));
-socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
-socket.on('online_count', (count) => updateOnlineCount(count));
+  socket.on('new_message', (message) => appendMessageToChat(message));
+  socket.on('message_updated', (message) => updateMessageInChat(message));
+  socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
+  socket.on('online_count', (count) => updateOnlineCount(count));
 
-socket.on('post_liked', (data) => {
-const likeCount = document.querySelector(`#like-count-${data.postId}`);
-if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
-});
+  socket.on('post_liked', (data) => {
+    const likeCount = document.querySelector(`#like-count-${data.postId}`);
+    if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
+  });
 
-socket.on('post_commented', (data) => {
-const commentCount = document.querySelector(`#comment-count-${data.postId}`);
-if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
-});
+  socket.on('post_commented', (data) => {
+    const commentCount = document.querySelector(`#comment-count-${data.postId}`);
+    if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
+  });
 
-socket.on('post_shared', (data) => {
-const shareCount = document.querySelector(`#share-count-${data.postId}`);
-if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
-});
+  socket.on('post_shared', (data) => {
+    const shareCount = document.querySelector(`#share-count-${data.postId}`);
+    if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
+  });
 
-setupEnhancedSocketListeners();
+  setupEnhancedSocketListeners();
 }
 
 function updateMessageInChat(msg) {
-const messageEl = document.getElementById(`msg-${msg.id}`);
-if (!messageEl) return;
+  const messageEl = document.getElementById(`msg-${msg.id}`);
+  if (!messageEl) return;
 
-const textEl = messageEl.querySelector('.text');
-if (textEl) {
-textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
-}
+  const textEl = messageEl.querySelector('.text');
+  if (textEl) {
+    textEl.innerHTML = `${msg.content} <span style="font-size:10px;color:#888;">(edited)</span>`;
+  }
 }
 
 function removeMessageFromChat(id) {
-const messageEl = document.getElementById(`msg-${id}`);
-if (messageEl) messageEl.remove();
+  const messageEl = document.getElementById(`msg-${id}`);
+  if (messageEl) messageEl.remove();
 }
 
 
@@ -2180,80 +775,80 @@ if (messageEl) messageEl.remove();
 // ========================================
 
 function initializeSearchBar() {
-const searchBox = document.getElementById('searchBox');
-const searchResults = document.getElementById('searchResults');
+  const searchBox = document.getElementById('searchBox');
+  const searchResults = document.getElementById('searchResults');
 
-if (!searchBox) return;
+  if (!searchBox) return;
 
-console.log('✅ Search initialized');
+  console.log('✅ Search initialized');
 
-searchBox.addEventListener('input', (e) => {
-if (searchTimeout) clearTimeout(searchTimeout);
+  searchBox.addEventListener('input', (e) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
 
-const query = e.target.value.trim();
-if (query.length < 2) {
-hideSearchResults();
-return;
-}
+    const query = e.target.value.trim();
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
 
-if (searchResults) {
-searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
-searchResults.style.display = 'block';
-}
+    if (searchResults) {
+      searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
+      searchResults.style.display = 'block';
+    }
 
-searchTimeout = setTimeout(() => performUserSearch(query), 600);
-});
+    searchTimeout = setTimeout(() => performUserSearch(query), 600);
+  });
 
-searchBox.addEventListener('focus', (e) => {
-const query = e.target.value.trim();
-if (query.length >= 2) performUserSearch(query);
-});
+  searchBox.addEventListener('focus', (e) => {
+    const query = e.target.value.trim();
+    if (query.length >= 2) performUserSearch(query);
+  });
 
-document.addEventListener('click', (e) => {
-if (!e.target.closest('.search-container')) hideSearchResults();
-});
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) hideSearchResults();
+  });
 
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') {
-hideSearchResults();
-searchBox.blur();
-}
-});
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      hideSearchResults();
+      searchBox.blur();
+    }
+  });
 }
 
 async function performUserSearch(query) {
-const searchResults = document.getElementById('searchResults');
-if (!searchResults) return;
+  const searchResults = document.getElementById('searchResults');
+  if (!searchResults) return;
 
-try {
-console.log('🔍 Searching:', query);
-const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
+  try {
+    console.log('🔍 Searching:', query);
+    const data = await apiCall(`/api/search/users?query=${encodeURIComponent(query)}`, 'GET');
 
-if (!data.success) throw new Error('Search failed');
-displaySearchResults(data.users || []);
-} catch(error) {
-console.error('❌ Search:', error);
-searchResults.innerHTML = '<div class="no-results" style="color:#ff6b6b;">❌ Search failed</div>';
-searchResults.style.display = 'block';
-}
+    if (!data.success) throw new Error('Search failed');
+    displaySearchResults(data.users || []);
+  } catch (error) {
+    console.error('❌ Search:', error);
+    searchResults.innerHTML = '<div class="no-results" style="color:#ff6b6b;">❌ Search failed</div>';
+    searchResults.style.display = 'block';
+  }
 }
 
 function displaySearchResults(users) {
-const searchResults = document.getElementById('searchResults');
-if (!searchResults) return;
+  const searchResults = document.getElementById('searchResults');
+  if (!searchResults) return;
 
-if (users.length === 0) {
-searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
-searchResults.style.display = 'block';
-return;
-}
+  if (users.length === 0) {
+    searchResults.innerHTML = '<div class="no-results">😔 No users found</div>';
+    searchResults.style.display = 'block';
+    return;
+  }
 
-let html = '';
-users.forEach(user => {
-const avatarContent = user.profile_pic ? 
-`<img src="${user.profile_pic}" alt="${user.username}">` : '👤';
+  let html = '';
+  users.forEach(user => {
+    const avatarContent = user.profile_pic ?
+      `<img src="${user.profile_pic}" alt="${user.username}">` : '👤';
 
-html += `
+    html += `
      <div class="search-result-item" onclick="showUserProfile('${user.id}')">
        <div class="search-result-avatar">${avatarContent}</div>
        <div class="search-result-info">
@@ -2263,42 +858,42 @@ html += `
        </div>
      </div>
    `;
-});
+  });
 
-searchResults.innerHTML = html;
-searchResults.style.display = 'block';
+  searchResults.innerHTML = html;
+  searchResults.style.display = 'block';
 }
 
 function hideSearchResults() {
-const searchResults = document.getElementById('searchResults');
-if (searchResults) searchResults.style.display = 'none';
+  const searchResults = document.getElementById('searchResults');
+  if (searchResults) searchResults.style.display = 'none';
 }
 
 async function showUserProfile(userId) {
-hideSearchResults();
-const searchBox = document.getElementById('searchBox');
-if (searchBox) searchBox.value = '';
+  hideSearchResults();
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) searchBox.value = '';
 }
 
 
 function showProfilePage() {
-if (!currentUser) return;
-showProfileModal(currentUser);
+  if (!currentUser) return;
+  showProfileModal(currentUser);
 
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
 
 function showProfileModal(user) {
-const isOwnProfile = currentUser && user.id === currentUser.id;
+  const isOwnProfile = currentUser && user.id === currentUser.id;
 
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
 
-modal.innerHTML = `
+  modal.innerHTML = `
    <div class="modal-box profile-modal-box">
      <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
      <div class="profile-container">
@@ -2347,7 +942,7 @@ modal.innerHTML = `
    </div>
  `;
 
-document.body.appendChild(modal);
+  document.body.appendChild(modal);
 }
 
 // ========================================
@@ -2355,30 +950,33 @@ document.body.appendChild(modal);
 // ========================================
 
 function showPage(name, e) {
-if(e) e.preventDefault();
+  if (e) e.preventDefault();
 
-document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-const page = document.getElementById(name);
-if(page) page.style.display = 'block';
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const page = document.getElementById(name);
+  if (page) page.style.display = 'block';
 
-document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-if(e?.target) e.target.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if (e?.target) e.target.classList.add('active');
 
-if(name === 'posts') loadPosts();
-else if(name === 'communities') loadCommunities();
-else if(name === 'rewards') loadRewardsPage();
+  // Save current page
+  localStorage.setItem('vibexpert_last_page', name);
 
-const hamburger = document.getElementById('hamburgerMenu');
-if (hamburger) hamburger.style.display = 'none';
+  if (name === 'posts') loadPosts();
+  else if (name === 'communities') loadCommunities();
+  else if (name === 'rewards') loadRewardsPage();
 
-window.scrollTo(0, 0);
+  const hamburger = document.getElementById('hamburgerMenu');
+  if (hamburger) hamburger.style.display = 'none';
+
+  window.scrollTo(0, 0);
 }
 
 function goHome() {
-showPage('home');
-document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-const homeLink = document.querySelector('.nav-link[onclick*="home"]');
-if (homeLink) homeLink.classList.add('active');
+  showPage('home');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const homeLink = document.querySelector('.nav-link[onclick*="home"]');
+  if (homeLink) homeLink.classList.add('active');
 }
 
 // ========================================
@@ -2386,137 +984,137 @@ if (homeLink) homeLink.classList.add('active');
 // ========================================
 
 async function createPost() {
-const postText = document.getElementById('postText')?.value.trim();
-console.log('🚀 Creating post');
+  const postText = document.getElementById('postText')?.value.trim();
+  console.log('🚀 Creating post');
 
-if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
-return showMessage('⚠️ Add content', 'error');
-}
+  if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
+    return showMessage('⚠️ Add content', 'error');
+  }
 
-if (!currentUser) return showMessage('⚠️ Login required', 'error');
+  if (!currentUser) return showMessage('⚠️ Login required', 'error');
 
-if (selectedPostDestination === 'community') {
-if (!currentUser.communityJoined || !currentUser.college) {
-showMessage('⚠️ Join university first', 'error');
-setTimeout(() => {
-if (confirm('Join college community?')) {
-showPage('home');
-const homeLink = document.querySelector('.nav-link[onclick*="home"]');
-if (homeLink) homeLink.classList.add('active');
-}
-}, 500);
-return;
-}
-}
+  if (selectedPostDestination === 'community') {
+    if (!currentUser.communityJoined || !currentUser.college) {
+      showMessage('⚠️ Join university first', 'error');
+      setTimeout(() => {
+        if (confirm('Join college community?')) {
+          showPage('home');
+          const homeLink = document.querySelector('.nav-link[onclick*="home"]');
+          if (homeLink) homeLink.classList.add('active');
+        }
+      }, 500);
+      return;
+    }
+  }
 
-try {
-showMessage('📤 Creating...', 'success');
+  try {
+    showMessage('📤 Creating...', 'success');
 
-const formData = new FormData();
-formData.append('content', postText);
-formData.append('postTo', selectedPostDestination);
+    const formData = new FormData();
+    formData.append('content', postText);
+    formData.append('postTo', selectedPostDestination);
 
-if (selectedMusic) formData.append('music', JSON.stringify(selectedMusic));
-if (selectedStickers.length > 0) formData.append('stickers', JSON.stringify(selectedStickers));
+    if (selectedMusic) formData.append('music', JSON.stringify(selectedMusic));
+    if (selectedStickers.length > 0) formData.append('stickers', JSON.stringify(selectedStickers));
 
-if (selectedFiles.length > 0) {
-showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
-for (let i = 0; i < selectedFiles.length; i++) {
-formData.append('media', selectedFiles[i]);
-}
-}
+    if (selectedFiles.length > 0) {
+      showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append('media', selectedFiles[i]);
+      }
+    }
 
-const data = await apiCall('/api/posts', 'POST', formData);
+    const data = await apiCall('/api/posts', 'POST', formData);
 
-if (data.success) {
-const msg = selectedPostDestination === 'profile' ? 
-'✅ Posted to profile!' : '✅ Shared to community!';
-showMessage(msg, 'success');
-checkAndUpdateRewards('post');
-const postCount = data.postCount || 1;
-setTimeout(() => showPostCelebrationModal(postCount), 800);
+    if (data.success) {
+      const msg = selectedPostDestination === 'profile' ?
+        '✅ Posted to profile!' : '✅ Shared to community!';
+      showMessage(msg, 'success');
+      checkAndUpdateRewards('post');
+      const postCount = data.postCount || 1;
+      setTimeout(() => showPostCelebrationModal(postCount), 800);
 
-if (data.badgeUpdated && data.newBadges?.length > 0) {
-setTimeout(() => showMessage(`🏆 Badge: ${data.newBadges.join(', ')}`, 'success'), 6000);
-}
+      if (data.badgeUpdated && data.newBadges?.length > 0) {
+        setTimeout(() => showMessage(`🏆 Badge: ${data.newBadges.join(', ')}`, 'success'), 6000);
+      }
 
-resetPostForm();
+      resetPostForm();
 
-setTimeout(() => {
-loadPosts();
-if (selectedPostDestination === 'profile') {
-const profilePosts = document.getElementById('userProfilePosts');
-if (profilePosts && currentUser) loadUserProfilePosts(currentUser.id);
-}
-if (selectedPostDestination === 'community') {
-const communityPosts = document.getElementById('communityPostsContainer');
-if (communityPosts) loadCommunityPosts();
-}
-}, 1000);
-} else {
-showMessage('❌ Failed', 'error');
-}
-} catch(error) {
-console.error('❌ Post error:', error);
-if (error.message.includes('timeout')) {
-showMessage('⚠️ Timeout - try smaller images', 'error');
-} else if (error.message.includes('university') || error.message.includes('community')) {
-showMessage('⚠️ Join university first', 'error');
-} else {
-showMessage('❌ Error: ' + error.message, 'error');
-}
-}
+      setTimeout(() => {
+        loadPosts();
+        if (selectedPostDestination === 'profile') {
+          const profilePosts = document.getElementById('userProfilePosts');
+          if (profilePosts && currentUser) loadUserProfilePosts(currentUser.id);
+        }
+        if (selectedPostDestination === 'community') {
+          const communityPosts = document.getElementById('communityPostsContainer');
+          if (communityPosts) loadCommunityPosts();
+        }
+      }, 1000);
+    } else {
+      showMessage('❌ Failed', 'error');
+    }
+  } catch (error) {
+    console.error('❌ Post error:', error);
+    if (error.message.includes('timeout')) {
+      showMessage('⚠️ Timeout - try smaller images', 'error');
+    } else if (error.message.includes('university') || error.message.includes('community')) {
+      showMessage('⚠️ Join university first', 'error');
+    } else {
+      showMessage('❌ Error: ' + error.message, 'error');
+    }
+  }
 }
 
 function resetPostForm() {
-const postText = document.getElementById('postText');
-if (postText) postText.value = '';
+  const postText = document.getElementById('postText');
+  if (postText) postText.value = '';
 
-selectedFiles = [];
-previewUrls = [];
-selectedMusic = null;
-selectedStickers = [];
+  selectedFiles = [];
+  previewUrls = [];
+  selectedMusic = null;
+  selectedStickers = [];
 
-const photoContainer = document.getElementById('photoPreviewContainer');
-if (photoContainer) {
-photoContainer.innerHTML = '';
-photoContainer.style.display = 'none';
-}
+  const photoContainer = document.getElementById('photoPreviewContainer');
+  if (photoContainer) {
+    photoContainer.innerHTML = '';
+    photoContainer.style.display = 'none';
+  }
 
-const assetsContainer = document.getElementById('selectedAssets');
-if (assetsContainer) {
-assetsContainer.innerHTML = '';
-assetsContainer.style.display = 'none';
-}
+  const assetsContainer = document.getElementById('selectedAssets');
+  if (assetsContainer) {
+    assetsContainer.innerHTML = '';
+    assetsContainer.style.display = 'none';
+  }
 }
 
 function renderPosts(posts) {
-let html = '';
+  let html = '';
 
-posts.forEach(post => {
-const author = post.users?.username || 'User';
-const authorId = post.users?.id || '';
-const content = post.content || '';
-const media = post.media || [];
-const time = new Date(post.created_at || post.timestamp).toLocaleString();
-const isOwn = currentUser && authorId === currentUser.id;
-const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
-const music = post.music || null;
-const stickers = post.stickers || [];
-const likeCount = post.like_count || 0;
-const commentCount = post.comment_count || 0;
-const shareCount = post.share_count || 0;
-const isLiked = post.is_liked || false;
+  posts.forEach(post => {
+    const author = post.users?.username || 'User';
+    const authorId = post.users?.id || '';
+    const content = post.content || '';
+    const media = post.media || [];
+    const time = new Date(post.created_at || post.timestamp).toLocaleString();
+    const isOwn = currentUser && authorId === currentUser.id;
+    const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
+    const music = post.music || null;
+    const stickers = post.stickers || [];
+    const likeCount = post.like_count || 0;
+    const commentCount = post.comment_count || 0;
+    const shareCount = post.share_count || 0;
+    const isLiked = post.is_liked || false;
 
-html += `
+    html += `
      <div class="enhanced-post" id="post-${post.id}">
        <div class="enhanced-post-header">
          <div class="enhanced-user-info" onclick="showUserProfile('${authorId}')" style="cursor:pointer;">
            <div class="enhanced-user-avatar">
-             ${post.users?.profile_pic ? 
-               `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` : 
-               '👤'
-             }
+             ${post.users?.profile_pic ?
+        `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` :
+        '👤'
+      }
            </div>
            <div class="enhanced-user-details">
              <div class="enhanced-username">@${author}</div>
@@ -2531,13 +1129,13 @@ html += `
        </div>
        <div class="enhanced-post-content">
          ${content ? `<div class="enhanced-post-text">${content}</div>` : ''}
-         ${stickers.length > 0 ? 
-           `<div class="post-stickers-container">
+         ${stickers.length > 0 ?
+        `<div class="post-stickers-container">
              ${stickers.map(s => `<span class="post-sticker">${s.emoji || s}</span>`).join('')}
            </div>` : ''
-         }
-         ${music ? 
-           `<div class="post-music-container">
+      }
+         ${music ?
+        `<div class="post-music-container">
              <div class="music-player">
                <div class="music-info">
                  <div class="music-icon">${music.emoji || '🎵'}</div>
@@ -2551,18 +1149,18 @@ html += `
                </audio>
              </div>
            </div>` : ''
-         }
-         ${media.length > 0 ? 
-           `<div class="enhanced-post-media">
-             ${media.map(m => 
-               m.type === 'image' ? 
-                 `<div class="enhanced-media-item"><img src="${m.url}"></div>` :
-               m.type === 'video' ? 
-                 `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>` :
-                 `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
-             ).join('')}
+      }
+         ${media.length > 0 ?
+        `<div class="enhanced-post-media">
+             ${media.map(m =>
+          m.type === 'image' ?
+            `<div class="enhanced-media-item"><img src="${m.url}"></div>` :
+            m.type === 'video' ?
+              `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>` :
+              `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+        ).join('')}
            </div>` : ''
-         }
+      }
        </div>
        <div class="enhanced-post-footer">
          <div class="enhanced-post-stats">
@@ -2580,92 +1178,92 @@ html += `
        </div>
      </div>
    `;
-});
+  });
 
-return html;
+  return html;
 }
 
 async function loadPosts() {
-const feedEl = document.getElementById('postsFeed');
-if (!feedEl) return;
+  const feedEl = document.getElementById('postsFeed');
+  if (!feedEl) return;
 
-try {
-feedEl.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading...</div>';
-const data = await apiCall('/api/posts', 'GET');
+  try {
+    feedEl.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ Loading...</div>';
+    const data = await apiCall('/api/posts', 'GET');
 
-if (!data.posts || data.posts.length === 0) {
-feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">📝 No posts yet</div>';
-return;
-}
+    if (!data.posts || data.posts.length === 0) {
+      feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#888;">📝 No posts yet</div>';
+      return;
+    }
 
-feedEl.innerHTML = renderPosts(data.posts);
-} catch(error) {
-console.error('❌ Load posts:', error);
-feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#ff6b6b;">❌ Failed to load</div>';
-}
+    feedEl.innerHTML = renderPosts(data.posts);
+  } catch (error) {
+    console.error('❌ Load posts:', error);
+    feedEl.innerHTML = '<div style="text-align:center;padding:40px;color:#ff6b6b;">❌ Failed to load</div>';
+  }
 }
 
 async function deletePost(postId) {
-if (!confirm('Delete this post?')) return;
+  if (!confirm('Delete this post?')) return;
 
-try {
-await apiCall(`/api/posts/${postId}`, 'DELETE');
-showMessage('🗑️ Deleted', 'success');
+  try {
+    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    showMessage('🗑️ Deleted', 'success');
 
-const postEl = document.getElementById(`post-${postId}`);
-if (postEl) postEl.remove();
+    const postEl = document.getElementById(`post-${postId}`);
+    if (postEl) postEl.remove();
 
-setTimeout(() => loadPosts(), 500);
-} catch(error) {
-showMessage('❌ Failed: ' + error.message, 'error');
-}
+    setTimeout(() => loadPosts(), 500);
+  } catch (error) {
+    showMessage('❌ Failed: ' + error.message, 'error');
+  }
 }
 
 async function toggleLike(postId) {
-if (!currentUser) return showMessage('⚠️ Login to like', 'error');
+  if (!currentUser) return showMessage('⚠️ Login to like', 'error');
 
-try {
-const likeBtn = document.querySelector(`#like-btn-${postId}`);
-const likeCount = document.querySelector(`#like-count-${postId}`);
+  try {
+    const likeBtn = document.querySelector(`#like-btn-${postId}`);
+    const likeCount = document.querySelector(`#like-count-${postId}`);
 
-if (likeBtn) likeBtn.disabled = true;
+    if (likeBtn) likeBtn.disabled = true;
 
-const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
+    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
 
-if (data.success) {
-  
-  if (data.liked) {
-    checkAndUpdateRewards('like');
+    if (data.success) {
+
+      if (data.liked) {
+        checkAndUpdateRewards('like');
+      }
+      if (likeBtn) {
+        likeBtn.innerHTML = data.liked ? '❤️ Liked' : '❤️ Like';
+        if (data.liked) likeBtn.classList.add('liked');
+        else likeBtn.classList.remove('liked');
+        likeBtn.disabled = false;
+      }
+
+      if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
+    }
+  } catch (error) {
+    console.error('❌ Like:', error);
+    showMessage('❌ Failed to like', 'error');
+
+    const likeBtn = document.querySelector(`#like-btn-${postId}`);
+    if (likeBtn) likeBtn.disabled = false;
   }
-if (likeBtn) {
-likeBtn.innerHTML = data.liked ? '❤️ Liked' : '❤️ Like';
-if (data.liked) likeBtn.classList.add('liked');
-else likeBtn.classList.remove('liked');
-likeBtn.disabled = false;
-}
-
-if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
-}
-} catch(error) {
-console.error('❌ Like:', error);
-showMessage('❌ Failed to like', 'error');
-
-const likeBtn = document.querySelector(`#like-btn-${postId}`);
-if (likeBtn) likeBtn.disabled = false;
-}
 }
 
 function openCommentModal(postId) {
-if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
+  if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
 
-currentCommentPostId = postId;
+  currentCommentPostId = postId;
 
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.id = 'commentModal';
-modal.style.display = 'flex';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'commentModal';
+  modal.style.display = 'flex';
 
-modal.innerHTML = `
+  modal.innerHTML = `
    <div class="modal-box" style="max-width:600px;max-height:80vh;overflow-y:auto;">
      <span class="close" onclick="closeCommentModal()">&times;</span>
      <h2>💬 Comments</h2>
@@ -2682,126 +1280,126 @@ modal.innerHTML = `
    </div>
  `;
 
-document.body.appendChild(modal);
-loadComments(postId);
+  document.body.appendChild(modal);
+  loadComments(postId);
 }
 
 function closeCommentModal() {
-const modal = document.getElementById('commentModal');
-if (modal) modal.remove();
-currentCommentPostId = null;
+  const modal = document.getElementById('commentModal');
+  if (modal) modal.remove();
+  currentCommentPostId = null;
 }
 
 async function loadComments(postId) {
-const container = document.getElementById('commentsContainer');
-if (!container) return;
+  const container = document.getElementById('commentsContainer');
+  if (!container) return;
 
-try {
-const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
+  try {
+    const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
 
-if (!data.success || !data.comments || data.comments.length === 0) {
-container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">💬 No comments yet</div>';
-return;
-}
+    if (!data.success || !data.comments || data.comments.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">💬 No comments yet</div>';
+      return;
+    }
 
-let html = '';
-data.comments.forEach(comment => {
-const author = comment.users?.username || 'User';
-const time = new Date(comment.created_at).toLocaleString();
-const isOwn = currentUser && comment.user_id === currentUser.id;
+    let html = '';
+    data.comments.forEach(comment => {
+      const author = comment.users?.username || 'User';
+      const time = new Date(comment.created_at).toLocaleString();
+      const isOwn = currentUser && comment.user_id === currentUser.id;
 
-html += `
+      html += `
        <div class="comment-item" style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
          border-radius:12px;padding:15px;margin-bottom:10px;">
          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
            <div style="display:flex;align-items:center;gap:10px;">
              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f74a3,#8da4d3);
                display:flex;align-items:center;justify-content:center;font-size:18px;">
-               ${comment.users?.profile_pic ? 
-                 `<img src="${comment.users.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : 
-                 '👤'
-               }
+               ${comment.users?.profile_pic ?
+          `<img src="${comment.users.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` :
+          '👤'
+        }
              </div>
              <div>
                <div style="font-weight:600;color:#4f74a3;">@${author}</div>
                <div style="font-size:11px;color:#888;">${time}</div>
              </div>
            </div>
-           ${isOwn ? 
-             `<button onclick="deleteComment('${comment.id}','${postId}')" 
+           ${isOwn ?
+          `<button onclick="deleteComment('${comment.id}','${postId}')" 
                style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:none;
-               padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>` : 
-             ''
-           }
+               padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>` :
+          ''
+        }
          </div>
          <div style="color:#e0e0e0;line-height:1.5;">${comment.content}</div>
        </div>
      `;
-});
+    });
 
-container.innerHTML = html;
-} catch(error) {
-console.error('❌ Load comments:', error);
-container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
-}
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('❌ Load comments:', error);
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b;">❌ Failed to load</div>';
+  }
 }
 
 async function submitComment(postId) {
-const input = document.getElementById('commentInput');
-const content = input?.value.trim();
+  const input = document.getElementById('commentInput');
+  const content = input?.value.trim();
 
-if (!content) return showMessage('⚠️ Empty comment', 'error');
+  if (!content) return showMessage('⚠️ Empty comment', 'error');
 
-try {
-const data = await apiCall(`/api/posts/${postId}/comments`, 'POST', { content });
+  try {
+    const data = await apiCall(`/api/posts/${postId}/comments`, 'POST', { content });
 
-if (data.success) {
-showMessage('✅ Comment posted!', 'success');
-checkAndUpdateRewards('comment');
-input.value = '';
-loadComments(postId);
+    if (data.success) {
+      showMessage('✅ Comment posted!', 'success');
+      checkAndUpdateRewards('comment');
+      input.value = '';
+      loadComments(postId);
 
-const commentCount = document.querySelector(`#comment-count-${postId}`);
-if (commentCount) {
-const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
-commentCount.textContent = `💬 ${currentCount + 1}`;
-}
-}
-} catch(error) {
-console.error('❌ Comment:', error);
-showMessage('❌ Failed to post', 'error');
-}
+      const commentCount = document.querySelector(`#comment-count-${postId}`);
+      if (commentCount) {
+        const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
+        commentCount.textContent = `💬 ${currentCount + 1}`;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Comment:', error);
+    showMessage('❌ Failed to post', 'error');
+  }
 }
 
 async function deleteComment(commentId, postId) {
-if (!confirm('Delete?')) return;
+  if (!confirm('Delete?')) return;
 
-try {
-await apiCall(`/api/posts/${postId}/comments/${commentId}`, 'DELETE');
-showMessage('🗑️ Deleted', 'success');
-loadComments(postId);
+  try {
+    await apiCall(`/api/posts/${postId}/comments/${commentId}`, 'DELETE');
+    showMessage('🗑️ Deleted', 'success');
+    loadComments(postId);
 
-const commentCount = document.querySelector(`#comment-count-${postId}`);
-if (commentCount) {
-const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
-if (currentCount > 0) commentCount.textContent = `💬 ${currentCount - 1}`;
-}
-} catch(error) {
-console.error('❌ Delete comment:', error);
-showMessage('❌ Failed', 'error');
-}
+    const commentCount = document.querySelector(`#comment-count-${postId}`);
+    if (commentCount) {
+      const currentCount = parseInt(commentCount.textContent.replace(/\D/g, '')) || 0;
+      if (currentCount > 0) commentCount.textContent = `💬 ${currentCount - 1}`;
+    }
+  } catch (error) {
+    console.error('❌ Delete comment:', error);
+    showMessage('❌ Failed', 'error');
+  }
 }
 
 function sharePost(postId, postContent = '', author = '') {
-const shareModal = document.createElement('div');
-shareModal.className = 'modal';
-shareModal.id = 'shareModal';
-shareModal.style.display = 'flex';
+  const shareModal = document.createElement('div');
+  shareModal.className = 'modal';
+  shareModal.id = 'shareModal';
+  shareModal.style.display = 'flex';
 
-const postUrl = `${window.location.origin}/?post=${postId}`;
-const shareText = `Check out @${author} on VibeXpert!`;
+  const postUrl = `${window.location.origin}/?post=${postId}`;
+  const shareText = `Check out @${author} on VibeXpert!`;
 
-shareModal.innerHTML = `
+  shareModal.innerHTML = `
    <div class="modal-box" style="max-width:500px;">
      <span class="close" onclick="closeShareModal()">&times;</span>
      <h2>🔄 Share</h2>
@@ -2833,72 +1431,72 @@ shareModal.innerHTML = `
    </div>
  `;
 
-document.body.appendChild(shareModal);
+  document.body.appendChild(shareModal);
 }
 
 function closeShareModal() {
-const modal = document.getElementById('shareModal');
-if (modal) modal.remove();
+  const modal = document.getElementById('shareModal');
+  if (modal) modal.remove();
 }
 
 async function shareVia(platform, url, text = '') {
-switch(platform) {
-case 'copy':
-try {
-await navigator.clipboard.writeText(url);
-showMessage('✅ Link copied!', 'success');
-closeShareModal();
-} catch(err) {
-const input = document.getElementById('shareUrlInput');
-if (input) {
-input.select();
-document.execCommand('copy');
-showMessage('✅ Link copied!', 'success');
-}
-}
-break;
+  switch (platform) {
+    case 'copy':
+      try {
+        await navigator.clipboard.writeText(url);
+        showMessage('✅ Link copied!', 'success');
+        closeShareModal();
+      } catch (err) {
+        const input = document.getElementById('shareUrlInput');
+        if (input) {
+          input.select();
+          document.execCommand('copy');
+          showMessage('✅ Link copied!', 'success');
+        }
+      }
+      break;
 
-case 'whatsapp':
-window.open(`https://wa.me/?text=${text}%20${encodeURIComponent(url)}`, '_blank');
-closeShareModal();
-break;
+    case 'whatsapp':
+      window.open(`https://wa.me/?text=${text}%20${encodeURIComponent(url)}`, '_blank');
+      closeShareModal();
+      break;
 
-case 'twitter':
-window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank');
-closeShareModal();
-break;
+    case 'twitter':
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank');
+      closeShareModal();
+      break;
 
-case 'native':
-if (navigator.share) {
-try {
-await navigator.share({ 
-title: 'VibeXpert', 
-text: decodeURIComponent(text), 
-url 
-});
-closeShareModal();
-} catch(err) {
-if (err.name !== 'AbortError') console.error('Share:', err);
-}
-} else {
-showMessage('⚠️ Not supported', 'error');
-}
-break;
-}
+    case 'native':
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'VibeXpert',
+            text: decodeURIComponent(text),
+            url
+          });
+          closeShareModal();
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Share:', err);
+        }
+      } else {
+        showMessage('⚠️ Not supported', 'error');
+      }
+      break;
+  }
 
-try {
-const postId = url.split('post=')[1];
-if (postId) {
-await apiCall(`/api/posts/${postId}/share`, 'POST');
-const shareCount = document.querySelector(`#share-count-${postId}`);
-if (shareCount) {
-const currentCount = parseInt(shareCount.textContent.replace(/\D/g, '')) || 0;
-shareCount.textContent = `🔄 ${currentCount + 1}`;
-}
-}
-} catch(error) {
-console.error('Share count:', error);
-}
+  try {
+    const postId = url.split('post=')[1];
+    if (postId) {
+      await apiCall(`/api/posts/${postId}/share`, 'POST');
+      const shareCount = document.querySelector(`#share-count-${postId}`);
+      if (shareCount) {
+        const currentCount = parseInt(shareCount.textContent.replace(/\D/g, '')) || 0;
+        shareCount.textContent = `🔄 ${currentCount + 1}`;
+      }
+    }
+  } catch (error) {
+    console.error('Share count:', error);
+  }
 }
 
 // ========================================
@@ -2906,102 +1504,102 @@ console.error('Share count:', error);
 // ========================================
 
 function showPostDestinationModal() {
-showModal('postDestinationModal');
+  showModal('postDestinationModal');
 }
 
 function selectPostDestination(destination) {
-selectedPostDestination = destination;
+  selectedPostDestination = destination;
 
-const displayEl = document.getElementById('currentDestination');
-if (displayEl) {
-displayEl.textContent = destination === 'profile' ? 'My Profile' : 'Community Feed';
-}
+  const displayEl = document.getElementById('currentDestination');
+  if (displayEl) {
+    displayEl.textContent = destination === 'profile' ? 'My Profile' : 'Community Feed';
+  }
 
-closeModal('postDestinationModal');
-showMessage(`✅ Will post to ${destination === 'profile' ? 'Profile' : 'Community'}`, 'success');
+  closeModal('postDestinationModal');
+  showMessage(`✅ Will post to ${destination === 'profile' ? 'Profile' : 'Community'}`, 'success');
 }
 
 function openPhotoGallery() {
-const input = document.createElement('input');
-input.type = 'file';
-input.accept = 'image/*,video/*,audio/*';
-input.multiple = true;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*,audio/*';
+  input.multiple = true;
 
-input.onchange = (e) => {
-const files = Array.from(e.target.files);
-handleMediaFiles(files);
-};
+  input.onchange = (e) => {
+    const files = Array.from(e.target.files);
+    handleMediaFiles(files);
+  };
 
-input.click();
+  input.click();
 }
 
 function openCamera() {
-const input = document.createElement('input');
-input.type = 'file';
-input.accept = 'image/*';
-input.capture = 'environment';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
 
-input.onchange = (e) => {
-const files = Array.from(e.target.files);
-handleMediaFiles(files);
-};
+  input.onchange = (e) => {
+    const files = Array.from(e.target.files);
+    handleMediaFiles(files);
+  };
 
-input.click();
+  input.click();
 }
 
 function handleMediaFiles(files) {
-if (!files || files.length === 0) return;
+  if (!files || files.length === 0) return;
 
-files.forEach(file => {
-if (file.size > 10 * 1024 * 1024) {
-showMessage('⚠️ File too large (max 10MB)', 'error');
-return;
-}
+  files.forEach(file => {
+    if (file.size > 10 * 1024 * 1024) {
+      showMessage('⚠️ File too large (max 10MB)', 'error');
+      return;
+    }
 
-selectedFiles.push(file);
+    selectedFiles.push(file);
 
-const reader = new FileReader();
-reader.onload = (e) => {
-previewUrls.push(e.target.result);
-updatePhotoPreview();
-};
-reader.readAsDataURL(file);
-});
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewUrls.push(e.target.result);
+      updatePhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function updatePhotoPreview() {
-const container = document.getElementById('photoPreviewContainer');
-if (!container) return;
+  const container = document.getElementById('photoPreviewContainer');
+  if (!container) return;
 
-if (previewUrls.length === 0) {
-container.style.display = 'none';
-return;
-}
+  if (previewUrls.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
 
-container.style.display = 'grid';
-container.innerHTML = '';
+  container.style.display = 'grid';
+  container.innerHTML = '';
 
-previewUrls.forEach((url, index) => {
-const wrapper = document.createElement('div');
-wrapper.className = 'media-preview-item';
+  previewUrls.forEach((url, index) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'media-preview-item';
 
-const file = selectedFiles[index];
-const isVideo = file.type.startsWith('video/');
-const isAudio = file.type.startsWith('audio/');
+    const file = selectedFiles[index];
+    const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
 
-if (isVideo) {
-wrapper.innerHTML = `
+    if (isVideo) {
+      wrapper.innerHTML = `
        <video src="${url}" controls></video>
        <button class="remove-media-btn" onclick="removeMedia(${index})">&times;</button>
      `;
-} else if (isAudio) {
-wrapper.innerHTML = `
+    } else if (isAudio) {
+      wrapper.innerHTML = `
        <div class="audio-preview">🎵 ${file.name}</div>
        <audio src="${url}" controls></audio>
        <button class="remove-media-btn" onclick="removeMedia(${index})">&times;</button>
      `;
-} else {
-wrapper.innerHTML = `
+    } else {
+      wrapper.innerHTML = `
        <img src="${url}" alt="Preview">
        <div class="media-actions">
          <button onclick="openCropEditor(${index})">✂️</button>
@@ -3009,28 +1607,28 @@ wrapper.innerHTML = `
          <button onclick="removeMedia(${index})">&times;</button>
        </div>
      `;
-}
+    }
 
-container.appendChild(wrapper);
-});
+    container.appendChild(wrapper);
+  });
 }
 
 function removeMedia(index) {
-selectedFiles.splice(index, 1);
-previewUrls.splice(index, 1);
-updatePhotoPreview();
-showMessage('✅ Media removed', 'success');
+  selectedFiles.splice(index, 1);
+  previewUrls.splice(index, 1);
+  updatePhotoPreview();
+  showMessage('✅ Media removed', 'success');
 }
 
 function openMusicSelector() {
-const modal = document.getElementById('musicSelectorModal');
-if (!modal) return;
+  const modal = document.getElementById('musicSelectorModal');
+  if (!modal) return;
 
-let html = '<div class="music-library">';
+  let html = '<div class="music-library">';
 
-musicLibrary.forEach(music => {
-const isSelected = selectedMusic && selectedMusic.id === music.id;
-html += `
+  musicLibrary.forEach(music => {
+    const isSelected = selectedMusic && selectedMusic.id === music.id;
+    html += `
      <div class="music-item ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
        <div class="music-item-icon">${music.emoji}</div>
        <div class="music-item-info">
@@ -3041,273 +1639,273 @@ html += `
        ${isSelected ? '<div class="music-selected-badge">✓</div>' : ''}
      </div>
    `;
-});
+  });
 
-html += '</div>';
+  html += '</div>';
 
-const selector = document.getElementById('musicSelector');
-if (selector) selector.innerHTML = html;
+  const selector = document.getElementById('musicSelector');
+  if (selector) selector.innerHTML = html;
 
-showModal('musicSelectorModal');
+  showModal('musicSelectorModal');
 }
 
 function selectMusic(musicId) {
-const music = musicLibrary.find(m => m.id === musicId);
-if (!music) return;
+  const music = musicLibrary.find(m => m.id === musicId);
+  if (!music) return;
 
-selectedMusic = music;
-closeModal('musicSelectorModal');
-updateSelectedAssets();
-showMessage(`🎵 Added: ${music.name}`, 'success');
+  selectedMusic = music;
+  closeModal('musicSelectorModal');
+  updateSelectedAssets();
+  showMessage(`🎵 Added: ${music.name}`, 'success');
 }
 
 function openStickerSelector() {
-const modal = document.getElementById('stickerSelectorModal');
-if (!modal) return;
+  const modal = document.getElementById('stickerSelectorModal');
+  if (!modal) return;
 
-let html = '<div class="sticker-categories">';
+  let html = '<div class="sticker-categories">';
 
-Object.keys(stickerLibrary).forEach(category => {
-html += `<h3 style="text-transform:capitalize;color:#4f74a3;margin:20px 0 10px 0;">${category}</h3>`;
-html += '<div class="sticker-grid">';
+  Object.keys(stickerLibrary).forEach(category => {
+    html += `<h3 style="text-transform:capitalize;color:#4f74a3;margin:20px 0 10px 0;">${category}</h3>`;
+    html += '<div class="sticker-grid">';
 
-stickerLibrary[category].forEach(sticker => {
-const isSelected = selectedStickers.some(s => s.id === sticker.id);
-html += `
+    stickerLibrary[category].forEach(sticker => {
+      const isSelected = selectedStickers.some(s => s.id === sticker.id);
+      html += `
        <div class="sticker-item ${isSelected ? 'selected' : ''}" onclick="toggleSticker('${sticker.id}', '${category}')">
          <span class="sticker-emoji">${sticker.emoji}</span>
          <span class="sticker-name">${sticker.name}</span>
        </div>
      `;
-});
+    });
 
-html += '</div>';
-});
+    html += '</div>';
+  });
 
-html += '</div>';
+  html += '</div>';
 
-const selector = document.getElementById('stickerSelector');
-if (selector) selector.innerHTML = html;
+  const selector = document.getElementById('stickerSelector');
+  if (selector) selector.innerHTML = html;
 
-showModal('stickerSelectorModal');
+  showModal('stickerSelectorModal');
 }
 
 function toggleSticker(stickerId, category) {
-const sticker = stickerLibrary[category].find(s => s.id === stickerId);
-if (!sticker) return;
+  const sticker = stickerLibrary[category].find(s => s.id === stickerId);
+  if (!sticker) return;
 
-const index = selectedStickers.findIndex(s => s.id === stickerId);
+  const index = selectedStickers.findIndex(s => s.id === stickerId);
 
-if (index > -1) {
-selectedStickers.splice(index, 1);
-showMessage('✅ Sticker removed', 'success');
-} else {
-if (selectedStickers.length >= 5) {
-showMessage('⚠️ Max 5 stickers', 'error');
-return;
-}
-selectedStickers.push(sticker);
-showMessage(`✅ Added: ${sticker.name}`, 'success');
-}
+  if (index > -1) {
+    selectedStickers.splice(index, 1);
+    showMessage('✅ Sticker removed', 'success');
+  } else {
+    if (selectedStickers.length >= 5) {
+      showMessage('⚠️ Max 5 stickers', 'error');
+      return;
+    }
+    selectedStickers.push(sticker);
+    showMessage(`✅ Added: ${sticker.name}`, 'success');
+  }
 
-updateSelectedAssets();
-openStickerSelector();
+  updateSelectedAssets();
+  openStickerSelector();
 }
 
 function updateSelectedAssets() {
-const container = document.getElementById('selectedAssets');
-if (!container) return;
+  const container = document.getElementById('selectedAssets');
+  if (!container) return;
 
-if (!selectedMusic && selectedStickers.length === 0) {
-container.style.display = 'none';
-return;
-}
+  if (!selectedMusic && selectedStickers.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
 
-container.style.display = 'block';
-let html = '<div class="selected-assets-wrapper">';
+  container.style.display = 'block';
+  let html = '<div class="selected-assets-wrapper">';
 
-if (selectedMusic) {
-html += `
+  if (selectedMusic) {
+    html += `
      <div class="selected-asset-item">
        <span>${selectedMusic.emoji} ${selectedMusic.name}</span>
        <button onclick="removeMusic()">&times;</button>
      </div>
    `;
-}
+  }
 
-selectedStickers.forEach((sticker, index) => {
-html += `
+  selectedStickers.forEach((sticker, index) => {
+    html += `
      <div class="selected-asset-item">
        <span>${sticker.emoji} ${sticker.name}</span>
        <button onclick="removeSticker(${index})">&times;</button>
      </div>
    `;
-});
+  });
 
-html += '</div>';
-container.innerHTML = html;
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 function removeMusic() {
-selectedMusic = null;
-updateSelectedAssets();
-showMessage('✅ Music removed', 'success');
+  selectedMusic = null;
+  updateSelectedAssets();
+  showMessage('✅ Music removed', 'success');
 }
 
 function removeSticker(index) {
-selectedStickers.splice(index, 1);
-updateSelectedAssets();
-showMessage('✅ Sticker removed', 'success');
+  selectedStickers.splice(index, 1);
+  updateSelectedAssets();
+  showMessage('✅ Sticker removed', 'success');
 }
 
 function openPhotoEditor(index) {
-currentEditIndex = index;
-const img = document.getElementById('editImage');
-if (img) {
-img.src = previewUrls[index];
-showModal('photoEditorModal');
-}
+  currentEditIndex = index;
+  const img = document.getElementById('editImage');
+  if (img) {
+    img.src = previewUrls[index];
+    showModal('photoEditorModal');
+  }
 }
 
 function applyFilter(filterName) {
-const img = document.getElementById('editImage');
-if (!img) return;
+  const img = document.getElementById('editImage');
+  if (!img) return;
 
-currentFilters = {};
+  currentFilters = {};
 
-switch(filterName) {
-case 'normal':
-img.style.filter = 'none';
-break;
-case 'vintage':
-currentFilters = { sepia: 50, contrast: 110, brightness: 90 };
-break;
-case 'clarendon':
-currentFilters = { contrast: 120, saturate: 135 };
-break;
-case 'moon':
-currentFilters = { grayscale: 100, contrast: 110, brightness: 110 };
-break;
-case 'lark':
-currentFilters = { contrast: 90, brightness: 110, saturate: 130 };
-break;
-case 'reyes':
-currentFilters = { sepia: 22, brightness: 110, contrast: 85, saturate: 75 };
-break;
-}
+  switch (filterName) {
+    case 'normal':
+      img.style.filter = 'none';
+      break;
+    case 'vintage':
+      currentFilters = { sepia: 50, contrast: 110, brightness: 90 };
+      break;
+    case 'clarendon':
+      currentFilters = { contrast: 120, saturate: 135 };
+      break;
+    case 'moon':
+      currentFilters = { grayscale: 100, contrast: 110, brightness: 110 };
+      break;
+    case 'lark':
+      currentFilters = { contrast: 90, brightness: 110, saturate: 130 };
+      break;
+    case 'reyes':
+      currentFilters = { sepia: 22, brightness: 110, contrast: 85, saturate: 75 };
+      break;
+  }
 
-applyFiltersToImage();
+  applyFiltersToImage();
 }
 
 function applyFiltersToImage() {
-const img = document.getElementById('editImage');
-if (!img) return;
+  const img = document.getElementById('editImage');
+  if (!img) return;
 
-let filterString = '';
+  let filterString = '';
 
-if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
-if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
-if (currentFilters.saturate) filterString += `saturate(${currentFilters.saturate}%) `;
-if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
-if (currentFilters.grayscale) filterString += `grayscale(${currentFilters.grayscale}%) `;
+  if (currentFilters.brightness) filterString += `brightness(${currentFilters.brightness}%) `;
+  if (currentFilters.contrast) filterString += `contrast(${currentFilters.contrast}%) `;
+  if (currentFilters.saturate) filterString += `saturate(${currentFilters.saturate}%) `;
+  if (currentFilters.sepia) filterString += `sepia(${currentFilters.sepia}%) `;
+  if (currentFilters.grayscale) filterString += `grayscale(${currentFilters.grayscale}%) `;
 
-img.style.filter = filterString.trim();
+  img.style.filter = filterString.trim();
 }
 
 function resetFilters() {
-const img = document.getElementById('editImage');
-if (img) img.style.filter = 'none';
-currentFilters = {};
-showMessage('✅ Filters reset', 'success');
+  const img = document.getElementById('editImage');
+  if (img) img.style.filter = 'none';
+  currentFilters = {};
+  showMessage('✅ Filters reset', 'success');
 }
 
 function saveEditedPhoto() {
-showMessage('✅ Changes saved!', 'success');
-closeModal('photoEditorModal');
+  showMessage('✅ Changes saved!', 'success');
+  closeModal('photoEditorModal');
 }
 
 function openCropEditor(index) {
-currentCropIndex = index;
-const img = document.getElementById('cropImage');
+  currentCropIndex = index;
+  const img = document.getElementById('cropImage');
 
-if (img) {
-img.src = previewUrls[index];
-showModal('cropEditorModal');
+  if (img) {
+    img.src = previewUrls[index];
+    showModal('cropEditorModal');
 
-setTimeout(() => {
-if (cropper) cropper.destroy();
+    setTimeout(() => {
+      if (cropper) cropper.destroy();
 
-cropper = new Cropper(img, {
-aspectRatio: NaN,
-viewMode: 1,
-autoCropArea: 1,
-responsive: true,
-background: false
-});
-}, 300);
-}
+      cropper = new Cropper(img, {
+        aspectRatio: NaN,
+        viewMode: 1,
+        autoCropArea: 1,
+        responsive: true,
+        background: false
+      });
+    }, 300);
+  }
 }
 
 function resetCrop() {
-if (cropper) {
-cropper.reset();
-showMessage('✅ Crop reset', 'success');
-}
+  if (cropper) {
+    cropper.reset();
+    showMessage('✅ Crop reset', 'success');
+  }
 }
 
 function rotateImage() {
-if (cropper) {
-cropper.rotate(90);
-}
+  if (cropper) {
+    cropper.rotate(90);
+  }
 }
 
 function applyCrop() {
-if (!cropper) return;
+  if (!cropper) return;
 
-const canvas = cropper.getCroppedCanvas();
-if (!canvas) return;
+  const canvas = cropper.getCroppedCanvas();
+  if (!canvas) return;
 
-canvas.toBlob((blob) => {
-const file = new File([blob], selectedFiles[currentCropIndex].name, {
-type: 'image/jpeg'
-});
+  canvas.toBlob((blob) => {
+    const file = new File([blob], selectedFiles[currentCropIndex].name, {
+      type: 'image/jpeg'
+    });
 
-selectedFiles[currentCropIndex] = file;
+    selectedFiles[currentCropIndex] = file;
 
-const reader = new FileReader();
-reader.onload = (e) => {
-previewUrls[currentCropIndex] = e.target.result;
-updatePhotoPreview();
-closeModal('cropEditorModal');
-showMessage('✅ Crop applied!', 'success');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewUrls[currentCropIndex] = e.target.result;
+      updatePhotoPreview();
+      closeModal('cropEditorModal');
+      showMessage('✅ Crop applied!', 'success');
 
-if (cropper) {
-cropper.destroy();
-cropper = null;
-}
-};
-reader.readAsDataURL(file);
-}, 'image/jpeg', 0.9);
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+    };
+    reader.readAsDataURL(file);
+  }, 'image/jpeg', 0.9);
 }
 
 // Setup aspect ratio buttons
 document.addEventListener('DOMContentLoaded', () => {
-const aspectBtns = document.querySelectorAll('.aspect-ratio-btn');
-aspectBtns.forEach(btn => {
-btn.addEventListener('click', () => {
-aspectBtns.forEach(b => b.classList.remove('active'));
-btn.classList.add('active');
+  const aspectBtns = document.querySelectorAll('.aspect-ratio-btn');
+  aspectBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      aspectBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-const ratio = btn.getAttribute('data-ratio');
-if (cropper) {
-if (ratio === 'free') {
-cropper.setAspectRatio(NaN);
-} else {
-cropper.setAspectRatio(eval(ratio));
-}
-}
-});
-});
+      const ratio = btn.getAttribute('data-ratio');
+      if (cropper) {
+        if (ratio === 'free') {
+          cropper.setAspectRatio(NaN);
+        } else {
+          cropper.setAspectRatio(eval(ratio));
+        }
+      }
+    });
+  });
 });
 
 // ========================================
@@ -3315,118 +1913,118 @@ cropper.setAspectRatio(eval(ratio));
 // ========================================
 
 function showModal(modalId) {
-const modal = document.getElementById(modalId);
-if (modal) modal.style.display = 'flex';
+  const modal = document.getElementById(modalId);
+  if (modal) modal.style.display = 'flex';
 }
 
 function closeModal(modalId) {
-const modal = document.getElementById(modalId);
-if (modal) modal.style.display = 'none';
+  const modal = document.getElementById(modalId);
+  if (modal) modal.style.display = 'none';
 
-if (modalId === 'cropEditorModal' && cropper) {
-cropper.destroy();
-cropper = null;
-}
+  if (modalId === 'cropEditorModal' && cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
 }
 
 function showMessage(text, type) {
-const box = document.getElementById('message');
+  const box = document.getElementById('message');
 
-if (!box) {
-console.log('Message:', text);
-return;
-}
+  if (!box) {
+    console.log('Message:', text);
+    return;
+  }
 
-const div = document.createElement('div');
-div.className = 'msg msg-' + type;
-div.textContent = text;
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.textContent = text;
 
-box.innerHTML = '';
-box.appendChild(div);
+  box.innerHTML = '';
+  box.appendChild(div);
 
-setTimeout(() => {
-if (div.parentNode) div.remove();
-}, 4000);
+  setTimeout(() => {
+    if (div.parentNode) div.remove();
+  }, 4000);
 }
 
 function updateLiveStats() {
-const onlineCount = Math.floor(Math.random() * 300) + 150;
-const postsToday = Math.floor(Math.random() * 500) + 200;
-const activeChats = Math.floor(Math.random() * 100) + 50;
+  const onlineCount = Math.floor(Math.random() * 300) + 150;
+  const postsToday = Math.floor(Math.random() * 500) + 200;
+  const activeChats = Math.floor(Math.random() * 100) + 50;
 
-const elements = {
-'liveUsersCount': onlineCount + ' Active',
-'heroOnline': onlineCount,
-'heroPostsToday': postsToday,
-'heroChats': activeChats,
-'footerUsers': onlineCount
-};
+  const elements = {
+    'liveUsersCount': onlineCount + ' Active',
+    'heroOnline': onlineCount,
+    'heroPostsToday': postsToday,
+    'heroChats': activeChats,
+    'footerUsers': onlineCount
+  };
 
-Object.keys(elements).forEach(id => {
-const el = document.getElementById(id);
-if (el) el.textContent = elements[id];
-});
+  Object.keys(elements).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = elements[id];
+  });
 }
 
 function updateOnlineCount(count) {
-const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
+  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
 
-elements.forEach(id => {
-const el = document.getElementById(id);
-if (el) {
-if (id === 'liveUsersCount') el.textContent = count + ' Active';
-else el.textContent = count;
-}
-});
+  elements.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === 'liveUsersCount') el.textContent = count + ' Active';
+      else el.textContent = count;
+    }
+  });
 }
 
 function updateLiveNotif(text) {
-const notif = document.getElementById('notifText');
-if (notif) notif.textContent = text;
+  const notif = document.getElementById('notifText');
+  if (notif) notif.textContent = text;
 }
 
 function toggleOptionsMenu() {
-const menu = document.getElementById('optionsMenu');
-const hamburger = document.getElementById('hamburgerMenu');
+  const menu = document.getElementById('optionsMenu');
+  const hamburger = document.getElementById('hamburgerMenu');
 
-if (hamburger) hamburger.style.display = 'none';
-if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+  if (hamburger) hamburger.style.display = 'none';
+  if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
 }
 
 function toggleHamburgerMenu() {
-const menu = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
+  const menu = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
 
-if (options) options.style.display = 'none';
-if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+  if (options) options.style.display = 'none';
+  if (menu) menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
 }
 
 function showComplaintModal() {
-const modal = document.getElementById('complaintModal');
-if (modal) modal.style.display = 'flex';
+  const modal = document.getElementById('complaintModal');
+  if (modal) modal.style.display = 'flex';
 
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
 
 function showContactModal() {
-const modal = document.getElementById('contactModal');
-if (modal) modal.style.display = 'flex';
+  const modal = document.getElementById('contactModal');
+  if (modal) modal.style.display = 'flex';
 
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
 
 function showFeedbackModal() {
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
 
-modal.innerHTML = `
+  modal.innerHTML = `
    <div class="modal-box">
      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
      <h2>📢 Feedback</h2>
@@ -3440,75 +2038,75 @@ modal.innerHTML = `
    </div>
  `;
 
-document.body.appendChild(modal);
+  document.body.appendChild(modal);
 
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
 
 async function submitFeedback() {
-const subject = document.getElementById('feedbackSubject')?.value.trim();
-const message = document.getElementById('feedbackMessage')?.value.trim();
+  const subject = document.getElementById('feedbackSubject')?.value.trim();
+  const message = document.getElementById('feedbackMessage')?.value.trim();
 
-if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
+  if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
 
-try {
-await apiCall('/api/feedback', 'POST', { subject, message });
-showMessage('✅ Thank you!', 'success');
-document.querySelector('.modal')?.remove();
-} catch(error) {
-showMessage('❌ Failed', 'error');
-}
+  try {
+    await apiCall('/api/feedback', 'POST', { subject, message });
+    showMessage('✅ Thank you!', 'success');
+    document.querySelector('.modal')?.remove();
+  } catch (error) {
+    showMessage('❌ Failed', 'error');
+  }
 }
 
 function submitComplaint() {
-const text = document.getElementById('complaintText')?.value.trim();
+  const text = document.getElementById('complaintText')?.value.trim();
 
-if (text) {
-showMessage('✅ Submitted!', 'success');
-const input = document.getElementById('complaintText');
-if (input) input.value = '';
-closeModal('complaintModal');
-} else {
-showMessage('⚠️ Enter details', 'error');
-}
+  if (text) {
+    showMessage('✅ Submitted!', 'success');
+    const input = document.getElementById('complaintText');
+    if (input) input.value = '';
+    closeModal('complaintModal');
+  } else {
+    showMessage('⚠️ Enter details', 'error');
+  }
 }
 
 function toggleTheme() {
-const body = document.body;
+  const body = document.body;
 
-if (body.classList.contains('dark-theme')) {
-body.classList.remove('dark-theme');
-body.classList.add('light-theme');
-} else {
-body.classList.remove('light-theme');
-body.classList.add('dark-theme');
-}
+  if (body.classList.contains('dark-theme')) {
+    body.classList.remove('dark-theme');
+    body.classList.add('light-theme');
+  } else {
+    body.classList.remove('light-theme');
+    body.classList.add('dark-theme');
+  }
 
-showMessage('🎨 Theme changed!', 'success');
+  showMessage('🎨 Theme changed!', 'success');
 
-const hamburger = document.getElementById('hamburgerMenu');
-const options = document.getElementById('optionsMenu');
-if (hamburger) hamburger.style.display = 'none';
-if (options) options.style.display = 'none';
+  const hamburger = document.getElementById('hamburgerMenu');
+  const options = document.getElementById('optionsMenu');
+  if (hamburger) hamburger.style.display = 'none';
+  if (options) options.style.display = 'none';
 }
 
 function loadTrending() {
-const container = document.getElementById('trendingContainer');
-if (!container) return;
+  const container = document.getElementById('trendingContainer');
+  if (!container) return;
 
-const trending = [
-{ title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
-{ title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
-{ title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
-];
+  const trending = [
+    { title: 'Campus Fest 2025', badge: 'Hot', text: 'Annual cultural festival starting next week!', likes: 234, comments: 45 },
+    { title: 'Study Groups', badge: 'New', text: 'Join semester exam preparation groups', likes: 156, comments: 23 },
+    { title: 'Sports Week', badge: 'Popular', text: 'Inter-college sports competition registrations open', likes: 189, comments: 67 }
+  ];
 
-let html = '';
+  let html = '';
 
-trending.forEach(item => {
-html += `
+  trending.forEach(item => {
+    html += `
      <div class="trending-card">
        <div class="trending-card-header">
          <div class="trending-title">${item.title}</div>
@@ -3523,44 +2121,44 @@ html += `
        </div>
      </div>
    `;
-});
+  });
 
-container.innerHTML = html;
+  container.innerHTML = html;
 }
 
 function loadRewardsPage() {
   console.log('📊 Loading Rewards Page');
-  
+
   // Just update the roadmap UI - that's it!
   setTimeout(() => updateRoadmapUI(), 100);
 }
 
 function completeTask(taskId) {
-const task = rewardsData.dailyTasks.find(t => t.id === taskId);
-if (!task) return;
+  const task = rewardsData.dailyTasks.find(t => t.id === taskId);
+  if (!task) return;
 
-if (task.completed) {
-showMessage('⚠️ Already completed', 'error');
-return;
-}
+  if (task.completed) {
+    showMessage('⚠️ Already completed', 'error');
+    return;
+  }
 
-task.completed = true;
-showMessage(`✅ +${task.reward} points earned!`, 'success');
-loadRewardsPage();
+  task.completed = true;
+  showMessage(`✅ +${task.reward} points earned!`, 'success');
+  loadRewardsPage();
 }
 
 function showPostCelebrationModal(postCount) {
-const modal = document.createElement('div');
-modal.className = 'modal';
-modal.style.display = 'flex';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
 
-let milestone = '';
-if (postCount === 1) milestone = '🎉 First Post!';
-else if (postCount === 10) milestone = '🎉 10 Posts!';
-else if (postCount === 50) milestone = '🎉 50 Posts!';
-else if (postCount === 100) milestone = '🎉 100 Posts!';
+  let milestone = '';
+  if (postCount === 1) milestone = '🎉 First Post!';
+  else if (postCount === 10) milestone = '🎉 10 Posts!';
+  else if (postCount === 50) milestone = '🎉 50 Posts!';
+  else if (postCount === 100) milestone = '🎉 100 Posts!';
 
-modal.innerHTML = `
+  modal.innerHTML = `
    <div class="modal-box" style="text-align:center;max-width:400px;">
      <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
      <div style="font-size:80px;margin:20px 0;">🎊</div>
@@ -3581,7 +2179,7 @@ modal.innerHTML = `
    </div>
  `;
 
-document.body.appendChild(modal);
+  document.body.appendChild(modal);
 }
 // ========================================
 // REWARDS ROADMAP SYSTEM
@@ -3624,17 +2222,17 @@ const roadmapLevels = {
 
 function updateRoadmapUI() {
   if (!currentUser) return;
-  
+
   const userStats = {
     posts: currentUser.postCount || 0,
     comments: currentUser.commentCount || 0,
     likes: currentUser.likeCount || 0,
     days_active: currentUser.daysActive || 1
   };
-  
+
   const currentLevel = calculateUserLevel(userStats);
   const nextLevel = getNextLevel(currentLevel);
-  
+
   updateCharacterPosition(currentLevel);  // ✅ Make sure this line is here
   updateProgressInfo(currentLevel, nextLevel, userStats);
   updateMilestoneStatuses(userStats);
@@ -3645,8 +2243,8 @@ function calculateUserLevel(stats) {
   for (let i = levels.length - 1; i >= 0; i--) {
     const level = levels[i];
     const reqs = roadmapLevels[level].requirements;
-    if (stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
-        stats.likes >= reqs.likes && stats.days_active >= reqs.days_active) {
+    if (stats.posts >= reqs.posts && stats.comments >= reqs.comments &&
+      stats.likes >= reqs.likes && stats.days_active >= reqs.days_active) {
       return level;
     }
   }
@@ -3673,14 +2271,14 @@ function updateProgressInfo(currentLevel, nextLevel, stats) {
   const tasksEl = document.getElementById('progressTasks');
   const barEl = document.getElementById('progressBarFill');
   const percentEl = document.getElementById('progressPercentage');
-  
+
   if (nameEl) nameEl.textContent = roadmapLevels[currentLevel].name;
-  
+
   if (nextLevel) {
     const reqs = roadmapLevels[nextLevel].requirements;
-    const progress = ((stats.posts/reqs.posts + stats.comments/reqs.comments + 
-                      stats.likes/reqs.likes + stats.days_active/reqs.days_active) / 4) * 100;
-    
+    const progress = ((stats.posts / reqs.posts + stats.comments / reqs.comments +
+      stats.likes / reqs.likes + stats.days_active / reqs.days_active) / 4) * 100;
+
     if (descEl) descEl.textContent = `Progress to ${roadmapLevels[nextLevel].name}`;
     if (tasksEl) tasksEl.innerHTML = `
       <div style="margin-top: 15px;">
@@ -3703,11 +2301,11 @@ function updateMilestoneStatuses(stats) {
   Object.keys(roadmapLevels).forEach(level => {
     const card = document.querySelector(`.milestone-level.${level}`);
     if (!card) return;
-    
+
     const reqs = roadmapLevels[level].requirements;
-    const completed = stats.posts >= reqs.posts && stats.comments >= reqs.comments && 
-                     stats.likes >= reqs.likes && stats.days_active >= reqs.days_active;
-    
+    const completed = stats.posts >= reqs.posts && stats.comments >= reqs.comments &&
+      stats.likes >= reqs.likes && stats.days_active >= reqs.days_active;
+
     const badge = card.querySelector('.level-status');
     if (badge) {
       if (completed) {
@@ -3730,13 +2328,13 @@ function updateMilestoneStatuses(stats) {
 
 function checkAndUpdateRewards(action) {
   if (!currentUser) return;
-  
-  switch(action) {
+
+  switch (action) {
     case 'post': currentUser.postCount = (currentUser.postCount || 0) + 1; break;
     case 'comment': currentUser.commentCount = (currentUser.commentCount || 0) + 1; break;
     case 'like': currentUser.likeCount = (currentUser.likeCount || 0) + 1; break;
   }
-  
+
   localStorage.setItem('user', JSON.stringify(currentUser));
   updateRoadmapUI();
   checkLevelUp();
@@ -3749,10 +2347,10 @@ function checkLevelUp() {
     likes: currentUser.likeCount || 0,
     days_active: currentUser.daysActive || 1
   };
-  
+
   const current = calculateUserLevel(stats);
   const previous = currentUser.currentLevel || 'wood';
-  
+
   if (current !== previous) {
     currentUser.currentLevel = current;
     localStorage.setItem('user', JSON.stringify(currentUser));
@@ -3800,17 +2398,17 @@ console.log('%cFeatures: Real-time chat, Reactions, Typing indicators, Message a
 function initFireworks() {
   const canvas = document.getElementById('fireworksCanvas');
   if (!canvas) return;
-  
+
   const ctx = canvas.getContext('2d');
-  
+
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  
+
   window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
-  
+
   class Particle {
     constructor(x, y, color) {
       this.x = x;
@@ -3824,7 +2422,7 @@ function initFireworks() {
       this.decay = Math.random() * 0.018 + 0.018;  // SLOWER FADE (was 0.015)
       this.size = Math.random() * 1 + 2;  // BIGGER (was 3 + 2)
     }
-    
+
     update() {
       this.velocity.x *= 0.98;
       this.velocity.y *= 0.98;
@@ -3833,7 +2431,7 @@ function initFireworks() {
       this.y += this.velocity.y;
       this.alpha -= this.decay;
     }
-    
+
     draw() {
       ctx.save();
       ctx.globalAlpha = this.alpha;
@@ -3844,43 +2442,43 @@ function initFireworks() {
       ctx.restore();
     }
   }
-  
+
   let particles = [];
   // MORE COLORFUL (12 colors instead of 6)
   const colors = [
-    '#FFD700', '#FFA500', '#FF6B6B', '#FF1493', 
-    '#00FF00', '#00FFFF', '#FF00FF', '#4f74a3', 
+    '#FFD700', '#FFA500', '#FF6B6B', '#FF1493',
+    '#00FF00', '#00FFFF', '#FF00FF', '#4f74a3',
     '#8da4d3', '#C0C0C0', '#FF4500', '#7FFF00'
   ];
-  
+
   function createFirework(x, y) {
     const particleCount = 60;  // MORE PARTICLES (was 30)
     const color = colors[Math.floor(Math.random() * colors.length)];
-    
+
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle(x, y, color));
     }
   }
-  
+
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     particles = particles.filter(particle => {
       particle.update();
       particle.draw();
       return particle.alpha > 0;
     });
-    
+
     requestAnimationFrame(animate);
   }
-  
+
   // MORE FREQUENT FIREWORKS (800ms instead of 2000ms)
   setInterval(() => {
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height * 0.5;
     createFirework(x, y);
   }, 800);
-  
+
   animate();
 }
 
@@ -3890,7 +2488,7 @@ function initFireworks() {
 
 function updateRewardsProgress() {
   if (!currentUser) return;
-  
+
   const userStats = {
     activeHours: currentUser.activeHours || 0,
     weeksActive: currentUser.weeksActive || 0,
@@ -3900,17 +2498,17 @@ function updateRewardsProgress() {
     likes: currentUser.likeCount || 0,
     followers: currentUser.followerCount || 0
   };
-  
+
   const woodProgress = Math.min(100, (userStats.activeHours / 20) * 100);
   const altWoodProgress = Math.min(100, (userStats.alternativeHours / 50) * 100);
   const progress = Math.max(woodProgress, altWoodProgress);
-  
+
   const progressBar = document.getElementById('progressBarFill');
   const progressPercent = document.getElementById('progressPercentage');
-  
+
   if (progressBar) progressBar.style.width = progress + '%';
   if (progressPercent) progressPercent.textContent = Math.round(progress) + '%';
-  
+
   const tasksEl = document.getElementById('progressTasks');
   if (tasksEl) {
     tasksEl.innerHTML = `
@@ -3936,14 +2534,14 @@ function updateRewardsCharacterPosition(level) {
     silver: 880,
     gold: 1280
   };
-   
-   const emojis = {
+
+  const emojis = {
     wood: '🚶‍♂️',    // Walking man
     bronze: '🏃‍♂️',   // Running man
     silver: '🤸‍♂️',   // Gymnast
     gold: '👑'       // Crown/King
   };
-  
+
   const char = document.getElementById('roadmapCharacter');
   if (char) {
     char.style.top = (positions[level] || 80) + 'px';
@@ -3954,7 +2552,7 @@ function updateRewardsCharacterPosition(level) {
 // Initialize when rewards page loads
 document.addEventListener('DOMContentLoaded', () => {
   initFireworks();
-  
+
   const rewardsPage = document.getElementById('rewards');
   if (rewardsPage) {
     const observer = new MutationObserver(() => {
@@ -3963,10 +2561,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRewardsCharacterPosition('wood');
       }
     });
-    
-    observer.observe(rewardsPage, { 
-      attributes: true, 
-      attributeFilter: ['style'] 
+
+    observer.observe(rewardsPage, {
+      attributes: true,
+      attributeFilter: ['style']
     });
   }
 });
@@ -3976,15 +2574,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateProfileAvatar() {
   if (!currentUser) return;
-  
+
   const avatarImg = document.getElementById('profileAvatarImg');
   const avatarInitial = document.getElementById('profileAvatarInitial');
   const userName = document.getElementById('userName');
-  
+
   if (userName) {
     userName.textContent = currentUser.username || 'User';
   }
-  
+
   if (currentUser.profile_pic && avatarImg && avatarInitial) {
     avatarImg.src = currentUser.profile_pic;
     avatarImg.style.display = 'block';
@@ -3996,7 +2594,7 @@ function updateProfileAvatar() {
 }
 
 // Call this after login
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   if (currentUser) {
     updateProfileAvatar();
   }
@@ -4009,13 +2607,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeMenuSearch() {
   const menuSearchBox = document.getElementById('searchBox');
   const mobileSearchBox = document.getElementById('mobileSearchBox');
-  
+
   if (menuSearchBox) {
     menuSearchBox.addEventListener('input', (e) => {
       handleMenuSearch(e.target.value, 'searchResults');
     });
   }
-  
+
   if (mobileSearchBox) {
     mobileSearchBox.addEventListener('input', (e) => {
       handleMenuSearch(e.target.value, 'mobileSearchResults');
@@ -4025,24 +2623,24 @@ function initializeMenuSearch() {
 
 function handleMenuSearch(query, resultsId) {
   const searchResults = document.getElementById(resultsId);
-  
+
   if (searchTimeout) clearTimeout(searchTimeout);
-  
+
   if (query.length < 2) {
     if (searchResults) searchResults.style.display = 'none';
     return;
   }
-  
+
   if (searchResults) {
     searchResults.innerHTML = '<div class="no-results">🔍 Searching...</div>';
     searchResults.style.display = 'block';
   }
-  
+
   searchTimeout = setTimeout(() => performUserSearch(query), 600);
 }
 
 // Initialize menu search on load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   initializeMenuSearch();
 });
 
@@ -4056,13 +2654,13 @@ let realVibeMediaType = null;
 function openRealVibeCreator() {
   const modal = document.getElementById('realVibeCreatorModal');
   if (modal) modal.style.display = 'flex';
-  
+
   // Reset form
   clearRealVibePreview();
   const caption = document.getElementById('realVibeCaption');
   if (caption) caption.value = '';
   updateCaptionCounter();
-  
+
   // Disable publish button
   const publishBtn = document.getElementById('publishRealVibeBtn');
   if (publishBtn) publishBtn.disabled = true;
@@ -4073,12 +2671,12 @@ function captureRealVibePhoto() {
   input.type = 'file';
   input.accept = 'image/*';
   input.capture = 'environment';
-  
+
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (file) handleRealVibeFile(file, 'image');
   };
-  
+
   input.click();
 }
 
@@ -4086,7 +2684,7 @@ function uploadRealVibeMedia() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*,video/*';
-  
+
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -4094,7 +2692,7 @@ function uploadRealVibeMedia() {
       handleRealVibeFile(file, type);
     }
   };
-  
+
   input.click();
 }
 
@@ -4103,12 +2701,12 @@ function captureRealVibeVideo() {
   input.type = 'file';
   input.accept = 'video/*';
   input.capture = 'environment';
-  
+
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (file) handleRealVibeFile(file, 'video');
   };
-  
+
   input.click();
 }
 
@@ -4117,16 +2715,16 @@ function handleRealVibeFile(file, type) {
     showMessage('⚠️ File too large (max 50MB)', 'error');
     return;
   }
-  
+
   realVibeMediaFile = file;
   realVibeMediaType = type;
-  
+
   const reader = new FileReader();
   reader.onload = (e) => {
     const previewArea = document.getElementById('realVibePreviewArea');
     const previewImg = document.getElementById('realVibePreviewImg');
     const previewVideo = document.getElementById('realVibePreviewVideo');
-    
+
     if (type === 'image') {
       previewImg.src = e.target.result;
       previewImg.style.display = 'block';
@@ -4136,25 +2734,25 @@ function handleRealVibeFile(file, type) {
       previewVideo.style.display = 'block';
       previewImg.style.display = 'none';
     }
-    
+
     if (previewArea) previewArea.style.display = 'block';
-    
+
     // Enable publish button
     const publishBtn = document.getElementById('publishRealVibeBtn');
     if (publishBtn) publishBtn.disabled = false;
   };
-  
+
   reader.readAsDataURL(file);
 }
 
 function clearRealVibePreview() {
   realVibeMediaFile = null;
   realVibeMediaType = null;
-  
+
   const previewArea = document.getElementById('realVibePreviewArea');
   const previewImg = document.getElementById('realVibePreviewImg');
   const previewVideo = document.getElementById('realVibePreviewVideo');
-  
+
   if (previewImg) {
     previewImg.src = '';
     previewImg.style.display = 'none';
@@ -4164,7 +2762,7 @@ function clearRealVibePreview() {
     previewVideo.style.display = 'none';
   }
   if (previewArea) previewArea.style.display = 'none';
-  
+
   // Disable publish button
   const publishBtn = document.getElementById('publishRealVibeBtn');
   if (publishBtn) publishBtn.disabled = true;
@@ -4175,33 +2773,33 @@ async function publishRealVibe() {
     showMessage('⚠️ Please add media first', 'error');
     return;
   }
-  
+
   if (!currentUser) {
     showMessage('⚠️ Please login first', 'error');
     return;
   }
-  
+
   try {
     showMessage('✨ Publishing RealVibe...', 'success');
-    
+
     const caption = document.getElementById('realVibeCaption')?.value.trim();
     const visibility = document.querySelector('input[name="realVibeVisibility"]:checked')?.value || 'public';
-    
+
     const formData = new FormData();
     formData.append('media', realVibeMediaFile);
     formData.append('caption', caption);
     formData.append('visibility', visibility);
     formData.append('type', realVibeMediaType);
-    
+
     // For now, simulate success (replace with actual API call)
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     showMessage('🎉 RealVibe published successfully!', 'success');
     closeModal('realVibeCreatorModal');
-    
+
     // Reload RealVibes
     loadRealVibes();
-    
+
   } catch (error) {
     console.error('Publish RealVibe error:', error);
     showMessage('❌ Failed to publish RealVibe', 'error');
@@ -4211,14 +2809,14 @@ async function publishRealVibe() {
 function updateCaptionCounter() {
   const caption = document.getElementById('realVibeCaption');
   const counter = document.getElementById('captionCount');
-  
+
   if (caption && counter) {
     counter.textContent = caption.value.length;
   }
 }
 
 // Add caption counter listener
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const caption = document.getElementById('realVibeCaption');
   if (caption) {
     caption.addEventListener('input', updateCaptionCounter);
@@ -4228,7 +2826,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadRealVibes() {
   const storiesGrid = document.getElementById('realVibeStoriesGrid');
   const yourGrid = document.getElementById('yourRealVibesGrid');
-  
+
   // For now, show empty state (replace with actual API call)
   if (storiesGrid) {
     storiesGrid.innerHTML = `
@@ -4240,7 +2838,7 @@ async function loadRealVibes() {
       </div>
     `;
   }
-  
+
   if (yourGrid) {
     yourGrid.innerHTML = '<div class="no-your-realvibes"><p>You haven\'t created any RealVibes yet</p></div>';
   }
@@ -4249,7 +2847,7 @@ async function loadRealVibes() {
 function viewRealVibe(realVibeId) {
   const modal = document.getElementById('realVibeViewerModal');
   if (modal) modal.style.display = 'flex';
-  
+
   // Load and display RealVibe (implement with actual data)
   // For now, just show modal structure
 }
@@ -4277,20 +2875,20 @@ function shareRealVibe() {
 }
 
 // Load RealVibes when page is shown
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const realVibePage = document.getElementById('realvibe');
   if (realVibePage) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
         if (mutation.target.style.display !== 'none') {
           loadRealVibes();
         }
       });
     });
-    
-    observer.observe(realVibePage, { 
-      attributes: true, 
-      attributeFilter: ['style'] 
+
+    observer.observe(realVibePage, {
+      attributes: true,
+      attributeFilter: ['style']
     });
   }
 });
@@ -4317,10 +2915,10 @@ function closeSubscriptionPopup() {
 function viewAllPlans() {
   closeSubscriptionPopup();
   showPage('subscriptionPlans');
-  
+
   // Update nav
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  
+
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -4332,7 +2930,7 @@ async function selectPlan(planType) {
     showAuthPopup();
     return;
   }
-  
+
   // Plan details
   const plans = {
     noble: {
@@ -4352,18 +2950,18 @@ async function selectPlan(planType) {
       days: 23
     }
   };
-  
+
   const plan = plans[planType];
-  
+
   if (!plan) {
     showMessage('❌ Invalid plan', 'error');
     return;
   }
-  
+
   // Check if first time subscriber
   const isFirstTime = !currentUser.hasSubscribed;
   const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
-  
+
   // Confirmation
   const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
     `Price: ₹${price}\n` +
@@ -4371,18 +2969,18 @@ async function selectPlan(planType) {
     `Videos: ${plan.videos}\n` +
     `Duration: ${plan.days} days\n\n` +
     (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
-  
+
   if (!confirm(confirmMsg)) return;
-  
+
   try {
     showMessage('💳 Processing payment...', 'success');
-    
+
     // Simulate payment processing (replace with actual payment gateway)
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Here you would integrate with actual payment gateway
     // For now, we'll simulate success
-    
+
     // Update user subscription
     currentUser.subscription = {
       plan: planType,
@@ -4393,19 +2991,19 @@ async function selectPlan(planType) {
       postersUsed: 0,
       videosUsed: 0
     };
-    
+
     currentUser.hasSubscribed = true;
     currentUser.isPremium = true;
-    
+
     localStorage.setItem('user', JSON.stringify(currentUser));
-    
+
     closeSubscriptionPopup();
-    
+
     showMessage('🎉 Subscription successful!', 'success');
-    
+
     // Show success modal
     showSubscriptionSuccessModal(plan);
-    
+
   } catch (error) {
     console.error('Subscription error:', error);
     showMessage('❌ Payment failed. Please try again.', 'error');
@@ -4416,7 +3014,7 @@ function showSubscriptionSuccessModal(plan) {
   const modal = document.createElement('div');
   modal.className = 'modal celebration-modal';
   modal.style.display = 'flex';
-  
+
   modal.innerHTML = `
     <div class="celebration-modal-content">
       <div class="celebration-emoji">👑</div>
@@ -4439,7 +3037,7 @@ function showSubscriptionSuccessModal(plan) {
       </button>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
   createConfetti();
 }
@@ -4447,10 +3045,10 @@ function showSubscriptionSuccessModal(plan) {
 // Check subscription status
 function checkSubscriptionStatus() {
   if (!currentUser || !currentUser.subscription) return null;
-  
+
   const now = new Date();
   const endDate = new Date(currentUser.subscription.endDate);
-  
+
   if (now > endDate) {
     // Subscription expired
     currentUser.isPremium = false;
@@ -4458,7 +3056,7 @@ function checkSubscriptionStatus() {
     localStorage.setItem('user', JSON.stringify(currentUser));
     return null;
   }
-  
+
   return currentUser.subscription;
 }
 
@@ -4466,9 +3064,9 @@ function checkSubscriptionStatus() {
 function updatePremiumBadge() {
   const userName = document.getElementById('userName');
   if (!userName) return;
-  
+
   const subscription = checkSubscriptionStatus();
-  
+
   if (subscription) {
     const planEmoji = subscription.plan === 'royal' ? '👑' : '🥈';
     userName.innerHTML = `${planEmoji} Hi, ${currentUser.username}`;
@@ -4478,7 +3076,7 @@ function updatePremiumBadge() {
 }
 
 // Call this after login
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   if (currentUser) {
     updatePremiumBadge();
   }
@@ -4490,7 +3088,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleTwitterFeed() {
   const twitterPanel = document.getElementById('twitterFeedPanel');
   const whatsappMain = document.getElementById('whatsappMain');
-  
+
   if (!twitterPanel || !whatsappMain) return;
 
   if (twitterPanel.style.display === 'none') {
@@ -4511,7 +3109,7 @@ async function loadTwitterFeed() {
 
   try {
     feedEl.innerHTML = '<div class="loading-spinner">⏳ Loading posts...</div>';
-    
+
     const data = await apiCall('/api/posts/community', 'GET');
 
     if (!data.posts || data.posts.length === 0) {
@@ -4527,7 +3125,7 @@ async function loadTwitterFeed() {
     }
 
     feedEl.innerHTML = renderTwitterPosts(data.posts);
-  } catch(error) {
+  } catch (error) {
     console.error('Load feed:', error);
     feedEl.innerHTML = '<div class="error-state">❌ Failed to load posts</div>';
   }
@@ -4553,10 +3151,10 @@ function renderTwitterPosts(posts) {
         <div class="twitter-post-header">
           <div class="twitter-user-info" onclick="showUserProfile('${authorId}')">
             <div class="twitter-avatar">
-              ${post.users?.profile_pic ? 
-                `<img src="${post.users.profile_pic}">` : 
-                '👤'
-              }
+              ${post.users?.profile_pic ?
+        `<img src="${post.users.profile_pic}">` :
+        '👤'
+      }
             </div>
             <div class="twitter-user-details">
               <span class="twitter-username">@${author}</span>
@@ -4572,13 +3170,13 @@ function renderTwitterPosts(posts) {
           ${media.length > 0 ? `
             <div class="twitter-media ${media.length === 1 ? 'single' : 'grid'}">
               ${media.slice(0, 4).map((m, idx) => {
-                if (m.type === 'image') {
-                  return `<img src="${m.url}" onclick="openMediaViewer('${post.id}', ${idx})">`;
-                } else if (m.type === 'video') {
-                  return `<video src="${m.url}" controls></video>`;
-                }
-                return '';
-              }).join('')}
+        if (m.type === 'image') {
+          return `<img src="${m.url}" onclick="openMediaViewer('${post.id}', ${idx})">`;
+        } else if (m.type === 'video') {
+          return `<video src="${m.url}" controls></video>`;
+        }
+        return '';
+      }).join('')}
               ${media.length > 4 ? `<div class="media-overlay">+${media.length - 4}</div>` : ''}
             </div>
           ` : ''}
@@ -4628,7 +3226,7 @@ async function toggleTwitterLike(postId) {
         }
       }
     }
-  } catch(error) {
+  } catch (error) {
     showMessage('❌ Failed to like', 'error');
   }
 }
@@ -4695,17 +3293,17 @@ function previewNewPostMedia(files) {
     reader.onload = (e) => {
       const div = document.createElement('div');
       div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;';
-      
+
       if (file.type.startsWith('video/')) {
         div.innerHTML = `<video src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;"></video>`;
       } else {
         div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
       }
-      
+
       div.innerHTML += `<button onclick="removeNewPostMedia(${idx})" 
         style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,0.7);color:white;
         border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;">×</button>`;
-      
+
       preview.appendChild(div);
     };
     reader.readAsDataURL(file);
@@ -4722,7 +3320,7 @@ function removeNewPostMedia(idx) {
 
 async function submitNewPost() {
   const content = document.getElementById('newPostContent')?.value.trim();
-  
+
   if (!content && newPostMediaFiles.length === 0) {
     return showMessage('⚠️ Add content or media', 'error');
   }
@@ -4739,12 +3337,12 @@ async function submitNewPost() {
     });
 
     await apiCall('/api/posts', 'POST', formData);
-    
+
     showMessage('✅ Post created!', 'success');
     document.querySelector('.modal').remove();
     newPostMediaFiles = [];
     loadTwitterFeed();
-  } catch(error) {
+  } catch (error) {
     showMessage('❌ Failed to create post', 'error');
   }
 }
@@ -4755,7 +3353,7 @@ async function submitNewPost() {
 
 function formatTimeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
-  
+
   if (seconds < 60) return 'just now';
   if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
   if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
@@ -4770,16 +3368,16 @@ function initWhatsAppFeatures() {
     let typingTimeout;
     input.addEventListener('input', () => {
       if (socket && currentUser && currentUser.college) {
-        socket.emit('typing', { 
-          collegeName: currentUser.college, 
-          username: currentUser.username 
+        socket.emit('typing', {
+          collegeName: currentUser.college,
+          username: currentUser.username
         });
-        
+
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
-          socket.emit('stop_typing', { 
-            collegeName: currentUser.college, 
-            username: currentUser.username 
+          socket.emit('stop_typing', {
+            collegeName: currentUser.college,
+            username: currentUser.username
           });
         }, 2000);
       }
@@ -4790,7 +3388,7 @@ function initWhatsAppFeatures() {
 function searchChats() {
   const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
   const chatItems = document.querySelectorAll('.chat-item');
-  
+
   chatItems.forEach(item => {
     const text = item.textContent.toLowerCase();
     item.style.display = text.includes(query) ? 'flex' : 'none';
@@ -4813,7 +3411,7 @@ function refreshChats() {
 if (socket) {
   socket.on('new_message', (message) => {
     appendWhatsAppMessage(message);
-    
+
     // Show notification if not focused
     if (document.hidden) {
       const unreadBadge = document.getElementById('unreadCount');
@@ -4824,13 +3422,13 @@ if (socket) {
       }
     }
   });
-  
+
   socket.on('user_typing', (data) => {
     if (data.username && currentUser && data.username !== currentUser.username) {
       showTypingIndicator(data.username);
     }
   });
-  
+
   socket.on('user_stop_typing', (data) => {
     hideTypingIndicator(data.username);
   });
@@ -4869,7 +3467,7 @@ let profilePhotoActionsVisible = false;
 // Show enhanced profile modal
 function showEnhancedProfile() {
   if (!currentUser) return;
-  
+
   const modal = document.getElementById('enhancedProfileModal');
   if (modal) {
     modal.style.display = 'flex';
@@ -4887,23 +3485,23 @@ function closeEnhancedProfile() {
 // Load profile data
 async function loadEnhancedProfileData() {
   if (!currentUser) return;
-  
+
   // Display name and username
   const displayName = document.getElementById('profileDisplayName');
   const username = document.getElementById('profileUsername');
-  
+
   if (displayName) displayName.textContent = currentUser.username || 'User';
   if (username) username.textContent = '@' + (currentUser.username || 'user');
-  
+
   // College info
   const collegeEl = document.getElementById('profileCollege');
   if (collegeEl && currentUser.college) {
     collegeEl.textContent = `🎓 ${currentUser.college}`;
   }
-  
+
   // Profile photo
   updateProfilePhotoDisplay();
-  
+
   // Bio
   const bioText = document.getElementById('bioText');
   if (bioText) {
@@ -4915,7 +3513,7 @@ async function loadEnhancedProfileData() {
       bioText.style.color = '#888';
     }
   }
-  
+
   // Cover photo
   if (currentUser.coverPhoto) {
     const cover = document.getElementById('profileCover');
@@ -4925,10 +3523,10 @@ async function loadEnhancedProfileData() {
       cover.style.backgroundPosition = 'center';
     }
   }
-  
+
   // Stats
   updateProfileStats();
-  
+
   // Badges
   updateProfileBadges();
 }
@@ -4937,7 +3535,7 @@ async function loadEnhancedProfileData() {
 function updateProfilePhotoDisplay() {
   const photoImg = document.getElementById('profilePhotoImg');
   const photoInitial = document.getElementById('profilePhotoInitial');
-  
+
   if (currentUser.profile_pic && photoImg && photoInitial) {
     photoImg.src = currentUser.profile_pic;
     photoImg.style.display = 'block';
@@ -4948,11 +3546,11 @@ function updateProfilePhotoDisplay() {
     photoInitial.style.display = 'block';
     if (photoImg) photoImg.style.display = 'none';
   }
-  
+
   // Also update header avatar
   const headerImg = document.getElementById('profileAvatarImg');
   const headerInitial = document.getElementById('profileAvatarInitial');
-  
+
   if (currentUser.profile_pic && headerImg && headerInitial) {
     headerImg.src = currentUser.profile_pic;
     headerImg.style.display = 'block';
@@ -4967,7 +3565,7 @@ function updateProfilePhotoDisplay() {
 function togglePhotoActions() {
   const actions = document.getElementById('profilePhotoActions');
   if (!actions) return;
-  
+
   profilePhotoActionsVisible = !profilePhotoActionsVisible;
   actions.style.display = profilePhotoActionsVisible ? 'flex' : 'none';
 }
@@ -4988,34 +3586,34 @@ function uploadProfilePhoto() {
 async function handleProfilePhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  
+
   // Validate file size (max 5MB)
   if (file.size > 5 * 1024 * 1024) {
     showMessage('⚠️ Photo too large (max 5MB)', 'error');
     return;
   }
-  
+
   // Validate file type
   if (!file.type.startsWith('image/')) {
     showMessage('⚠️ Please select an image file', 'error');
     return;
   }
-  
+
   try {
     showMessage('📤 Uploading photo...', 'success');
-    
+
     const formData = new FormData();
     formData.append('profilePhoto', file);
-    
+
     const data = await apiCall('/api/user/profile-photo', 'POST', formData);
-    
+
     if (data.success && data.photoUrl) {
       currentUser.profile_pic = data.photoUrl;
       localStorage.setItem('user', JSON.stringify(currentUser));
-      
+
       updateProfilePhotoDisplay();
       showMessage('✅ Photo updated!', 'success');
-      
+
       // Hide actions
       const actions = document.getElementById('profilePhotoActions');
       if (actions) actions.style.display = 'none';
@@ -5025,7 +3623,7 @@ async function handleProfilePhotoUpload(event) {
     console.error('Photo upload error:', error);
     showMessage('❌ Failed to upload photo', 'error');
   }
-  
+
   // Clear input
   event.target.value = '';
 }
@@ -5033,19 +3631,19 @@ async function handleProfilePhotoUpload(event) {
 // Remove profile photo
 async function removeProfilePhoto() {
   if (!confirm('Remove profile photo?')) return;
-  
+
   try {
     showMessage('🗑️ Removing photo...', 'success');
-    
+
     const data = await apiCall('/api/user/profile-photo', 'DELETE');
-    
+
     if (data.success) {
       currentUser.profile_pic = null;
       localStorage.setItem('user', JSON.stringify(currentUser));
-      
+
       updateProfilePhotoDisplay();
       showMessage('✅ Photo removed', 'success');
-      
+
       // Hide actions
       const actions = document.getElementById('profilePhotoActions');
       if (actions) actions.style.display = 'none';
@@ -5067,43 +3665,43 @@ function editCoverPhoto() {
 async function handleCoverPhotoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  
+
   if (file.size > 5 * 1024 * 1024) {
     showMessage('⚠️ Photo too large (max 5MB)', 'error');
     return;
   }
-  
+
   if (!file.type.startsWith('image/')) {
     showMessage('⚠️ Please select an image file', 'error');
     return;
   }
-  
+
   try {
     showMessage('📤 Uploading cover...', 'success');
-    
+
     const formData = new FormData();
     formData.append('coverPhoto', file);
-    
+
     const data = await apiCall('/api/user/cover-photo', 'POST', formData);
-    
+
     if (data.success && data.photoUrl) {
       currentUser.coverPhoto = data.photoUrl;
       localStorage.setItem('user', JSON.stringify(currentUser));
-      
+
       const cover = document.getElementById('profileCover');
       if (cover) {
         cover.style.backgroundImage = `url('${data.photoUrl}')`;
         cover.style.backgroundSize = 'cover';
         cover.style.backgroundPosition = 'center';
       }
-      
+
       showMessage('✅ Cover updated!', 'success');
     }
   } catch (error) {
     console.error('Cover upload error:', error);
     showMessage('❌ Failed to upload cover', 'error');
   }
-  
+
   event.target.value = '';
 }
 
@@ -5113,11 +3711,11 @@ function editBio() {
   const bioEdit = document.getElementById('bioEdit');
   const bioInput = document.getElementById('bioInput');
   const bioCount = document.getElementById('bioCount');
-  
+
   if (!bioDisplay || !bioEdit || !bioInput) return;
 
 }
-  
+
 
 
 console.log('✨ RealVibe features initialized!');
@@ -5202,7 +3800,7 @@ function initializeSocket() {
   socket.on('connect', () => {
     console.log('✅ Socket connected:', socket.id);
     updateConnectionStatus(true);
-    
+
     if (currentUser && currentUser.college) {
       socket.emit('join_college', currentUser.college);
       socket.emit('user_online', currentUser.id);
@@ -5274,7 +3872,7 @@ async function loadCommunityMessages() {
 
   try {
     console.log('📥 Loading messages...');
-    
+
     if (!messageContainer) {
       messageContainer = document.getElementById('chatMessages');
     }
@@ -5414,7 +4012,7 @@ async function sendCommunityMessage() {
     if (data.success && data.message) {
       // Remove temporary message
       removeMessageFromUI(tempId);
-      
+
       // Add real message (if not already added by socket)
       const messageExists = document.getElementById(`msg-${data.message.id}`);
       if (!messageExists) {
@@ -5432,7 +4030,7 @@ async function sendCommunityMessage() {
   } catch (error) {
     console.error('❌ Send error:', error);
     showMessage('Failed to send message: ' + error.message, 'error');
-    
+
     // Mark temp messages as failed
     document.querySelectorAll('[id^="msg-temp-"]').forEach(el => {
       el.style.opacity = '0.5';
@@ -5476,9 +4074,9 @@ function addMessageToUI(message, skipScroll = false) {
   const isOwnMessage = message.sender_id === currentUser?.id;
   const sender = message.users?.username || message.sender_name || 'User';
   const timestamp = new Date(message.created_at || message.timestamp);
-  const timeStr = timestamp.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  const timeStr = timestamp.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   // Create message element
@@ -5726,7 +4324,7 @@ function updateTypingIndicator() {
 
   const usernames = Array.from(typingUsers);
   let text = '';
-  
+
   if (usernames.length === 1) {
     text = `${usernames[0]} is typing...`;
   } else if (usernames.length === 2) {
@@ -5748,14 +4346,14 @@ function setupChatInput() {
   if (!input) return;
 
   // Auto-resize
-  input.addEventListener('input', function() {
+  input.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     handleTyping();
   });
 
   // Enter to send
-  input.addEventListener('keypress', function(e) {
+  input.addEventListener('keypress', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendCommunityMessage();
@@ -5789,7 +4387,7 @@ function sendMessage() {
 
 function scrollToBottom() {
   if (!messageContainer) return;
-  
+
   messageContainer.scrollTo({
     top: messageContainer.scrollHeight,
     behavior: 'smooth'
@@ -5829,7 +4427,7 @@ function playSound(type) {
     if (sounds[type]) {
       const audio = new Audio(sounds[type]);
       audio.volume = 0.2;
-      audio.play().catch(() => {}); // Silently fail
+      audio.play().catch(() => { }); // Silently fail
     }
   } catch (error) {
     // Ignore audio errors
@@ -5969,7 +4567,7 @@ function addAmazingMessage(message, skipScroll = false) {
 
   const isOwn = message.sender_id === currentUser?.id;
   const sender = message.users?.username || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  const time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const messageEl = document.createElement('div');
   messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
@@ -5978,9 +4576,9 @@ function addAmazingMessage(message, skipScroll = false) {
   let html = `
     <div class="message-avatar">
       ${message.users?.profile_pic ?
-        `<img src="${message.users.profile_pic}" alt="${sender}">` :
-        '👤'
-      }
+      `<img src="${message.users.profile_pic}" alt="${sender}">` :
+      '👤'
+    }
     </div>
     <div class="message-content-wrapper">
       <div class="message-header">
@@ -6208,10 +4806,10 @@ function populateEmojiPanel() {
   if (!grid) return;
 
   const emojis = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
-    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
-    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
+    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋',
+    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤐', '🤨',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟',
+    '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '⚽', '🏀', '🎮', '🎯', '🎪', '🎨', '🎭', '🎬', '🎤', '🎧', '🎵', '🎶'
   ];
 
   let html = '';
@@ -6387,7 +4985,7 @@ function setupAmazingInput() {
   const input = document.getElementById('messageInput');
   if (!input) return;
 
-  input.addEventListener('input', function() {
+  input.addEventListener('input', function () {
     // Auto-resize
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 120) + 'px';
@@ -6405,7 +5003,7 @@ function setupAmazingInput() {
   // Handle scroll for unseen messages
   const container = document.getElementById('messagesContainer');
   if (container) {
-    container.addEventListener('scroll', function() {
+    container.addEventListener('scroll', function () {
       isUserScrolling = true;
       if (isAtBottom()) {
         markMessagesAsSeen();
@@ -6457,630 +5055,15 @@ function viewMedia(url) {
 }
 
 // ==========================================
-// AMAZING COMMUNITY CHAT SYSTEM
+// INITIALIZE AMAZING CHAT ON PAGE LOAD  
 // ==========================================
 
-let selectedMediaFile = null;
-let selectedMediaType = null;
-let isUserScrolling = false;
-let lastSeenMessageId = null;
-let unseenMessageCount = 0;
-
-// Initialize amazing chat when communities page loads
-function initializeAmazingChat() {
-  console.log('🚀 Initializing Amazing Community Chat...');
-
-  // Set community name
-  if (currentUser?.college) {
-    document.getElementById('communityName').textContent = `${currentUser.college} Community`;
-  }
-
-  // Initialize socket connection
-  initializeSocketConnection();
-
-  // Load messages
-  loadAmazingMessages();
-
-  // Set up input handlers
-  setupAmazingInput();
-
-  // Populate emoji and sticker panels
-  populateEmojiPanel();
-  populateStickerPanel();
-
-  console.log('✅ Amazing Chat Initialized');
-}
-
-// ==========================================
-// LOAD MESSAGES WITH UNSEEN TRACKING
-// ==========================================
-
-async function loadAmazingMessages() {
-  try {
-    const container = document.getElementById('messagesContainer');
-    if (!container) return;
-
-    // Show loading
-    container.innerHTML = `
-      <div class="loading-messages">
-        <div class="loading-spinner"></div>
-        <p>Loading messages...</p>
-      </div>
-    `;
-
-    const data = await apiCall('/api/community/messages', 'GET');
-
-    if (!data.success) {
-      if (data.needsJoinCommunity) {
-        container.innerHTML = `
-          <div class="join-community-prompt">
-            <div class="join-icon">🎓</div>
-            <h3>Join Your College Community</h3>
-            <p>Connect with fellow students and start chatting!</p>
-            <button onclick="showJoinCommunityModal()" class="join-btn">Join Community</button>
-          </div>
-        `;
-        return;
-      }
-      throw new Error(data.error || 'Failed to load messages');
-    }
-
-    // Clear loading
-    container.innerHTML = '';
-
-    if (!data.messages || data.messages.length === 0) {
-      container.innerHTML = `
-        <div class="no-messages">
-          <div class="no-messages-icon">💬</div>
-          <h3>No Messages Yet</h3>
-          <p>Be the first to start the conversation!</p>
-        </div>
-      `;
-      return;
-    }
-
-    // Display messages
-    data.messages.forEach(msg => {
-      addAmazingMessage(msg, true); // Skip scroll for initial load
-    });
-
-    // Scroll to bottom
-    setTimeout(() => {
-      scrollToBottom();
-      markMessagesAsSeen();
-    }, 100);
-
-  } catch (error) {
-    console.error('❌ Load messages error:', error);
-    const container = document.getElementById('messagesContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="error-state">
-          <div class="error-icon">⚠️</div>
-          <h3>Failed to Load Messages</h3>
-          <p>${error.message}</p>
-          <button onclick="loadAmazingMessages()" class="retry-btn">Retry</button>
-        </div>
-      `;
-    }
-  }
-}
-
-// ==========================================
-// ADD MESSAGE TO UI WITH REACTIONS
-// ==========================================
-
-function addAmazingMessage(message, skipScroll = false) {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return;
-
-  // Check if message already exists
-  const existingMsg = document.getElementById(`msg-${message.id}`);
-  if (existingMsg) return;
-
-  // Remove empty state
-  const emptyState = container.querySelector('.no-messages');
-  if (emptyState) emptyState.remove();
-
-  const isOwn = message.sender_id === currentUser?.id;
-  const sender = message.users?.username || 'User';
-  const time = new Date(message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-  const messageEl = document.createElement('div');
-  messageEl.className = `amazing-message ${isOwn ? 'own' : 'other'}`;
-  messageEl.id = `msg-${message.id}`;
-
-  let html = `
-    <div class="message-avatar">
-      ${message.users?.profile_pic ?
-        `<img src="${message.users.profile_pic}" alt="${sender}">` :
-        '👤'
-      }
-    </div>
-    <div class="message-content-wrapper">
-      <div class="message-header">
-        <span class="message-sender">${isOwn ? 'You' : sender}</span>
-        <span class="message-time">${time}</span>
-      </div>
-      <div class="message-bubble">
-  `;
-
-  if (message.content) {
-    html += `<div class="message-text">${escapeHtml(message.content)}</div>`;
-  }
-
-  if (message.media_url) {
-    if (message.media_type?.startsWith('image/')) {
-      html += `<img src="${message.media_url}" class="message-media" onclick="viewMedia('${message.media_url}')">`;
-    } else if (message.media_type?.startsWith('video/')) {
-      html += `<video src="${message.media_url}" controls class="message-media"></video>`;
-    }
-  }
-
-  html += `
-      </div>
-      <div class="message-actions">
-        <button class="action-btn react-btn" onclick="reactToMessage('${message.id}')" title="React">
-          ❤️ <span class="react-count">${message.reactions || 0}</span>
-        </button>
-        <button class="action-btn reply-btn" onclick="replyToMessage('${message.id}')" title="Reply">↩️</button>
-        ${isOwn ? `<button class="action-btn delete-btn" onclick="deleteAmazingMessage('${message.id}')" title="Delete">🗑️</button>` : ''}
-      </div>
-    </div>
-  `;
-
-  messageEl.innerHTML = html;
-  container.appendChild(messageEl);
-
-  // Animate entrance
-  setTimeout(() => messageEl.classList.add('visible'), 10);
-
-  // Scroll to bottom if not user scrolling
-  if (!skipScroll && !isUserScrolling) {
-    setTimeout(() => scrollToBottom(), 50);
-  }
-
-  // Update unseen count if message is new and user is not at bottom
-  if (!isOwn && !isAtBottom()) {
-    unseenMessageCount++;
-    updateUnseenIndicator();
-  }
-}
-
-// ==========================================
-// MESSAGE ACTIONS
-// ==========================================
-
-async function reactToMessage(messageId) {
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji: '❤️' });
-
-    if (data.success) {
-      // Update reaction count in UI
-      const reactBtn = document.querySelector(`#msg-${messageId} .react-btn .react-count`);
-      if (reactBtn) {
-        const currentCount = parseInt(reactBtn.textContent) || 0;
-        reactBtn.textContent = currentCount + 1;
-      }
-      showMessage('❤️ Reacted!', 'success');
-    }
-  } catch (error) {
-    console.error('Reaction error:', error);
-    showMessage('❌ Failed to react', 'error');
-  }
-}
-
-function replyToMessage(messageId) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value = `@reply to message: `;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-}
-
-async function deleteAmazingMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    const data = await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-
-    if (data.success) {
-      const messageEl = document.getElementById(`msg-${messageId}`);
-      if (messageEl) {
-        messageEl.style.animation = 'fadeOut 0.3s ease-out';
-        setTimeout(() => messageEl.remove(), 300);
-      }
-      showMessage('🗑️ Message deleted', 'success');
-    }
-  } catch (error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-// ==========================================
-// SEND MESSAGE
-// ==========================================
-
-async function sendMessage() {
-  const input = document.getElementById('messageInput');
-  const content = input?.value?.trim();
-
-  if (!content && !selectedMediaFile) {
-    showMessage('⚠️ Type a message or add media', 'error');
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  try {
-    const formData = new FormData();
-    if (content) formData.append('content', content);
-    if (selectedMediaFile) {
-      formData.append('media', selectedMediaFile);
-    }
-
-    // Clear input immediately
-    if (input) input.value = '';
-    clearMediaPreview();
-
-    const data = await apiCall('/api/community/messages', 'POST', formData);
-
-    if (data.success && data.message) {
-      // Add to UI immediately
-      addAmazingMessage(data.message);
-
-      // Mark as seen since we just sent it
-      markMessagesAsSeen();
-
-      // Stop typing indicator
-      stopTyping();
-    }
-
-  } catch (error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-  }
-}
-
-// ==========================================
-// MEDIA SHARING
-// ==========================================
-
-function openGallery() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-  input.multiple = false;
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        showMessage('⚠️ File too large (max 10MB)', 'error');
-        return;
-      }
-      handleMediaSelection(file);
-    }
-  };
-
-  input.click();
-}
-
-function handleMediaSelection(file) {
-  selectedMediaFile = file;
-  selectedMediaType = file.type.startsWith('video/') ? 'video' : 'image';
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const previewPanel = document.getElementById('mediaPreviewPanel');
-    const previewContent = document.getElementById('previewContent');
-
-    if (previewPanel && previewContent) {
-      if (selectedMediaType === 'image') {
-        previewContent.innerHTML = `<img src="${e.target.result}" class="preview-media">`;
-      } else {
-        previewContent.innerHTML = `<video src="${e.target.result}" controls class="preview-media"></video>`;
-      }
-      previewPanel.style.display = 'flex';
-    }
-  };
-
-  reader.readAsDataURL(file);
-}
-
-function clearMediaPreview() {
-  selectedMediaFile = null;
-  selectedMediaType = null;
-
-  const previewPanel = document.getElementById('mediaPreviewPanel');
-  if (previewPanel) previewPanel.style.display = 'none';
-}
-
-// ==========================================
-// EMOJI PANEL
-// ==========================================
-
-function openEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeStickerPanel(); // Close sticker panel if open
-  }
-}
-
-function closeEmojiPanel() {
-  const panel = document.getElementById('emojiPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateEmojiPanel() {
-  const grid = document.getElementById('emojiGrid');
-  if (!grid) return;
-
-  const emojis = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋',
-    '👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','😐','😑','😶','😏','😒','🙄','😬','🤐','🤨',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟',
-    '🎉','🎊','🎈','🎁','🏆','🥇','🥈','🥉','⚽','🏀','🎮','🎯','🎪','🎨','🎭','🎬','🎤','🎧','🎵','🎶'
-  ];
-
-  let html = '';
-  emojis.forEach(emoji => {
-    html += `<button class="emoji-btn" onclick="insertEmoji('${emoji}')">${emoji}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPanel();
-}
-
-// ==========================================
-// STICKER PANEL
-// ==========================================
-
-function openStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) {
-    panel.style.display = 'block';
-    closeEmojiPanel(); // Close emoji panel if open
-  }
-}
-
-function closeStickerPanel() {
-  const panel = document.getElementById('stickerPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function populateStickerPanel() {
-  const grid = document.getElementById('stickerGrid');
-  if (!grid) return;
-
-  const stickers = [
-    '🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚', '🌟', '🎪', '🎭', '🎨', '🎪',
-    '😎', '🤓', '🤠', '👻', '🎃', '🦄', '🐱', '🐶', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐸'
-  ];
-
-  let html = '';
-  stickers.forEach(sticker => {
-    html += `<button class="sticker-btn" onclick="insertSticker('${sticker}')">${sticker}</button>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function insertSticker(sticker) {
-  const input = document.getElementById('messageInput');
-  if (input) {
-    input.value += sticker;
-    input.focus();
-  }
-  closeStickerPanel();
-}
-
-// ==========================================
-// TYPING INDICATORS
-// ==========================================
-
-function handleTyping() {
-  const input = document.getElementById('messageInput');
-  if (!input || !socket || !currentUser) return;
-
-  const content = input.value.trim();
-
-  if (content.length > 0) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  } else {
-    stopTyping();
-  }
-}
-
-function stopTyping() {
-  if (socket && currentUser) {
-    socket.emit('stop_typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-  }
-}
-
-function showTypingIndicator(username) {
-  const indicator = document.getElementById('typingIndicators');
-  const textEl = document.getElementById('typingUsersText');
-
-  if (indicator && textEl) {
-    textEl.textContent = `${username} is typing...`;
-    indicator.style.display = 'flex';
-  }
-}
-
-function hideTypingIndicator() {
-  const indicator = document.getElementById('typingIndicators');
-  if (indicator) indicator.style.display = 'none';
-}
-
-// ==========================================
-// ONLINE MEMBERS
-// ==========================================
-
-function updateOnlineMembers(members) {
-  const countEl = document.getElementById('onlineCount');
-  const avatarsEl = document.getElementById('onlineAvatars');
-
-  if (countEl) countEl.textContent = members.length;
-
-  if (avatarsEl) {
-    let html = '';
-    members.slice(0, 5).forEach(member => {
-      html += `<div class="online-avatar" title="${member.username}">👤</div>`;
-    });
-    if (members.length > 5) {
-      html += `<div class="online-more">+${members.length - 5}</div>`;
-    }
-    avatarsEl.innerHTML = html;
-  }
-}
-
-// ==========================================
-// UNSEEN MESSAGES
-// ==========================================
-
-function isAtBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (!container) return true;
-
-  const threshold = 100; // pixels from bottom
-  return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-}
-
-function updateUnseenIndicator() {
-  const indicator = document.getElementById('unseenIndicator');
-  const countEl = document.getElementById('unseenCount');
-
-  if (indicator && countEl) {
-    if (unseenMessageCount > 0) {
-      countEl.textContent = unseenMessageCount;
-      indicator.style.display = 'flex';
-    } else {
-      indicator.style.display = 'none';
-    }
-  }
-}
-
-function markMessagesAsSeen() {
-  unseenMessageCount = 0;
-  updateUnseenIndicator();
-}
-
-function scrollToBottom() {
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    markMessagesAsSeen();
-  }
-}
-
-// ==========================================
-// INPUT HANDLERS
-// ==========================================
-
-function setupAmazingInput() {
-  const input = document.getElementById('messageInput');
-  if (!input) return;
-
-  input.addEventListener('input', function() {
-    // Auto-resize
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-
-    // Update send button
-    const sendBtn = document.getElementById('sendBtn');
-    if (sendBtn) {
-      sendBtn.disabled = !this.value.trim() && !selectedMediaFile;
-    }
-
-    // Handle typing
-    handleTyping();
-  });
-
-  // Handle scroll for unseen messages
-  const container = document.getElementById('messagesContainer');
-  if (container) {
-    container.addEventListener('scroll', function() {
-      isUserScrolling = true;
-      if (isAtBottom()) {
-        markMessagesAsSeen();
-      }
-    });
-  }
-}
-
-function handleMessageKeypress(event) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-}
-
-// ==========================================
-// SEARCH MESSAGES
-// ==========================================
-
-function searchMessages() {
-  const query = prompt('Search messages:');
-  if (query) {
-    showMessage(`🔍 Searching for "${query}"`, 'success');
-    // Implement search functionality
-  }
-}
-
-// ==========================================
-// COMMUNITY INFO
-// ==========================================
-
-function showCommunityInfo() {
-  showMessage('ℹ️ Community info coming soon!', 'success');
-}
-
-// ==========================================
-// UTILITY FUNCTIONS
-// ==========================================
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function viewMedia(url) {
-  // Open media in lightbox or new window
-  window.open(url, '_blank');
-}
-
-// ==========================================
-// INITIALIZE AMAZING CHAT ON PAGE LOAD
-// ==========================================
-
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   // Initialize amazing chat when communities page becomes visible
   const communitiesPage = document.getElementById('communities');
   if (communitiesPage) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
         if (mutation.target.style.display !== 'none') {
           initializeAmazingChat();
         }
@@ -7098,4 +5081,3 @@ console.log('✅ Amazing Community Chat System Ready');
 console.log('✅ Community chat module loaded');
 
 
-s
