@@ -5793,3 +5793,40 @@ window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// FIX: Override existing functions
+// ==========================================
+
+// Store original functions
+const originalAppendWhatsAppMessage = window.appendWhatsAppMessage;
+const originalSendWhatsAppMessage = window.sendWhatsAppMessage;
+
+// Override with fixed versions
+window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
+window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+
+console.log('✅ WhatsApp functions overridden with fixed versions');
