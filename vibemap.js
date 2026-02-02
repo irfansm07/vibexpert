@@ -1736,37 +1736,50 @@ async function loadWhatsAppMessages() {
     
     if (!messagesEl) return;
 
-    // Keep date separator
-    const dateSeparator = messagesEl.querySelector('.date-separator');
-    messagesEl.innerHTML = '';
-    if (dateSeparator) messagesEl.appendChild(dateSeparator);
+    // ✅ FIXED: Only clear if this is the first load
+    const existingMessages = messagesEl.querySelectorAll('[id^="wa-msg-"]');
+    const isFirstLoad = existingMessages.length === 0;
+    
+    if (isFirstLoad) {
+      // Keep date separator on first load only
+      const dateSeparator = messagesEl.querySelector('.date-separator');
+      messagesEl.innerHTML = '';
+      if (dateSeparator) messagesEl.appendChild(dateSeparator);
+    }
 
     if (!data.messages || data.messages.length === 0) {
-      messagesEl.innerHTML += `
-        <div class="no-messages">
-          <div style="font-size:64px;margin-bottom:20px;">👋</div>
-          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-          <p style="color:#888;">Say hi to your college community</p>
-        </div>
-      `;
+      if (isFirstLoad) {
+        messagesEl.innerHTML += `
+          <div class="no-messages">
+            <div style="font-size:64px;margin-bottom:20px;">👋</div>
+            <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
+            <p style="color:#888;">Say hi to your college community</p>
+          </div>
+        `;
+      }
       return;
     }
 
-    // ✅ CRITICAL FIX: Don't reverse - API returns in correct order (oldest first)
-    // Messages will append to bottom due to flex-direction: column
+    // ✅ FIXED: Only append new messages that don't already exist
     console.log(`📥 Loading ${data.messages.length} messages`);
-    data.messages.forEach(msg => appendWhatsAppMessage(msg));
-    // ✅ Scroll to bottom after all messages loaded
-    setTimeout(() => scrollToBottom(), 100);
+    data.messages.forEach(msg => {
+      const msgExists = document.getElementById(`wa-msg-${msg.id}`);
+      if (!msgExists) {
+        appendWhatsAppMessage(msg);
+      }
+    });
+    
+    // ✅ Scroll to bottom only on first load
+    if (isFirstLoad) {
+      setTimeout(() => scrollToBottom(), 100);
+    }
     
     // Update stats
     updateChatStats(data.messages.length);
   } catch(error) {
-    console.error('', error);
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    }
+    console.error('Load messages error:', error);
   }
+}
 
 
 async function sendWhatsAppMessage() {
@@ -5443,16 +5456,14 @@ function appendWhatsAppMessage(msg) {
   const wrapper = document.createElement('div');
   wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `wa-msg-${messageId}`;
-  wrapper.dataset.timestamp = Date.now(); // ✅ Add timestamp for duplicate detection
+  wrapper.dataset.timestamp = Date.now();
 
   let messageHTML = '';
   
-  // Add sender name for others
   if (!isOwn) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
-  // Message bubble
   messageHTML += `
     <div class="message-bubble">
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
@@ -5472,7 +5483,6 @@ function appendWhatsAppMessage(msg) {
     scrollToBottom();
   }
 
-  // Play sound for received messages
   if (!isOwn && !msg.isTemp) {
     playMessageSound('receive');
   }
@@ -5736,9 +5746,7 @@ function initWhatsAppChatFixes() {
     });
   }
 
-  // Override existing functions
-  window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
-  window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+
 
   console.log('✅ WhatsApp Chat Fixes Initialized!');
 }
@@ -5783,3 +5791,53 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// FIX: Override existing functions
+// ==========================================
+
+// Store original functions
+const originalAppendWhatsAppMessage = window.appendWhatsAppMessage;
+const originalSendWhatsAppMessage = window.sendWhatsAppMessage;
+
+// Override with fixed versions
+window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
+window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+
+console.log('✅ WhatsApp functions overridden with fixed versions');
+
+
+
+
+
+
+
+
+
+
+
