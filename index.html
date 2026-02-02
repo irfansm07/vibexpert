@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,7 +335,7 @@ Get Started Now →
 </div>
 <div class="footer-section">
 <h4>Contact</h4>
-<p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="067573767669747246706f64637e766374722865696b">[email&#160;protected]</a></p>
+<p>📧 support@vibexpert.com</p>
 <p>📱 +91-9347702626</p>
 </div>
 </div>
@@ -625,7 +626,7 @@ Enter your email address and we'll send you a verification code.
 <div class="chat-messages" id="chatMessages"></div>
 <div class="chat-input-box">
 <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKeypress(event)">
-<button class="send-btn" onclick="sendEnhancedMessage()">Send</button>
+<button class="send-btn" onclick="sendChatMessage()">Send</button>
 </div>
 </div>
 </div>
@@ -1096,7 +1097,7 @@ Enter your email address and we'll send you a verification code.
     </div>
   </div>
 </section>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // Initialize roadmap when rewards page loads
   document.addEventListener('DOMContentLoaded', function() {
     // Call updateRoadmapUI when rewards page becomes visible
@@ -1226,7 +1227,7 @@ Enter your email address and we'll send you a verification code.
 <div class="modal-box">
 <span class="close" onclick="closeModal('contactModal')">&times;</span>
 <h2>Contact Us</h2>
-<p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a5d6d0d5d5cad7d1e5d3ccc7c0ddd5c0d7d18bc6cac8">[email&#160;protected]</a></p>
+<p>📧 Email: support@vibexpert.com</p>
     <p>📱 Phone: +91-9347702626</p>
     <p>📱 Phone: +91-9959568369</p>
 <p>💬 Live Chat: 24/7</p>
@@ -1242,7 +1243,7 @@ Enter your email address and we'll send you a verification code.
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
+<script src="vibemap.js"></script>
 
 <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
 <script>
@@ -1310,4 +1311,25 @@ if (vantaNetEffect) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  // Check which page is visible and init appropriate backgr
+  // Check which page is visible and init appropriate background
+const aboutPage = document.getElementById('aboutUsPage');
+const mainPage = document.getElementById('mainPage');
+
+if (aboutPage && aboutPage.style.display !== 'none') {
+    initGlobeBackground();
+}
+
+if (mainPage && mainPage.style.display !== 'none') {
+    initNetBackground();
+}
+});
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+destroyGlobeBackground();
+destroyNetBackground();
+});
+</script>
+
+</body>
+</html>
