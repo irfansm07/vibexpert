@@ -1437,85 +1437,59 @@ sendEnhancedMessage();
 
 async function sendWhatsAppMessage() {
   const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
+  const content = input.value.trim();
   
-  if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
+  if (!content) return;
 
   try {
-    // ✅ Clear input FIRST
-    const originalContent = content;
+    // 1. Clear input immediately
     input.value = '';
-    input.style.height = 'auto';
-
-    // ✅ Create unique temp ID with timestamp
+    
+    // 2. Create unique temp ID
     const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // ✅ Show optimistic UI message
+    // 3. Show optimistic message
     const tempMessage = {
       id: tempId,
-      content: originalContent,
-      sender_id: currentUser.id,
+      content: content,
+      user_id: currentUser.id,
       users: {
         username: currentUser.username,
         avatar_url: currentUser.avatar_url
       },
       created_at: new Date().toISOString(),
-      text: originalContent,
-      isTemp: true
+      isTemp: true // Mark as temporary
     };
-
-    appendWhatsAppMessage(tempMessage);
-
-    // Stop typing indicator
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-
-    // ✅ Send to server
-    console.log('📤 Sending message to server...');
+    
+    appendWhatsAppMessage(tempMessage, true); // true = own message
+    
+    // 4. Send to server
     const response = await apiCall('/api/community/messages', 'POST', { 
-      content: originalContent 
+      content: content 
     });
     
-    if (response.success && response.message) {
-      console.log('✅ Server response received:', response.message.id);
-      
-      // ✅ Remove temp message
-      const tempEl = document.getElementById(`wa-msg-${tempId}`);
-      if (tempEl) {
-        console.log(`🗑️ Removing temp message: ${tempId}`);
-        tempEl.remove();
+    if (response.success) {
+      // 5. Remove temp message
+      const tempElement = document.getElementById(`wa-msg-${tempId}`);
+      if (tempElement) {
+        tempElement.remove();
       }
       
-      // ✅ DON'T add real message here - it will come via Socket.IO
-      // The backend now excludes the sender from the broadcast
-      // So we won't get a duplicate
+      // 6. Add real message from API response
+      appendWhatsAppMessage(response.message, true);
       
-      playMessageSound('send');
       console.log('✅ Message sent successfully');
     }
-  } catch(error) {
-    console.error('❌ Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
+    
+  } catch (error) {
+    console.error('❌ Failed to send message:', error);
+    showMessage('Failed to send message', 'error');
     
     // Remove temp message on error
-    const tempEl = document.getElementById(`wa-msg-${tempId}`);
-    if (tempEl) tempEl.remove();
-    
-    // Restore input
-    input.value = originalContent;
+    const tempElement = document.getElementById(`wa-msg-temp-${tempId}`);
+    if (tempElement) {
+      tempElement.remove();
+    }
   }
 }
 function handleWhatsAppKeypress(e) {
@@ -1808,7 +1782,85 @@ async function loadWhatsAppMessages() {
 }
 
 
+async function sendWhatsAppMessage() {
+  const input = document.getElementById('whatsappInput');
+  const content = input?.value.trim();
+  
+  if (!content) {
+    showMessage('⚠️ Message cannot be empty', 'error');
+    input?.focus();
+    return;
+  }
 
+  if (!currentUser) {
+    showMessage('⚠️ Please login first', 'error');
+    return;
+  }
+
+  // ✅ Clear input IMMEDIATELY
+  const originalContent = content;
+  input.value = '';
+  input.style.height = 'auto';
+
+  // ✅ Create unique temp ID
+  const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  
+  const tempMessage = {
+    id: tempId,
+    content: originalContent,
+    sender_id: currentUser.id,
+    users: {
+      username: currentUser.username,
+      avatar_url: currentUser.avatar_url
+    },
+    created_at: new Date().toISOString(),
+    text: originalContent,
+    isTemp: true
+  };
+
+  try {
+    // ✅ Show optimistic message
+    appendWhatsAppMessage(tempMessage);
+
+    // Stop typing indicator
+    if (socket && currentUser.college) {
+      socket.emit('stop_typing', { 
+        collegeName: currentUser.college, 
+        username: currentUser.username 
+      });
+    }
+
+    // ✅ Send to server
+    const response = await apiCall('/api/community/messages', 'POST', { 
+      content: originalContent 
+    });
+    
+    if (response.success && response.message) {
+      playMessageSound('send');
+      
+      // ✅ Remove temp message
+      const tempEl = document.getElementById(`wa-msg-${tempId}`);
+      if (tempEl) {
+        console.log(`🗑️ Removing temp: ${tempId}`);
+        tempEl.remove();
+      }
+      
+      // ✅ Add real message from API (NOT from socket)
+      console.log(`✅ Adding real: ${response.message.id}`);
+      appendWhatsAppMessage(response.message);
+    }
+  } catch(error) {
+    console.error('❌ Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+    
+    // Remove temp on error
+    const tempEl = document.getElementById(`wa-msg-${tempId}`);
+    if (tempEl) tempEl.remove();
+    
+    // Restore input
+    input.value = originalContent;
+  }
+}
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -2249,7 +2301,12 @@ if (currentUser?.college) socket.emit('join_college', currentUser.college);
 socket.emit('user_online', currentUser.id);
 });
 
-
+socket.on('new_message', (message) => {
+  // ✅ CRITICAL: Ignore own messages from socket (backend should exclude, but double-check)
+  if (message.sender_id === currentUser?.id) {
+    console.log('⚠️ Ignoring own message from socket');
+    return;
+  }
   
   console.log('📨 Received message from socket:', message.id);
   appendWhatsAppMessage(message);
@@ -5369,50 +5426,13 @@ function appendWhatsAppMessage(msg) {
   const timeLabel = messageTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2,8));
 
-  console.log('📥 appendWhatsAppMessage called:', {
-    id: messageId,
-    isTemp: msg.isTemp,
-    isOwn: isOwn,
-    content: (msg.text || msg.content || '').substring(0, 30)
-  });
-
-  // ✅ LEVEL 1: Check by message ID
+  // ✅ CRITICAL: Enhanced duplicate detection
   const existingMsg = document.getElementById(`wa-msg-${messageId}`);
   if (existingMsg && !msg.isTemp) {
-    console.log('⚠️ Duplicate content detected, skipping (ID match):', messageId);
+    console.log('⚠️ Duplicate detected, skipping:', messageId);
     return;
   }
   
-  // ✅ LEVEL 2: Check for content duplicates within 3 seconds (for own messages)
-  if (!msg.isTemp && isOwn) {
-    const recentMessages = Array.from(messagesEl.querySelectorAll('.whatsapp-message.own'));
-    const threeSecondsAgo = Date.now() - 3000;
-    
-    const isDuplicate = recentMessages.some(el => {
-      const msgText = el.querySelector('.message-text')?.textContent;
-      const msgTime = el.dataset.timestamp ? parseInt(el.dataset.timestamp) : 0;
-      const contentMatch = msgText === (msg.text || msg.content);
-      const timeMatch = msgTime > threeSecondsAgo;
-      
-      if (contentMatch && timeMatch) {
-        console.log('⚠️ Duplicate content detected, skipping (content+time match):', {
-          text: msgText?.substring(0, 20),
-          timeDiff: Date.now() - msgTime
-        });
-      }
-      
-      return contentMatch && timeMatch;
-    });
-    
-    if (isDuplicate) {
-      console.log('⚠️ Duplicate content detected, skipping');
-      return;
-    }
-  }
-
-  console.log('✅ Adding new message:', messageId);
-
-  // ... rest of function remains the same ...
   // ✅ Extra check: Don't show duplicates of same content within 3 seconds
   if (!msg.isTemp && isOwn) {
     const recentMessages = Array.from(messagesEl.querySelectorAll('.whatsapp-message.own'));
@@ -5588,30 +5608,17 @@ function setupWhatsAppSocketListeners() {
   socket.off('message_deleted');
 
   // New message received (only from OTHER users - backend excludes sender)
- socket.on('new_message', (message) => {
-  console.log('📨 Socket received new_message:', {
-    id: message.id,
-    sender: message.sender_id,
-    currentUser: currentUser?.id,
-    isOwn: message.sender_id === currentUser?.id
+  socket.on('new_message', (message) => {
+    console.log('📨 New message received:', message);
+    
+    // ✅ Double-check it's not from current user (shouldn't happen with backend fix)
+    if (message.sender_id === currentUser?.id) {
+      console.log('⚠️ Ignoring own message from socket');
+      return;
+    }
+    
+    appendWhatsAppMessage(message);
   });
-
-  // ✅ CRITICAL: Ignore own messages from socket
-  if (message.sender_id === currentUser?.id) {
-    console.log('⚠️ Ignoring own message from socket (backend should have excluded)');
-    return;
-  }
-  
-  // ✅ Check if message already exists
-  const existingMsg = document.getElementById(`wa-msg-${message.id}`);
-  if (existingMsg) {
-    console.log('⚠️ Message already exists, skipping:', message.id);
-    return;
-  }
-  
-  console.log('✅ Adding message from socket:', message.id);
-  appendWhatsAppMessage(message);
-});
 
   // User started typing
   socket.off('user_typing').on('user_typing', (data) => {
@@ -5823,4 +5830,15 @@ window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
 window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
 
 console.log('✅ WhatsApp functions overridden with fixed versions');
+
+
+
+
+
+
+
+
+
+
+
 
