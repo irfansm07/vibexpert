@@ -1503,388 +1503,16 @@ async function sendWhatsAppMessage() {
     if (tempElement) {
       tempElement.remove();
     }
-  }
-}
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    sendWhatsAppMessage();
+    sendWhatsAppMessageFixed();
   }
   
   // Auto-resize textarea
   e.target.style.height = 'auto';
   e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
 }
-
-function showMessageOptions(messageId, isOwn) {
-  const options = [
-    { icon: '📋', label: 'Copy', action: () => copyMessage(messageId) },
-    { icon: '↪️', label: 'Reply', action: () => replyToMessage(messageId) },
-    { icon: '⭐', label: 'Star', action: () => starMessage(messageId) }
-  ];
-
-  if (isOwn) {
-    options.push({ icon: '🗑️', label: 'Delete', action: () => deleteWhatsAppMessage(messageId) });
-  }
-
-  showContextMenu(options);
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-// ========================================
-// COMMUNITIES & CHAT
-// ========================================
-
-function loadCommunities() {
-  const container = document.getElementById('communitiesContainer');
-  if (!container) return;
-
-  if (!currentUser) {
-    container.innerHTML = `
-      <div class="community-guidance">
-        <p>🎓 Please login first!</p>
-        <button class="home-nav-btn" onclick="showPage('home')">Login</button>
-      </div>
-    `;
-    return;
-  }
-
-  // WhatsApp-style complete layout
-  container.innerHTML = `
-    <div class="whatsapp-container">
-      <!-- Left Sidebar: Chats List -->
-      <div class="whatsapp-sidebar">
-        <div class="whatsapp-sidebar-header">
-          <div>
-            <h3>${currentUser.college}</h3>
-            <p style="font-size:12px;color:#888;margin-top:3px;">College Community</p>
-          </div>
-          <div class="sidebar-actions">
-          </div>
-        </div>
-        
-        <div class="whatsapp-search">
-          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
-        </div>
-        
-        <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Community Group Chat -->
-          <div class="chat-item active" onclick="openCommunityChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar">🎓</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>${currentUser.college} Community</h4>
-                <span class="chat-time">Now</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Click to open group chat</span>
-                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Announcements Channel -->
-          <div class="chat-item" onclick="openAnnouncementsChannel()">
-            <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>📢 Announcements</h4>
-                <span class="chat-time">"COMING SOON"</span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">Important college updates</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Study Groups -->
-          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
-            <div class="chat-avatar">
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                 </div>
-              <div class="chat-preview">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Main Chat Area -->
-      <div class="whatsapp-main" id="whatsappMain">
-        <div class="whatsapp-chat-header">
-          <div class="chat-header-info">
-            <div class="chat-avatar-large">🎓</div>
-            <div>
-              <h3>${currentUser.college} Community</h3>
-              <p class="chat-status">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> members online
-              </p>
-            </div>
-          </div>
-          <div class="chat-header-actions">
-            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
-          </div>
-        </div>
-
-        <div class="whatsapp-messages" id="whatsappMessages">
-          <div class="date-separator">
-            <span>Today</span>
-          </div>
-          <div style="text-align:center;padding:40px;color:#888;">
-          </div>
-        </div>
-
-        <div class="whatsapp-input-area">
-          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
-          <div class="input-wrapper">
-            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
-              onkeydown="handleWhatsAppKeypress(event)" 
-              oninput="handleTypingIndicator()"></textarea>
-          </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
-            <span class="send-icon">➤</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Twitter-style Feed (Initially Hidden) -->
-      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
-        <div class="twitter-header">
-          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
-          <h3>Community Posts</h3>
-        </div>
-        <div class="twitter-feed" id="twitterFeed">
-          <div style="text-align:center;padding:40px;color:#888;">
-            <div style="font-size:48px;margin-bottom:15px;">📰</div>
-            <p>Loading posts...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat Info Panel (Hidden) -->
-      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-        <div class="info-panel-header">
-          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
-          <h3>Chat Info</h3>
-        </div>
-        <div class="info-panel-content">
-          <div class="info-section">
-            <div class="info-avatar">🎓</div>
-            <h2>${currentUser.college}</h2>
-            <p>College Community Group</p>
-          </div>
-          
-          <div class="info-section">
-            <h4>📊 Statistics</h4>
-            <div class="info-stats">
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMembers">0</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMessages">0</span>
-                <span class="stat-label">Messages</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="activeToday">0</span>
-                <span class="stat-label">Active Today</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4>⚙️ Settings</h4>
-            <div class="info-option" onclick="toggleNotifications()">
-              <span>🔔 Notifications</span>
-              <span id="notifStatus">On</span>
-            </div>
-            <div class="info-option" onclick="muteChat()">
-              <span>🔇 Mute Chat</span>
-              <span>Off</span>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Initialize chat
- setTimeout(() => {
-    if (typeof initWhatsAppChatFixes === 'function') {
-      initWhatsAppChatFixes();  // ← ADD ONLY THIS LINE
-    }
-    loadWhatsAppMessages();
-    initWhatsAppFeatures();
-    loadTwitterFeed();
-  }, 100);
-}
- 
-// ==========================================
-// WHATSAPP MESSAGE FUNCTIONS
-// ==========================================
-
-async function loadWhatsAppMessages() {
-  try {
-    const data = await apiCall('/api/community/messages', 'GET');
-    const messagesEl = document.getElementById('whatsappMessages');
-    
-    if (!messagesEl) return;
-
-    // ✅ FIXED: Only clear if this is the first load
-    const existingMessages = messagesEl.querySelectorAll('[id^="wa-msg-"]');
-    const isFirstLoad = existingMessages.length === 0;
-    
-    if (isFirstLoad) {
-      // Keep date separator on first load only
-      const dateSeparator = messagesEl.querySelector('.date-separator');
-      messagesEl.innerHTML = '';
-      if (dateSeparator) messagesEl.appendChild(dateSeparator);
-    }
-
-    if (!data.messages || data.messages.length === 0) {
-      if (isFirstLoad) {
-        messagesEl.innerHTML += `
-          <div class="no-messages">
-            <div style="font-size:64px;margin-bottom:20px;">👋</div>
-            <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-            <p style="color:#888;">Say hi to your college community</p>
-          </div>
-        `;
-      }
-      return;
-    }
-
-    // ✅ FIXED: Only append new messages that don't already exist
-    console.log(`📥 Loading ${data.messages.length} messages`);
-    data.messages.forEach(msg => {
-      const msgExists = document.getElementById(`wa-msg-${msg.id}`);
-      if (!msgExists) {
-        appendWhatsAppMessage(msg);
-      }
-    });
-    
-    // ✅ Scroll to bottom only on first load
-    if (isFirstLoad) {
-      setTimeout(() => scrollToBottom(), 100);
-    }
-    
-    // Update stats
-    updateChatStats(data.messages.length);
-  } catch(error) {
-    console.error('Load messages error:', error);
-  }
-}
-
-
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
-  if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  // ✅ Clear input IMMEDIATELY
-  const originalContent = content;
-  input.value = '';
-  input.style.height = 'auto';
-
-  // ✅ Create unique temp ID
-  const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-  
-  const tempMessage = {
-    id: tempId,
-    content: originalContent,
-    sender_id: currentUser.id,
-    users: {
-      username: currentUser.username,
-      avatar_url: currentUser.avatar_url
-    },
-    created_at: new Date().toISOString(),
-    text: originalContent,
-    isTemp: true
-  };
-
-  try {
-    // ✅ Show optimistic message
-    appendWhatsAppMessage(tempMessage);
-
-    // Stop typing indicator
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-
-    // ✅ Send to server
-    const response = await apiCall('/api/community/messages', 'POST', { 
-      content: originalContent 
-    });
-    
-    if (response.success && response.message) {
-      playMessageSound('send');
-      
-      // ✅ Remove temp message
-      const tempEl = document.getElementById(`wa-msg-${tempId}`);
-      if (tempEl) {
-        console.log(`🗑️ Removing temp: ${tempId}`);
-        tempEl.remove();
-      }
-      
-      // ✅ Add real message from API (NOT from socket)
-      console.log(`✅ Adding real: ${response.message.id}`);
-      appendWhatsAppMessage(response.message);
-    }
-  } catch(error) {
-    console.error('❌ Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-    
-    // Remove temp on error
-    const tempEl = document.getElementById(`wa-msg-${tempId}`);
-    if (tempEl) tempEl.remove();
-    
-    // Restore input
-    input.value = originalContent;
-  }
-}
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
 function handleTypingIndicator() {
   const now = Date.now();
   if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
@@ -5665,19 +5293,26 @@ function setupWhatsAppSocketListeners() {
  * Enhanced sendWhatsAppMessage with proper handling
  */
 async function sendWhatsAppMessageFixed() {
+  console.log('🔧 sendWhatsAppMessageFixed called with initial content:', document.getElementById('whatsappInput')?.value.trim());
+  console.log('🔧 sendWhatsAppMessageFixed called');
   const input = document.getElementById('whatsappInput');
   const content = input?.value.trim();
+  console.log('🔧 Content:', content, 'Input exists:', !!input);
   
   if (!content) {
+    console.log('🔧 No content, returning');
     showMessage('⚠️ Message cannot be empty', 'error');
     input?.focus();
     return;
   }
 
   if (!currentUser) {
+    console.log('🔧 No current user, returning');
     showMessage('⚠️ Please login first', 'error');
     return;
   }
+
+  console.log('🔧 About to try block');
 
   try {
     // Temporarily add required fields to bypass backend check
@@ -5844,11 +5479,16 @@ console.log('📦 WhatsApp Chat Fixes Module Loaded');
 const originalAppendWhatsAppMessage = window.appendWhatsAppMessage;
 const originalSendWhatsAppMessage = window.sendWhatsAppMessage;
 
-  // Override existing functions
-  window.appendWhatsAppMessage = appendWhatsAppMessage;
-  window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
+// Override existing functions
+window.appendWhatsAppMessage = appendWhatsAppMessage;
+window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
 
 console.log('✅ WhatsApp functions overridden with fixed versions');
+
+}
+}
+
+// End of file
 
 
 
