@@ -1736,243 +1736,38 @@ async function loadWhatsAppMessages() {
     
     if (!messagesEl) return;
 
-    // ✅ FIXED: Only clear if this is the first load
-    const existingMessages = messagesEl.querySelectorAll('[id^="wa-msg-"]');
-    const isFirstLoad = existingMessages.length === 0;
-    
-    if (isFirstLoad) {
-      // Keep date separator on first load only
-      const dateSeparator = messagesEl.querySelector('.date-separator');
-      messagesEl.innerHTML = '';
-      if (dateSeparator) messagesEl.appendChild(dateSeparator);
-    }
+    // Keep date separator
+    const dateSeparator = messagesEl.querySelector('.date-separator');
+    messagesEl.innerHTML = '';
+    if (dateSeparator) messagesEl.appendChild(dateSeparator);
 
     if (!data.messages || data.messages.length === 0) {
-      if (isFirstLoad) {
-        messagesEl.innerHTML += `
-          <div class="no-messages">
-            <div style="font-size:64px;margin-bottom:20px;">👋</div>
-            <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
-            <p style="color:#888;">Say hi to your college community</p>
-          </div>
-        `;
-      }
+      messagesEl.innerHTML += `
+        <div class="no-messages">
+          <div style="font-size:64px;margin-bottom:20px;">👋</div>
+          <h3 style="color:#4f74a3;margin-bottom:10px;">Welcome to Community Chat!</h3>
+          <p style="color:#888;">Say hi to your college community</p>
+        </div>
+      `;
       return;
     }
 
-    // ✅ FIXED: Only append new messages that don't already exist
+    // ✅ CRITICAL FIX: Don't reverse - API returns in correct order (oldest first)
+    // Messages will append to bottom due to flex-direction: column
     console.log(`📥 Loading ${data.messages.length} messages`);
-    data.messages.forEach(msg => {
-      const msgExists = document.getElementById(`wa-msg-${msg.id}`);
-      if (!msgExists) {
-        appendWhatsAppMessage(msg);
-      }
-    });
-    
-    // ✅ Scroll to bottom only on first load
-    if (isFirstLoad) {
-      setTimeout(() => scrollToBottom(), 100);
-    }
+    data.messages.forEach(msg => appendWhatsAppMessage(msg));
+    // ✅ Scroll to bottom after all messages loaded
+    setTimeout(() => scrollToBottom(), 100);
     
     // Update stats
     updateChatStats(data.messages.length);
   } catch(error) {
-    console.error('Load messages error:', error);
-  }
-}
-
-
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input?.value.trim();
-  
-  if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
-    return;
-  }
-
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
-    return;
-  }
-
-  // ✅ Clear input IMMEDIATELY
-  const originalContent = content;
-  input.value = '';
-  input.style.height = 'auto';
-
-  // ✅ Create unique temp ID
-  const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-  
-  const tempMessage = {
-    id: tempId,
-    content: originalContent,
-    sender_id: currentUser.id,
-    users: {
-      username: currentUser.username,
-      avatar_url: currentUser.avatar_url
-    },
-    created_at: new Date().toISOString(),
-    text: originalContent,
-    isTemp: true
-  };
-
-  try {
-    // ✅ Show optimistic message
-    appendWhatsAppMessage(tempMessage);
-
-    // Stop typing indicator
-    if (socket && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
+    console.error('', error);
+    const messagesEl = document.getElementById('whatsappMessages');
+    
     }
-
-    // ✅ Send to server
-    const response = await apiCall('/api/community/messages', 'POST', { 
-      content: originalContent 
-    });
-    
-    if (response.success && response.message) {
-      playMessageSound('send');
-      
-      // ✅ Remove temp message
-      const tempEl = document.getElementById(`wa-msg-${tempId}`);
-      if (tempEl) {
-        console.log(`🗑️ Removing temp: ${tempId}`);
-        tempEl.remove();
-      }
-      
-      // ✅ Add real message from API (NOT from socket)
-      console.log(`✅ Adding real: ${response.message.id}`);
-      appendWhatsAppMessage(response.message);
-    }
-  } catch(error) {
-    console.error('❌ Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
-    
-    // Remove temp on error
-    const tempEl = document.getElementById(`wa-msg-${tempId}`);
-    if (tempEl) tempEl.remove();
-    
-    // Restore input
-    input.value = originalContent;
-  }
-}
-function handleWhatsAppKeypress(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendWhatsAppMessage();
-  }
-  
-  // Auto-resize textarea
-  e.target.style.height = 'auto';
-  e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
-}
-
-function handleTypingIndicator() {
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-    socket.emit('typing', { 
-      collegeName: currentUser.college, 
-      username: currentUser.username 
-    });
-    lastTypingEmit = now;
   }
 
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser && currentUser.college) {
-      socket.emit('stop_typing', { 
-        collegeName: currentUser.college, 
-        username: currentUser.username 
-      });
-    }
-  }, 3000);
-}
-
-function showMessageActions(messageId) {
-  // Hide all other action menus
-  document.querySelectorAll('.message-actions-menu').forEach(menu => {
-    menu.style.display = 'none';
-  });
-  
-  // Show this message's actions
-  const actionsMenu = document.getElementById(`actions-${messageId}`);
-  if (actionsMenu) {
-    actionsMenu.style.display = 'flex';
-    
-    // Hide after 5 seconds
-    setTimeout(() => {
-      actionsMenu.style.display = 'none';
-    }, 5000);
-  }
-}
-
-async function deleteWhatsAppMessage(messageId) {
-  if (!confirm('Delete this message?')) return;
-
-  try {
-    await apiCall(`/api/community/messages/${messageId}`, 'DELETE');
-    
-    const messageEl = document.getElementById(`wa-msg-${messageId}`);
-    if (messageEl) {
-      messageEl.style.animation = 'fadeOut 0.3s ease';
-      setTimeout(() => messageEl.remove(), 300);
-    }
-    
-    showMessage('🗑️ Message deleted', 'success');
-  } catch(error) {
-    console.error('Delete error:', error);
-    showMessage('❌ Failed to delete', 'error');
-  }
-}
-
-function copyMessageText(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  
-  if (!text) return;
-
-  navigator.clipboard.writeText(text).then(() => {
-    showMessage('📋 Message copied!', 'success');
-  }).catch(() => {
-    showMessage('❌ Failed to copy', 'error');
-  });
-}
-
-function replyToMessage(messageId) {
-  const messageEl = document.getElementById(`wa-msg-${messageId}`);
-  const text = messageEl?.querySelector('.message-text')?.textContent;
-  const sender = messageEl?.querySelector('.message-sender-name')?.textContent || 'You';
-  
-  if (!text) return;
-  
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value = `@${sender}: ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}\n\n`;
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  }
-  
-  showMessage(`↩️ Replying to ${sender}`, 'success');
-}
-
-function forwardMessage(messageId) {
-  showMessage('↪️ Forward feature coming soon!', 'success');
-}
-
-function scrollToBottom() {
-  const messagesEl = document.getElementById('whatsappMessages');
-  if (messagesEl) {
-    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-  }
-}
-
-function updateChatStats(messageCount) {
-  const totalMessages = document.getElementById('totalMessages');
   if (totalMessages) totalMessages.textContent = messageCount;
 }
 
@@ -2030,69 +1825,6 @@ function closeEmojiPicker() {
   const picker = document.getElementById('emojiPickerPopup');
   if (picker) picker.remove();
 }
-
-function insertEmoji(emoji) {
-  const input = document.getElementById('whatsappInput');
-  if (input) {
-    input.value += emoji;
-    input.focus();
-  }
-  closeEmojiPicker();
-}
-
-function searchEmojis(query) {
-  // Simple search implementation
-  const categories = document.querySelectorAll('.emoji-category');
-  categories.forEach(cat => {
-    const items = cat.querySelectorAll('.emoji-item');
-    let hasVisible = false;
-    items.forEach(item => {
-      // In real app, you'd have emoji names to search
-      item.style.display = 'flex';
-      hasVisible = true;
-    });
-    cat.style.display = hasVisible ? 'block' : 'none';
-  });
-}
-
-function openStickerPicker() {
-  showMessage('🎨 Sticker picker coming soon!', 'success');
-  
-  // Quick sticker selection
-  const stickers = ['🔥', '💯', '✨', '⚡', '💪', '🎯', '🚀', '💝', '🎨', '📚'];
-  const sticker = prompt('Quick sticker:\n' + stickers.join(' ') + '\n\nChoose one:');
-  
-  if (sticker && stickers.includes(sticker)) {
-    const input = document.getElementById('whatsappInput');
-    if (input) {
-      input.value += sticker;
-      input.focus();
-    }
-  }
-}
-
-function openAttachMenu() {
-  const menu = document.createElement('div');
-  menu.className = 'attach-menu-popup';
-  menu.style.cssText = 'position:fixed;bottom:80px;left:50px;background:rgba(15,25,45,0.98);border:2px solid rgba(79,116,163,0.4);border-radius:15px;padding:15px;z-index:5000;';
-  
-  menu.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;min-width:200px;">
-      <button onclick="attachPhoto()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📷</span>
-        <span>Photo</span>
-      </button>
-      <button onclick="attachVideo()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">🎥</span>
-        <span>Video</span>
-      </button>
-      <button onclick="attachDocument()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(79,116,163,0.2);border:2px solid rgba(79,116,163,0.3);border-radius:12px;cursor:pointer;color:#4f74a3;font-weight:600;">
-        <span style="font-size:32px;">📄</span>
-        <span>Document</span>
-      </button>
-      <button onclick="menu.remove()" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:rgba(239,68,68,0.2);border:2px solid rgba(239,68,68,0.3);border-radius:12px;cursor:pointer;color:#ff6b6b;font-weight:600;">
-        <span style="font-size:32px;">✕</span>
-        <span>Cancel</span>
       </button>
     </div>
   `;
@@ -5028,44 +4760,6 @@ if (socket) {
     hideTypingIndicator(data.username);
   });
 }
-
-function showTypingIndicator(username) {
-  let indicator = document.getElementById('typing-indicator');
-  if (!indicator) {
-    indicator = document.createElement('div');
-    indicator.id = 'typing-indicator';
-    indicator.className = 'whatsapp-typing-indicator';
-    document.getElementById('whatsappMessages')?.appendChild(indicator);
-  }
-  indicator.innerHTML = `
-    <div class="typing-bubble">
-      <span>${username} is typing</span>
-      <div class="typing-dots">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
-  `;
-  scrollToBottom();
-}
-
-function hideTypingIndicator(username) {
-  const indicator = document.getElementById('typing-indicator');
-  if (indicator) indicator.remove();
-}
-
-// ==========================================
-// ENHANCED PROFILE FUNCTIONS
-// ==========================================
-
-let profilePhotoActionsVisible = false;
-
-// Show enhanced profile modal
-function showEnhancedProfile() {
-  if (!currentUser) return;
-  
-  const modal = document.getElementById('enhancedProfileModal');
-  if (modal) {
-    modal.style.display = 'flex';
     loadEnhancedProfileData();
   }
 }
@@ -5456,14 +5150,16 @@ function appendWhatsAppMessage(msg) {
   const wrapper = document.createElement('div');
   wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `wa-msg-${messageId}`;
-  wrapper.dataset.timestamp = Date.now();
+  wrapper.dataset.timestamp = Date.now(); // ✅ Add timestamp for duplicate detection
 
   let messageHTML = '';
   
+  // Add sender name for others
   if (!isOwn) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
+  // Message bubble
   messageHTML += `
     <div class="message-bubble">
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
@@ -5483,6 +5179,7 @@ function appendWhatsAppMessage(msg) {
     scrollToBottom();
   }
 
+  // Play sound for received messages
   if (!isOwn && !msg.isTemp) {
     playMessageSound('receive');
   }
@@ -5746,7 +5443,9 @@ function initWhatsAppChatFixes() {
     });
   }
 
-
+  // Override existing functions
+  window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
+  window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
 
   console.log('✅ WhatsApp Chat Fixes Initialized!');
 }
@@ -5791,53 +5490,3 @@ document.addEventListener('DOMContentLoaded', function() {
 window.initWhatsAppChatFixes = initWhatsAppChatFixes;
 
 console.log('📦 WhatsApp Chat Fixes Module Loaded');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ==========================================
-// FIX: Override existing functions
-// ==========================================
-
-// Store original functions
-const originalAppendWhatsAppMessage = window.appendWhatsAppMessage;
-const originalSendWhatsAppMessage = window.sendWhatsAppMessage;
-
-// Override with fixed versions
-window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
-window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
-
-console.log('✅ WhatsApp functions overridden with fixed versions');
-
-
-
-
-
-
-
-
-
-
-
