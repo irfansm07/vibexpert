@@ -678,10 +678,7 @@ function setupEventListeners() {
       closeAuthPopup();
     }
 
-    if (e.target.classList.contains('cta-button') || e.target.closest('.cta-button')) {
-      e.preventDefault();
-      showAuthPopup();
-    }
+
   });
 }
 
@@ -1534,10 +1531,17 @@ function loadCommunities() {
 
   if (!currentUser || !currentUser.communityJoined) {
     container.innerHTML = `
-      <div class="community-guidance">
-        <p>🎓 Connect to college first!</p>
-        <button class="home-nav-btn" onclick="showPage('home')">Explore</button>
-      </div>
+    <div class="join-community-container"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px;">
+        <div class="join-icon" style="font-size: 80px; margin-bottom: 20px;">🤝</div>
+        <h2 style="margin-bottom: 15px; color: var(--text-color);">Join a Community</h2>
+        <p style="margin-bottom: 30px; color: var(--text-muted); max-width: 400px;">Connect with students from your
+            university. Join now to start chatting and sharing vibes!</p>
+        <button onclick="goToActiveUniversities()" class="cta-button"
+            style="padding: 15px 40px; font-size: 18px; border-radius: 30px; background: linear-gradient(45deg, #4f74a3, #8da4d3); border: none; color: white; cursor: pointer; box-shadow: 0 5px 15px rgba(79, 116, 163, 0.4); transition: transform 0.2s;">
+            Join Now →
+        </button>
+    </div>
     `;
     return;
   }
@@ -2129,6 +2133,23 @@ function attachDocument() {
 // COLLEGE VERIFICATION
 // ========================================
 
+function goToActiveUniversities() {
+  // If user is already joined, go directly to chat
+  if (currentUser && currentUser.college) {
+    console.log('🎓 User already has college:', currentUser.college);
+    // Switch to communities tab which will trigger initCommunityChat
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector('.nav-link[onclick*="communities"]')?.classList.add('active');
+
+    // Manually trigger showPage for communities
+    showPage('communities');
+    return;
+  }
+
+  showPage('activeUniversities');
+  renderActiveUniversities();
+}
+
 function selectUniversity(type) {
   currentType = type;
   currentPage = 1;
@@ -2210,16 +2231,34 @@ function openVerify(name, emailDomain) {
   currentVerifyCollege = { name, emailDomain };
 
   const modalHtml = `
-   <div class="modal-box">
+   <div class="modal-box verify-modal-box">
      <span class="close" onclick="closeModal('verifyModal')">&times;</span>
-     <h2>Verify College</h2>
-     <p>Enter your college email</p>
-     <p style="color:#888;font-size:13px;">Must end with: ${emailDomain}</p>
-     <input type="email" id="verifyEmail" placeholder="your.email${emailDomain}">
-     <button onclick="requestVerificationCode()">Send Code</button>
-     <div id="codeSection" style="display:none;margin-top:20px;">
-       <input type="text" id="verifyCode" placeholder="6-digit code" maxlength="6">
-       <button onclick="verifyCollegeCode()">Verify</button>
+     
+     <div class="verify-header">
+       <div class="verify-icon">🎓</div>
+       <h2>Verify College</h2>
+       <p class="verify-subtitle">Connect with your campus community</p>
+     </div>
+
+     <div class="verify-step">
+       <label>1. Enter College Email</label>
+       <div class="input-group">
+         <input type="email" id="verifyEmail" placeholder="student@${emailDomain}">
+         <div class="email-hint">Must end with: <strong>${emailDomain}</strong></div>
+       </div>
+       <button class="action-btn send-otp-btn" onclick="requestVerificationCode()">
+         <span>📧 Send Verification Code</span>
+       </button>
+     </div>
+
+     <div class="verify-step disabled-step" id="codeSection">
+       <label>2. Enter Verification Code</label>
+       <div class="input-group">
+         <input type="text" id="verifyCode" placeholder="Enter 6-digit OTP" maxlength="6" disabled>
+       </div>
+       <button class="action-btn verify-btn" id="verifyBtn" onclick="verifyCollegeCode()" disabled>
+         <span>✨ Verify & Join</span>
+       </button>
      </div>
    </div>
  `;
@@ -2250,8 +2289,20 @@ async function requestVerificationCode() {
     });
 
     showMessage('✅ Code sent to ' + email, 'success');
+
+    // Enable OTP section
     const codeSection = document.getElementById('codeSection');
-    if (codeSection) codeSection.style.display = 'block';
+    const verifyCodeInput = document.getElementById('verifyCode');
+    const verifyBtn = document.getElementById('verifyBtn');
+
+    if (codeSection) {
+      codeSection.classList.remove('disabled-step');
+      if (verifyCodeInput) {
+        verifyCodeInput.disabled = false;
+        verifyCodeInput.focus();
+      }
+      if (verifyBtn) verifyBtn.disabled = false;
+    }
   } catch (error) {
     showMessage('❌ ' + error.message, 'error');
   }
@@ -2553,6 +2604,14 @@ function goHome() {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   const homeLink = document.querySelector('.nav-link[onclick*="home"]');
   if (homeLink) homeLink.classList.add('active');
+}
+
+function goToActiveUniversities() {
+  showPage('home');
+  const section = document.getElementById('active-universities');
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 // ========================================
@@ -5856,3 +5915,255 @@ window.appendWhatsAppMessage = appendWhatsAppMessageFixed;
 window.sendWhatsAppMessage = sendWhatsAppMessageFixed;
 
 console.log('✅ WhatsApp functions overridden with fixed versions');
+
+// ==========================================
+// NEW COMMUNITY CHAT LOGIC (5-Day Retention)
+// ==========================================
+
+let communitySocketInitialized = false;
+
+function initCommunityChat() {
+  console.log('💬 Initializing Community Chat...');
+
+  // Reload user from storage to be sure
+  if (!currentUser) {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) currentUser = JSON.parse(stored);
+    } catch (e) {
+      console.error('Error parsing user', e);
+    }
+  }
+
+  console.log('👤 Current User Status:', currentUser ? 'Logged In' : 'Null', currentUser?.college);
+
+  const chatState = document.getElementById('communityChatState');
+  const joinState = document.getElementById('joinCommunityState');
+  const communitySection = document.getElementById('communities');
+
+  if (!currentUser || !currentUser.college) {
+    console.log('❌ User not joined to a college. Showing Join State.');
+    if (joinState) {
+      joinState.style.display = 'flex';
+      joinState.classList.remove('hidden');
+    }
+    if (chatState) {
+      chatState.style.display = 'none';
+      chatState.classList.add('hidden');
+    }
+    return;
+  }
+
+  // User is joined
+  console.log('✅ User is joined. Showing Chat State.');
+  if (joinState) {
+    joinState.style.display = 'none';
+    joinState.classList.add('hidden');
+  }
+  if (chatState) {
+    chatState.style.display = 'flex';
+    chatState.classList.remove('hidden');
+  }
+
+  // Update Header
+  const title = document.getElementById('communityTitle');
+  if (title) title.textContent = `Welcome to ${currentUser.college}`;
+
+  // Join Socket Room
+  if (socket) {
+    console.log('🔌 Joining socket room:', currentUser.college);
+    socket.emit('join_college', currentUser.college);
+    setupCommunitySocketListeners();
+  }
+
+  // Load Messages
+  loadCommunityMessages();
+}
+
+async function loadCommunityMessages() {
+  try {
+    const messagesArea = document.getElementById('chatMessages');
+    if (!messagesArea) return;
+
+    // Keep welcome message
+    const welcomeMsg = messagesArea.querySelector('.chat-welcome-message');
+    messagesArea.innerHTML = '';
+    if (welcomeMsg) messagesArea.appendChild(welcomeMsg);
+
+    const data = await apiCall('/api/community/messages');
+
+    if (data.success && data.messages) {
+      data.messages.forEach(msg => appendCommunityMessage(msg));
+      scrollToCommunityBottom();
+    }
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+  }
+}
+
+function appendCommunityMessage(msg) {
+  const messagesArea = document.getElementById('chatMessages');
+  if (!messagesArea) return;
+
+  const isOwn = msg.sender_id === (currentUser && currentUser.id);
+  const senderName = msg.users?.username || 'User';
+  const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-message ${isOwn ? 'right' : 'left'}`;
+
+  let mediaHtml = '';
+  if (msg.media_url) {
+    if (msg.media_type === 'video') {
+      mediaHtml = `<video src="${msg.media_url}" class="chat-media-video" controls></video>`;
+    } else {
+      mediaHtml = `<img src="${msg.media_url}" class="chat-media-img" onclick="openImageViewer(this.src)">`;
+    }
+  }
+
+  msgDiv.innerHTML = `
+    ${!isOwn ? `<div class="chat-sender-name">${senderName}</div>` : ''}
+    <div class="chat-bubble">
+      ${msg.content || ''}
+      ${mediaHtml}
+      <div class="message-time">${time}</div>
+    </div>
+  `;
+
+  messagesArea.appendChild(msgDiv);
+  scrollToCommunityBottom();
+}
+
+function scrollToCommunityBottom() {
+  const messagesArea = document.getElementById('chatMessages');
+  if (messagesArea) {
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+}
+
+let selectedChatMedia = null;
+
+function handleChatMediaSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  selectedChatMedia = file;
+  const reader = new FileReader();
+
+  const previewContainer = document.getElementById('chatMediaPreview');
+  const imgPreview = document.getElementById('chatPreviewImg');
+  const videoPreview = document.getElementById('chatPreviewVideo');
+
+  if (previewContainer) {
+    reader.onload = function (e) {
+      previewContainer.style.display = 'block';
+
+      if (file.type.startsWith('video/')) {
+        videoPreview.src = e.target.result;
+        videoPreview.style.display = 'block';
+        imgPreview.style.display = 'none';
+      } else {
+        imgPreview.src = e.target.result;
+        imgPreview.style.display = 'block';
+        videoPreview.style.display = 'none';
+      }
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+function clearChatPreview() {
+  selectedChatMedia = null;
+  const input = document.getElementById('chatMediaInput');
+  const preview = document.getElementById('chatMediaPreview');
+
+  if (input) input.value = '';
+  if (preview) preview.style.display = 'none';
+}
+
+async function sendCommunityMessage() {
+  const input = document.getElementById('chatInput');
+  const content = input.value.trim();
+
+  if (!content && !selectedChatMedia) return;
+
+  // Optimistic UI
+  appendCommunityMessage({
+    sender_id: currentUser.id,
+    content: content,
+    created_at: new Date().toISOString(),
+    media_url: selectedChatMedia ? URL.createObjectURL(selectedChatMedia) : null,
+    media_type: selectedChatMedia?.type.startsWith('video/') ? 'video' : 'image',
+    users: { username: currentUser.username }
+  });
+
+  input.value = '';
+  clearChatPreview();
+
+  try {
+    const formData = new FormData();
+    formData.append('content', content);
+    if (selectedChatMedia) {
+      formData.append('media', selectedChatMedia);
+    }
+
+    await apiCall('/api/community/messages', 'POST', formData);
+    // Success - Socket will handle real message, we rely on optimistic for immediate feedback
+  } catch (error) {
+    console.error('Send failed:', error);
+    showMessage('Failed to send message', 'error');
+  }
+}
+
+function handleChatKeyPress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendCommunityMessage();
+  }
+}
+
+function setupCommunitySocketListeners() {
+  if (!socket || communitySocketInitialized) return;
+
+  socket.on('new_message', (msg) => {
+    if (msg.sender_id !== currentUser.id) {
+      appendCommunityMessage(msg);
+      playMessageSound('receive');
+    }
+  });
+
+  socket.on('online_count', (count) => {
+    const countEl = document.getElementById('communityOnlineCount');
+    if (countEl) countEl.textContent = `${count} Online`;
+  });
+
+  communitySocketInitialized = true;
+}
+
+// Global scope override for showPage
+// We capture the previous implementation if we can, but since we are appending,
+// we just define a wrapper.
+const previousShowPage = window.showPage;
+
+window.showPage = function (pageId, ...args) {
+  console.log(`Navigate to: ${pageId}`);
+
+  // Call original logic (assuming it handles display:block/none)
+  if (typeof previousShowPage === 'function') {
+    previousShowPage(pageId, ...args);
+  } else {
+    // Fallback if previousShowPage isn't captured (e.g. it was defined as function declaration)
+    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
+    const page = document.getElementById(pageId);
+    if (page) page.style.display = 'block';
+  }
+
+  // Hook for Communities
+  if (pageId === 'communities') {
+    // Small delay to ensure DOM is ready
+    setTimeout(() => initCommunityChat(), 50);
+  }
+};
