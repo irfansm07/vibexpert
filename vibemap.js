@@ -5777,17 +5777,7 @@ async function sendWhatsAppMessageFixed() {
   }
 
   try {
-    // Optimistic UI update
-    const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date(),
-      text: content
-    };
-
-    appendWhatsAppMessageFixed(tempMsg);
+    // Clear input immediately for better UX
     input.value = '';
     input.style.height = 'auto';
 
@@ -5805,19 +5795,16 @@ async function sendWhatsAppMessageFixed() {
     if (response.success) {
       playMessageSound('send');
 
-      // Remove temp message
-      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
-      if (tempEl) tempEl.remove();
-
-      // Real message will come via Socket.IO
+      // ✅ FIX: Show the message immediately since socket won't broadcast it back to sender
+      // The socket listener filters out messages from current user (line 5624-5627)
+      appendWhatsAppMessageFixed(response.message);
     }
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
-
-    // Remove temp message on error
-    const tempEl = document.querySelector('[id^="wa-msg-temp-"]');
-    if (tempEl) tempEl.remove();
+    
+    // Restore the message to input on error so user can retry
+    input.value = content;
   }
 }
 
