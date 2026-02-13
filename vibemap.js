@@ -4672,14 +4672,16 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 // ==========================================
-// SUBSCRIPTION SYSTEM
+// SUBSCRIPTION SYSTEM - RAZORPAY INTEGRATION
 // ==========================================
 
 function openSubscriptionPopup() {
   const popup = document.getElementById('subscriptionPopup');
   if (popup) {
+    showSubView('subscriptionIntro');
     popup.classList.add('show');
     document.body.style.overflow = 'hidden';
+    updatePlanPricing();
   }
 }
 
@@ -4691,15 +4693,30 @@ function closeSubscriptionPopup() {
   }
 }
 
+function showSubView(viewId) {
+  document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+  const target = document.getElementById(viewId);
+  if (target) target.classList.add('active');
+}
+
+function showAllPlansView() {
+  showSubView('subscriptionPlansView');
+}
+
+function showIntroView() {
+  showSubView('subscriptionIntro');
+}
+
 function viewAllPlans() {
-  closeSubscriptionPopup();
-  showPage('subscriptionPlans');
+  showAllPlansView();
+}
 
-  // Update nav
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-
-  // Scroll to top
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function updatePlanPricing() {
+  const isFirstTime = !currentUser || !currentUser.hasSubscribed;
+  const noblePrice = document.getElementById('noblePrice');
+  const royalPrice = document.getElementById('royalPrice');
+  if (noblePrice) noblePrice.textContent = isFirstTime ? '₹9' : '₹29';
+  if (royalPrice) royalPrice.textContent = isFirstTime ? '₹15' : '₹49';
 }
 
 async function selectPlan(planType) {
@@ -4710,101 +4727,128 @@ async function selectPlan(planType) {
     return;
   }
 
-  // Animal Avatar States - Dancing Monkeys and Friends
-  const animalAvatars = {
-    email: {
-      idle: '🐵',
-      happy: '🕺',
-      excited: '💃'
-    },
-    password: {
-      idle: '🐒',
-      happy: '🦍',
-      excited: '🦧'
-    },
-    confirm: {
-      idle: '🐵',
-      happy: '🕺',
-      excited: '💃'
-    }
-  };
-
-  // Plan details
   const plans = {
-    noble: {
-      name: 'Noble',
-      firstTimePrice: 9,
-      regularPrice: 79,
-      posters: 5,
-      videos: 1,
-      days: 15
-    },
-    royal: {
-      name: 'Royal',
-      firstTimePrice: 15,
-      regularPrice: 99,
-      posters: 5,
-      videos: 3,
-      days: 23
-    }
+    noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 29, posters: 5, videos: 1, days: 15 },
+    royal: { name: 'Royal', firstTimePrice: 15, regularPrice: 49, posters: 5, videos: 3, days: 23 }
   };
 
   const plan = plans[planType];
+  if (!plan) { showMessage('❌ Invalid plan', 'error'); return; }
 
-  if (!plan) {
-    showMessage('❌ Invalid plan', 'error');
-    return;
-  }
-
-  // Check if first time subscriber
   const isFirstTime = !currentUser.hasSubscribed;
   const price = isFirstTime ? plan.firstTimePrice : plan.regularPrice;
 
-  // Confirmation
-  const confirmMsg = `Subscribe to ${plan.name} Plan?\n\n` +
-    `Price: ₹${price}\n` +
-    `Posters: ${plan.posters}\n` +
-    `Videos: ${plan.videos}\n` +
-    `Duration: ${plan.days} days\n\n` +
-    (isFirstTime ? '🎉 First time special price!' : 'Regular pricing');
-
-  if (!confirm(confirmMsg)) return;
+  // Show processing spinner in popup
+  showSubView('subscriptionProcessing');
 
   try {
-    showMessage('💳 Processing payment...', 'success');
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showMessage('⚠️ Session expired. Please login again.', 'error');
+      closeSubscriptionPopup();
+      showAuthPopup();
+      return;
+    }
 
-    // Simulate payment processing (replace with actual payment gateway)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Step 1: Create order on backend
+    const orderRes = await fetch(`${API_URL}/api/payment/create-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ amount: price, planType, isFirstTime })
+    });
+    const orderData = await orderRes.json();
 
-    // Here you would integrate with actual payment gateway
-    // For now, we'll simulate success
+    if (!orderRes.ok || !orderData.success) {
+      throw new Error(orderData.error || 'Failed to create order');
+    }
 
-    // Update user subscription
-    currentUser.subscription = {
-      plan: planType,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + plan.days * 24 * 60 * 60 * 1000),
-      posters: plan.posters,
-      videos: plan.videos,
-      postersUsed: 0,
-      videosUsed: 0
+    // Step 2: Open REAL Razorpay Checkout - money goes to YOUR account
+    showIntroView(); // Hide processing while Razorpay opens
+
+    const rzpOptions = {
+      key: orderData.razorpayKeyId,
+      amount: orderData.amount * 100, // Razorpay wants paise
+      currency: 'INR',
+      name: 'VibeXpert',
+      description: `${plan.name} Plan - ${plan.days} Days`,
+      image: 'https://vibexpert.online/assets/logo.png',
+      order_id: orderData.orderId,
+      prefill: {
+        name: currentUser.name || currentUser.username || '',
+        email: currentUser.email || ''
+      },
+      theme: { color: '#FFD700' },
+      handler: async function (response) {
+        // Payment successful on Razorpay's side - now verify on our backend
+        showSubView('subscriptionProcessing');
+        try {
+          const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planType
+            })
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            // Update local user data
+            currentUser.subscription = {
+              plan: planType,
+              startDate: new Date(),
+              endDate: new Date(verifyData.subscription ? verifyData.subscription.endDate : Date.now() + plan.days * 86400000),
+              posters: plan.posters,
+              videos: plan.videos,
+              postersUsed: 0,
+              videosUsed: 0
+            };
+            currentUser.hasSubscribed = true;
+            currentUser.isPremium = true;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+
+            // Show success in popup
+            const successEl = document.getElementById('successPlanDetails');
+            if (successEl) {
+              successEl.innerHTML = `<strong>${plan.name} Plan</strong> activated!<br>` +
+                `📸 ${plan.posters} Posters + 🎥 ${plan.videos} Video${plan.videos > 1 ? 's' : ''}<br>` +
+                `⏰ Valid for ${plan.days} days<br>` +
+                `<small style="opacity:0.7">Payment ID: ${response.razorpay_payment_id}</small>`;
+            }
+            showSubView('subscriptionSuccess');
+            updatePremiumBadge();
+            showMessage('🎉 Subscription activated!', 'success');
+          } else {
+            throw new Error(verifyData.error || 'Verification failed');
+          }
+        } catch (vErr) {
+          console.error('Payment verification error:', vErr);
+          showSubView('subscriptionFailed');
+          showMessage('❌ Payment verification failed', 'error');
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          showIntroView();
+          showMessage('Payment cancelled', 'error');
+        }
+      }
     };
 
-    currentUser.hasSubscribed = true;
-    currentUser.isPremium = true;
-
-    localStorage.setItem('user', JSON.stringify(currentUser));
-
-    closeSubscriptionPopup();
-
-    showMessage('🎉 Subscription successful!', 'success');
-
-    // Show success modal
-    showSubscriptionSuccessModal(plan);
+    const rzp = new Razorpay(rzpOptions);
+    rzp.on('payment.failed', function (resp) {
+      console.error('Razorpay payment failed:', resp.error);
+      showSubView('subscriptionFailed');
+      showMessage('❌ Payment failed: ' + (resp.error.description || 'Unknown error'), 'error');
+    });
+    rzp.open();
 
   } catch (error) {
     console.error('Subscription error:', error);
-    showMessage('❌ Payment failed. Please try again.', 'error');
+    showSubView('subscriptionFailed');
+    showMessage('❌ ' + (error.message || 'Payment failed. Please try again.'), 'error');
   }
 }
 
@@ -4812,71 +4856,94 @@ function showSubscriptionSuccessModal(plan) {
   const modal = document.createElement('div');
   modal.className = 'modal celebration-modal';
   modal.style.display = 'flex';
-
   modal.innerHTML = `
     <div class="celebration-modal-content">
       <div class="celebration-emoji">👑</div>
       <h2 class="celebration-title" style="color:#FFD700;">Welcome to ${plan.name}!</h2>
       <p class="celebration-message">You can now advertise your content</p>
-      
       <div class="celebration-stats" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.2));">
         <div class="celebration-count">${plan.posters} Posters + ${plan.videos} Video${plan.videos > 1 ? 's' : ''}</div>
         <div class="celebration-label">Available Now</div>
       </div>
-      
       <div class="celebration-quote">
         <strong>Duration:</strong> ${plan.days} days<br>
         Your ads will appear in Community & RealVibes sections
       </div>
-      
-      <button class="celebration-button" style="background:linear-gradient(135deg,#FFD700,#FFA500);" 
+      <button class="celebration-button" style="background:linear-gradient(135deg,#FFD700,#FFA500);"
         onclick="this.closest('.modal').remove(); showPage('posts');">
         Start Creating Ads 🚀
       </button>
     </div>
   `;
-
   document.body.appendChild(modal);
-  createConfetti();
+  if (typeof createConfetti === 'function') createConfetti();
 }
 
 // Check subscription status
 function checkSubscriptionStatus() {
   if (!currentUser || !currentUser.subscription) return null;
-
   const now = new Date();
   const endDate = new Date(currentUser.subscription.endDate);
-
   if (now > endDate) {
-    // Subscription expired
     currentUser.isPremium = false;
     currentUser.subscription = null;
     localStorage.setItem('user', JSON.stringify(currentUser));
     return null;
   }
-
   return currentUser.subscription;
 }
 
 // Display premium badge if user is subscribed
 function updatePremiumBadge() {
   const userName = document.getElementById('userName');
-  if (!userName) return;
-
+  if (!userName || !currentUser) return;
   const subscription = checkSubscriptionStatus();
-
   if (subscription) {
     const planEmoji = subscription.plan === 'royal' ? '👑' : '🥈';
-    userName.innerHTML = `${planEmoji} Hi, ${currentUser.username}`;
+    const badgeClass = subscription.plan === 'royal' ? 'royal-verified' : 'noble-verified';
+    userName.innerHTML = `${planEmoji} Hi, ${currentUser.username} <span class="premium-verification-badge ${badgeClass}">✓</span>`;
   } else {
     userName.textContent = 'Hi, ' + currentUser.username;
+  }
+}
+
+// Fetch subscription status from backend on login
+async function fetchSubscriptionStatus() {
+  if (!currentUser) return;
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(`${API_URL}/api/subscription/status`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success && data.subscription) {
+      currentUser.subscription = {
+        plan: data.subscription.plan,
+        startDate: data.subscription.startDate,
+        endDate: data.subscription.endDate,
+        posters: data.subscription.postersQuota || 5,
+        videos: data.subscription.videosQuota || 1,
+        postersUsed: 0,
+        videosUsed: 0
+      };
+      currentUser.isPremium = true;
+      currentUser.hasSubscribed = true;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    } else {
+      currentUser.isPremium = false;
+      currentUser.subscription = null;
+    }
+    updatePremiumBadge();
+  } catch (err) {
+    console.error('Failed to fetch subscription status:', err);
   }
 }
 
 // Call this after login
 document.addEventListener('DOMContentLoaded', function () {
   if (currentUser) {
-    updatePremiumBadge();
+    fetchSubscriptionStatus();
   }
 });
 
