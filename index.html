@@ -451,7 +451,7 @@
             <h2>Create Account</h2>
             <input type="text" id="signupName" placeholder="Full Name" required>
             <input type="email" id="signupEmail" placeholder="Email" required>
-            <input type="text" id="signupReg" placeholder="Registration Number" required>
+            <input type="text" id="signupReg" placeholder="College Email" required>
 
             <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
             <div style="display:flex; gap:15px; margin-bottom:15px;">
@@ -501,7 +501,7 @@
         <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
         <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
         <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
-        <a href="#" class="nav-link" onclick="showPage('rewards', event)">🎁 Rewards</a>
+        <a href="#" class="nav-link" onclick="showPage('vibeshop', event)">🛒 VibeShop</a>
       </nav>
 
       <div class="header-right">
@@ -555,7 +555,7 @@
           <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
           <div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
           <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
-          <div class="menu-item" onclick="showPage('rewards', event)">🎁 Rewards</div>
+          <div class="menu-item" onclick="showPage('vibeshop', event)">🛒 VibeShop</div>
           <hr>
           <div class="menu-item" onclick="showProfilePage()">👤 Profile</div>
           <div class="menu-item" onclick="showComplaintModal()">📢 Complaint</div>
@@ -863,303 +863,296 @@
         <div id="postsFeed" class="posts-feed"></div>
       </section>
 
-      <!-- REWARDS -->
-
-      <section id="rewards" class="page" style="display:none;">
-
-        <!-- Fireworks Canvas -->
-        <canvas id="fireworksCanvas"></canvas>
-
-        <!-- Rewards Roadmap Container -->
-        <div class="rewards-roadmap-container" id="rewardsRoadmapSection">
-          <h1 class="roadmap-title">🏆 Your Journey to Success</h1>
-
-          <div class="roadmap-wrapper">
-            <!-- Vertical Path Line -->
-            <div class="roadmap-path"></div>
-
-
-            <!-- Character/Avatar that moves along path -->
-            <div class="roadmap-character" id="roadmapCharacter"></div>
-
-            <!-- Current Progress Info Box -->
-            <div class="progress-info" id="progressInfo">
-              <h3>
-                <span>🎯</span>
-                <span id="currentLevelName">Wood League</span>
-              </h3>
-              <p id="progressDescription">Keep going to unlock new levels!</p>
-
-              <div id="progressTasks">
-                <div style="margin-top: 15px; color: #888;">
-                  <div>⏱️ Active Hours: 0/20 per week</div>
-                  <div>📅 Weeks: 0/4</div>
-                  <div>🔥 Alternative: 0/50 hours in 10 days</div>
+      <!-- PROFILE SECTION -->
+      <section id="profile" class="page" style="display:none;">
+        <input type="file" id="profilePicInput" style="display:none" accept="image/*"
+          onchange="handleProfilePicUpload(event)">
+        <div class="profile-page-container">
+          <div class="profile-premium-header">
+            <div class="profile-header-main">
+              <div class="profile-avatar-large">
+                <img id="profilePageAvatarImg" src="" alt="Avatar" style="display:none;">
+                <span id="profilePageAvatarInitial">👤</span>
+                <button class="avatar-edit-overlay" onclick="uploadProfilePic()">📷</button>
+              </div>
+              <div class="profile-header-info">
+                <h1 id="profilePageName">User Name</h1>
+                <p id="profilePageUsername">@username</p>
+                <div id="profilePageUserId"
+                  style="font-family: monospace; color: rgba(255,255,255,0.4); font-size: 11px; margin-bottom: 10px;">
+                  ID: #000000</div>
+                <div class="profile-header-actions">
+                  <button id="followBtn" class="btn-primary"
+                    style="display:none; padding: 8px 25px; font-size: 14px; margin-bottom: 15px;"
+                    onclick="toggleFollow()">Follow</button>
+                </div>
+                <div class="profile-badges" id="profilePageBadges">
+                  <span class="badge-item">🏅 Silver Level</span>
+                  <span class="badge-item">✨ Top Contributor</span>
                 </div>
               </div>
-
-              <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
-              </div>
-
-              <div class="progress-percentage" id="progressPercentage">0%</div>
-            </div>
-
-            <!-- WOOD LEAGUE -->
-            <div class="milestone-level wood">
-              <div class="level-header">
-                <div>
-                  <div>🪵</div>
-                  <div>
-                    <h3>Wood League</h3>
-                    <p>Beginner Level</p>
-                  </div>
+              <div class="profile-header-stats">
+                <div class="header-stat-item">
+                  <span class="stat-value" id="profileStatPosts">0</span>
+                  <span class="stat-label">Posts</span>
                 </div>
-                <div class="level-status in-progress">🎯 In Progress</div>
-              </div>
-
-              <div class="level-content">
-                <div class="requirements">
-                  <h4>📋 Requirements</h4>
-                  <ul>
-                    <li><span>⏱️</span><span>Be active 20 hours/week for a month</span></li>
-                    <li><span>🔥</span><span>OR be active 50 hours over 10 days</span></li>
-                  </ul>
+                <div class="header-stat-item">
+                  <span class="stat-value" id="profileStatFollowers">0</span>
+                  <span class="stat-label">Followers</span>
                 </div>
-
-                <div class="rewards">
-                  <h4>🎁 Rewards</h4>
-                  <ul>
-                    <li><span>✅</span><span>Verification Badge</span></li>
-                    <li><span>🏅</span><span>Trusted Member Status</span></li>
-                    <li><span>🔓</span><span>Access to exclusive features</span></li>
-                  </ul>
+                <div class="header-stat-item">
+                  <span class="stat-value" id="profileStatFollowing">0</span>
+                  <span class="stat-label">Following</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- BRONZE LEAGUE -->
-            <div class="milestone-level bronze">
-              <div class="level-header">
-                <div>
-                  <div>🥉</div>
-                  <div>
-                    <h3>Bronze League</h3>
-                    <p>Content Creator</p>
+          <div class="profile-nav-tabs">
+            <button class="profile-tab-btn active" onclick="switchProfileTab('info', event)">👤 Profile</button>
+            <button class="profile-tab-btn" onclick="switchProfileTab('cart', event)">🛒 My Cart</button>
+            <button class="profile-tab-btn" onclick="switchProfileTab('shipping', event)">🚚 Shipping</button>
+            <button class="profile-tab-btn" onclick="switchProfileTab('orders', event)">📦 My Orders</button>
+          </div>
+
+          <div class="profile-tab-content">
+            <!-- Profile Info Tab -->
+            <div id="profileTabInfo" class="tab-pane active">
+              <div class="profile-info-grid">
+                <div class="info-card">
+                  <h3>About Me</h3>
+                  <p id="profileBio">Tell the world about yourself...</p>
+                  <button class="btn-micro" onclick="editProfileBio()">Edit Bio</button>
+                </div>
+                <div class="info-card">
+                  <h3>Education</h3>
+                  <div class="info-item">
+                    <span class="info-icon">🎓</span>
+                    <span id="profileCollege">College Name</span>
                   </div>
-                </div>
-                <div class="level-status locked">🔒 Locked</div>
-              </div>
-
-              <div class="level-content">
-                <div class="requirements">
-                  <h4>📋 Requirements</h4>
-                  <ul>
-                    <li><span>📝</span><span>Post 150 posts</span></li>
-                    <li><span>👁️</span><span>Reach 1,000 total views</span></li>
-                    <li><span>❤️</span><span>OR get 10,000 likes</span></li>
-                  </ul>
-                </div>
-
-                <div class="rewards">
-                  <h4>🎁 Rewards</h4>
-                  <ul>
-                    <li><span>📢</span><span>Eligible for Official Posts</span></li>
-                    <li><span>🥉</span><span>Bronze Creator Badge</span></li>
-                    <li><span>📊</span><span>Advanced Analytics</span></li>
-                  </ul>
+                  <div class="info-item">
+                    <span class="info-icon">📧</span>
+                    <span id="profileRegNo">College Email</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- SILVER LEAGUE -->
-            <div class="milestone-level silver">
-              <div class="level-header">
-                <div>
-                  <div>🥈</div>
-                  <div>
-                    <h3>Silver League</h3>
-                    <p>Influencer Tier</p>
+            <!-- Cart Tab -->
+            <div id="profileTabCart" class="tab-pane">
+              <div class="ecommerce-view">
+                <h3>Shopping Cart</h3>
+                <div id="cartItemsContainer" class="cart-items-list">
+                  <!-- Mock items -->
+                  <div class="empty-state">
+                    <div class="empty-icon">🛒</div>
+                    <p>Your cart is empty.</p>
                   </div>
                 </div>
-                <div class="level-status locked">🔒 Locked</div>
-              </div>
-
-              <div class="level-content">
-                <div class="requirements">
-                  <h4>📋 Requirements</h4>
-                  <ul>
-                    <li><span>👥</span><span>Exceed 5,000 followers</span></li>
-                    <li><span>📈</span><span>Maintain engagement rate</span></li>
-                  </ul>
-                </div>
-
-                <div class="rewards">
-                  <h4>🎁 Rewards</h4>
-                  <ul>
-                    <li><span>📣</span><span>Able to Advertise</span></li>
-                    <li><span>🥈</span><span>Silver Influencer Badge</span></li>
-                    <li><span>💼</span><span>Brand Partnership Access</span></li>
-                    <li><span>🎨</span><span>Custom Profile Themes</span></li>
-                  </ul>
+                <div class="cart-summary" style="display:none;">
+                  <div class="summary-row"><span>Subtotal:</span><span id="cartSubtotal">₹0</span></div>
+                  <button class="btn-primary checkout-btn" onclick="proceedToCheckout()">Checkout Now</button>
                 </div>
               </div>
             </div>
 
-            <!-- GOLD LEAGUE -->
-            <div class="milestone-level gold">
-              <div class="level-header">
-                <div>
-                  <div>🥇</div>
-                  <div>
-                    <h3>Gold League</h3>
-                    <p>Elite Monetization</p>
+            <!-- Shipping Tab -->
+            <div id="profileTabShipping" class="tab-pane">
+              <div class="ecommerce-view">
+                <h3>Shipping Details</h3>
+                <div class="shipping-address-card">
+                  <div class="address-header">
+                    <span class="address-type">Default Address</span>
+                    <button class="btn-micro" onclick="editShippingAddress()">Edit</button>
+                  </div>
+                  <div id="shippingAddressContent" class="address-details">
+                    <p>No address saved yet.</p>
                   </div>
                 </div>
-                <div class="level-status locked">🔒 Locked</div>
               </div>
+            </div>
 
-              <div class="level-content">
-                <div class="requirements">
-                  <h4>📋 Requirements</h4>
-                  <ul>
-                    <li><span>📝</span><span>Upload 1 post daily for 3 days</span></li>
-                    <li><span>🎥</span><span>Upload 1 vlog for 3 days</span></li>
-                    <li><span>📊</span><span>Maintain quality content</span></li>
-                  </ul>
-                </div>
-
-                <div class="rewards">
-                  <h4>🎁 Rewards</h4>
-                  <ul>
-                    <li><span>💰</span><span>Earn Money from Content</span></li>
-                    <li><span>📈</span><span>Paid by views & likes</span></li>
-                    <li><span>🥇</span><span>Gold Elite Badge</span></li>
-                    <li><span>👑</span><span>VIP Creator Status</span></li>
-                    <li><span>🌟</span><span>Featured on Homepage</span></li>
-                  </ul>
+            <!-- Orders Tab -->
+            <div id="profileTabOrders" class="tab-pane">
+              <div class="ecommerce-view">
+                <h3>My Orders</h3>
+                <div id="orderHistoryContainer" class="orders-list">
+                  <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <p>No orders yet.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
           </div>
         </div>
-      </section>
-      <!-- SUBSCRIPTION PLANS PAGE -->
-      <section id="subscriptionPlans" class="page" style="display:none;">
-        <div class="subscription-plans-page">
-          <div class="plans-header">
-            <h1 class="plans-title">Choose Your Plan</h1>
-            <p class="plans-subtitle">Advertise your content and reach thousands of students!</p>
-          </div>
+  </div>
+  </section>
 
-          <div class="plans-grid">
-            <!-- NORMAL PLAN -->
-            <div class="plan-card normal">
-              <div class="plan-icon">📱</div>
-              <h3 class="plan-name">Normal</h3>
+  <!-- EDIT PROFILE SECTION -->
+  <section id="editProfile" class="page" style="display:none;">
+    <div class="edit-profile-container">
+      <div class="edit-profile-header">
+        <button class="back-btn" onclick="showPage('profile')">← Back</button>
+        <h1 class="vibe-hard-branding">VIBE HARD</h1>
+      </div>
 
-              <div class="plan-price-section">
-                <div class="plan-price">FREE</div>
-                <div class="plan-duration">Current plan</div>
-              </div>
-
-              <ul class="plan-features">
-                <li>Create unlimited posts</li>
-                <li>Share unlimited vibes</li>
-                <li>Join communities</li>
-                <li>Chat with students</li>
-                <li>No advertising allowed</li>
-              </ul>
-
-              <button class="plan-select-btn" disabled>Current Plan</button>
-            </div>
-
-            <!-- NOBLE PLAN -->
-            <div class="plan-card noble">
-              <div class="plan-badge recommended">Recommended</div>
-              <div class="plan-icon">🥈</div>
-              <h3 class="plan-name">Noble</h3>
-
-              <div class="plan-price-section">
-                <div class="plan-original-price">₹79</div>
-                <div class="plan-price">₹9</div>
-                <div class="plan-duration">First time only • Then ₹79</div>
-              </div>
-
-              <ul class="plan-features">
-                <li>Everything in Normal</li>
-                <li>5 Advertisement Posters</li>
-                <li>1 Advertisement Video</li>
-                <li>15 Days advertising</li>
-                <li>Show in Community Feed</li>
-                <li>Show in RealVibes</li>
-              </ul>
-
-              <button class="plan-select-btn" onclick="selectPlan('noble')">
-                Select Noble Plan
-              </button>
-            </div>
-
-            <!-- ROYAL PLAN -->
-            <div class="plan-card royal">
-              <div class="plan-badge popular">Most Popular</div>
-              <div class="plan-icon">👑</div>
-              <h3 class="plan-name">Royal</h3>
-
-              <div class="plan-price-section">
-                <div class="plan-original-price">₹99</div>
-                <div class="plan-price">₹15</div>
-                <div class="plan-duration">First time only • Then ₹99</div>
-              </div>
-
-              <ul class="plan-features">
-                <li>Everything in Noble</li>
-                <li>5 Advertisement Posters</li>
-                <li>3 Advertisement Videos</li>
-                <li>23 Days advertising</li>
-                <li>Priority in Community Feed</li>
-                <li>Priority in RealVibes</li>
-                <li>Premium badge on profile</li>
-              </ul>
-
-              <button class="plan-select-btn" onclick="selectPlan('royal')">
-                Select Royal Plan
-              </button>
-            </div>
-          </div>
-
-          <div style="text-align:center; margin-top:40px;">
-            <button class="back-btn" onclick="showPage('home')">← Back to Home</button>
-          </div>
+      <div class="edit-profile-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="editName" placeholder="Enter your full name">
         </div>
-      </section>
-      <script>
-        // Initialize roadmap when rewards page loads
-        document.addEventListener('DOMContentLoaded', function () {
-          // Call updateRoadmapUI when rewards page becomes visible
-          const rewardsPage = document.getElementById('rewards');
-          if (rewardsPage) {
-            const observer = new MutationObserver(function (mutations) {
-              mutations.forEach(function (mutation) {
-                if (mutation.target.style.display !== 'none') {
-                  updateRoadmapUI();
-                }
-              });
-            });
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="editUsername" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label>Bio</label>
+          <textarea id="editBio" placeholder="Tell the world about yourself..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>College</label>
+          <input type="text" id="editCollege" placeholder="Enter your college">
+        </div>
+        <div class="form-group">
+          <label>College Email</label>
+          <input type="text" id="editRegNo" placeholder="Enter college email">
+        </div>
 
-            observer.observe(rewardsPage, {
-              attributes: true,
-              attributeFilter: ['style']
-            });
-          }
+        <div class="form-actions">
+          <button class="btn-primary" onclick="saveProfileChanges()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="vibeshop" class="page" style="display:none;">
+    <div class="vibeshop-container">
+      <h1 class="roadmap-title">🛒 VibeShop</h1>
+      <div style="text-align:center; padding:100px; color:#888;">
+        <div style="font-size:64px; margin-bottom:20px;">🏪</div>
+        <h2>Coming Soon!</h2>
+        <p>The exclusive VibeShop is under construction. Check back soon for amazing items!</p>
+      </div>
+    </div>
+  </section>
+  </section>
+  <!-- SUBSCRIPTION PLANS PAGE -->
+  <section id="subscriptionPlans" class="page" style="display:none;">
+    <div class="subscription-plans-page">
+      <div class="plans-header">
+        <h1 class="plans-title">Choose Your Plan</h1>
+        <p class="plans-subtitle">Advertise your content and reach thousands of students!</p>
+      </div>
+
+      <div class="plans-grid">
+        <!-- NORMAL PLAN -->
+        <div class="plan-card normal">
+          <div class="plan-icon">📱</div>
+          <h3 class="plan-name">Normal</h3>
+
+          <div class="plan-price-section">
+            <div class="plan-price">FREE</div>
+            <div class="plan-duration">Current plan</div>
+          </div>
+
+          <ul class="plan-features">
+            <li>Create unlimited posts</li>
+            <li>Share unlimited vibes</li>
+            <li>Join communities</li>
+            <li>Chat with students</li>
+            <li>No advertising allowed</li>
+          </ul>
+
+          <button class="plan-select-btn" disabled>Current Plan</button>
+        </div>
+
+        <!-- NOBLE PLAN -->
+        <div class="plan-card noble">
+          <div class="plan-badge recommended">Recommended</div>
+          <div class="plan-icon">🥈</div>
+          <h3 class="plan-name">Noble</h3>
+
+          <div class="plan-price-section">
+            <div class="plan-original-price">₹79</div>
+            <div class="plan-price">₹9</div>
+            <div class="plan-duration">First time only • Then ₹79</div>
+          </div>
+
+          <ul class="plan-features">
+            <li>Everything in Normal</li>
+            <li>5 Advertisement Posters</li>
+            <li>1 Advertisement Video</li>
+            <li>15 Days advertising</li>
+            <li>Show in Community Feed</li>
+            <li>Show in RealVibes</li>
+          </ul>
+
+          <button class="plan-select-btn" onclick="selectPlan('noble')">
+            Select Noble Plan
+          </button>
+        </div>
+
+        <!-- ROYAL PLAN -->
+        <div class="plan-card royal">
+          <div class="plan-badge popular">Most Popular</div>
+          <div class="plan-icon">👑</div>
+          <h3 class="plan-name">Royal</h3>
+
+          <div class="plan-price-section">
+            <div class="plan-original-price">₹99</div>
+            <div class="plan-price">₹15</div>
+            <div class="plan-duration">First time only • Then ₹99</div>
+          </div>
+
+          <ul class="plan-features">
+            <li>Everything in Noble</li>
+            <li>5 Advertisement Posters</li>
+            <li>3 Advertisement Videos</li>
+            <li>23 Days advertising</li>
+            <li>Priority in Community Feed</li>
+            <li>Priority in RealVibes</li>
+            <li>Premium badge on profile</li>
+          </ul>
+
+          <button class="plan-select-btn" onclick="selectPlan('royal')">
+            Select Royal Plan
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:40px;">
+        <button class="back-btn" onclick="showPage('home')">← Back to Home</button>
+      </div>
+    </div>
+  </section>
+  <script>
+    // Initialize roadmap when rewards page loads
+    document.addEventListener('DOMContentLoaded', function () {
+      // Call updateVibeshopUI when vibeshop page becomes visible
+      const vibeshopPage = document.getElementById('vibeshop');
+      if (vibeshopPage) {
+        const observer = new MutationObserver(function (mutations) {
+          mutations.forEach(function (mutation) {
+            if (mutation.target.style.display !== 'none') {
+              // updateVibeshopUI(); 
+            }
+          });
         });
-      </script>
-    </main>
 
-    <footer>
-      <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
-    </footer>
+        observer.observe(vibeshopPage, {
+          attributes: true,
+          attributeFilter: ['style']
+        });
+      }
+    });
+  </script>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
+  </footer>
   </div>
 
   <!-- MODALS -->
@@ -1278,6 +1271,35 @@
       <textarea id="complaintText" placeholder="Describe your complaint..."
         style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
       <button onclick="submitComplaint()">Submit Complaint</button>
+    </div>
+  </div>
+
+  <!-- BIO EDIT MODAL -->
+  <div id="bioEditModal" class="modal" style="display:none;">
+    <div class="modal-box bio-modal">
+      <span class="close" onclick="closeModal('bioEditModal')">&times;</span>
+      <h2>Update Profile</h2>
+      <p style="color:#8da4d3; font-size:14px; margin-bottom:20px;">VIBE HARD! Express yourself and manage your
+        identity.</p>
+
+      <div style="margin-bottom: 20px;">
+        <label
+          style="color:#8da4d3; font-size:12px; display:block; margin-bottom:8px; text-transform:uppercase;">Username</label>
+        <input type="text" id="modalUsernameText" placeholder="Enter new username"
+          style="width:100%; padding:15px 20px; border:1px solid rgba(79, 116, 163, 0.2); border-radius:15px; background:rgba(255,255,255,0.03); color:white; font-size:16px; outline:none; transition:all 0.3s ease;">
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label
+          style="color:#8da4d3; font-size:12px; display:block; margin-bottom:8px; text-transform:uppercase;">Bio</label>
+        <textarea id="modalBioText" placeholder="Tell the world about yourself..."
+          style="width:100%; padding:20px; border:1px solid rgba(79, 116, 163, 0.2); border-radius:20px; font-family:inherit; min-height:150px; background:rgba(255,255,255,0.03); color:white; margin-bottom:10px; font-size:16px; transition: all 0.3s ease;"
+          maxlength="200"></textarea>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="bioCharCount" style="color:#8da4d3; font-size:12px;">0/200</span>
+        <button class="btn-primary" style="padding: 12px 30px;" onclick="saveBioFromModal()">Save Profile</button>
+      </div>
     </div>
   </div>
 
