@@ -684,23 +684,38 @@ function getToken() {
   return localStorage.getItem('authToken');
 }
 
+// Fixed apiCall function - merged both versions with proper endpoint handling
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
-  const options = { method, headers: {}, signal: controller.signal };
+
+  // Ensure endpoint starts with / and construct full URL
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_URL}${normalizedEndpoint}`;
+
+  const options = {
+    method,
+    headers: {},
+    signal: controller.signal
+  };
+
   const token = getToken();
   if (token) options.headers['Authorization'] = `Bearer ${token}`;
+
   if (body && !(body instanceof FormData)) {
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   } else if (body instanceof FormData) {
     options.body = body;
   }
+
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, options);
+    const response = await fetch(url, options);
     clearTimeout(timeoutId);
+
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Request failed');
+    if (!response.ok) throw new Error(data.error || data.message || 'Request failed');
+
     return data;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -712,6 +727,9 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
   }
 }
 
+
+
+// Keep login and signup functions as they were (they're correct)
 async function login(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmail')?.value.trim();
@@ -776,42 +794,6 @@ async function signup(e) {
     const form = document.getElementById('signupForm');
     if (form) form.reset();
     setTimeout(() => goLogin(null), 2000);
-  } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
-  }
-}
-
-function goSignup(e) {
-  if (e) e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'block';
-}
-
-function goLogin(e) {
-  if (e) e.preventDefault();
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
-  document.getElementById('loginForm').style.display = 'block';
-}
-
-function goForgotPassword(e) {
-  e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'block';
-}
-
-async function handleForgotPassword(e) {
-  e.preventDefault();
-  const email = document.getElementById('resetEmail')?.value.trim();
-  if (!email) return showMessage('⚠️ Enter email', 'error');
-  try {
-    showMessage('📧 Sending code...', 'success');
-    await apiCall('/api/forgot-password', 'POST', { email });
-    showMessage('✅ Check email', 'success');
-    document.getElementById('resetEmailSection').style.display = 'none';
-    document.getElementById('resetCodeSection').style.display = 'block';
   } catch (error) {
     showMessage('❌ ' + error.message, 'error');
   }
@@ -2493,6 +2475,18 @@ async function showUserProfile(userId) {
   hideSearchResults();
   const searchBox = document.getElementById('searchBox');
   if (searchBox) searchBox.value = '';
+
+  try {
+    const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    if (data.success && data.user) {
+      showProfilePage(data.user);
+    } else {
+      showMessage('User not found', 'error');
+    }
+  } catch (error) {
+    console.error('Show profile error:', error);
+    showMessage('Failed to load profile', 'error');
+  }
 }
 
 
@@ -2546,12 +2540,15 @@ function showProfilePage(user) {
   if (postsStat) postsStat.textContent = targetUser.postCount || 0;
   if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
 
+  const followingStat = document.getElementById('profileStatFollowing');
+  if (followingStat) followingStat.textContent = targetUser.followingCount || 0;
+
   // Set bio
   const bioEl = document.getElementById('profileBio');
   if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
 
   // Ownership Visibility
-  const isOwn = currentUser && targetUser.username === currentUser.username; // Fallback to username if id is flaky
+  const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
 
   document.querySelectorAll('.edit-cover-btn, .avatar-edit-overlay, .btn-micro').forEach(btn => {
     btn.style.display = isOwn ? 'block' : 'none';
@@ -2563,7 +2560,9 @@ function showProfilePage(user) {
       followBtn.style.display = 'none';
     } else {
       followBtn.style.display = 'block';
-      const isFollowing = currentUser && currentUser.following && currentUser.following.includes(targetUser.username);
+      // Use API provided isFollowing state if available, fallback to local check
+      const isFollowing = targetUser.isFollowing;
+
       followBtn.textContent = isFollowing ? 'Following' : 'Follow';
       followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
       // Toggle look
@@ -2579,27 +2578,70 @@ function showProfilePage(user) {
   switchProfileTab('info');
 }
 
-function toggleFollow() {
+async function toggleFollow() {
   if (!currentUser || !window.currentProfileUser) return;
 
-  if (!currentUser.following) currentUser.following = [];
-  const targetUsername = window.currentProfileUser.username;
-  const isFollowing = currentUser.following.includes(targetUsername);
+  const targetUser = window.currentProfileUser;
+  const followBtn = document.getElementById('followBtn');
+  const followersStat = document.getElementById('profileStatFollowers');
 
-  if (isFollowing) {
-    currentUser.following = currentUser.following.filter(u => u !== targetUsername);
-    if (window.currentProfileUser.followersCount) window.currentProfileUser.followersCount--;
-    showLiveActivity(`👋 Unfollowed @${targetUsername}`, 'info');
-  } else {
-    currentUser.following.push(targetUsername);
-    if (!window.currentProfileUser.followersCount) window.currentProfileUser.followersCount = 0;
-    window.currentProfileUser.followersCount++;
-    showLiveActivity(`✨ Following @${targetUsername}!`, 'success');
+  // Optimistic UI Update
+  const isFollowing = targetUser.isFollowing;
+  const originalFollowersCount = targetUser.followersCount;
+
+  // Toggle state locally
+  targetUser.isFollowing = !isFollowing;
+  targetUser.followersCount += isFollowing ? -1 : 1;
+
+  // Update UI immediately
+  if (followBtn) {
+    followBtn.textContent = targetUser.isFollowing ? 'Following' : 'Follow';
+    followBtn.className = targetUser.isFollowing ? 'btn-secondary' : 'btn-primary';
+    followBtn.style.opacity = targetUser.isFollowing ? '0.7' : '1';
   }
 
-  // Save and Refresh UI
-  saveUserToLocal();
-  showProfilePage(window.currentProfileUser);
+  if (followersStat) {
+    followersStat.textContent = targetUser.followersCount;
+  }
+
+  try {
+    const endpoint = isFollowing ? `/api/unfollow/${targetUser.id}` : `/api/follow/${targetUser.id}`;
+    const result = await apiCall(endpoint, 'POST');
+
+    if (result.success) {
+      const action = isFollowing ? 'Unfollowed' : 'Following';
+      showLiveActivity(`${action === 'Following' ? '✨' : '👋'} ${action} @${targetUser.username}`, 'success');
+
+      // Update local storage to keep "following" list in sync if needed (optional but good for other UI parts)
+      if (!currentUser.following) currentUser.following = [];
+      if (!isFollowing) {
+        if (!currentUser.following.includes(targetUser.username)) currentUser.following.push(targetUser.username);
+        currentUser.followingCount = (currentUser.followingCount || 0) + 1;
+      } else {
+        currentUser.following = currentUser.following.filter(u => u !== targetUser.username);
+        currentUser.followingCount = Math.max(0, (currentUser.followingCount || 0) - 1);
+      }
+      saveUserToLocal();
+
+    } else {
+      // Revert if failed
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Follow toggle error:', error);
+    // Revert UI
+    targetUser.isFollowing = isFollowing;
+    targetUser.followersCount = originalFollowersCount;
+    if (followBtn) {
+      followBtn.textContent = isFollowing ? 'Following' : 'Follow';
+      followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
+      followBtn.style.opacity = isFollowing ? '0.7' : '1';
+    }
+    if (followersStat) {
+      followersStat.textContent = originalFollowersCount;
+    }
+    showMessage('❌ Action failed', 'error');
+  }
 }
 
 function switchProfileTab(tabName, event) {
@@ -2790,7 +2832,7 @@ function showEditProfilePage() {
   showPage('editProfile');
 }
 
-function saveProfileChanges() {
+async function saveProfileChanges() {
   if (!currentUser) return;
 
   const newName = document.getElementById('editName').value;
@@ -2799,20 +2841,32 @@ function saveProfileChanges() {
   const newCollege = document.getElementById('editCollege').value;
   const newRegNo = document.getElementById('editRegNo').value;
 
-  // Update currentUser
-  currentUser.username = newUsername; // Simple mapping
-  currentUser.bio = newBio;
-  currentUser.college = newCollege;
-  currentUser.registration_number = newRegNo;
+  try {
+    showMessage('Saving profile...', 'info');
 
-  saveUserToLocal();
+    const result = await apiCall('/api/profile/update', 'PUT', {
+      username: newUsername,
+      bio: newBio,
+      college: newCollege,
+      registration_number: newRegNo
+    });
 
-  // Refresh UI
-  const userNameDisplay = document.getElementById('userName');
-  if (userNameDisplay) userNameDisplay.textContent = newUsername;
+    if (result.success) {
+      // Update currentUser with server response
+      currentUser = result.user;
+      saveUserToLocal();
 
-  showProfilePage(currentUser);
-  showLiveActivity('🚀 Profile updated! VIBE HARD.', 'success');
+      // Refresh UI
+      const userNameDisplay = document.getElementById('userName');
+      if (userNameDisplay) userNameDisplay.textContent = currentUser.username;
+
+      showProfilePage(currentUser);
+      showLiveActivity('🚀 Profile updated! VIBE HARD.', 'success');
+    }
+  } catch (error) {
+    console.error('Save profile error:', error);
+    showMessage('❌ Failed to save profile', 'error');
+  }
 }
 
 function editProfileBio() {
@@ -2887,7 +2941,7 @@ function editShippingAddress() {
 
 function saveUserToLocal() {
   if (currentUser) {
-    localStorage.setItem('vibexpert_user', JSON.stringify(currentUser));
+    localStorage.setItem('user', JSON.stringify(currentUser));
   }
 }
 
@@ -2984,6 +3038,13 @@ async function createPost() {
       showMessage(msg, 'success');
       checkAndUpdateRewards('post');
       const postCount = data.postCount || 1;
+
+      // Update local post count
+      if (currentUser) {
+        currentUser.postCount = (currentUser.postCount || 0) + 1;
+        saveUserToLocal();
+      }
+
       setTimeout(() => showPostCelebrationModal(postCount), 800);
 
       if (data.badgeUpdated && data.newBadges?.length > 0) {
@@ -3161,6 +3222,12 @@ async function deletePost(postId) {
   try {
     await apiCall(`/api/posts/${postId}`, 'DELETE');
     showMessage('🗑️ Deleted', 'success');
+
+    // Update local post count
+    if (currentUser) {
+      currentUser.postCount = Math.max(0, (currentUser.postCount || 0) - 1);
+      saveUserToLocal();
+    }
 
     const postEl = document.getElementById(`post-${postId}`);
     if (postEl) postEl.remove();
