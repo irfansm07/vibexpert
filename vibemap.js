@@ -368,19 +368,8 @@ let connectionStatus = 'connected';
 let chatInitialized = false;
 
 // Data
-const rewardsData = {
-  dailyTasks: [
-    { id: 'post_today', title: 'Share Your Day', desc: 'Create 1 post', reward: 10, icon: '📝', completed: false },
-    { id: 'comment_5', title: 'Engage', desc: 'Comment on 5 posts', reward: 15, icon: '💬', completed: false },
-    { id: 'like_10', title: 'Spread Love', desc: 'Like 10 posts', reward: 5, icon: '❤️', completed: false },
-    { id: 'login_streak', title: 'Daily Login', desc: '7 days streak', reward: 50, icon: '🔥', completed: false }
-  ],
-  achievements: [
-    { id: 'social', title: 'Social Butterfly', desc: '50 connections', reward: 100, icon: '🦋', progress: 0, target: 50 },
-    { id: 'content', title: 'Content King', desc: '100 posts', reward: 200, icon: '👑', progress: 0, target: 100 },
-    { id: 'influencer', title: 'Influencer', desc: '1000 likes', reward: 500, icon: '⭐', progress: 0, target: 1000 },
-    { id: 'hero', title: 'Community Hero', desc: '500 messages', reward: 150, icon: '🦸', progress: 0, target: 500 }
-  ]
+const vibeshopData = {
+  items: []
 };
 
 const musicLibrary = [
@@ -2321,6 +2310,7 @@ async function verifyCollegeCode() {
 
     showMessage('🎉 ' + data.message, 'success');
     currentUser.college = data.college;
+    currentUser.registration_number = data.collegeEmail || currentUser.email; // Use verified college email
     currentUser.communityJoined = true;
     currentUser.badges = data.badges;
     localStorage.setItem('user', JSON.stringify(currentUser));
@@ -2506,74 +2496,401 @@ async function showUserProfile(userId) {
 }
 
 
-function showProfilePage() {
+function showProfilePage(user) {
+  const targetUser = user || currentUser;
+  if (!targetUser) return;
+
+  // Storing the current profile user globally for toggleFollow
+  window.currentProfileUser = targetUser;
+
+  // Show the profile page section
+  showPage('profile');
+
+  // Populate Header
+  const nameEl = document.getElementById('profilePageName');
+  const userEl = document.getElementById('profilePageUsername');
+  const avatarImg = document.getElementById('profilePageAvatarImg');
+  const avatarInitial = document.getElementById('profilePageAvatarInitial');
+  const collegeEl = document.getElementById('profileCollege');
+  const regNoEl = document.getElementById('profileRegNo');
+  const postsStat = document.getElementById('profileStatPosts');
+  const followBtn = document.getElementById('followBtn');
+  const followersStat = document.getElementById('profileStatFollowers');
+
+  if (nameEl) nameEl.textContent = targetUser.username;
+  if (userEl) userEl.textContent = `@${targetUser.username}`;
+
+  // User ID Display
+  const userIdEl = document.getElementById('profilePageUserId');
+  if (userIdEl) {
+    if (!targetUser.userId) {
+      targetUser.userId = 'VIBE-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    }
+    userIdEl.textContent = `ID: #${targetUser.userId}`;
+  }
+
+  if (targetUser.profile_pic) {
+    if (avatarImg) {
+      avatarImg.src = targetUser.profile_pic;
+      avatarImg.style.display = 'block';
+    }
+    if (avatarInitial) avatarInitial.style.display = 'none';
+  } else {
+    if (avatarImg) avatarImg.style.display = 'none';
+    if (avatarInitial) avatarInitial.style.display = 'block';
+  }
+
+
+  if (collegeEl) collegeEl.textContent = targetUser.college || 'No college set';
+  if (regNoEl) regNoEl.textContent = targetUser.registration_number || 'No college email';
+  if (postsStat) postsStat.textContent = targetUser.postCount || 0;
+  if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
+
+  // Set bio
+  const bioEl = document.getElementById('profileBio');
+  if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
+
+  // Ownership Visibility
+  const isOwn = currentUser && targetUser.username === currentUser.username; // Fallback to username if id is flaky
+
+  document.querySelectorAll('.edit-cover-btn, .avatar-edit-overlay, .btn-micro').forEach(btn => {
+    btn.style.display = isOwn ? 'block' : 'none';
+  });
+
+  // Handle Follow Button
+  if (followBtn) {
+    if (isOwn) {
+      followBtn.style.display = 'none';
+    } else {
+      followBtn.style.display = 'block';
+      const isFollowing = currentUser && currentUser.following && currentUser.following.includes(targetUser.username);
+      followBtn.textContent = isFollowing ? 'Following' : 'Follow';
+      followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
+      // Toggle look
+      if (isFollowing) {
+        followBtn.style.opacity = '0.7';
+      } else {
+        followBtn.style.opacity = '1';
+      }
+    }
+  }
+
+  // Load default tab
+  switchProfileTab('info');
+}
+
+function toggleFollow() {
+  if (!currentUser || !window.currentProfileUser) return;
+
+  if (!currentUser.following) currentUser.following = [];
+  const targetUsername = window.currentProfileUser.username;
+  const isFollowing = currentUser.following.includes(targetUsername);
+
+  if (isFollowing) {
+    currentUser.following = currentUser.following.filter(u => u !== targetUsername);
+    if (window.currentProfileUser.followersCount) window.currentProfileUser.followersCount--;
+    showLiveActivity(`👋 Unfollowed @${targetUsername}`, 'info');
+  } else {
+    currentUser.following.push(targetUsername);
+    if (!window.currentProfileUser.followersCount) window.currentProfileUser.followersCount = 0;
+    window.currentProfileUser.followersCount++;
+    showLiveActivity(`✨ Following @${targetUsername}!`, 'success');
+  }
+
+  // Save and Refresh UI
+  saveUserToLocal();
+  showProfilePage(window.currentProfileUser);
+}
+
+function switchProfileTab(tabName, event) {
+  // Update buttons
+  document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  if (event) {
+    event.currentTarget.classList.add('active');
+  } else {
+    // Find button by text or data-tab if I had it, otherwise just first one or find by onclick
+    const btns = document.querySelectorAll('.profile-tab-btn');
+    btns.forEach(btn => {
+      if (btn.getAttribute('onclick').includes(`'${tabName}'`)) {
+        btn.classList.add('active');
+      }
+    });
+  }
+
+  // Update content
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.classList.remove('active');
+  });
+
+  const targetPane = document.getElementById('profileTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+  if (targetPane) targetPane.classList.add('active');
+
+  // Specific tab loading logic
+  if (tabName === 'cart') loadCartItems();
+  else if (tabName === 'shipping') loadShippingDetails();
+  else if (tabName === 'orders') loadOrderHistory();
+}
+
+function loadCartItems() {
+  const container = document.getElementById('cartItemsContainer');
+  const summary = document.querySelector('.cart-summary');
+  if (!container) return;
+
+  const cart = [
+    { id: 1, name: 'VibeX Premium Hoodie', price: 1499, img: '📦', qty: 1 },
+    { id: 2, name: 'Smart Student Pack', price: 499, img: '🎒', qty: 1 }
+  ];
+
+  if (cart.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🛒</div>
+        <p>Your cart is empty. Start shopping!</p>
+      </div>`;
+    if (summary) summary.style.display = 'none';
+    return;
+  }
+
+  let html = '';
+  let subtotal = 0;
+  cart.forEach(item => {
+    subtotal += item.price * item.qty;
+    html += `
+      <div class="cart-item" style="display:flex;align-items:center;gap:20px;padding:20px;background:rgba(255,255,255,0.05);border-radius:15px;margin-bottom:15px;border:1px solid rgba(79,116,163,0.2);">
+        <div style="font-size:40px;">${item.img}</div>
+        <div style="flex:1;">
+          <h4 style="color:white;margin:0 0 5px 0;">${item.name}</h4>
+          <p style="color:#8da4d3;margin:0;font-size:14px;">Qty: ${item.qty} • ₹${item.price}</p>
+        </div>
+        <div style="font-weight:700;color:white;">₹${item.price * item.qty}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+  if (summary) {
+    summary.style.display = 'block';
+    const subtotalEl = document.getElementById('cartSubtotal');
+    if (subtotalEl) subtotalEl.textContent = `₹${subtotal}`;
+  }
+}
+
+function loadShippingDetails() {
+  const container = document.getElementById('shippingAddressContent');
+  if (!container) return;
+  // Mock loading
+  container.innerHTML = `
+    <p><strong>${currentUser?.username || 'Premium User'}</strong></p>
+    <p>Block B, Excellence Residency</p>
+    <p>University Main Road, Tech Park</p>
+    <p>PIN: 4620XX | India</p>
+    <p style="margin-top:10px;font-size:12px;color:#4f74a3;">📞 +91 98765 43210</p>
+  `;
+}
+
+function loadOrderHistory() {
+  const container = document.getElementById('orderHistoryContainer');
+  if (!container) return;
+
+  const orders = [
+    { id: 'VX-9921', date: 'Oct 24, 2023', status: 'Delivered', total: 1299, items: 1 },
+    { id: 'VX-8842', date: 'Sep 12, 2023', status: 'In Transit', total: 2450, items: 3 }
+  ];
+
+  if (orders.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <p>No orders yet. Your future purchases will appear here.</p>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  orders.forEach(order => {
+    const statusColor = order.status === 'Delivered' ? '#4ade80' : '#8da4d3';
+    html += `
+      <div class="order-card" style="padding:25px;background:rgba(255,255,255,0.05);border-radius:20px;margin-bottom:15px;border:1px solid rgba(79,116,163,0.2);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
+          <div>
+            <h4 style="color:white;margin:0;">Order #${order.id}</h4>
+            <span style="color:#8da4d3;font-size:12px;">${order.date}</span>
+          </div>
+          <span style="color:${statusColor};font-weight:700;font-size:14px;">${order.status}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#8da4d3;">${order.items} ${order.items === 1 ? 'Item' : 'Items'}</span>
+          <span style="color:white;font-weight:700;">₹${order.total}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// PROFILE EDITING & PHOTO UPLOADS
+function uploadProfilePic() {
+  document.getElementById('profilePicInput').click();
+}
+
+function handleProfilePicUpload(event) {
+  const file = event.target.files[0];
+  if (!file || !currentUser) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    currentUser.profile_pic = dataUrl;
+
+    // Update UI components
+    const profileImg = document.getElementById('profilePageAvatarImg');
+    const profileInitial = document.getElementById('profilePageAvatarInitial');
+    const mainAvatarImg = document.getElementById('profileAvatarImg');
+    const mainAvatarInitial = document.getElementById('profileAvatarInitial');
+
+    if (profileImg) {
+      profileImg.src = dataUrl;
+      profileImg.style.display = 'block';
+    }
+    if (profileInitial) profileInitial.style.display = 'none';
+
+    if (mainAvatarImg) {
+      mainAvatarImg.src = dataUrl;
+      mainAvatarImg.style.display = 'block';
+    }
+    if (mainAvatarInitial) mainAvatarInitial.style.display = 'none';
+
+    saveUserToLocal();
+    showLiveActivity('✨ Profile picture updated!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+
+function showEditProfilePage() {
   if (!currentUser) return;
-  showProfileModal(currentUser);
 
-  const hamburger = document.getElementById('hamburgerMenu');
-  const options = document.getElementById('optionsMenu');
-  if (hamburger) hamburger.style.display = 'none';
-  if (options) options.style.display = 'none';
+  // Populate form
+  const nameInput = document.getElementById('editName');
+  const userInput = document.getElementById('editUsername');
+  const bioInput = document.getElementById('editBio');
+  const collegeInput = document.getElementById('editCollege');
+  const regNoInput = document.getElementById('editRegNo');
+
+  if (nameInput) nameInput.value = currentUser.username || ''; // Standard username as name
+  if (userInput) userInput.value = currentUser.username || '';
+  if (bioInput) bioInput.value = currentUser.bio || '';
+  if (collegeInput) collegeInput.value = currentUser.college || '';
+  if (regNoInput) regNoInput.value = currentUser.registration_number || '';
+
+  showPage('editProfile');
 }
 
-function showProfileModal(user) {
-  const isOwnProfile = currentUser && user.id === currentUser.id;
+function saveProfileChanges() {
+  if (!currentUser) return;
 
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
+  const newName = document.getElementById('editName').value;
+  const newUsername = document.getElementById('editUsername').value;
+  const newBio = document.getElementById('editBio').value;
+  const newCollege = document.getElementById('editCollege').value;
+  const newRegNo = document.getElementById('editRegNo').value;
 
-  modal.innerHTML = `
-   <div class="modal-box profile-modal-box">
-     <button class="close-profile" onclick="this.parentElement.parentElement.remove()">&times;</button>
-     <div class="profile-container">
-       <div class="profile-header">
-         <div class="profile-cover"></div>
-         <div class="profile-main">
-           <div class="profile-photo-section">
-             <div class="profile-photo" style="${user.profile_pic ? `background-image:url('${user.profile_pic}');background-size:cover;` : ''}">
-               ${!user.profile_pic ? '👤' : ''}
-             </div>
-             ${isOwnProfile ? '<button class="avatar-upload-btn" onclick="uploadProfilePic()">📷 Change</button>' : ''}
-             <div class="active-badge">
-               <span class="status-dot"></span>
-               <span>Active</span>
-             </div>
-           </div>
-           <div class="profile-name-section">
-             <h2>${user.username}</h2>
-             <div class="nickname-display">
-               <span class="nickname-label">@${user.username}</span>
-             </div>
-             ${user.college ? `<p style="color:#888;font-size:14px;">🎓 ${user.college}</p>` : ''}
-             ${user.registration_number ? `<p style="color:#888;font-size:13px;">📋 ${user.registration_number}</p>` : ''}
-           </div>
-           ${isOwnProfile ? '<button class="profile-edit-btn" onclick="toggleEditProfile()">✏️ Edit</button>' : ''}
-         </div>
-       </div>
-       <div class="profile-stats-section">
-         <div class="stat-card">
-           <div class="stat-icon">📝</div>
-           <div class="stat-value">${user.postCount || 0}</div>
-           <div class="stat-title">Posts</div>
-         </div>
-         <div class="stat-card">
-           <div class="stat-icon">🏆</div>
-           <div class="stat-value">${user.badges?.length || 0}</div>
-           <div class="stat-title">Badges</div>
-         </div>
-         <div class="stat-card">
-           <div class="stat-icon">⏱️</div>
-           <div class="stat-value">24h</div>
-           <div class="stat-title">Active</div>
-         </div>
-       </div>
-     </div>
-   </div>
- `;
+  // Update currentUser
+  currentUser.username = newUsername; // Simple mapping
+  currentUser.bio = newBio;
+  currentUser.college = newCollege;
+  currentUser.registration_number = newRegNo;
 
-  document.body.appendChild(modal);
+  saveUserToLocal();
+
+  // Refresh UI
+  const userNameDisplay = document.getElementById('userName');
+  if (userNameDisplay) userNameDisplay.textContent = newUsername;
+
+  showProfilePage(currentUser);
+  showLiveActivity('🚀 Profile updated! VIBE HARD.', 'success');
 }
+
+function editProfileBio() {
+  if (!currentUser) return;
+  const modal = document.getElementById('bioEditModal');
+  const textarea = document.getElementById('modalBioText');
+  const userInput = document.getElementById('modalUsernameText');
+  const countDisplay = document.getElementById('bioCharCount');
+
+  if (modal) {
+    if (textarea) {
+      textarea.value = currentUser.bio || '';
+      if (countDisplay) countDisplay.textContent = `${textarea.value.length}/200`;
+
+      // Character counter
+      textarea.oninput = () => {
+        if (countDisplay) countDisplay.textContent = `${textarea.value.length}/200`;
+      };
+    }
+    if (userInput) userInput.value = currentUser.username || '';
+
+    modal.style.display = 'flex';
+  }
+}
+
+function saveBioFromModal() {
+  const textarea = document.getElementById('modalBioText');
+  const userInput = document.getElementById('modalUsernameText');
+
+  if (currentUser) {
+    let changed = false;
+
+    if (textarea) {
+      const newBio = textarea.value;
+      if (currentUser.bio !== newBio) {
+        currentUser.bio = newBio;
+        changed = true;
+      }
+    }
+
+    if (userInput) {
+      const newUsername = userInput.value.trim();
+      if (newUsername && currentUser.username !== newUsername) {
+        currentUser.username = newUsername;
+        changed = true;
+
+        // Update global UI elements for username
+        const navUsername = document.getElementById('userName');
+        if (navUsername) navUsername.textContent = newUsername;
+      }
+    }
+
+    if (changed) {
+      saveUserToLocal();
+      showProfilePage(currentUser);
+      showLiveActivity('🚀 Profile updated! Looking fresh.', 'success');
+    }
+
+    closeModal('bioEditModal');
+  }
+}
+
+function editShippingAddress() {
+  // Can be part of edit profile too, but for now keeping it simple
+  const modal = prompt("Enter Shipping Address:", "Excellence Residency, Block B...");
+  if (modal) {
+    const container = document.getElementById('shippingAddressContent');
+    if (container) container.innerHTML = `<p>${modal}</p>`;
+    showLiveActivity('🚚 Shipping info updated!', 'success');
+  }
+}
+
+function saveUserToLocal() {
+  if (currentUser) {
+    localStorage.setItem('vibexpert_user', JSON.stringify(currentUser));
+  }
+}
+
 
 // ========================================
 // NAVIGATION
@@ -2591,7 +2908,7 @@ function showPage(name, e) {
 
   if (name === 'posts') loadPosts();
   else if (name === 'communities') loadCommunities();
-  else if (name === 'rewards') loadRewardsPage();
+  else if (name === 'vibeshop') loadVibeshopPage();
 
   const hamburger = document.getElementById('hamburgerMenu');
   if (hamburger) hamburger.style.display = 'none';
@@ -3761,264 +4078,24 @@ function loadTrending() {
   container.innerHTML = html;
 }
 
-function loadRewardsPage() {
-  console.log('📊 Loading Rewards Page');
-
-  // Just update the roadmap UI - that's it!
-  setTimeout(() => updateRoadmapUI(), 100);
+function loadVibeshopPage() {
+  console.log('🛍️ Loading VibeShop Page');
 }
 
-function completeTask(taskId) {
-  const task = rewardsData.dailyTasks.find(t => t.id === taskId);
-  if (!task) return;
 
-  if (task.completed) {
-    showMessage('⚠️ Already completed', 'error');
-    return;
-  }
 
-  task.completed = true;
-  showMessage(`✅ +${task.reward} points earned!`, 'success');
-  loadRewardsPage();
-}
 
-function showPostCelebrationModal(postCount) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
-
-  let milestone = '';
-  if (postCount === 1) milestone = '🎉 First Post!';
-  else if (postCount === 10) milestone = '🎉 10 Posts!';
-  else if (postCount === 50) milestone = '🎉 50 Posts!';
-  else if (postCount === 100) milestone = '🎉 100 Posts!';
-
-  modal.innerHTML = `
-   <div class="modal-box" style="text-align:center;max-width:400px;">
-     <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-     <div style="font-size:80px;margin:20px 0;">🎊</div>
-     <h2 style="color:#4f74a3;font-size:32px;margin-bottom:15px;">${milestone || 'Post Shared!'}</h2>
-     <p style="color:#888;font-size:16px;margin-bottom:25px;">
-       Your content is now live! Keep sharing your amazing moments.
-     </p>
-     <div style="background:linear-gradient(135deg,rgba(79,116,163,0.2),rgba(141,164,211,0.2));
-       padding:20px;border-radius:15px;margin-bottom:20px;">
-       <div style="font-size:36px;font-weight:800;color:#4f74a3;">${postCount}</div>
-       <div style="font-size:14px;color:#888;">Total Posts</div>
-     </div>
-     <button onclick="this.parentElement.parentElement.remove()" 
-       style="width:100%;padding:14px;background:linear-gradient(135deg,#4f74a3,#8da4d3);
-       color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
-       Awesome! 🚀
-     </button>
-   </div>
- `;
-
-  document.body.appendChild(modal);
-}
 // ========================================
 // REWARDS ROADMAP SYSTEM
 // ========================================
 
-const roadmapLevels = {
-  wood: {
-    name: 'Wood League',
-    color: '#8B4513',
-    icon: '🪵',
-    position: 80,
-    requirements: { posts: 5, comments: 10, likes: 20, days_active: 3 },
-    rewards: ['Wood Badge', '50 Points', 'Basic Avatar Frame']
-  },
-  bronze: {
-    name: 'Bronze League',
-    color: '#CD7F32',
-    icon: '🥉',
-    position: 480,
-    requirements: { posts: 15, comments: 30, likes: 50, days_active: 7 },
-    rewards: ['Bronze Badge', '150 Points', 'Bronze Avatar Frame']
-  },
-  silver: {
-    name: 'Silver League',
-    color: '#C0C0C0',
-    icon: '🥈',
-    position: 880,
-    requirements: { posts: 50, comments: 100, likes: 200, days_active: 15 },
-    rewards: ['Silver Badge', '500 Points', 'Silver Avatar Frame']
-  },
-  gold: {
-    name: 'Gold League',
-    color: '#FFD700',
-    icon: '🥇',
-    position: 1280,
-    requirements: { posts: 100, comments: 250, likes: 500, days_active: 30 },
-    rewards: ['Gold Badge', '1000 Points', 'Gold Avatar Frame', 'VIP Status']
-  }
-};
+const roadmapLevels = {};
 
 function updateRoadmapUI() {
-  if (!currentUser) return;
-
-  const userStats = {
-    posts: currentUser.postCount || 0,
-    comments: currentUser.commentCount || 0,
-    likes: currentUser.likeCount || 0,
-    days_active: currentUser.daysActive || 1
-  };
-
-  const currentLevel = calculateUserLevel(userStats);
-  const nextLevel = getNextLevel(currentLevel);
-
-  updateCharacterPosition(currentLevel);  // ✅ Make sure this line is here
-  updateProgressInfo(currentLevel, nextLevel, userStats);
-  updateMilestoneStatuses(userStats);
+  // Roadmaps removed for VibeShop refactor
 }
 
-function calculateUserLevel(stats) {
-  const levels = ['wood', 'bronze', 'silver', 'gold'];
-  for (let i = levels.length - 1; i >= 0; i--) {
-    const level = levels[i];
-    const reqs = roadmapLevels[level].requirements;
-    if (stats.posts >= reqs.posts && stats.comments >= reqs.comments &&
-      stats.likes >= reqs.likes && stats.days_active >= reqs.days_active) {
-      return level;
-    }
-  }
-  return 'wood';
-}
 
-function getNextLevel(currentLevel) {
-  const levels = ['wood', 'bronze', 'silver', 'gold'];
-  const idx = levels.indexOf(currentLevel);
-  return idx < levels.length - 1 ? levels[idx + 1] : null;
-}
-
-function updateCharacterPosition(level) {
-  const char = document.getElementById('roadmapCharacter');
-  if (char) {
-    char.style.top = roadmapLevels[level].position + 'px';
-    char.textContent = roadmapLevels[level].icon;
-  }
-}
-
-function updateProgressInfo(currentLevel, nextLevel, stats) {
-  const nameEl = document.getElementById('currentLevelName');
-  const descEl = document.getElementById('progressDescription');
-  const tasksEl = document.getElementById('progressTasks');
-  const barEl = document.getElementById('progressBarFill');
-  const percentEl = document.getElementById('progressPercentage');
-
-  if (nameEl) nameEl.textContent = roadmapLevels[currentLevel].name;
-
-  if (nextLevel) {
-    const reqs = roadmapLevels[nextLevel].requirements;
-    const progress = ((stats.posts / reqs.posts + stats.comments / reqs.comments +
-      stats.likes / reqs.likes + stats.days_active / reqs.days_active) / 4) * 100;
-
-    if (descEl) descEl.textContent = `Progress to ${roadmapLevels[nextLevel].name}`;
-    if (tasksEl) tasksEl.innerHTML = `
-      <div style="margin-top: 15px;">
-        <div>📝 Posts: ${stats.posts}/${reqs.posts}</div>
-        <div>💬 Comments: ${stats.comments}/${reqs.comments}</div>
-        <div>❤️ Likes: ${stats.likes}/${reqs.likes}</div>
-        <div>📅 Days Active: ${stats.days_active}/${reqs.days_active}</div>
-      </div>`;
-    if (barEl) barEl.style.width = Math.min(100, progress) + '%';
-    if (percentEl) percentEl.textContent = Math.round(progress) + '%';
-  } else {
-    if (descEl) descEl.textContent = '🏆 Maximum Level!';
-    if (tasksEl) tasksEl.innerHTML = '<div style="margin-top:15px;color:#FFD700;">Highest level achieved! 🎉</div>';
-    if (barEl) barEl.style.width = '100%';
-    if (percentEl) percentEl.textContent = '100%';
-  }
-}
-
-function updateMilestoneStatuses(stats) {
-  Object.keys(roadmapLevels).forEach(level => {
-    const card = document.querySelector(`.milestone-level.${level}`);
-    if (!card) return;
-
-    const reqs = roadmapLevels[level].requirements;
-    const completed = stats.posts >= reqs.posts && stats.comments >= reqs.comments &&
-      stats.likes >= reqs.likes && stats.days_active >= reqs.days_active;
-
-    const badge = card.querySelector('.level-status');
-    if (badge) {
-      if (completed) {
-        badge.className = 'level-status completed';
-        badge.textContent = '✅ Completed';
-      } else {
-        const current = calculateUserLevel(stats);
-        const next = getNextLevel(current);
-        if (level === next) {
-          badge.className = 'level-status in-progress';
-          badge.textContent = '🎯 In Progress';
-        } else {
-          badge.className = 'level-status locked';
-          badge.textContent = '🔒 Locked';
-        }
-      }
-    }
-  });
-}
-
-function checkAndUpdateRewards(action) {
-  if (!currentUser) return;
-
-  switch (action) {
-    case 'post': currentUser.postCount = (currentUser.postCount || 0) + 1; break;
-    case 'comment': currentUser.commentCount = (currentUser.commentCount || 0) + 1; break;
-    case 'like': currentUser.likeCount = (currentUser.likeCount || 0) + 1; break;
-  }
-
-  localStorage.setItem('user', JSON.stringify(currentUser));
-  updateRoadmapUI();
-  checkLevelUp();
-}
-
-function checkLevelUp() {
-  const stats = {
-    posts: currentUser.postCount || 0,
-    comments: currentUser.commentCount || 0,
-    likes: currentUser.likeCount || 0,
-    days_active: currentUser.daysActive || 1
-  };
-
-  const current = calculateUserLevel(stats);
-  const previous = currentUser.currentLevel || 'wood';
-
-  if (current !== previous) {
-    currentUser.currentLevel = current;
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    showLevelUpCelebration(current);
-  }
-}
-
-function showLevelUpCelebration(level) {
-  const data = roadmapLevels[level];
-  const modal = document.createElement('div');
-  modal.className = 'modal celebration-modal';
-  modal.style.display = 'flex';
-  modal.innerHTML = `
-    <div class="celebration-modal-content">
-      <div class="celebration-emoji">${data.icon}</div>
-      <h2 class="celebration-title" style="color:${data.color}">Level Up!</h2>
-      <p class="celebration-message">You've reached ${data.name}!</p>
-      <div class="celebration-stats" style="background:linear-gradient(135deg,${data.color}33,${data.color}22);">
-        <div class="celebration-count">${data.name}</div>
-        <div class="celebration-label">New Rank</div>
-      </div>
-      <div class="celebration-quote">
-        <strong>Rewards:</strong><br>${data.rewards.join(' • ')}
-      </div>
-      <button class="celebration-button" style="background:linear-gradient(135deg,${data.color},${data.color}cc);" 
-        onclick="this.closest('.modal').remove()">Awesome! 🎉</button>
-    </div>`;
-  document.body.appendChild(modal);
-  createConfetti();
-}
-
-window.updateRoadmapUI = updateRoadmapUI;
-window.checkAndUpdateRewards = checkAndUpdateRewards;
 // ========================================
 // CONSOLE LOG - INITIALIZATION COMPLETE
 // ========================================
@@ -5777,7 +5854,17 @@ async function sendWhatsAppMessageFixed() {
   }
 
   try {
-    // Clear input immediately for better UX
+    // Optimistic UI update
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      content,
+      sender_id: currentUser.id,
+      users: currentUser,
+      timestamp: new Date(),
+      text: content
+    };
+
+    appendWhatsAppMessageFixed(tempMsg);
     input.value = '';
     input.style.height = 'auto';
 
@@ -5795,16 +5882,19 @@ async function sendWhatsAppMessageFixed() {
     if (response.success) {
       playMessageSound('send');
 
-      // ✅ FIX: Show the message immediately since socket won't broadcast it back to sender
-      // The socket listener filters out messages from current user (line 5624-5627)
-      appendWhatsAppMessageFixed(response.message);
+      // Remove temp message
+      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
+      if (tempEl) tempEl.remove();
+
+      // Real message will come via Socket.IO
     }
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
-    
-    // Restore the message to input on error so user can retry
-    input.value = content;
+
+    // Remove temp message on error
+    const tempEl = document.querySelector('[id^="wa-msg-temp-"]');
+    if (tempEl) tempEl.remove();
   }
 }
 
