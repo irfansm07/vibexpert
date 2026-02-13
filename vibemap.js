@@ -4742,7 +4742,7 @@ async function selectPlan(planType) {
   showSubView('subscriptionProcessing');
 
   try {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       showMessage('⚠️ Session expired. Please login again.', 'error');
       closeSubscriptionPopup();
@@ -4910,7 +4910,7 @@ function updatePremiumBadge() {
 // Fetch subscription status from backend on login
 async function fetchSubscriptionStatus() {
   if (!currentUser) return;
-  const token = localStorage.getItem('token');
+  const token = getToken();
   if (!token) return;
   try {
     const res = await fetch(`${API_URL}/api/subscription/status`, {
