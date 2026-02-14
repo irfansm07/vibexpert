@@ -4715,8 +4715,8 @@ function updatePlanPricing() {
   const isFirstTime = !currentUser || !currentUser.hasSubscribed;
   const noblePrice = document.getElementById('noblePrice');
   const royalPrice = document.getElementById('royalPrice');
-  if (noblePrice) noblePrice.textContent = isFirstTime ? '₹9' : '₹29';
-  if (royalPrice) royalPrice.textContent = isFirstTime ? '₹15' : '₹49';
+  if (noblePrice) noblePrice.textContent = '₹9';
+  if (royalPrice) royalPrice.textContent = '₹25';
 }
 
 async function selectPlan(planType) {
@@ -4728,8 +4728,8 @@ async function selectPlan(planType) {
   }
 
   const plans = {
-    noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 29, posters: 5, videos: 1, days: 15 },
-    royal: { name: 'Royal', firstTimePrice: 15, regularPrice: 49, posters: 5, videos: 3, days: 23 }
+    noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 9, posters: 5, videos: 1, days: 15 },
+    royal: { name: 'Royal', firstTimePrice: 25, regularPrice: 25, posters: 5, videos: 3, days: 23 }
   };
 
   const plan = plans[planType];
