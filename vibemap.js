@@ -775,6 +775,28 @@ async function login(e) {
   }
 }
 
+// Form navigation functions
+function goSignup(e) {
+  e?.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+}
+
+function goLogin(e) {
+  e?.preventDefault();
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+}
+
+function goForgotPassword(e) {
+  e?.preventDefault();
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
 async function signup(e) {
   e.preventDefault();
   const username = document.getElementById('signupName')?.value.trim();
@@ -783,10 +805,21 @@ async function signup(e) {
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
   const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  
   if (!username || !email || !registrationNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
   if (!gender) return showMessage('Please select gender', 'error');
   if (password !== confirm) return showMessage('Passwords don\'t match', 'error');
   if (password.length < 6) return showMessage('Password min 6 characters', 'error');
+  if (username.length < 3) return showMessage('Username must be at least 3 characters', 'error');
+  
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return showMessage('Invalid email format', 'error');
+  
+  // Registration number validation
+  const registrationNumberRegex = /^[0-9]{8,12}$/;
+  if (!registrationNumberRegex.test(registrationNumber)) return showMessage('Invalid registration number format', 'error');
+  
   try {
     showMessage('Creating account...', 'success');
     await apiCall('/api/register', 'POST', { username, email, password, registrationNumber, gender });
@@ -2494,7 +2527,7 @@ function showProfilePage(user) {
   const targetUser = user || currentUser;
   if (!targetUser) return;
 
-  // Storing the current profile user globally for toggleFollow
+  // Store current profile user globally for toggleFollow
   window.currentProfileUser = targetUser;
 
   // Show the profile page section
@@ -2511,32 +2544,28 @@ function showProfilePage(user) {
   const followBtn = document.getElementById('followBtn');
   const followersStat = document.getElementById('profileStatFollowers');
 
-  if (nameEl) nameEl.textContent = targetUser.username;
+  if (nameEl) nameEl.textContent = targetUser.name || targetUser.username;
   if (userEl) userEl.textContent = `@${targetUser.username}`;
 
-  // User ID Display
+  // Real User ID Display
   const userIdEl = document.getElementById('profilePageUserId');
   if (userIdEl) {
-    if (!targetUser.userId) {
-      targetUser.userId = 'VIBE-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-    }
-    userIdEl.textContent = `ID: #${targetUser.userId}`;
+    const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
+    userIdEl.textContent = `ID: #${shortId}`;
   }
 
+  // Avatar
   if (targetUser.profile_pic) {
-    if (avatarImg) {
-      avatarImg.src = targetUser.profile_pic;
-      avatarImg.style.display = 'block';
-    }
+    if (avatarImg) { avatarImg.src = targetUser.profile_pic; avatarImg.style.display = 'block'; }
     if (avatarInitial) avatarInitial.style.display = 'none';
   } else {
     if (avatarImg) avatarImg.style.display = 'none';
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
 
-
+  // Real data from database
   if (collegeEl) collegeEl.textContent = targetUser.college || 'No college set';
-  if (regNoEl) regNoEl.textContent = targetUser.registration_number || 'No college email';
+  if (regNoEl) regNoEl.textContent = targetUser.registration_number || targetUser.email || 'No email';
   if (postsStat) postsStat.textContent = targetUser.postCount || 0;
   if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
 
@@ -2546,6 +2575,30 @@ function showProfilePage(user) {
   // Set bio
   const bioEl = document.getElementById('profileBio');
   if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
+
+  // Dynamic Badges - based on REAL data
+  const badgesEl = document.getElementById('profilePageBadges');
+  if (badgesEl) {
+    let badges = '';
+    // Premium badge
+    if (targetUser.isPremium || (targetUser.subscription && targetUser.subscription.plan)) {
+      const plan = targetUser.subscription ? targetUser.subscription.plan : 'noble';
+      if (plan === 'royal') {
+        badges += '<span class="badge-item" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.2));color:#FFD700;">👑 Royal</span>';
+      } else {
+        badges += '<span class="badge-item" style="background:rgba(192,192,192,0.2);color:#c0c0c0;">🥈 Noble</span>';
+      }
+    }
+    // Community badge
+    if (targetUser.college) {
+      badges += `<span class="badge-item">🎓 ${targetUser.college}</span>`;
+    }
+    // Verified badge (if has email)
+    if (targetUser.email || targetUser.registration_number) {
+      badges += '<span class="badge-item" style="background:rgba(59,130,246,0.2);color:#60a5fa;">✓ Verified</span>';
+    }
+    badgesEl.innerHTML = badges || '<span class="badge-item">🆕 New Member</span>';
+  }
 
   // Ownership Visibility
   const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
@@ -2560,22 +2613,50 @@ function showProfilePage(user) {
       followBtn.style.display = 'none';
     } else {
       followBtn.style.display = 'block';
-      // Use API provided isFollowing state if available, fallback to local check
       const isFollowing = targetUser.isFollowing;
-
       followBtn.textContent = isFollowing ? 'Following' : 'Follow';
       followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
-      // Toggle look
-      if (isFollowing) {
-        followBtn.style.opacity = '0.7';
-      } else {
-        followBtn.style.opacity = '1';
-      }
+      followBtn.style.opacity = isFollowing ? '0.7' : '1';
     }
   }
 
+  // Fetch real follower/following counts from backend
+  fetchProfileStats(targetUser);
+
   // Load default tab
   switchProfileTab('info');
+}
+
+// Fetch real stats from backend
+async function fetchProfileStats(targetUser) {
+  if (!targetUser || !targetUser.id) return;
+  try {
+    const result = await apiCall(`/api/profile/${targetUser.id}`);
+    if (result && result.user) {
+      const followersStat = document.getElementById('profileStatFollowers');
+      const followingStat = document.getElementById('profileStatFollowing');
+      const postsStat = document.getElementById('profileStatPosts');
+      if (followersStat) followersStat.textContent = result.user.followersCount || 0;
+      if (followingStat) followingStat.textContent = result.user.followingCount || 0;
+      if (postsStat) postsStat.textContent = result.user.postCount || 0;
+      // Update target user data
+      targetUser.followersCount = result.user.followersCount || 0;
+      targetUser.followingCount = result.user.followingCount || 0;
+      targetUser.postCount = result.user.postCount || 0;
+      // Update isFollowing status for follow button
+      if (result.user.isFollowing !== undefined) {
+        targetUser.isFollowing = result.user.isFollowing;
+        const followBtn = document.getElementById('followBtn');
+        if (followBtn && followBtn.style.display !== 'none') {
+          followBtn.textContent = result.user.isFollowing ? 'Following' : 'Follow';
+          followBtn.className = result.user.isFollowing ? 'btn-secondary' : 'btn-primary';
+          followBtn.style.opacity = result.user.isFollowing ? '0.7' : '1';
+        }
+      }
+    }
+  } catch (e) {
+    console.log('Could not fetch profile stats:', e);
+  }
 }
 
 async function toggleFollow() {
