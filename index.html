@@ -574,25 +574,94 @@
 
     <!-- SUBSCRIPTION POPUP -->
     <div id="subscriptionPopup" class="subscription-popup">
+      <div class="subscription-overlay" onclick="closeSubscriptionPopup()"></div>
       <div class="subscription-content">
         <button class="subscription-close" onclick="closeSubscriptionPopup()">&times;</button>
 
-        <div class="subscription-header">
-          <div class="subscription-icon">👑</div>
-          <h2 class="subscription-title">Unlock Premium Power!</h2>
-          <p class="subscription-subtitle">Advertise your content in Community & RealVibes</p>
+        <!-- INTRO VIEW -->
+        <div id="subscriptionIntro" class="sub-view active">
+          <div class="subscription-header">
+            <div class="subscription-icon">👑</div>
+            <h2 class="subscription-title">Unlock Premium Power!</h2>
+            <p class="subscription-subtitle">Advertise your content in Community &amp; RealVibes</p>
+          </div>
+          <div class="first-time-badge">🎉 First Time Offer!</div>
+          <div class="first-price">₹9</div>
+          <div class="price-label">Special introductory price for Noble Plan</div>
+          <button class="subscribe-now-btn" onclick="selectPlan('noble')">Subscribe Now ✨</button>
+          <a class="view-plans-link" onclick="showAllPlansView()">View All Plans →</a>
         </div>
 
-        <div class="first-time-badge">🎉 First Time Offer!</div>
+        <!-- ALL PLANS VIEW -->
+        <div id="subscriptionPlansView" class="sub-view">
+          <div class="subscription-header">
+            <div class="subscription-icon">👑</div>
+            <h2 class="subscription-title">Choose Your Plan</h2>
+            <p class="subscription-subtitle">Boost your visibility across VibeXpert</p>
+          </div>
 
-        <div class="first-price">₹9</div>
-        <div class="price-label">Special introductory price</div>
+          <div class="plans-grid">
+            <!-- NOBLE PLAN -->
+            <div class="plan-card" id="noblePlanCard">
+              <div class="plan-badge">🥈 Popular</div>
+              <h3 class="plan-name">Noble</h3>
+              <div class="plan-pricing">
+                <span class="plan-price" id="noblePrice">₹9</span>
+                <span class="plan-duration">/ 15 days</span>
+              </div>
+              <ul class="plan-features">
+                <li>✅ 5 Advertisement Posters</li>
+                <li>✅ 1 Advertisement Video</li>
+                <li>✅ Community &amp; RealVibes reach</li>
+                <li>✅ Premium badge</li>
+              </ul>
+              <button class="plan-select-btn" onclick="selectPlan('noble')">Get Noble ✨</button>
+            </div>
 
-        <button class="subscribe-now-btn" onclick="selectPlan('noble')">
-          Subscribe Now ✨
-        </button>
+            <!-- ROYAL PLAN -->
+            <div class="plan-card royal" id="royalPlanCard">
+              <div class="plan-badge royal-badge">👑 Best Value</div>
+              <h3 class="plan-name">Royal</h3>
+              <div class="plan-pricing">
+                <span class="plan-price" id="royalPrice">₹25</span>
+                <span class="plan-duration">/ 23 days</span>
+              </div>
+              <ul class="plan-features">
+                <li>✅ 5 Advertisement Posters</li>
+                <li>✅ 3 Advertisement Videos</li>
+                <li>✅ Community &amp; RealVibes reach</li>
+                <li>✅ Premium badge</li>
+                <li>✅ Priority support</li>
+              </ul>
+              <button class="plan-select-btn royal-btn" onclick="selectPlan('royal')">Get Royal 👑</button>
+            </div>
+          </div>
 
-        <a class="view-plans-link" onclick="viewAllPlans()">View All Plans →</a>
+          <a class="view-plans-link" onclick="showIntroView()">← Back</a>
+        </div>
+
+        <!-- PROCESSING STATE -->
+        <div id="subscriptionProcessing" class="sub-view">
+          <div class="processing-spinner"></div>
+          <h3 class="processing-text">Processing Payment...</h3>
+          <p class="processing-sub">Please don't close this window</p>
+        </div>
+
+        <!-- SUCCESS STATE -->
+        <div id="subscriptionSuccess" class="sub-view">
+          <div class="success-check">✅</div>
+          <h3 class="success-title">Payment Successful!</h3>
+          <p class="success-message" id="successPlanDetails"></p>
+          <button class="subscribe-now-btn" onclick="closeSubscriptionPopup()">Start Creating Ads 🚀</button>
+        </div>
+
+        <!-- FAILURE STATE -->
+        <div id="subscriptionFailed" class="sub-view">
+          <div class="fail-icon">❌</div>
+          <h3 class="fail-title">Payment Failed</h3>
+          <p class="fail-message">Something went wrong. Please try again.</p>
+          <button class="subscribe-now-btn" onclick="showIntroView()">Try Again</button>
+        </div>
       </div>
     </div>
     <!-- CONTENT -->
