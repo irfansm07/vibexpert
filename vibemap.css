@@ -437,13 +437,59 @@
 }
 
 .send-btn:hover {
-  transform: translateY(-3px) scale(1.05);
+  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
   padding-left: 36px;
 }
 
 .send-btn:active {
   transform: translateY(-1px) scale(0.98);
+}
+
+.about-login-btn {
+  padding: 20px 50px;
+  background: linear-gradient(135deg, #4f74a3, #8da4d3);
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 30px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(79, 116, 163, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 1s ease 0.6s backwards;
+}
+
+.about-login-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.about-login-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.about-login-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 15px 45px rgba(79, 116, 163, 0.5);
+}
+
+.about-login-btn:active {
+  transform: translateY(-1px) scale(1.02);
 }
 
 /* ==========================================
