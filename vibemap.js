@@ -578,7 +578,7 @@ function scrollToBottomAndLogin() {
     top: document.body.scrollHeight,
     behavior: 'smooth'
   });
-  
+
   // Wait for scroll to complete, then show login popup
   setTimeout(() => {
     showAuthPopup();
@@ -665,46 +665,100 @@ function initPasswordEyeClosing() {
   const passwordField = document.getElementById('loginPassword');
   const signupPasswordField = document.getElementById('signupPass');
   const svg = document.querySelector('.auth-characters-svg');
-  
+
   if (!svg) return;
-  
+
   const eyes = svg.querySelectorAll('.blob-eye');
-  
+  let closedLines = [];
+  let eyesClosed = false;
+
   function closeEyes() {
+    if (eyesClosed) return;
+    eyesClosed = true;
+
+    // Clean up any previous closed-eye lines
+    closedLines.forEach(l => l.remove());
+    closedLines = [];
+
     eyes.forEach(eye => {
-      eye.style.opacity = '0.1';
-      eye.style.transition = 'opacity 0.2s ease';
+      // Hide all original eye children (circles, pupils, highlights)
+      Array.from(eye.children).forEach(child => {
+        child.setAttribute('data-orig-display', child.style.display || '');
+        child.style.display = 'none';
+      });
+
+      // Get eye center from the first circle (eye white)
+      const eyeWhite = eye.querySelector('circle:first-child');
+      if (!eyeWhite) return;
+      const cx = parseFloat(eyeWhite.getAttribute('cx'));
+      const cy = parseFloat(eyeWhite.getAttribute('cy'));
+      const r = parseFloat(eyeWhite.getAttribute('r'));
+
+      // Draw a curved "closed eye" line
+      const w = r * 1.2;
+      const closedEye = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      closedEye.setAttribute('d', `M${cx - w},${cy} Q${cx},${cy + w * 0.5} ${cx + w},${cy}`);
+      closedEye.setAttribute('stroke', '#2d2d4e');
+      closedEye.setAttribute('stroke-width', '2.5');
+      closedEye.setAttribute('fill', 'none');
+      closedEye.setAttribute('stroke-linecap', 'round');
+      closedEye.classList.add('closed-eye-line');
+
+      eye.appendChild(closedEye);
+      closedLines.push(closedEye);
     });
   }
-  
+
   function openEyes() {
+    if (!eyesClosed) return;
+    eyesClosed = false;
+
+    // Restore all original eye children
     eyes.forEach(eye => {
-      eye.style.opacity = '1';
+      Array.from(eye.children).forEach(child => {
+        if (child.classList.contains('closed-eye-line')) return;
+        child.style.display = child.getAttribute('data-orig-display') || '';
+      });
     });
+
+    // Remove closed-eye lines
+    closedLines.forEach(l => l.remove());
+    closedLines = [];
   }
-  
+
   // Login password field
   if (passwordField) {
     passwordField.addEventListener('focus', closeEyes);
     passwordField.addEventListener('blur', openEyes);
-    passwordField.addEventListener('input', function() {
-      if (this.value.length > 0) {
-        closeEyes();
-      }
-    });
   }
-  
+
   // Signup password fields
   if (signupPasswordField) {
     signupPasswordField.addEventListener('focus', closeEyes);
     signupPasswordField.addEventListener('blur', openEyes);
   }
-  
+
   const confirmPasswordField = document.getElementById('signupConfirm');
   if (confirmPasswordField) {
     confirmPasswordField.addEventListener('focus', closeEyes);
     confirmPasswordField.addEventListener('blur', openEyes);
   }
+}
+
+// ========================================
+// PASSWORD VISIBILITY TOGGLE
+// ========================================
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.classList.add('showing');
+  } else {
+    input.type = 'password';
+    btn.classList.remove('showing');
+  }
+  input.focus();
 }
 
 function closeAuthPopup() {
@@ -888,11 +942,11 @@ async function handleForgotPassword(e) {
   e.preventDefault();
   const email = document.getElementById('resetEmail')?.value.trim();
   if (!email) return showMessage('⚠️ Email required', 'error');
-  
+
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) return showMessage('⚠️ Invalid email format', 'error');
-  
+
   try {
     showMessage('📧 Sending reset code...', 'success');
     await apiCall('/api/forgot-password', 'POST', { email });
