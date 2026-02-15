@@ -376,7 +376,7 @@
           </div>
           <div class="footer-section">
             <h4>Contact</h4>
-            <p>📧 support@vibexpert.com</p>
+            <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ddaea8adadb2afa99dabb4bfb8a5adb8afa9f3beb2b0">[email&#160;protected]</a></p>
             <p>📱 +91-9347702626</p>
           </div>
         </div>
@@ -393,87 +393,337 @@
     <div class="auth-popup-content">
       <button class="auth-popup-close" onclick="closeAuthPopup()">&times;</button>
 
-      <div class="auth-container">
-        <div class="auth-box">
-          <h1>VibeXpert</h1>
-          <p>Connect With The Verse</p>
+      <div class="auth-card-wrapper">
+        <!-- LEFT PANEL: Animated Characters -->
+        <div class="auth-characters-panel">
+          <svg class="auth-characters-svg" viewBox="0 0 420 460" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Gradients for depth -->
+              <linearGradient id="pinkGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#F7B8CB" />
+                <stop offset="100%" stop-color="#E8809E" />
+              </linearGradient>
+              <linearGradient id="mintGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#A8E6CF" />
+                <stop offset="100%" stop-color="#5CB89A" />
+              </linearGradient>
+              <linearGradient id="tealGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#4ECDC4" />
+                <stop offset="100%" stop-color="#1A8A7D" />
+              </linearGradient>
+              <linearGradient id="orangeGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#F4845F" />
+                <stop offset="100%" stop-color="#C55A35" />
+              </linearGradient>
+              <linearGradient id="blueGrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="#7EB8E0" />
+                <stop offset="100%" stop-color="#4A8DBE" />
+              </linearGradient>
+              <!-- Shadow filter -->
+              <filter id="blobShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+                <feOffset dx="2" dy="4" result="offset" />
+                <feFlood flood-color="rgba(0,0,0,0.18)" />
+                <feComposite in2="offset" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- Ground shadows with subtle animation -->
+            <ellipse class="ground-shadow" cx="85" cy="430" rx="55" ry="8" fill="rgba(0,0,0,0.12)" />
+            <ellipse class="ground-shadow" cx="215" cy="438" rx="70" ry="10" fill="rgba(0,0,0,0.12)" style="animation-delay: 0.5s;" />
+            <ellipse class="ground-shadow" cx="100" cy="450" rx="42" ry="6" fill="rgba(0,0,0,0.1)" style="animation-delay: 1s;" />
+            <ellipse class="ground-shadow" cx="320" cy="448" rx="40" ry="6" fill="rgba(0,0,0,0.1)" style="animation-delay: 1.5s;" />
+
+            <!-- ===== MINT GREEN BLOB (left, tall) ===== -->
+            <g class="blob-character" data-blob="mint" filter="url(#blobShadow)">
+              <path d="M40,160 C35,120 130,118 125,160 L128,390 C130,420 32,422 35,390 Z" fill="url(#mintGrad)" />
+              <!-- Body highlight -->
+              <ellipse cx="70" cy="200" rx="28" ry="80" fill="rgba(255,255,255,0.15)" transform="rotate(-5,70,200)" />
+              <!-- Ears/bumps -->
+              <ellipse cx="52" cy="152" rx="14" ry="12" fill="#7DD4B5" />
+              <ellipse cx="113" cy="152" rx="14" ry="12" fill="#7DD4B5" />
+              <!-- Left Eye -->
+              <g class="blob-eye" data-eye="mint-left">
+                <circle cx="62" cy="230" r="17" fill="white" />
+                <circle cx="62" cy="230" r="16" fill="white" stroke="rgba(0,0,0,0.05)" stroke-width="0.5" />
+                <circle class="blob-pupil" cx="62" cy="232" r="9" fill="#2d2d4e" />
+                <circle cx="66" cy="226" r="3.5" fill="white" opacity="0.9" />
+              </g>
+              <!-- Right Eye -->
+              <g class="blob-eye" data-eye="mint-right">
+                <circle cx="103" cy="230" r="17" fill="white" />
+                <circle cx="103" cy="230" r="16" fill="white" stroke="rgba(0,0,0,0.05)" stroke-width="0.5" />
+                <circle class="blob-pupil" cx="103" cy="232" r="9" fill="#2d2d4e" />
+                <circle cx="107" cy="226" r="3.5" fill="white" opacity="0.9" />
+              </g>
+              <!-- Happy smile -->
+              <path d="M68,260 Q82,278 96,260" stroke="#2a7a5e" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <!-- Cheeks -->
+              <ellipse cx="50" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
+              <ellipse cx="115" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
+              <!-- Feet -->
+              <ellipse cx="55" cy="418" rx="18" ry="12" fill="#52B892" />
+              <ellipse cx="82" cy="420" rx="16" ry="13" fill="#52B892" />
+              <ellipse cx="110" cy="418" rx="18" ry="12" fill="#52B892" />
+            </g>
+
+            <!-- ===== BIG PINK BLOB (center, tallest) ===== -->
+            <g class="blob-character" data-blob="pink" filter="url(#blobShadow)">
+              <path d="M155,95 C148,50 280,48 275,95 L282,395 C285,435 148,437 152,395 Z" fill="url(#pinkGrad)" />
+              <!-- Body highlight -->
+              <ellipse cx="195" cy="180" rx="35" ry="100" fill="rgba(255,255,255,0.13)"
+                transform="rotate(-4,195,180)" />
+              <!-- Ears -->
+              <ellipse cx="172" cy="80" rx="16" ry="18" fill="#F0A0BA" />
+              <ellipse cx="260" cy="80" rx="16" ry="18" fill="#F0A0BA" />
+              <!-- Left Eye (big) -->
+              <g class="blob-eye" data-eye="pink-left">
+                <circle cx="195" cy="200" r="30" fill="white" />
+                <circle cx="195" cy="200" r="29" fill="white" stroke="rgba(0,0,0,0.04)" stroke-width="0.5" />
+                <circle class="blob-pupil" cx="195" cy="203" r="16" fill="#2d2d4e" />
+                <circle cx="201" cy="193" r="5.5" fill="white" opacity="0.9" />
+                <circle cx="190" cy="210" r="2.5" fill="white" opacity="0.5" />
+              </g>
+              <!-- Right Eye (slightly smaller for character) -->
+              <g class="blob-eye" data-eye="pink-right">
+                <circle cx="250" cy="200" r="22" fill="white" />
+                <circle cx="250" cy="200" r="21" fill="white" stroke="rgba(0,0,0,0.04)" stroke-width="0.5" />
+                <circle class="blob-pupil" cx="250" cy="202" r="12" fill="#2d2d4e" />
+                <circle cx="255" cy="194" r="4" fill="white" opacity="0.9" />
+              </g>
+              <!-- Rosy cheeks -->
+              <ellipse cx="168" cy="240" rx="14" ry="9" fill="#E07090" opacity="0.4" />
+              <ellipse cx="278" cy="238" rx="12" ry="8" fill="#E07090" opacity="0.4" />
+              <!-- Subtle smile -->
+              <path d="M205,250 Q220,262 238,252" stroke="#C06080" stroke-width="2" fill="none"
+                stroke-linecap="round" />
+              <!-- Feet -->
+              <ellipse cx="175" cy="432" rx="22" ry="14" fill="#DE8DA6" />
+              <ellipse cx="215" cy="435" rx="20" ry="15" fill="#DE8DA6" />
+              <ellipse cx="255" cy="432" rx="22" ry="14" fill="#DE8DA6" />
+            </g>
+
+            <!-- ===== ORANGE BLOB (top, small, riding on pink) ===== -->
+            <g class="blob-character" data-blob="red" filter="url(#blobShadow)">
+              <path d="M192,25 C188,5 255,3 252,25 L256,105 C258,128 188,130 190,105 Z" fill="url(#orangeGrad)" />
+              <!-- Body highlight -->
+              <ellipse cx="215" cy="50" rx="16" ry="30" fill="rgba(255,255,255,0.16)" transform="rotate(-3,215,50)" />
+              <!-- Wavy hair/crown -->
+              <circle cx="202" cy="14" r="11" fill="#E87550" />
+              <circle cx="220" cy="8" r="13" fill="#EC8060" />
+              <circle cx="238" cy="14" r="11" fill="#E87550" />
+              <!-- Left Eye -->
+              <g class="blob-eye" data-eye="red-left">
+                <circle cx="208" cy="62" r="10" fill="white" />
+                <circle class="blob-pupil" cx="208" cy="63" r="5.5" fill="#2d2d4e" />
+                <circle cx="211" cy="59" r="2" fill="white" opacity="0.9" />
+              </g>
+              <!-- Right Eye -->
+              <g class="blob-eye" data-eye="red-right">
+                <circle cx="235" cy="62" r="10" fill="white" />
+                <circle class="blob-pupil" cx="235" cy="63" r="5.5" fill="#2d2d4e" />
+                <circle cx="238" cy="59" r="2" fill="white" opacity="0.9" />
+              </g>
+              <!-- Open smile -->
+              <path d="M214,83 Q222,93 230,83" stroke="#8B3A20" stroke-width="2" fill="none" stroke-linecap="round" />
+              <!-- Cheeks -->
+              <ellipse cx="200" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
+              <ellipse cx="243" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
+            </g>
+
+            <!-- ===== TEAL BLOB (bottom-left, short) ===== -->
+            <g class="blob-character" data-blob="teal" filter="url(#blobShadow)">
+              <path d="M55,305 C50,275 145,273 140,305 L143,418 C145,442 48,444 52,418 Z" fill="url(#tealGrad)" />
+              <!-- Body highlight -->
+              <ellipse cx="88" cy="340" rx="22" ry="45" fill="rgba(255,255,255,0.14)" transform="rotate(-4,88,340)" />
+              <!-- Ears -->
+              <ellipse cx="68" cy="290" rx="10" ry="12" fill="#40BFB2" />
+              <ellipse cx="127" cy="290" rx="10" ry="12" fill="#40BFB2" />
+              <!-- Left Eye -->
+              <g class="blob-eye" data-eye="teal-left">
+                <circle cx="78" cy="345" r="14" fill="white" />
+                <circle class="blob-pupil" cx="78" cy="347" r="8" fill="#2d2d4e" />
+                <circle cx="81" cy="341" r="3" fill="white" opacity="0.9" />
+              </g>
+              <!-- Right Eye -->
+              <g class="blob-eye" data-eye="teal-right">
+                <circle cx="117" cy="345" r="14" fill="white" />
+                <circle class="blob-pupil" cx="117" cy="347" r="8" fill="#2d2d4e" />
+                <circle cx="120" cy="341" r="3" fill="white" opacity="0.9" />
+              </g>
+              <!-- Grin -->
+              <path d="M85,372 Q97,386 110,372" stroke="#0E6B60" stroke-width="2.2" fill="none"
+                stroke-linecap="round" />
+              <!-- Cheeks -->
+              <ellipse cx="66" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
+              <ellipse cx="130" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
+            </g>
+
+            <!-- ===== BLUE BLOB (bottom-right, small & cute) ===== -->
+            <g class="blob-character" data-blob="blue" filter="url(#blobShadow)">
+              <path d="M265,320 C260,295 340,293 335,320 L338,418 C340,438 258,440 262,418 Z" fill="url(#blueGrad)" />
+              <!-- Body highlight -->
+              <ellipse cx="292" cy="355" rx="18" ry="35" fill="rgba(255,255,255,0.15)" transform="rotate(-3,292,355)" />
+              <!-- Ears -->
+              <ellipse cx="278" cy="310" rx="8" ry="10" fill="#6CB4D8" />
+              <ellipse cx="322" cy="310" rx="8" ry="10" fill="#6CB4D8" />
+              <!-- Left Eye -->
+              <g class="blob-eye" data-eye="blue-left">
+                <circle cx="285" cy="358" r="13" fill="white" />
+                <circle class="blob-pupil" cx="285" cy="360" r="7" fill="#2d2d4e" />
+                <circle cx="288" cy="354" r="2.5" fill="white" opacity="0.9" />
+              </g>
+              <!-- Right Eye -->
+              <g class="blob-eye" data-eye="blue-right">
+                <circle cx="315" cy="358" r="13" fill="white" />
+                <circle class="blob-pupil" cx="315" cy="360" r="7" fill="#2d2d4e" />
+                <circle cx="318" cy="354" r="2.5" fill="white" opacity="0.9" />
+              </g>
+              <!-- Big happy smile -->
+              <path d="M290,382 Q300,395 310,382" stroke="#2A6C90" stroke-width="2" fill="none"
+                stroke-linecap="round" />
+              <!-- Cheeks -->
+              <ellipse cx="275" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
+              <ellipse cx="325" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
+            </g>
+          </svg>
+        </div>
+
+        <!-- RIGHT PANEL: Forms -->
+        <div class="auth-form-panel">
+          <div class="auth-form-logo">🌿</div>
+          <h1 class="auth-form-title">Hey there, Vibe Master! 👋</h1>
+          <p class="auth-form-subtitle">Ready to dive back into the action? Let's get you connected! ✨</p>
 
           <div id="message"></div>
 
           <!-- LOGIN FORM -->
           <form id="loginForm" onsubmit="login(event)">
-            <h2>Login</h2>
-            <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
-            <input type="password" id="loginPassword" placeholder="Password" required>
-            <button type="submit">Login</button>
-            <p>Don't have account? <a href="#" onclick="goSignup(event)">Sign Up</a></p>
-            <p style="text-align:center; margin-top:10px;"><a href="#" onclick="goForgotPassword(event)"
-                style="font-size:13px;">Forgot Password?</a></p>
+            <div class="auth-input-group">
+              <label for="loginEmail">Email</label>
+              <input type="text" id="loginEmail" placeholder="Email or Reg Number" required>
+            </div>
+            <div class="auth-input-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" placeholder="Password" required>
+            </div>
+            <div class="auth-form-options">
+              <label class="auth-remember-me">
+                <input type="checkbox" id="rememberMe">
+                <span>Remember me</span>
+              </label>
+              <a href="#" onclick="goForgotPassword(event)" class="auth-forgot-link">Forgot password?</a>
+            </div>
+            <button type="submit" class="auth-submit-btn">Log in</button>
+            <div class="auth-divider">
+              <span>or</span>
+            </div>
+            <button type="button" class="auth-google-btn" onclick="showMessage('Google login coming soon!', 'success')">
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4"
+                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" />
+                <path fill="#34A853"
+                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
+                <path fill="#FBBC05"
+                  d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" />
+                <path fill="#EA4335"
+                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" />
+              </svg>
+              Log in with Google
+            </button>
+            <p class="auth-switch-text">Don't have an account? <a href="#" onclick="goSignup(event)">Sign up</a></p>
           </form>
 
           <!-- FORGOT PASSWORD FORM -->
           <form id="forgotPasswordForm" onsubmit="return false;" style="display:none;">
-            <h2>Reset Password</h2>
+            <h2 class="auth-section-title">Reset Password</h2>
 
             <div id="resetEmailSection">
-              <p style="color:#888; font-size:14px; margin-bottom:15px;">
+              <p class="auth-helper-text">
                 Enter your email address and we'll send you a verification code.
               </p>
-              <input type="email" id="resetEmail" placeholder="Enter your email" required>
-              <button type="button" onclick="handleForgotPassword(event)">📧 Send Reset Code</button>
+              <div class="auth-input-group">
+                <label for="resetEmail">Email</label>
+                <input type="email" id="resetEmail" placeholder="Enter your email" required>
+              </div>
+              <button type="button" class="auth-submit-btn" onclick="handleForgotPassword(event)">📧 Send Reset
+                Code</button>
             </div>
 
             <div id="resetCodeSection" style="display:none;">
-              <p style="color:#888; font-size:14px; margin-bottom:15px;">
+              <p class="auth-helper-text">
                 📧 Check your email for the 6-digit verification code.
               </p>
-              <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}"
-                required
-                style="margin-bottom:15px; font-size:20px; letter-spacing:5px; text-align:center; font-weight:bold;">
-              <input type="password" id="newPassword" placeholder="New Password" required minlength="6"
-                style="margin-bottom:15px;">
-              <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required minlength="6"
-                style="margin-bottom:15px;">
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button type="button" onclick="verifyResetCode(event)" style="flex:1; min-width:120px;">🔐 Reset
+              <div class="auth-input-group">
+                <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}"
+                  required class="auth-code-input">
+              </div>
+              <div class="auth-input-group">
+                <input type="password" id="newPassword" placeholder="New Password" required minlength="6">
+              </div>
+              <div class="auth-input-group">
+                <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required
+                  minlength="6">
+              </div>
+              <div class="auth-btn-row">
+                <button type="button" class="auth-submit-btn" onclick="verifyResetCode(event)">🔐 Reset
                   Password</button>
-                <button type="button" onclick="resendResetCode()"
-                  style="flex:1; min-width:120px; background:rgba(79,116,163,0.2); color:#4f74a3;">📧 Resend
-                  Code</button>
+                <button type="button" class="auth-secondary-btn" onclick="resendResetCode()">📧 Resend Code</button>
               </div>
             </div>
 
-            <p><a href="#" onclick="goLogin(event)">← Back to Login</a></p>
+            <p class="auth-switch-text"><a href="#" onclick="goLogin(event)">← Back to Login</a></p>
           </form>
 
           <!-- SIGNUP FORM -->
           <form id="signupForm" onsubmit="signup(event)" style="display:none;">
-            <h2>Create Account</h2>
-            <input type="text" id="signupName" placeholder="Full Name" required>
-            <input type="email" id="signupEmail" placeholder="Email" required>
-            <input type="text" id="signupReg" placeholder="College Email" required>
-
-            <label style="display:block; margin:15px 0 10px 0; color:#a0a0a0; font-size:14px;">Gender</label>
-            <div style="display:flex; gap:15px; margin-bottom:15px;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Male" required style="cursor:pointer;">
-                👨 Male
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Female" style="cursor:pointer;">
-                👩 Female
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#d0d0d0;">
-                <input type="radio" name="gender" value="Other" style="cursor:pointer;">
-                🌈 Other
-              </label>
+            <h2 class="auth-section-title">Create Account</h2>
+            <div class="auth-input-group">
+              <label for="signupName">Full Name</label>
+              <input type="text" id="signupName" placeholder="Full Name" required>
+            </div>
+            <div class="auth-input-group">
+              <label for="signupEmail">Email</label>
+              <input type="email" id="signupEmail" placeholder="Email" required>
+            </div>
+            <div class="auth-input-group">
+              <label for="signupPhone">Phone Number</label>
+              <input type="tel" id="signupPhone" placeholder="Phone Number" required pattern="[0-9]{10}">
             </div>
 
-            <input type="password" id="signupPass" placeholder="Password" required>
-            <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+            <div class="auth-gender-section">
+              <label class="auth-gender-label">Gender</label>
+              <div class="auth-gender-options">
+                <label class="auth-gender-option">
+                  <input type="radio" name="gender" value="Male" required>
+                  <span>👨 Male</span>
+                </label>
+                <label class="auth-gender-option">
+                  <input type="radio" name="gender" value="Female">
+                  <span>👩 Female</span>
+                </label>
+                <label class="auth-gender-option">
+                  <input type="radio" name="gender" value="Other">
+                  <span>🌈 Other</span>
+                </label>
+              </div>
+            </div>
 
-            <button type="submit">Create Account</button>
-            <p>Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
+            <div class="auth-input-group">
+              <label for="signupPass">Password</label>
+              <input type="password" id="signupPass" placeholder="Password" required>
+            </div>
+            <div class="auth-input-group">
+              <label for="signupConfirm">Confirm Password</label>
+              <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+            </div>
+
+            <button type="submit" class="auth-submit-btn">Create Account</button>
+            <p class="auth-switch-text">Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
           </form>
         </div>
       </div>
@@ -1195,7 +1445,7 @@
       </div>
     </div>
   </section>
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // Initialize roadmap when rewards page loads
     document.addEventListener('DOMContentLoaded', function () {
       // Call updateVibeshopUI when vibeshop page becomes visible
@@ -1325,7 +1575,7 @@
     <div class="modal-box">
       <span class="close" onclick="closeModal('contactModal')">&times;</span>
       <h2>Contact Us</h2>
-      <p>📧 Email: rimerge.online@gmail.com (Recommended*) </p>
+      <p>📧 Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="295b40444c5b4e4c0746474540474c694e44484045074a4644">[email&#160;protected]</a> (Recommended*) </p>
       <p>📱 Phone: +91-9347702626</p>
       <p>📱 Phone: +91-8523015813</p>
       <p>💬 Live Chat: 24/7</p>
@@ -1371,7 +1621,7 @@
     </div>
   </div>
 
-  <script src="vibemap.js"></script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="vibemap.js"></script>
 
   <!-- ✅ VANTA BACKGROUNDS INITIALIZATION -->
   <script>
@@ -1441,23 +1691,15 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function () {
       // Check which page is visible and init appropriate background
-      const aboutPage = document.getElementById('aboutUsPage');
-      const mainPage = document.getElementById('mainPage');
-
+      const aboutPage = document.getElementById('aboutUs'); 
+      const homePage = document.getElementById('home');
       if (aboutPage && aboutPage.style.display !== 'none') {
         initGlobeBackground();
-      }
-
-      if (mainPage && mainPage.style.display !== 'none') {
+      } else if (homePage && homePage.style.display !== 'none') {
         initNetBackground();
-      }
+      } else {
+        // If neither is visible, initialize both (or choose based on your preference)
+        initGlobeBackground();
+        initNetBackground();
+      } 
     });
-
-    // Clean up on page unload
-    window.addEventListener('beforeunload', () => {
-      destroyGlobeBackground();
-      destroyNetBackground();
-    });
-  </script>
-
-</body>
