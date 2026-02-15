@@ -502,47 +502,8 @@ function showAboutUsPage() {
   if (aboutPage) aboutPage.style.display = 'block';
   if (mainPage) mainPage.style.display = 'none';
 
-  initScrollProgress();
   initRevealOnScroll();
   initStatsCounter();
-  initScrollDetection();
-  createScrollProgressIndicator();
-}
-
-function createScrollProgressIndicator() {
-  if (scrollProgressIndicator) return;
-  scrollProgressIndicator = document.createElement('div');
-  scrollProgressIndicator.className = 'scroll-progress-indicator';
-  scrollProgressIndicator.innerHTML = '📜 Scroll to explore • <span id="scrollPercent">0%</span>';
-  document.body.appendChild(scrollProgressIndicator);
-}
-
-function initScrollProgress() {
-  window.addEventListener('scroll', updateScrollProgress);
-}
-
-function updateScrollProgress() {
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const scrollHeight = document.documentElement.scrollHeight;
-  const clientHeight = window.innerHeight;
-  const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
-
-  const progressFill = document.getElementById('scrollProgressFill');
-  if (progressFill) progressFill.style.width = scrolled + '%';
-
-  const scrollPercent = document.getElementById('scrollPercent');
-  if (scrollPercent) scrollPercent.textContent = Math.round(scrolled) + '%';
-
-  if (scrollProgressIndicator) {
-    if (scrolled > 10 && scrolled < 95) scrollProgressIndicator.classList.add('show');
-    else scrollProgressIndicator.classList.remove('show');
-  }
-
-  if (scrollCheckEnabled && scrolled >= 95 && !hasScrolledToBottom) {
-    hasScrolledToBottom = true;
-    scrollCheckEnabled = false;
-    showAuthPopupAutomatic();
-  }
 }
 
 function initRevealOnScroll() {
@@ -610,13 +571,25 @@ function showAuthPopupAutomatic() {
   createConfetti();
 }
 
+function scrollToBottomAndLogin() {
+  // Scroll to bottom of page
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: 'smooth'
+  });
+  
+  // Wait for scroll to complete, then show login popup
+  setTimeout(() => {
+    showAuthPopup();
+  }, 1000);
+}
+
 function showAuthPopup() {
   const authPopup = document.getElementById('authPopup');
   if (authPopup) {
     authPopup.classList.add('show');
     authPopup.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    if (scrollProgressIndicator) scrollProgressIndicator.classList.remove('show');
     initBlobEyeTracking();
     initPasswordEyeClosing(); // Make characters close eyes when typing password
   }
@@ -908,6 +881,26 @@ function goForgotPassword(e) {
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('signupForm').style.display = 'none';
   document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail')?.value.trim();
+  if (!email) return showMessage('⚠️ Email required', 'error');
+  
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return showMessage('⚠️ Invalid email format', 'error');
+  
+  try {
+    showMessage('📧 Sending reset code...', 'success');
+    await apiCall('/api/forgot-password', 'POST', { email });
+    showMessage('✅ Reset code sent to your email!', 'success');
+    document.getElementById('resetEmailSection').style.display = 'none';
+    document.getElementById('resetCodeSection').style.display = 'block';
+  } catch (error) {
+    showMessage('❌ ' + error.message, 'error');
+  }
 }
 
 async function signup(e) {
