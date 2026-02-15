@@ -2385,10 +2385,10 @@ body.light-theme .footer-section p {
   display: grid;
   grid-template-columns: 1fr 1fr;
   /* Brighter glass effect */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.20) 0%, 
-    rgba(255, 255, 255, 0.10) 50%, 
-    rgba(255, 255, 255, 0.15) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.20) 0%,
+      rgba(255, 255, 255, 0.10) 50%,
+      rgba(255, 255, 255, 0.15) 100%);
   backdrop-filter: blur(40px) saturate(1.6);
   -webkit-backdrop-filter: blur(40px) saturate(1.6);
   border-radius: 24px;
@@ -2423,7 +2423,7 @@ body.light-theme .footer-section p {
   position: absolute;
   width: 200%;
   height: 200%;
-  background: 
+  background:
     radial-gradient(circle at 30% 40%, rgba(168, 230, 207, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 70% 60%, rgba(247, 184, 203, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 50% 80%, rgba(126, 184, 224, 0.12) 0%, transparent 50%);
@@ -2433,10 +2433,13 @@ body.light-theme .footer-section p {
 }
 
 @keyframes ambientGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 0.6;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.1);
     opacity: 0.8;
@@ -2485,48 +2488,64 @@ body.light-theme .footer-section p {
 }
 
 @keyframes blobFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
 }
 
 @keyframes gentleSway {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   25% {
     transform: translateY(-5px) rotate(1.5deg);
   }
+
   50% {
     transform: translateY(-10px) rotate(0deg);
   }
+
   75% {
     transform: translateY(-5px) rotate(-1.5deg);
   }
 }
 
 @keyframes gentleRock {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   30% {
     transform: translateY(-8px) rotate(-1deg);
   }
+
   70% {
     transform: translateY(-12px) rotate(1deg);
   }
 }
 
 @keyframes gentleTwist {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   40% {
     transform: translateY(-10px) rotate(2deg);
   }
+
   80% {
     transform: translateY(-5px) rotate(-2deg);
   }
@@ -2542,9 +2561,14 @@ body.light-theme .footer-section p {
 }
 
 @keyframes eyeBlink {
-  0%, 48%, 52%, 100% {
+
+  0%,
+  48%,
+  52%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.1;
   }
@@ -2557,10 +2581,13 @@ body.light-theme .footer-section p {
 }
 
 @keyframes shadowPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.7;
     transform: scale(0.95);
@@ -2574,18 +2601,22 @@ body.light-theme .footer-section p {
   flex-direction: column;
   justify-content: center;
   /* Bright frosted glass effect */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.25) 0%, 
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.20) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.20) 100%);
   /* Strong blur to see colors behind */
   backdrop-filter: blur(30px) saturate(1.8);
   -webkit-backdrop-filter: blur(30px) saturate(1.8);
   overflow-y: auto;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
   max-height: 92vh;
   /* Removed borders to feel as one with characters */
   /* Multi-layered shadow for depth */
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -1px 0 rgba(255, 255, 255, 0.2);
@@ -2600,18 +2631,21 @@ body.light-theme .footer-section p {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
   transition: left 0.5s;
   pointer-events: none;
 }
 
 .auth-form-panel:hover::before {
   left: 100%;
+}
+
+.auth-form-panel::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Edge */
 }
 
 .auth-form-logo {
@@ -2681,37 +2715,37 @@ body.light-theme .footer-section p {
   color: #ffffff;
   letter-spacing: 0.3px;
   /* Modern gradient background */
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.12) 0%, 
-    rgba(255, 255, 255, 0.08) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.08) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 .auth-input-group input:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.16) 0%, 
-    rgba(255, 255, 255, 0.12) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.12) 100%);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .auth-input-group input:focus {
   border-color: rgba(141, 164, 211, 0.6);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.18) 0%, 
-    rgba(255, 255, 255, 0.14) 100%);
-  box-shadow: 
-    0 0 0 4px rgba(141, 164, 211, 0.15), 
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.14) 100%);
+  box-shadow:
+    0 0 0 4px rgba(141, 164, 211, 0.15),
     0 8px 24px rgba(79, 116, 163, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
@@ -2722,6 +2756,61 @@ body.light-theme .footer-section p {
   font-weight: 400;
   letter-spacing: 0.2px;
 }
+
+/* Password Eye Toggle */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px !important;
+}
+
+.password-eye-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+  border-radius: 50%;
+}
+
+.password-eye-toggle:hover {
+  color: rgba(141, 164, 211, 0.9);
+  transform: translateY(-50%) scale(1.12);
+}
+
+.password-eye-toggle:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.password-eye-toggle .eye-icon {
+  display: none;
+  pointer-events: none;
+}
+
+.password-eye-toggle .eye-closed {
+  display: block;
+}
+
+.password-eye-toggle.showing .eye-open {
+  display: block;
+}
+
+.password-eye-toggle.showing .eye-closed {
+  display: none;
+}
+
 
 .auth-code-input {
   font-size: 22px !important;
@@ -2800,10 +2889,10 @@ body.light-theme .footer-section p {
   width: 100%;
   padding: 16px 24px;
   /* Modern vibrant gradient */
-  background: linear-gradient(135deg, 
-    #667eea 0%,
-    #764ba2 50%,
-    #667eea 100%);
+  background: linear-gradient(135deg,
+      #667eea 0%,
+      #764ba2 50%,
+      #667eea 100%);
   background-size: 200% 100%;
   color: white;
   border: none;
@@ -2813,7 +2902,7 @@ body.light-theme .footer-section p {
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(102, 126, 234, 0.35),
     0 4px 12px rgba(118, 75, 162, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -2836,7 +2925,7 @@ body.light-theme .footer-section p {
 .auth-submit-btn:hover {
   background-position: 100% 0;
   transform: translateY(-3px);
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(102, 126, 234, 0.45),
     0 6px 16px rgba(118, 75, 162, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -2848,7 +2937,7 @@ body.light-theme .footer-section p {
 
 .auth-submit-btn:active {
   transform: translateY(-1px);
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(102, 126, 234, 0.4),
     0 3px 10px rgba(118, 75, 162, 0.3);
 }
@@ -2916,9 +3005,9 @@ body.light-theme .footer-section p {
 .auth-google-btn {
   width: 100%;
   padding: 14px 20px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.12) 0%, 
-    rgba(255, 255, 255, 0.08) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.08) 100%);
   color: rgba(255, 255, 255, 0.95);
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
@@ -2932,18 +3021,18 @@ body.light-theme .footer-section p {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .auth-google-btn:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.18) 0%, 
-    rgba(255, 255, 255, 0.14) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.14) 100%);
   border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
