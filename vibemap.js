@@ -617,6 +617,119 @@ function showAuthPopup() {
     authPopup.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     if (scrollProgressIndicator) scrollProgressIndicator.classList.remove('show');
+    initBlobEyeTracking();
+    initPasswordEyeClosing(); // Make characters close eyes when typing password
+  }
+}
+
+// ========================================
+// BLOB EYE TRACKING ANIMATION
+// ========================================
+function initBlobEyeTracking() {
+  const authPopup = document.getElementById('authPopup');
+  const svg = authPopup?.querySelector('.auth-characters-svg');
+  if (!svg) return;
+
+  // Remove old listener if present
+  if (authPopup._eyeTrackHandler) {
+    authPopup.removeEventListener('mousemove', authPopup._eyeTrackHandler);
+  }
+
+  const handler = function (e) {
+    const svgRect = svg.getBoundingClientRect();
+    const svgWidth = svgRect.width;
+    const svgHeight = svgRect.height;
+    // SVG viewBox is 420x460
+    const scaleX = 420 / svgWidth;
+    const scaleY = 460 / svgHeight;
+    // Mouse position in SVG coordinate space
+    const mouseX = (e.clientX - svgRect.left) * scaleX;
+    const mouseY = (e.clientY - svgRect.top) * scaleY;
+
+    const eyes = svg.querySelectorAll('.blob-eye');
+    eyes.forEach(function (eye) {
+      const pupil = eye.querySelector('.blob-pupil');
+      const eyeWhite = eye.querySelector('circle:first-child');
+      if (!pupil || !eyeWhite) return;
+
+      const cx = parseFloat(eyeWhite.getAttribute('cx'));
+      const cy = parseFloat(eyeWhite.getAttribute('cy'));
+      const eyeR = parseFloat(eyeWhite.getAttribute('r'));
+      const pupilR = parseFloat(pupil.getAttribute('r'));
+      const maxMove = eyeR - pupilR - 2;
+
+      const dx = mouseX - cx;
+      const dy = mouseY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const angle = Math.atan2(dy, dx);
+
+      const clampedDist = Math.min(dist * 0.15, maxMove);
+      const newCx = cx + Math.cos(angle) * clampedDist;
+      const newCy = cy + Math.sin(angle) * clampedDist;
+
+      pupil.setAttribute('cx', newCx);
+      pupil.setAttribute('cy', newCy);
+    });
+  };
+
+  authPopup._eyeTrackHandler = handler;
+  authPopup.addEventListener('mousemove', handler);
+
+  // Also handle touch for mobile
+  authPopup.addEventListener('touchmove', function (e) {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      handler({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+  }, { passive: true });
+}
+
+// ========================================
+// PASSWORD FIELD - CHARACTERS CLOSE EYES
+// ========================================
+function initPasswordEyeClosing() {
+  const passwordField = document.getElementById('loginPassword');
+  const signupPasswordField = document.getElementById('signupPass');
+  const svg = document.querySelector('.auth-characters-svg');
+  
+  if (!svg) return;
+  
+  const eyes = svg.querySelectorAll('.blob-eye');
+  
+  function closeEyes() {
+    eyes.forEach(eye => {
+      eye.style.opacity = '0.1';
+      eye.style.transition = 'opacity 0.2s ease';
+    });
+  }
+  
+  function openEyes() {
+    eyes.forEach(eye => {
+      eye.style.opacity = '1';
+    });
+  }
+  
+  // Login password field
+  if (passwordField) {
+    passwordField.addEventListener('focus', closeEyes);
+    passwordField.addEventListener('blur', openEyes);
+    passwordField.addEventListener('input', function() {
+      if (this.value.length > 0) {
+        closeEyes();
+      }
+    });
+  }
+  
+  // Signup password fields
+  if (signupPasswordField) {
+    signupPasswordField.addEventListener('focus', closeEyes);
+    signupPasswordField.addEventListener('blur', openEyes);
+  }
+  
+  const confirmPasswordField = document.getElementById('signupConfirm');
+  if (confirmPasswordField) {
+    confirmPasswordField.addEventListener('focus', closeEyes);
+    confirmPasswordField.addEventListener('blur', openEyes);
   }
 }
 
@@ -801,28 +914,28 @@ async function signup(e) {
   e.preventDefault();
   const username = document.getElementById('signupName')?.value.trim();
   const email = document.getElementById('signupEmail')?.value.trim();
-  const registrationNumber = document.getElementById('signupReg')?.value.trim();
+  const phoneNumber = document.getElementById('signupPhone')?.value.trim();
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
   const gender = document.querySelector('input[name="gender"]:checked')?.value;
-  
-  if (!username || !email || !registrationNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
+
+  if (!username || !email || !phoneNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
   if (!gender) return showMessage('Please select gender', 'error');
   if (password !== confirm) return showMessage('Passwords don\'t match', 'error');
   if (password.length < 6) return showMessage('Password min 6 characters', 'error');
   if (username.length < 3) return showMessage('Username must be at least 3 characters', 'error');
-  
+
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) return showMessage('Invalid email format', 'error');
-  
-  // Registration number validation
-  const registrationNumberRegex = /^[0-9]{8,12}$/;
-  if (!registrationNumberRegex.test(registrationNumber)) return showMessage('Invalid registration number format', 'error');
-  
+
+  // Phone number validation (10 digits)
+  const phoneRegex = /^[0-9]{10}$/;
+  if (!phoneRegex.test(phoneNumber)) return showMessage('Invalid phone number (must be 10 digits)', 'error');
+
   try {
     showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { username, email, password, registrationNumber, gender });
+    await apiCall('/api/register', 'POST', { username, email, password, phoneNumber, gender });
     showMessage('🎉 Account created!', 'success');
     const form = document.getElementById('signupForm');
     if (form) form.reset();
