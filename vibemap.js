@@ -504,6 +504,7 @@ function showAboutUsPage() {
 
   initRevealOnScroll();
   initStatsCounter();
+  initScrollDetection();
 }
 
 function initRevealOnScroll() {
