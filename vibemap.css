@@ -2596,7 +2596,7 @@ body.light-theme .footer-section p {
 
 /* RIGHT PANEL - Forms (TRUE Glassmorphism Effect) */
 .auth-form-panel {
-  padding: 40px 36px;
+  padding: 32px 28px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -2692,7 +2692,7 @@ body.light-theme .footer-section p {
 
 /* Input Groups */
 .auth-input-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .auth-input-group label {
