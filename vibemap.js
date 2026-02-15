@@ -962,13 +962,10 @@ async function signup(e) {
   e.preventDefault();
   const username = document.getElementById('signupName')?.value.trim();
   const email = document.getElementById('signupEmail')?.value.trim();
-  const phoneNumber = document.getElementById('signupPhone')?.value.trim();
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
-  const gender = document.querySelector('input[name="gender"]:checked')?.value;
 
-  if (!username || !email || !phoneNumber || !password || !confirm) return showMessage('Fill all fields', 'error');
-  if (!gender) return showMessage('Please select gender', 'error');
+  if (!username || !email || !password || !confirm) return showMessage('Fill all fields', 'error');
   if (password !== confirm) return showMessage('Passwords don\'t match', 'error');
   if (password.length < 6) return showMessage('Password min 6 characters', 'error');
   if (username.length < 3) return showMessage('Username must be at least 3 characters', 'error');
@@ -977,13 +974,9 @@ async function signup(e) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) return showMessage('Invalid email format', 'error');
 
-  // Phone number validation (10 digits)
-  const phoneRegex = /^[0-9]{10}$/;
-  if (!phoneRegex.test(phoneNumber)) return showMessage('Invalid phone number (must be 10 digits)', 'error');
-
   try {
     showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { username, email, password, phoneNumber, gender });
+    await apiCall('/api/register', 'POST', { username, email, password });
     showMessage('🎉 Account created!', 'success');
     const form = document.getElementById('signupForm');
     if (form) form.reset();
