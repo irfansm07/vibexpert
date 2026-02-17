@@ -19,9 +19,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-  <!-- Socket.io CDN -->
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
   <!-- LIVE ACTIVITY NOTIFICATION -->
   <div id="liveActivityNotif" class="live-activity-notif">
     <div class="notif-dot"></div>
@@ -75,9 +72,9 @@
             <p>Connect with students from IITs, NITs, VITs, and universities across India</p>
           </div>
           <div class="about-card reveal-on-scroll">
-            <div class="about-card-icon">💬</div>
-            <h3>Real-Time Chat</h3>
-            <p>Engage in live conversations with your college community instantly</p>
+            <div class="about-card-icon">🌐</div>
+            <h3>Social Networking</h3>
+            <p>Connect with students from your college and across India</p>
           </div>
           <div class="about-card reveal-on-scroll">
             <div class="about-card-icon">�</div>
@@ -116,45 +113,7 @@
                 <div class="mockup-image"></div>
                 <div class="mockup-actions">
                   <span>❤️</span>
-                  <span>💬</span>
-                  <span>🔄</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="feature-showcase-text">
-            <h3>📱 Enhanced Post Creation</h3>
-            <ul>
-              <li>✨ Add photos, videos, and audio</li>
-              <li>🎵 Attach music from our library</li>
-              <li>🎨 Decorate with fun stickers</li>
-              <li>✂️ Crop and edit your media</li>
-              <li>🌐 Share to profile or community</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="feature-showcase reveal-on-scroll">
-          <div class="feature-showcase-image">
-            <div class="feature-mockup">
-              <div class="mockup-header">
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-              </div>
-              <div class="mockup-content">
-                <div class="mockup-post">
-                  <div class="mockup-avatar">👤</div>
-                  <div class="mockup-text">
-                    <div class="mockup-line"></div>
-                    <div class="mockup-line short"></div>
-                  </div>
-                </div>
-                <div class="mockup-image"></div>
-                <div class="mockup-actions">
-                  <span>❤️</span>
-                  <span>💬</span>
-                  <span>🔄</span>
+                  <span></span>
                 </div>
               </div>
             </div>
@@ -176,8 +135,7 @@
             <h3>🎓 College Communities</h3>
             <ul>
               <li>🔐 Verified college email system</li>
-              <li>💬 Private community chat rooms</li>
-              <li>📢 Share updates with classmates</li>
+              <li> Share updates with classmates</li>
               <li>👥 Real-time online indicators</li>
               <li>🏅 Earn badges for engagement</li>
             </ul>
@@ -190,14 +148,17 @@
                 <span class="mockup-dot"></span>
               </div>
               <div class="mockup-content">
-                <div class="mockup-chat-message left">
-                  <div class="chat-bubble">Hey! Anyone up for study group?</div>
+                <div class="mockup-post">
+                  <div class="mockup-avatar">👤</div>
+                  <div class="mockup-text">
+                    <div class="mockup-line"></div>
+                    <div class="mockup-line short"></div>
+                  </div>
                 </div>
-                <div class="mockup-chat-message right">
-                  <div class="chat-bubble">Count me in! 📚</div>
-                </div>
-                <div class="mockup-chat-message left">
-                  <div class="chat-bubble">Library at 4pm?</div>
+                <div class="mockup-image"></div>
+                <div class="mockup-actions">
+                  <span>❤️</span>
+                  <span>🔄</span>
                 </div>
               </div>
             </div>
@@ -317,7 +278,7 @@
         <div class="testimonials-grid">
           <div class="testimonial-card reveal-on-scroll">
             <div class="testimonial-avatar">👨‍🎓</div>
-            <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The community chat is
+            <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The community features are
               amazing for study groups."</p>
             <div class="testimonial-author">Rahul S.</div>
             <div class="testimonial-college">IIT Delhi</div>
@@ -351,7 +312,7 @@
           <p>Connect with thousands of students from 500+ universities</p>
           <div class="cta-features">
             <span>✅ Free Forever</span>
-            <span>✅ Verified Communities</span>
+            <span>✅ Verified Network</span>
             <span>✅ Rich Features</span>
           </div>
           <button class="cta-button" onclick="showAuthPopup()">
@@ -820,7 +781,6 @@
 
       <nav class="nav">
         <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
-        <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
         <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
         <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
         <a href="#" class="nav-link" onclick="showPage('vibeshop', event)">🛒 VibeShop</a>
@@ -874,7 +834,6 @@
           </div>
           <hr>
           <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
-          <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
           <div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
           <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
           <div class="menu-item" onclick="showPage('vibeshop', event)">🛒 VibeShop</div>
@@ -1052,11 +1011,6 @@
         <div id="collegeContainer" class="colleges"></div>
         <div id="pagination" class="pagination"></div>
         <button class="back-btn" onclick="backToUniversities()">← Back</button>
-      </section>
-
-      <!-- COMMUNITIES - PROFESSIONAL CHAT INTERFACE -->
-      <section id="communities" class="page" style="display:none;">
-        <div id="communitiesContainer"></div>
       </section>
 
       <!-- REALVIBE SECTION -->
@@ -1377,6 +1331,7 @@
 
           </div>
         </div>
+      </div>
   </div>
   </section>
 
@@ -1450,8 +1405,7 @@
           <ul class="plan-features">
             <li>Create unlimited posts</li>
             <li>Share unlimited vibes</li>
-            <li>Join communities</li>
-            <li>Chat with students</li>
+            <li>Connect with students</li>
             <li>No advertising allowed</li>
           </ul>
 
