@@ -1773,15 +1773,8 @@ function loadCommunities() {
             <div class="chat-avatar-large">🎓</div>
             <div>
               <h3>${currentUser.college} Community</h3>
-              <p class="chat-status">
-                <span class="online-dot"></span>
-                <span id="onlineCount">0</span> members online
-              </p>
+              <p class="chat-status">Your College Community · Live</p>
             </div>
-          </div>
-          <div class="chat-header-actions">
-            <button class="icon-btn" onclick="searchInChat()" title="Search">🔍</button>
-            <button class="icon-btn" onclick="toggleTwitterFeed()" title="View Posts">📰</button>
           </div>
         </div>
 
@@ -1793,15 +1786,27 @@ function loadCommunities() {
           </div>
         </div>
 
+        <!-- Media preview bar (shows above input when file selected) -->
+        <div class="chat-file-preview-bar" id="chatFilePreviewBar" style="display:none;">
+          <div class="preview-bar-inner">
+            <img id="chatFilePreviewImg" style="display:none;" alt="preview">
+            <video id="chatFilePreviewVideo" style="display:none;" controls></video>
+            <div class="preview-filename" id="chatFilePreviewName"></div>
+          </div>
+          <button class="preview-clear-btn" onclick="clearChatFilePreview()" title="Remove">✕</button>
+        </div>
+
         <div class="whatsapp-input-area">
           <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <button class="icon-btn" onclick="openStickerPicker()" title="Stickers">🎨</button>
+          <!-- FILE BUTTON replaces sticker -->
+          <input type="file" id="chatFileInput" accept="image/*,video/*" style="display:none" onchange="handleChatFileSelect(event)">
+          <button class="icon-btn file-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Send Photo/Video">📎</button>
           <div class="input-wrapper">
             <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
               onkeydown="handleWhatsAppKeypress(event)" 
               oninput="handleTypingIndicator()"></textarea>
           </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessage()" title="Send">
+          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessageWithMedia()" title="Send">
             <span class="send-icon">➤</span>
           </button>
         </div>
@@ -6134,17 +6139,40 @@ function appendWhatsAppMessageFixed(msg) {
   let messageHTML = '';
 
   if (!isOwn) {
-    // defined helper
     const safeSender = typeof escapeHtml === 'function' ? escapeHtml(sender) : sender;
     messageHTML += `<div class="message-sender-name">${safeSender}</div>`;
   }
 
-  // Handle content
   const contentRaw = msg.text || msg.content || '';
   const contentText = typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw;
 
+  // Media (image/video)
+  let mediaHTML = '';
+  if (msg.media_url) {
+    if (msg.media_type === 'video') {
+      mediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+    } else {
+      mediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+    }
+  }
+
+  // Options bar (shown on hover)
+  const optionsBar = `
+    <div class="msg-options-bar">
+      <button class="msg-opt-btn" onclick="showEmojiReactPicker('${messageId}', this)" title="React">😊</button>
+      ${isOwn ? `<button class="msg-opt-btn" onclick="editChatMsg('${messageId}')" title="Edit">✏️</button>` : ''}
+      ${isOwn ? `<button class="msg-opt-btn delete-opt" onclick="deleteChatMsg('${messageId}')" title="Delete">🗑️</button>` : ''}
+      <button class="msg-opt-btn seen-opt" onclick="showSeenBy('${messageId}')" title="Seen by">👁️ <span class="seen-count" id="seen-${messageId}">0</span></button>
+    </div>
+  `;
+
+  // Emoji reaction row
+  const reactBar = `<div class="msg-react-bar" id="reacts-${messageId}"></div>`;
+
   messageHTML += `
-    <div class="message-bubble">
+    ${optionsBar}
+    <div class="message-bubble" id="bubble-${messageId}">
+      ${mediaHTML}
       <div class="message-text">${contentText}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
@@ -6152,6 +6180,7 @@ function appendWhatsAppMessageFixed(msg) {
       </div>
       ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
     </div>
+    ${reactBar}
   `;
 
   wrapper.innerHTML = messageHTML;
@@ -6422,9 +6451,38 @@ async function loadCommunityMessages() {
 
     const data = await apiCall('/api/community/messages');
 
-    if (data.success && data.messages) {
-      data.messages.forEach(msg => appendCommunityMessage(msg));
-      scrollToCommunityBottom();
+   if (data.success && data.messages) {
+      // Mark where unread starts (last seen timestamp from localStorage)
+      const lastSeen = localStorage.getItem('lastSeenTime_' + currentUser.college) || 0;
+      let firstUnreadEl = null;
+
+      data.messages.forEach(msg => {
+        appendWhatsAppMessageFixed(msg);
+        const msgTime = new Date(msg.created_at || 0).getTime();
+        const isUnread = msgTime > Number(lastSeen) && msg.sender_id !== currentUser.id;
+        if (isUnread && !firstUnreadEl) {
+          // Insert unread divider before this message
+          const el = document.getElementById('whatsappMessages');
+          const divider = document.createElement('div');
+          divider.className = 'unread-divider';
+          divider.innerHTML = '↑ Unread messages';
+          if (el && el.lastChild) {
+            el.insertBefore(divider, el.lastChild);
+            firstUnreadEl = divider;
+          }
+        }
+      });
+
+      // Save current time as "last seen"
+      localStorage.setItem('lastSeenTime_' + currentUser.college, Date.now());
+
+      // Scroll to first unread, otherwise scroll to bottom
+      if (firstUnreadEl) {
+        firstUnreadEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        const el = document.getElementById('whatsappMessages');
+        if (el) el.scrollTop = el.scrollHeight;
+      }
     }
   } catch (error) {
     console.error('Failed to load messages:', error);
@@ -6510,6 +6568,217 @@ function clearChatPreview() {
 
   if (input) input.value = '';
   if (preview) preview.style.display = 'none';
+}
+// ==========================================
+// CHAT FILE UPLOAD (replaces sticker)
+// ==========================================
+
+let selectedWhatsAppMedia = null;
+
+function handleChatFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  selectedWhatsAppMedia = file;
+
+  const bar = document.getElementById('chatFilePreviewBar');
+  const img = document.getElementById('chatFilePreviewImg');
+  const vid = document.getElementById('chatFilePreviewVideo');
+  const name = document.getElementById('chatFilePreviewName');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    if (file.type.startsWith('video/')) {
+      vid.src = e.target.result;
+      vid.style.display = 'block';
+      img.style.display = 'none';
+    } else {
+      img.src = e.target.result;
+      img.style.display = 'block';
+      vid.style.display = 'none';
+    }
+    if (name) name.textContent = file.name;
+    if (bar) bar.style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearChatFilePreview() {
+  selectedWhatsAppMedia = null;
+  const fileInput = document.getElementById('chatFileInput');
+  const bar = document.getElementById('chatFilePreviewBar');
+  const img = document.getElementById('chatFilePreviewImg');
+  const vid = document.getElementById('chatFilePreviewVideo');
+  if (fileInput) fileInput.value = '';
+  if (bar) bar.style.display = 'none';
+  if (img) { img.src = ''; img.style.display = 'none'; }
+  if (vid) { vid.src = ''; vid.style.display = 'none'; }
+}
+
+// Send message with optional media
+async function sendWhatsAppMessageWithMedia() {
+  const input = document.getElementById('whatsappInput');
+  const content = input?.value.trim();
+
+  if (!content && !selectedWhatsAppMedia) {
+    input?.focus();
+    return;
+  }
+
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
+
+  // Optimistic bubble
+  const tempId = 'temp-' + Date.now();
+  const tempMsg = {
+    id: tempId,
+    content: content || '',
+    text: content || '',
+    sender_id: currentUser.id,
+    users: currentUser,
+    timestamp: new Date(),
+    isTemp: true,
+    media_url: selectedWhatsAppMedia ? URL.createObjectURL(selectedWhatsAppMedia) : null,
+    media_type: selectedWhatsAppMedia ? (selectedWhatsAppMedia.type.startsWith('video/') ? 'video' : 'image') : null
+  };
+
+  appendWhatsAppMessageFixed(tempMsg);
+  input.value = '';
+  input.style.height = 'auto';
+  clearChatFilePreview();
+
+  if (socket && currentUser.college) {
+    socket.emit('stop_typing', { collegeName: currentUser.college, username: currentUser.username });
+  }
+
+  try {
+    let response;
+    if (selectedWhatsAppMedia) {
+      const fd = new FormData();
+      fd.append('content', content || '');
+      fd.append('media', selectedWhatsAppMedia);
+      response = await apiCall('/api/community/messages', 'POST', fd);
+    } else {
+      response = await apiCall('/api/community/messages', 'POST', { content });
+    }
+
+    if (response.success && response.message) {
+      playMessageSound('send');
+      const tempEl = document.getElementById(`wa-msg-${tempId}`);
+      if (tempEl) tempEl.remove();
+      appendWhatsAppMessageFixed(response.message);
+    }
+  } catch (error) {
+    console.error('Send error:', error);
+    showMessage('❌ Failed to send message', 'error');
+    const tempEl = document.getElementById(`wa-msg-${tempId}`);
+    if (tempEl) tempEl.remove();
+  }
+}
+
+// ==========================================
+// MESSAGE OPTIONS: REACT, EDIT, DELETE, SEEN
+// ==========================================
+
+const REACT_EMOJIS = ['❤️','😂','😮','😢','👍','🔥'];
+
+function showEmojiReactPicker(msgId, btn) {
+  // Remove any existing picker
+  document.querySelectorAll('.emoji-react-picker').forEach(p => p.remove());
+
+  const picker = document.createElement('div');
+  picker.className = 'emoji-react-picker';
+  picker.innerHTML = REACT_EMOJIS.map(e =>
+    `<button class="react-emoji-btn" onclick="addMsgReaction('${msgId}','${e}',this)">${e}</button>`
+  ).join('');
+
+  // Position near button
+  const rect = btn.getBoundingClientRect();
+  picker.style.position = 'fixed';
+  picker.style.top = (rect.top - 55) + 'px';
+  picker.style.left = rect.left + 'px';
+  document.body.appendChild(picker);
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function closePicker(ev) {
+      if (!picker.contains(ev.target)) {
+        picker.remove();
+        document.removeEventListener('click', closePicker);
+      }
+    });
+  }, 10);
+}
+
+function addMsgReaction(msgId, emoji, btn) {
+  const bar = document.getElementById('reacts-' + msgId);
+  if (!bar) { btn.closest('.emoji-react-picker')?.remove(); return; }
+
+  // Check if this emoji already exists
+  let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
+  if (existing) {
+    const countEl = existing.querySelector('.react-count');
+    countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+  } else {
+    const pill = document.createElement('button');
+    pill.className = 'react-pill';
+    pill.dataset.emoji = emoji;
+    pill.innerHTML = `${emoji} <span class="react-count">1</span>`;
+    pill.onclick = () => {
+      const c = pill.querySelector('.react-count');
+      const n = parseInt(c.textContent) - 1;
+      if (n <= 0) pill.remove(); else c.textContent = n;
+    };
+    bar.appendChild(pill);
+  }
+
+  btn.closest('.emoji-react-picker')?.remove();
+}
+
+function editChatMsg(msgId) {
+  const bubble = document.getElementById('bubble-' + msgId);
+  const textEl = bubble?.querySelector('.message-text');
+  if (!textEl) return;
+
+  const current = textEl.textContent;
+  const newText = prompt('Edit message:', current);
+  if (newText === null || newText.trim() === current) return;
+
+  textEl.textContent = newText.trim();
+
+  // Add "edited" label
+  let editedTag = bubble.querySelector('.edited-tag');
+  if (!editedTag) {
+    editedTag = document.createElement('span');
+    editedTag.className = 'edited-tag';
+    editedTag.textContent = 'edited';
+    const meta = bubble.querySelector('.message-meta');
+    if (meta) meta.prepend(editedTag);
+  }
+
+  // Fire API silently (best effort)
+  apiCall(`/api/community/messages/${msgId}`, 'PATCH', { content: newText.trim() })
+    .catch(() => {/* server may not support yet */});
+}
+
+async function deleteChatMsg(msgId) {
+  if (!confirm('Delete this message?')) return;
+
+  const el = document.getElementById('wa-msg-' + msgId);
+  if (el) { el.style.opacity = '0.4'; el.style.pointerEvents = 'none'; }
+
+  try {
+    await apiCall(`/api/community/messages/${msgId}`, 'DELETE');
+    if (el) { el.style.animation = 'fadeOut 0.3s ease'; setTimeout(() => el.remove(), 300); }
+    showMessage('🗑️ Deleted', 'success');
+  } catch (e) {
+    if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
+    showMessage('❌ Could not delete', 'error');
+  }
+}
+
+function showSeenBy(msgId) {
+  const countEl = document.getElementById('seen-' + msgId);
+  const count = countEl ? countEl.textContent : '0';
+  showMessage(`👁️ Seen by ${count} ${count === '1' ? 'person' : 'people'}`, 'success');
 }
 
 async function sendCommunityMessage() {
