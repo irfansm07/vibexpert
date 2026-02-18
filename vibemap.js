@@ -1534,10 +1534,6 @@ function addMessageToUI(message) {
 function setupEnhancedSocketListeners() {
   if (!socket) return;
 
-  socket.on('new_message', (message) => {
-    if (window.queueMessageUpdate) queueMessageUpdate(message);
-    else appendMessageToChat(message);
-  });
 
   socket.on('user_typing', (data) => {
     if (data.username && currentUser && data.username !== currentUser.username) {
@@ -1891,7 +1887,12 @@ function loadCommunities() {
 // WHATSAPP MESSAGE FUNCTIONS
 // ==========================================
 
+let isLoadingWhatsAppMessages = false; 
+
 async function loadWhatsAppMessages() {
+  if (isLoadingWhatsAppMessages) return; 
+  isLoadingWhatsAppMessages = true; 
+
   try {
     const data = await apiCall('/api/community/messages', 'GET');
     const messagesEl = document.getElementById('whatsappMessages');
@@ -1940,7 +1941,9 @@ async function loadWhatsAppMessages() {
     updateChatStats(data.messages.length);
   } catch (error) {
     console.error('Load messages error:', error);
-  }
+  } finally {
+    isLoadingWhatsAppMessages = false;
+   }
 }
 
 
@@ -2511,16 +2514,6 @@ function initializeSocket() {
     socket.emit('user_online', currentUser.id);
   });
 
-  socket.on('new_message', (message) => {
-    // ✅ CRITICAL: Ignore own messages from socket (backend should exclude, but double-check)
-    if (message.sender_id === currentUser?.id) {
-      console.log('⚠️ Ignoring own message from socket');
-      return;
-    }
-
-    console.log('📨 Received message from socket:', message.id);
-    appendWhatsAppMessage(message);
-  });
   socket.on('message_updated', (message) => updateMessageInChat(message));
   socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
   socket.on('online_count', (count) => updateOnlineCount(count));
@@ -2558,6 +2551,24 @@ function removeMessageFromChat(id) {
   if (messageEl) messageEl.remove();
 }
 
+
+function openCommunityChat() {
+  // Community chat is already open by default
+  console.log('Community chat opened');
+}
+
+function openAnnouncementsChannel() {
+  showMessage('📢 Announcements coming soon!', 'success');
+}
+
+function searchChatMessages() {
+  const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
+  const messages = document.querySelectorAll('.whatsapp-message');
+  messages.forEach(msg => {
+    const text = msg.textContent.toLowerCase();
+    msg.style.display = text.includes(query) ? '' : 'none';
+  });
+}
 
 // ========================================
 // PROFILE & SEARCH
@@ -5888,23 +5899,6 @@ function appendWhatsAppMessage(msg) {
     return;
   }
 
-  // ✅ Extra check: Don't show duplicates of same content within 3 seconds
-  if (!msg.isTemp && isOwn) {
-    const recentMessages = Array.from(messagesEl.querySelectorAll('.whatsapp-message.own'));
-    const threeSecondsAgo = Date.now() - 3000;
-
-    const isDuplicate = recentMessages.some(el => {
-      const msgText = el.querySelector('.message-text')?.textContent;
-      const msgTime = el.dataset.timestamp ? parseInt(el.dataset.timestamp) : 0;
-      return msgText === (msg.text || msg.content) && msgTime > threeSecondsAgo;
-    });
-
-    if (isDuplicate) {
-      console.log('⚠️ Duplicate content detected, skipping');
-      return;
-    }
-  }
-
   // ✅ Remember if user was at bottom
   const wasAtBottom = (messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 100);
 
@@ -6129,33 +6123,6 @@ function appendWhatsAppMessageFixed(msg) {
     return;
   }
 
-  // ✅ Extra check: Don't show duplicates of same content within 3 seconds
-  // Only check if NOT a temp message (temp messages are allowed immediately)
-  if (!isTemp && isOwn) {
-    const recentMessages = Array.from(messagesEl.querySelectorAll('.whatsapp-message.own'));
-    const threeSecondsAgo = Date.now() - 3000;
-
-    // Check by content and time proximity
-    const isDuplicate = recentMessages.some(el => {
-      // If the ID matches exactly, we already handled it
-      if (el.id === `wa-msg-${messageId}`) return true;
-
-      const msgText = el.querySelector('.message-text')?.textContent;
-      // dataset.timestamp might be missing, default to now
-      const msgTime = el.dataset.timestamp ? parseInt(el.dataset.timestamp) : Date.now();
-
-      return msgText === (msg.text || msg.content) && msgTime > threeSecondsAgo;
-    });
-
-    // However, we want to allow the *real* message to replace the temp message?
-    // Usually invalidating temp is handled by ID replacement or removal.
-    // Here we just skip if duplicate content found recently.
-    if (isDuplicate) {
-      console.log('⚠️ Duplicate content detected (heuristic), skipping');
-      return;
-    }
-  }
-
   // ✅ Remember if user was at bottom
   const wasAtBottom = (messagesEl.scrollTop + messagesEl.clientHeight >= messagesEl.scrollHeight - 100);
 
@@ -6225,12 +6192,13 @@ async function sendWhatsAppMessageFixed() {
   try {
     // Optimistic UI update
     const tempMsg = {
-      id: 'temp-' + Date.now(),
-      content,
-      sender_id: currentUser.id,
-      users: currentUser,
-      timestamp: new Date(),
-      text: content
+    id: 'temp-' + Date.now(),
+    content,
+    sender_id: currentUser.id,
+    users: currentUser,
+    timestamp: new Date(),
+    text: content,
+    isTemp: true          // ← ADD THIS LINE
     };
 
     appendWhatsAppMessageFixed(tempMsg);
@@ -6248,15 +6216,17 @@ async function sendWhatsAppMessageFixed() {
     // Send to server
     const response = await apiCall('/api/community/messages', 'POST', { content });
 
-    if (response.success) {
-      playMessageSound('send');
+   if (response.success && response.message) {
+    playMessageSound('send');
 
-      // Remove temp message
-      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
-      if (tempEl) tempEl.remove();
+    // Remove temp message
+    const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
+    if (tempEl) tempEl.remove();
 
-      // Real message will come via Socket.IO
-    }
+    // Server excludes sender from socket broadcast, so we add the real message directly
+    appendWhatsAppMessageFixed(response.message);
+   }
+
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
@@ -6286,14 +6256,6 @@ function initWhatsAppChatFixes() {
   if (input) {
     // Handle typing indicator
     input.addEventListener('input', handleWhatsAppTyping);
-
-    // Handle Enter key
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendWhatsAppMessageFixed();
-      }
-    });
 
     // Auto-resize textarea
     input.addEventListener('input', (e) => {
@@ -6368,7 +6330,29 @@ console.log('✅ WhatsApp functions overridden with fixed versions');
 
 let communitySocketInitialized = false;
 
+function setupCommunitySocketListeners() {   // ← ADD THIS WHOLE FUNCTION
+  if (!socket || communitySocketInitialized) return;
+  communitySocketInitialized = true;
+  socket.off('new_message');
+  socket.on('new_message', (message) => {
+    if (message.sender_id === currentUser?.id) return;
+    appendCommunityMessage(message);
+  });
+  socket.on('user_typing', (data) => {
+    if (data.username && currentUser && data.username !== currentUser.username)
+      showTypingIndicator(data.username);
+  });
+  socket.on('user_stop_typing', (data) => {
+    if (data.username) hideTypingIndicator(data.username);
+  });
+  socket.on('message_deleted', ({ id }) => {
+    const el = document.getElementById(`wa-msg-${id}`) || document.getElementById(`msg-${id}`);
+    if (el) { el.style.animation = 'fadeOut 0.3s ease'; setTimeout(() => el.remove(), 300); }
+  });
+}
+
 function initCommunityChat() {
+
   console.log('💬 Initializing Community Chat...');
 
   // Reload user from storage to be sure
@@ -6544,14 +6528,15 @@ async function sendCommunityMessage() {
     users: { username: currentUser.username }
   });
 
+  const mediaToSend = selectedChatMedia;
   input.value = '';
   clearChatPreview();
 
   try {
     const formData = new FormData();
     formData.append('content', content);
-    if (selectedChatMedia) {
-      formData.append('media', selectedChatMedia);
+    if (mediaToSend) {
+      formData.append('media', mediaToSend);
     }
 
     await apiCall('/api/community/messages', 'POST', formData);
@@ -6569,22 +6554,34 @@ function handleChatKeyPress(event) {
   }
 }
 
-function setupCommunitySocketListeners() {
-  if (!socket || communitySocketInitialized) return;
 
-  socket.on('new_message', (msg) => {
-    if (msg.sender_id !== currentUser.id) {
-      appendCommunityMessage(msg);
-      playMessageSound('receive');
-    }
-  });
+function toggleChatInfo() {
+  const panel = document.getElementById('chatInfoPanel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
 
-  socket.on('online_count', (count) => {
-    const countEl = document.getElementById('communityOnlineCount');
-    if (countEl) countEl.textContent = `${count} Online`;
-  });
+function leaveGroup() {
+  if (confirm('Are you sure you want to leave the community?')) {
+    showMessage('Feature coming soon!', 'success');
+  }
+}
 
-  communitySocketInitialized = true;
+function toggleNotifications() {
+  const status = document.getElementById('notifStatus');
+  if (status) status.textContent = status.textContent === 'On' ? 'Off' : 'On';
+}
+
+function muteChat() {
+  showMessage('🔇 Chat muted!', 'success');
+}
+
+function openImageViewer(src) {
+  window.open(src, '_blank');
+}
+
+function searchInChat() {
+  const box = document.getElementById('chatSearchBox');
+  if (box) box.focus();
 }
 
 // Global scope override for showPage
