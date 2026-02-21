@@ -1119,7 +1119,7 @@ function appendMessageToChat(msg) {
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
   const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timeLabel = messageTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
   if (document.getElementById('msg-' + messageId)) return;
@@ -1485,7 +1485,7 @@ function renderMessage(msg) {
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
   const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timeLabel = messageTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
   let html = `<div class="chat-message ${isOwn ? 'own' : 'other'}" id="msg-${messageId}">`;
@@ -1798,9 +1798,11 @@ function loadCommunities() {
 
         <div class="whatsapp-input-area">
           <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <!-- FILE BUTTON replaces sticker -->
-          <input type="file" id="chatFileInput" accept="image/*,video/*" style="display:none" onchange="handleChatFileSelect(event)">
-          <button class="icon-btn file-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Send Photo/Video">📎</button>
+          <!-- CAMERA + GALLERY BUTTONS -->
+          <input type="file" id="chatCameraInput" accept="image/*,video/*" capture="environment" style="display:none" onchange="handleChatFileSelect(event)">
+          <input type="file" id="chatGalleryInput" accept="image/*,video/*" style="display:none" onchange="handleChatFileSelect(event)">
+          <button class="icon-btn media-cam-btn" onclick="document.getElementById('chatCameraInput').click()" title="Take Photo/Video with Camera">📷</button>
+          <button class="icon-btn media-gal-btn" onclick="document.getElementById('chatGalleryInput').click()" title="Choose from Gallery/Files">🖼️</button>
           <div class="input-wrapper">
             <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
               onkeydown="handleWhatsAppKeypress(event)" 
@@ -2522,6 +2524,13 @@ function initializeSocket() {
   socket.on('message_updated', (message) => updateMessageInChat(message));
   socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
   socket.on('online_count', (count) => updateOnlineCount(count));
+  // ✅ NEW: Listen for seen count updates from server
+  socket.on('seen_update', (counts) => {
+    Object.entries(counts).forEach(([msgId, count]) => {
+      const el = document.getElementById('seen-' + msgId);
+      if (el) el.textContent = count;
+    });
+  });
 
   socket.on('post_liked', (data) => {
     const likeCount = document.querySelector(`#like-count-${data.postId}`);
@@ -5526,7 +5535,7 @@ function refreshChats() {
 // Update socket listeners for WhatsApp
 if (socket) {
   socket.on('new_message', (message) => {
-    appendWhatsAppMessage(message);
+    appendWhatsAppMessageFixed(message); // ✅ FIXED: always use the version that renders media
 
     // Show notification if not focused
     if (document.hidden) {
@@ -5893,8 +5902,10 @@ function appendWhatsAppMessage(msg) {
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // ✅ FIX BUG 3: server sends created_at, fall back to timestamp, then now
+  const messageTime = msg.created_at ? new Date(msg.created_at) : (msg.timestamp ? new Date(msg.timestamp) : new Date());
+  const timeLabel = messageTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
   // ✅ CRITICAL: Enhanced duplicate detection
@@ -5918,9 +5929,20 @@ function appendWhatsAppMessage(msg) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
+  // ✅ FIX BUG 2: Render media_url if present (image or video)
+  let mediaHTML = '';
+  if (msg.media_url) {
+    if (msg.media_type === 'video') {
+      mediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline style="max-width:100%;border-radius:8px;display:block;margin-bottom:4px;"></video>`;
+    } else {
+      mediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)" style="max-width:100%;border-radius:8px;display:block;margin-bottom:4px;cursor:pointer;">`;
+    }
+  }
+
   messageHTML += `
     <div class="message-bubble">
-      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      ${mediaHTML}
+      ${(msg.text || msg.content) ? `<div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>` : ''}
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
         ${isOwn ? `<span class="message-status">${msg.isTemp ? '⏳' : '✓✓'}</span>` : ''}
@@ -6071,7 +6093,7 @@ function setupWhatsAppSocketListeners() {
       return;
     }
 
-    appendWhatsAppMessage(message);
+    appendWhatsAppMessageFixed(message); // ✅ FIXED: always use the version that renders media
   });
 
   // User started typing
@@ -6115,9 +6137,9 @@ function appendWhatsAppMessageFixed(msg) {
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   // robust sender name logic
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  const messageTime = msg.created_at ? new Date(msg.created_at) : (msg.timestamp ? new Date(msg.timestamp) : new Date());
+  const timeLabel = messageTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
 
@@ -6475,7 +6497,17 @@ async function loadCommunityMessages() {
 
       // Save current time as "last seen"
       localStorage.setItem('lastSeenTime_' + currentUser.college, Date.now());
-
+      // ✅ NEW: Tell server that this user has seen all loaded messages
+      const allMsgIds = Array.from(document.querySelectorAll('[id^="wa-msg-"]'))
+        .map(el => el.id.replace('wa-msg-', ''))
+        .filter(id => !id.startsWith('temp-') && !id.startsWith('tmp-'));
+      if (socket && allMsgIds.length > 0) {
+        socket.emit('mark_seen', {
+          collegeName: currentUser.college,
+          userId: currentUser.id,
+          messageIds: allMsgIds
+        });
+      }
       // Scroll to first unread, otherwise scroll to bottom
       if (firstUnreadEl) {
         firstUnreadEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -6495,7 +6527,7 @@ function appendCommunityMessage(msg) {
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const senderName = msg.users?.username || 'User';
-  const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(msg.created_at || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-message ${isOwn ? 'right' : 'left'}`;
@@ -6578,40 +6610,366 @@ let selectedWhatsAppMedia = null;
 function handleChatFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
-  selectedWhatsAppMedia = file;
-
-  const bar = document.getElementById('chatFilePreviewBar');
-  const img = document.getElementById('chatFilePreviewImg');
-  const vid = document.getElementById('chatFilePreviewVideo');
-  const name = document.getElementById('chatFilePreviewName');
+  event.target.value = ''; // reset so same file can be reselected
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    if (file.type.startsWith('video/')) {
-      vid.src = e.target.result;
-      vid.style.display = 'block';
-      img.style.display = 'none';
-    } else {
-      img.src = e.target.result;
-      img.style.display = 'block';
-      vid.style.display = 'none';
-    }
-    if (name) name.textContent = file.name;
-    if (bar) bar.style.display = 'flex';
+    openMediaEditorModal(e.target.result, file);
   };
   reader.readAsDataURL(file);
 }
 
 function clearChatFilePreview() {
   selectedWhatsAppMedia = null;
-  const fileInput = document.getElementById('chatFileInput');
+  ['chatCameraInput','chatGalleryInput','chatFileInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   const bar = document.getElementById('chatFilePreviewBar');
   const img = document.getElementById('chatFilePreviewImg');
   const vid = document.getElementById('chatFilePreviewVideo');
-  if (fileInput) fileInput.value = '';
   if (bar) bar.style.display = 'none';
   if (img) { img.src = ''; img.style.display = 'none'; }
   if (vid) { vid.src = ''; vid.style.display = 'none'; }
+}
+
+// ======================================================
+// MEDIA EDITOR MODAL — full editing + art style system
+// ======================================================
+let _medOrigDataUrl = null;
+let _medFile        = null;
+let _medRotation    = 0;
+let _medFlipH       = false;
+let _medArtStyle    = 'none';
+let _medBaseFilter  = 'none';
+let _medImg         = null;
+
+function openMediaEditorModal(dataUrl, file) {
+  _medOrigDataUrl = dataUrl;
+  _medFile = file;
+  _medRotation = 0;
+  _medFlipH = false;
+  _medArtStyle = 'none';
+  _medBaseFilter = 'none';
+
+  // Build modal once
+  if (!document.getElementById('mediaEditorModal')) {
+    const modal = document.createElement('div');
+    modal.id = 'mediaEditorModal';
+    modal.className = 'med-overlay';
+    modal.innerHTML = `
+      <div class="med-box">
+
+        <!-- HEADER -->
+        <div class="med-header">
+          <button class="med-header-btn med-cancel" onclick="closeMedEditor()">✕ Cancel</button>
+          <span class="med-title">Edit Media</span>
+          <button class="med-header-btn med-send" onclick="confirmMedSend()">Send ➤</button>
+        </div>
+
+        <!-- CANVAS PREVIEW -->
+        <div class="med-canvas-area">
+          <canvas id="medCanvas"></canvas>
+          <video id="medVideoPreview" controls style="display:none;max-width:100%;max-height:260px;border-radius:12px;"></video>
+          <div class="med-processing" id="medProcessing" style="display:none;">
+            <div class="med-spinner"></div>
+            <span>Applying art style...</span>
+          </div>
+        </div>
+
+        <!-- ART STYLES -->
+        <div style="overflow-y:auto;flex:1;padding-bottom:8px;">
+
+        <div class="med-section-label">🎨 Art Style</div>
+        <div class="med-art-row" id="medArtRow">
+          <button class="med-art-btn active" data-style="none"    onclick="applyArtStyle('none',this)">📷 Original</button>
+          <button class="med-art-btn"        data-style="ghibli"  onclick="applyArtStyle('ghibli',this)">🌸 Ghibli</button>
+          <button class="med-art-btn"        data-style="sketch"  onclick="applyArtStyle('sketch',this)">✏️ Sketch</button>
+          <button class="med-art-btn"        data-style="bw"      onclick="applyArtStyle('bw',this)">⬛ B&W Art</button>
+          <button class="med-art-btn"        data-style="anime"   onclick="applyArtStyle('anime',this)">✨ Animation</button>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="med-section-label">🎞 Filter</div>
+        <div class="med-filter-row">
+          <button class="med-filter-btn active" onclick="applyMedFilter('none',this)">Normal</button>
+          <button class="med-filter-btn" onclick="applyMedFilter('sepia(70%)',this)">Warm</button>
+          <button class="med-filter-btn" onclick="applyMedFilter('saturate(220%) hue-rotate(10deg)',this)">Vivid</button>
+          <button class="med-filter-btn" onclick="applyMedFilter('contrast(130%) brightness(1.1)',this)">Punch</button>
+          <button class="med-filter-btn" onclick="applyMedFilter('hue-rotate(200deg) saturate(150%)',this)">Cool</button>
+          <button class="med-filter-btn" onclick="applyMedFilter('brightness(1.2) saturate(0%) contrast(90%)',this)">Fade</button>
+        </div>
+
+        <!-- SLIDERS -->
+        <div class="med-sliders">
+          <div class="med-slider-row">
+            <span>☀️</span>
+            <input type="range" class="med-slider" id="medBright" min="40" max="220" value="100" oninput="redrawMed()">
+          </div>
+          <div class="med-slider-row">
+            <span>◐</span>
+            <input type="range" class="med-slider" id="medContrast" min="40" max="220" value="100" oninput="redrawMed()">
+          </div>
+          <div class="med-slider-row">
+            <span>🎨</span>
+            <input type="range" class="med-slider" id="medSaturate" min="0" max="300" value="100" oninput="redrawMed()">
+          </div>
+        </div>
+
+        <!-- TRANSFORM -->
+        <div class="med-section-label">🔄 Transform</div>
+        <div class="med-transform-row">
+          <button class="med-tool-btn" onclick="rotateMed(-90)" title="Rotate Left">↺</button>
+          <button class="med-tool-btn" onclick="rotateMed(90)"  title="Rotate Right">↻</button>
+          <button class="med-tool-btn" onclick="flipMedH()"     title="Flip Horizontal">⇄</button>
+          <button class="med-tool-btn" onclick="resetMedEdits()" title="Reset All">↩ Reset</button>
+        </div>
+
+        <!-- CAPTION -->
+        <div class="med-section-label">💬 Caption</div>
+        <input type="text" id="medCaption" class="med-caption-input" placeholder="Add a caption (optional)...">
+
+        </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('mediaEditorModal').style.display = 'flex';
+
+  // Reset all controls
+  document.getElementById('medBright').value = 100;
+  document.getElementById('medContrast').value = 100;
+  document.getElementById('medSaturate').value = 100;
+  document.getElementById('medCaption').value = '';
+  document.querySelectorAll('.med-art-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.med-art-btn[data-style="none"]')?.classList.add('active');
+  document.querySelectorAll('.med-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.med-filter-btn')?.classList.add('active');
+
+  const canvas = document.getElementById('medCanvas');
+  const vidPrev = document.getElementById('medVideoPreview');
+
+  if (file.type.startsWith('video/')) {
+    canvas.style.display = 'none';
+    vidPrev.style.display = 'block';
+    vidPrev.src = dataUrl;
+    // Disable art/filter for video
+    document.getElementById('medArtRow').style.opacity = '0.4';
+    document.getElementById('medArtRow').style.pointerEvents = 'none';
+  } else {
+    vidPrev.style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('medArtRow').style.opacity = '1';
+    document.getElementById('medArtRow').style.pointerEvents = 'auto';
+
+    const image = new Image();
+    image.onload = function() {
+      _medImg = image;
+      const MAX = 580;
+      const scale = Math.min(1, MAX / image.width);
+      canvas.width  = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      redrawMed();
+    };
+    image.src = dataUrl;
+  }
+}
+
+function closeMedEditor() {
+  const modal = document.getElementById('mediaEditorModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// --- Art Style Canvas Filters ---
+// These simulate art styles using pure CSS canvas filters + pixel manipulation
+const ART_STYLES = {
+  none:   { filter: '' },
+  ghibli: { filter: 'saturate(180%) brightness(1.12) contrast(105%) hue-rotate(5deg)', overlay: 'rgba(255,230,180,0.10)' },
+  sketch: { filter: 'grayscale(100%) contrast(200%) brightness(1.4) invert(0%)', sketch: true },
+  bw:     { filter: 'grayscale(100%) contrast(130%) brightness(1.05)' },
+  anime:  { filter: 'saturate(250%) contrast(120%) brightness(1.08) hue-rotate(-10deg)', posterize: 6 }
+};
+
+function applyArtStyle(style, btn) {
+  _medArtStyle = style;
+  document.querySelectorAll('.med-art-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  redrawMed();
+}
+
+function applyMedFilter(filter, btn) {
+  _medBaseFilter = filter;
+  document.querySelectorAll('.med-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  redrawMed();
+}
+
+function rotateMed(deg) {
+  _medRotation = (_medRotation + deg + 360) % 360;
+  redrawMed();
+}
+
+function flipMedH() {
+  _medFlipH = !_medFlipH;
+  redrawMed();
+}
+
+function resetMedEdits() {
+  _medRotation = 0;
+  _medFlipH = false;
+  _medArtStyle = 'none';
+  _medBaseFilter = 'none';
+  document.getElementById('medBright').value = 100;
+  document.getElementById('medContrast').value = 100;
+  document.getElementById('medSaturate').value = 100;
+  document.querySelectorAll('.med-art-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.med-art-btn[data-style="none"]')?.classList.add('active');
+  document.querySelectorAll('.med-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.med-filter-btn')?.classList.add('active');
+  redrawMed();
+}
+
+function redrawMed() {
+  const canvas = document.getElementById('medCanvas');
+  if (!canvas || !_medImg) return;
+  const ctx = canvas.getContext('2d');
+
+  const bright   = document.getElementById('medBright')?.value   || 100;
+  const contrast = document.getElementById('medContrast')?.value || 100;
+  const sat      = document.getElementById('medSaturate')?.value || 100;
+
+  const art = ART_STYLES[_medArtStyle] || ART_STYLES.none;
+
+  // Build combined filter
+  let filterStr = `brightness(${bright}%) contrast(${contrast}%) saturate(${sat}%)`;
+  if (art.filter) filterStr += ' ' + art.filter;
+  if (_medBaseFilter && _medBaseFilter !== 'none') filterStr += ' ' + _medBaseFilter;
+
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Rotation handling
+  const rot = _medRotation;
+  const isRotated90 = rot === 90 || rot === 270;
+  if (isRotated90) {
+    canvas.style.width  = canvas.height + 'px';
+    canvas.style.height = canvas.width  + 'px';
+  } else {
+    canvas.style.width  = '';
+    canvas.style.height = '';
+  }
+
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rot * Math.PI / 180);
+  if (_medFlipH) ctx.scale(-1, 1);
+
+  ctx.filter = filterStr;
+
+  if (isRotated90) {
+    ctx.drawImage(_medImg, -canvas.height / 2, -canvas.width / 2, canvas.height, canvas.width);
+  } else {
+    ctx.drawImage(_medImg, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+  }
+  ctx.restore();
+
+  // Sketch post-processing: invert edges using pixel data
+  if (_medArtStyle === 'sketch') {
+    applySketchEffect(ctx, canvas.width, canvas.height);
+  }
+
+  // Ghibli warm overlay
+  if (_medArtStyle === 'ghibli' && art.overlay) {
+    ctx.fillStyle = art.overlay;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Animation/anime: posterize
+  if (_medArtStyle === 'anime' && art.posterize) {
+    applyPosterize(ctx, canvas.width, canvas.height, art.posterize);
+  }
+}
+
+function applySketchEffect(ctx, w, h) {
+  try {
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const copy = new Uint8ClampedArray(data);
+
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = (y * w + x) * 4;
+        const top    = ((y-1) * w + x) * 4;
+        const bottom = ((y+1) * w + x) * 4;
+        const left   = (y * w + (x-1)) * 4;
+        const right  = (y * w + (x+1)) * 4;
+
+        for (let c = 0; c < 3; c++) {
+          const gx = -copy[left+c] + copy[right+c];
+          const gy = -copy[top+c]  + copy[bottom+c];
+          const edge = Math.min(255, Math.abs(gx) + Math.abs(gy));
+          data[i+c] = 255 - edge;
+        }
+        data[i+3] = 255;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } catch(e) { /* cross-origin safety */ }
+}
+
+function applyPosterize(ctx, w, h, levels) {
+  try {
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    const step = 255 / (levels - 1);
+    for (let i = 0; i < data.length; i += 4) {
+      data[i]   = Math.round(Math.round(data[i]   / step) * step);
+      data[i+1] = Math.round(Math.round(data[i+1] / step) * step);
+      data[i+2] = Math.round(Math.round(data[i+2] / step) * step);
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } catch(e) {}
+}
+
+function confirmMedSend() {
+  const caption = document.getElementById('medCaption')?.value.trim() || '';
+  const vidPrev = document.getElementById('medVideoPreview');
+
+  if (vidPrev && vidPrev.style.display !== 'none') {
+    // ✅ Video: use original file directly (no editing)
+    selectedWhatsAppMedia = _medFile;
+    const bar = document.getElementById('chatFilePreviewBar');
+    const vid = document.getElementById('chatFilePreviewVideo');
+    const img = document.getElementById('chatFilePreviewImg');
+    const name = document.getElementById('chatFilePreviewName');
+    if (vid) { vid.src = _medOrigDataUrl; vid.style.display = 'block'; }
+    if (img) img.style.display = 'none';
+    if (name) name.textContent = caption || _medFile.name;
+    if (bar) bar.style.display = 'flex';
+    if (caption) { const inp = document.getElementById('whatsappInput'); if (inp) inp.value = caption; }
+    closeMedEditor();
+    return;
+  }
+
+  // ✅ Image: export edited canvas with correct clean filename (no double extensions)
+  const canvas = document.getElementById('medCanvas');
+  const baseName = (_medFile.name || 'image').replace(/\.[^.]+$/, ''); // strip extension
+  const outName = baseName + '_edited.jpg';
+
+  canvas.toBlob(function(blob) {
+    if (!blob) { showMessage('❌ Could not process image', 'error'); return; }
+    selectedWhatsAppMedia = new File([blob], outName, { type: 'image/jpeg' });
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const bar = document.getElementById('chatFilePreviewBar');
+    const img = document.getElementById('chatFilePreviewImg');
+    const vid = document.getElementById('chatFilePreviewVideo');
+    const name = document.getElementById('chatFilePreviewName');
+    if (img) { img.src = dataUrl; img.style.display = 'block'; }
+    if (vid) vid.style.display = 'none';
+    if (name) name.textContent = caption || outName;
+    if (bar) bar.style.display = 'flex';
+    if (caption) { const inp = document.getElementById('whatsappInput'); if (inp) inp.value = caption; }
+    closeMedEditor();
+  }, 'image/jpeg', 0.92);
 }
 
 // Send message with optional media
@@ -6640,10 +6998,13 @@ async function sendWhatsAppMessageWithMedia() {
     media_type: selectedWhatsAppMedia ? (selectedWhatsAppMedia.type.startsWith('video/') ? 'video' : 'image') : null
   };
 
+  // ✅ FIX BUG 1: Save the media file BEFORE clearChatFilePreview() nulls selectedWhatsAppMedia
+  const mediaFileToSend = selectedWhatsAppMedia;
+
   appendWhatsAppMessageFixed(tempMsg);
   input.value = '';
   input.style.height = 'auto';
-  clearChatFilePreview();
+  clearChatFilePreview(); // safe to call now — we already saved the file above
 
   if (socket && currentUser.college) {
     socket.emit('stop_typing', { collegeName: currentUser.college, username: currentUser.username });
@@ -6651,10 +7012,22 @@ async function sendWhatsAppMessageWithMedia() {
 
   try {
     let response;
-    if (selectedWhatsAppMedia) {
+    if (mediaFileToSend) {
+      // Validate file size before uploading
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (mediaFileToSend.size > maxSize) {
+        showMessage('❌ File too large. Max 50MB allowed.', 'error');
+        const tempEl = document.getElementById(`wa-msg-${tempId}`);
+        if (tempEl) tempEl.remove();
+        return;
+      }
+
+      console.log('📤 Uploading media:', mediaFileToSend.name, mediaFileToSend.type, (mediaFileToSend.size/1024).toFixed(1)+'KB');
+      showMessage('⏫ Uploading media...', 'success');
+
       const fd = new FormData();
       fd.append('content', content || '');
-      fd.append('media', selectedWhatsAppMedia);
+      fd.append('media', mediaFileToSend);
       response = await apiCall('/api/community/messages', 'POST', fd);
     } else {
       response = await apiCall('/api/community/messages', 'POST', { content });
@@ -6665,12 +7038,21 @@ async function sendWhatsAppMessageWithMedia() {
       const tempEl = document.getElementById(`wa-msg-${tempId}`);
       if (tempEl) tempEl.remove();
       appendWhatsAppMessageFixed(response.message);
+    } else {
+      throw new Error(response.error || 'Unknown server error');
     }
   } catch (error) {
-    console.error('Send error:', error);
-    showMessage('❌ Failed to send message', 'error');
+    console.error('❌ Send error:', error);
+    const friendlyMsg = error.message?.includes('File type')
+      ? '❌ ' + error.message
+      : error.message?.includes('too large')
+      ? '❌ File too large (max 50MB)'
+      : error.message?.includes('community')
+      ? '❌ Join a college community first'
+      : '❌ Failed to send. Check your connection.';
+    showMessage(friendlyMsg, 'error');
     const tempEl = document.getElementById(`wa-msg-${tempId}`);
-    if (tempEl) tempEl.remove();
+    if (tempEl) { tempEl.style.opacity = '0.4'; tempEl.querySelector('.message-status').textContent = '❌'; }
   }
 }
 
@@ -6845,7 +7227,22 @@ function muteChat() {
 }
 
 function openImageViewer(src) {
-  window.open(src, '_blank');
+  // ✅ FIX: Show inline lightbox — blob URLs and cross-origin URLs work correctly here
+  const existing = document.getElementById('imgLightbox');
+  if (existing) existing.remove();
+
+  const lb = document.createElement('div');
+  lb.id = 'imgLightbox';
+  lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  lb.onclick = () => lb.remove();
+  lb.innerHTML = `
+    <img src="${src}" style="max-width:95vw;max-height:92vh;border-radius:10px;object-fit:contain;box-shadow:0 0 60px rgba(0,0,0,0.8);">
+    <button onclick="event.stopPropagation();document.getElementById('imgLightbox').remove()"
+      style="position:absolute;top:16px;right:16px;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);color:#ff8080;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <a href="${src}" download onclick="event.stopPropagation()"
+      style="position:absolute;top:16px;right:64px;background:rgba(79,116,163,0.25);border:1px solid rgba(79,116,163,0.4);color:#8ab0d8;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;">⬇</a>
+  `;
+  document.body.appendChild(lb);
 }
 
 function searchInChat() {
