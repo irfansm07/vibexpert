@@ -855,7 +855,24 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
     clearTimeout(timeoutId);
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || data.message || 'Request failed');
+    if (!response.ok) {
+      const err = new Error(data.error || data.message || 'Request failed');
+      err.status = response.status;
+      err.code = data.code || null;
+
+      // Daily message limit — show a prominent banner and stop the call chain
+      if (response.status === 429 && data.code === 'DAILY_LIMIT_REACHED') {
+        showMessage(
+          '🚫 Your college has reached the 10,000 message limit for today! Chat resets at midnight UTC. 🌙',
+          'error',
+          7000
+        );
+        // Return null so callers don't crash; they should guard with  if (!response) return;
+        return null;
+      }
+
+      throw err;
+    }
 
     return data;
   } catch (error) {
@@ -1091,8 +1108,8 @@ function appendMessageToChat(msg) {
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
+  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
   if (document.getElementById('msg-' + messageId)) return;
@@ -1457,13 +1474,30 @@ function setupInfiniteScroll() {
 function renderMessage(msg) {
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
+  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
+
+  // ✅ FIX: Build media HTML for renderMessage
+  let renderMediaHTML = '';
+  if (msg.media_url) {
+    if (msg.media_type === 'video') {
+      renderMediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+    } else if (msg.media_type === 'audio') {
+      renderMediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+    } else if (msg.media_type === 'pdf') {
+      renderMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
+    } else if (msg.media_type === 'document') {
+      renderMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
+    } else {
+      renderMediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+    }
+  }
 
   let html = `<div class="chat-message ${isOwn ? 'own' : 'other'}" id="msg-${messageId}">`;
   if (!isOwn) html += `<div class="sender">@${escapeHtml(sender)}</div>`;
   html += `
+   ${renderMediaHTML}
    <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
    <div class="message-footer">
      <span class="message-time">${timeLabel}</span>
@@ -1673,6 +1707,23 @@ function loadCommunities() {
     return;
   }
 
+  // Ensure whatsapp container is correctly positioned on next frame
+  // (header may still be visible when communities loads)
+  requestAnimationFrame(() => {
+    const header = document.querySelector('.header');
+    const chatContainer = document.querySelector('.whatsapp-container');
+    if (header && chatContainer) {
+      if (document.body.classList.contains('header-autohide')) {
+        chatContainer.style.top = '0';
+        chatContainer.style.height = '100vh';
+      } else {
+        const hh = header.offsetHeight || 72;
+        chatContainer.style.top = hh + 'px';
+        chatContainer.style.height = `calc(100vh - ${hh}px)`;
+      }
+    }
+  });
+
   // WhatsApp-style complete layout
   container.innerHTML = `
     <div class="whatsapp-container">
@@ -1759,20 +1810,10 @@ function loadCommunities() {
           </div>
         </div>
 
-        <!-- Media preview bar (shows above input when file selected) -->
-        <div class="chat-file-preview-bar" id="chatFilePreviewBar" style="display:none;">
-          <div class="preview-bar-inner">
-            <img id="chatFilePreviewImg" style="display:none;" alt="preview">
-            <video id="chatFilePreviewVideo" style="display:none;" controls></video>
-            <div class="preview-filename" id="chatFilePreviewName"></div>
-          </div>
-          <button class="preview-clear-btn" onclick="clearChatFilePreview()" title="Remove">✕</button>
-        </div>
-
         <div class="whatsapp-input-area">
           <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
           <!-- FILE BUTTON replaces sticker -->
-          <input type="file" id="chatFileInput" accept="image/*,video/*" style="display:none" onchange="handleChatFileSelect(event)">
+          <input type="file" id="chatFileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" style="display:none" onchange="handleChatFileSelect(event)">
           <button class="icon-btn file-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Send Photo/Video">📎</button>
           <div class="input-wrapper">
             <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
@@ -1882,10 +1923,9 @@ async function loadWhatsAppMessages() {
     const isFirstLoad = existingMessages.length === 0;
 
     if (isFirstLoad) {
-      // Keep date separator on first load only
-      const dateSeparator = messagesEl.querySelector('.date-separator');
       messagesEl.innerHTML = '';
-      if (dateSeparator) messagesEl.appendChild(dateSeparator);
+      // Reset date tracking so separators re-render fresh
+      resetChatDateTracking();
     }
 
     if (!data.messages || data.messages.length === 0) {
@@ -3174,6 +3214,147 @@ function saveUserToLocal() {
 // NAVIGATION
 // ========================================
 
+// ==========================================
+// HEADER AUTO-HIDE — for communities, posts, realvibe
+// ==========================================
+
+let _headerHideTimer = null;
+
+function enableHeaderAutohide() {
+  const header = document.querySelector('.header');
+  if (!header) return;
+
+  document.body.classList.add('header-autohide');
+  header.classList.remove('header-peeking');
+
+  // Immediately expand whatsapp container to full height when header hides
+  const chatContainer = document.querySelector('.whatsapp-container');
+  if (chatContainer) {
+    chatContainer.style.top = '0';
+    chatContainer.style.height = '100vh';
+  }
+
+  // Create hover zone if not exists
+  let zone = document.getElementById('headerHoverZone');
+  if (!zone) {
+    zone = document.createElement('div');
+    zone.id = 'headerHoverZone';
+    zone.className = 'header-hover-zone';
+    document.body.appendChild(zone);
+  }
+
+  // Remove old listeners first
+  document.removeEventListener('mousemove', _headerMouseMove);
+  zone.removeEventListener('mouseenter', _headerZoneEnter);
+  header.removeEventListener('mouseleave', _headerMouseLeave);
+  header.removeEventListener('mouseenter', _headerMouseEnter);
+
+  // Show on mouse near top (within 60px)
+  document.addEventListener('mousemove', _headerMouseMove);
+  // Also show when hovering the zone directly
+  zone.addEventListener('mouseenter', _headerZoneEnter);
+  // Cancel hide timer when mouse enters header
+  header.addEventListener('mouseenter', _headerMouseEnter);
+  // Hide when mouse leaves header
+  header.addEventListener('mouseleave', _headerMouseLeave);
+
+  // Touch: show on tap near top
+  document.addEventListener('touchstart', _headerTouchStart, { passive: true });
+}
+
+function disableHeaderAutohide() {
+  const header = document.querySelector('.header');
+  if (!header) return;
+
+  document.body.classList.remove('header-autohide');
+  header.classList.remove('header-peeking');
+
+  // Restore chat container below header
+  const chatContainer = document.querySelector('.whatsapp-container');
+  if (chatContainer) {
+    const headerH = header.offsetHeight || 72;
+    chatContainer.style.top = headerH + 'px';
+    chatContainer.style.height = `calc(100vh - ${headerH}px)`;
+  }
+
+  document.removeEventListener('mousemove', _headerMouseMove);
+  document.removeEventListener('touchstart', _headerTouchStart);
+  header.removeEventListener('mouseenter', _headerMouseEnter);
+
+  const zone = document.getElementById('headerHoverZone');
+  if (zone) zone.remove();
+
+  clearTimeout(_headerHideTimer);
+}
+
+function _headerMouseMove(e) {
+  const header = document.querySelector('.header');
+  if (!header) return;
+
+  if (e.clientY <= 60) {
+    // Mouse is near top — show header
+    clearTimeout(_headerHideTimer);
+    header.classList.add('header-peeking');
+    // Shrink container to make room for header
+    const cont = document.querySelector('.whatsapp-container');
+    if (cont) {
+      const hh = header.offsetHeight || 72;
+      cont.style.top = hh + 'px';
+      cont.style.height = `calc(100vh - ${hh}px)`;
+    }
+  } else if (e.clientY > 120 && !header.contains(e.target)) {
+    // Mouse moved well away AND is not over the header — start hide timer
+    clearTimeout(_headerHideTimer);
+    _headerHideTimer = setTimeout(() => {
+      // Only hide if mouse is still not on the header itself
+      if (!header.matches(':hover')) {
+        header.classList.remove('header-peeking');
+        // Re-expand container when header hides
+        const cont = document.querySelector('.whatsapp-container');
+        if (cont) { cont.style.top = '0'; cont.style.height = '100vh'; }
+      }
+    }, 800);
+  }
+}
+
+function _headerZoneEnter() {
+  const header = document.querySelector('.header');
+  if (header) {
+    clearTimeout(_headerHideTimer);
+    header.classList.add('header-peeking');
+    // Shrink container to make room
+    const cont = document.querySelector('.whatsapp-container');
+    if (cont) {
+      const hh = header.offsetHeight || 72;
+      cont.style.top = hh + 'px';
+      cont.style.height = `calc(100vh - ${hh}px)`;
+    }
+  }
+}
+
+function _headerMouseEnter() {
+  // Cancel any pending hide timer when mouse enters the header
+  clearTimeout(_headerHideTimer);
+}
+
+function _headerMouseLeave() {
+  _headerHideTimer = setTimeout(() => {
+    const header = document.querySelector('.header');
+    if (header) header.classList.remove('header-peeking');
+  }, 600);
+}
+
+function _headerTouchStart(e) {
+  const header = document.querySelector('.header');
+  if (!header) return;
+  const touch = e.touches[0];
+  if (touch && touch.clientY <= 60) {
+    clearTimeout(_headerHideTimer);
+    header.classList.add('header-peeking');
+    _headerHideTimer = setTimeout(() => header.classList.remove('header-peeking'), 3000);
+  }
+}
+
 function showPage(name, e) {
   if (e) e.preventDefault();
 
@@ -3187,6 +3368,21 @@ function showPage(name, e) {
   if (name === 'posts') loadPosts();
   else if (name === 'communities') loadCommunities();
   else if (name === 'vibeshop') loadVibeshopPage();
+
+  // Hide footer on communities, posts, realvibe
+  const footer = document.getElementById('mainFooter');
+  if (footer) {
+    const noFooterPages = ['communities', 'posts', 'realvibe'];
+    footer.style.display = noFooterPages.includes(name) ? 'none' : '';
+  }
+
+  // Auto-hide header on communities, posts, realvibe
+  const autoHidePages = ['communities', 'posts', 'realvibe'];
+  if (autoHidePages.includes(name)) {
+    enableHeaderAutohide();
+  } else {
+    disableHeaderAutohide();
+  }
 
   const hamburger = document.getElementById('hamburgerMenu');
   if (hamburger) hamburger.style.display = 'none';
@@ -5860,14 +6056,52 @@ function isWhatsAppAtBottom() {
 /**
  * Enhanced appendWhatsAppMessage with smart auto-scroll
  */
+// ==========================================
+// WHATSAPP-STYLE DATE SEPARATOR HELPERS
+// ==========================================
+
+let _lastChatDateLabel = null;
+
+function formatDateLabel(date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today - msgDay) / 86400000);
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays <= 4) return date.toLocaleDateString([], { weekday: 'long' });
+  return date.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short' });
+}
+
+function insertDateSeparatorIfNeeded(messagesEl, messageTime) {
+  const label = formatDateLabel(messageTime);
+  if (label === _lastChatDateLabel) return false;
+  _lastChatDateLabel = label;
+  const sep = document.createElement('div');
+  sep.className = 'wa-date-separator';
+  sep.setAttribute('data-date-label', label);
+  sep.innerHTML = `<span>${label}</span>`;
+  messagesEl.appendChild(sep);
+  return true;
+}
+
+function resetChatDateTracking() {
+  _lastChatDateLabel = null;
+}
+
+// ==========================================
+// WHATSAPP MESSAGE APPEND
+// ==========================================
+
 function appendWhatsAppMessage(msg) {
   const messagesEl = document.getElementById('whatsappMessages');
   if (!messagesEl) return;
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
+  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
   // ✅ CRITICAL: Enhanced duplicate detection
@@ -5891,8 +6125,25 @@ function appendWhatsAppMessage(msg) {
     messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
   }
 
+  // ✅ FIX: Render media in the base appendWhatsAppMessage function
+  let baseMediaHTML = '';
+  if (msg.media_url) {
+    if (msg.media_type === 'video') {
+      baseMediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+    } else if (msg.media_type === 'audio') {
+      baseMediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+    } else if (msg.media_type === 'pdf') {
+      baseMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
+    } else if (msg.media_type === 'document') {
+      baseMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
+    } else {
+      baseMediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+    }
+  }
+
   messageHTML += `
     <div class="message-bubble">
+      ${baseMediaHTML}
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
@@ -5903,6 +6154,10 @@ function appendWhatsAppMessage(msg) {
   `;
 
   wrapper.innerHTML = messageHTML;
+
+  // 📅 WhatsApp-style date separator
+  insertDateSeparatorIfNeeded(messagesEl, messageTime);
+
   messagesEl.appendChild(wrapper);
 
   // ✅ Smart scroll: only if user was already at bottom OR it's own message
@@ -6033,6 +6288,7 @@ function setupWhatsAppSocketListeners() {
   socket.off('user_typing');
   socket.off('user_stop_typing');
   socket.off('message_deleted');
+  socket.off('messages_seen');
 
   // New message received (only from OTHER users - backend excludes sender)
   socket.on('new_message', (message) => {
@@ -6069,7 +6325,94 @@ function setupWhatsAppSocketListeners() {
       setTimeout(() => messageEl.remove(), 300);
     }
   });
+
+  // ✅ SEEN BY — someone in the room has seen messages up to lastMsgId
+  socket.on('messages_seen', (data) => {
+    const { username, avatar, lastMsgId } = data;
+    if (!username) return;
+
+    // Store in global map
+    if (!window._msgSeenBy) window._msgSeenBy = {};
+    if (!window._msgSeenBy[lastMsgId]) window._msgSeenBy[lastMsgId] = [];
+    const already = window._msgSeenBy[lastMsgId].find(u => u.username === username);
+    if (!already) window._msgSeenBy[lastMsgId].push({ username, avatar: avatar || '👤' });
+
+    // Find the last own message and mark it seen with blue ticks + avatar row
+    const allOwn = document.querySelectorAll('.whatsapp-message.own');
+    if (!allOwn.length) return;
+    const lastOwnMsg = allOwn[allOwn.length - 1];
+    const lastOwnId = lastOwnMsg.id.replace('wa-msg-', '');
+
+    // Blue double ticks
+    const statusEl = document.getElementById('status-' + lastOwnId);
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="tick tick-seen">✓✓</span>';
+    }
+
+    // Seen-by avatars row
+    const seenByRow = document.getElementById('seenby-' + lastOwnId);
+    if (seenByRow) {
+      // Collect ALL people who have seen ANY message (show under last message)
+      const allSeenUsers = [];
+      const seen = new Set();
+      Object.values(window._msgSeenBy).forEach(arr => {
+        arr.forEach(u => {
+          if (!seen.has(u.username)) { seen.add(u.username); allSeenUsers.push(u); }
+        });
+      });
+      seenByRow.innerHTML = allSeenUsers.slice(0, 5).map(u =>
+        `<span class="seen-avatar-chip" title="${u.username}">${u.avatar}</span>`
+      ).join('');
+    }
+  });
 }
+
+// ==========================================
+// SEEN BY — emit to server when user views chat
+// ==========================================
+
+function emitMarkSeen(lastMsgId) {
+  if (!socket || !currentUser || !currentUser.college || !lastMsgId) return;
+  // Don't emit for temp IDs
+  if (String(lastMsgId).startsWith('temp-') || String(lastMsgId).startsWith('tmp-')) return;
+  socket.emit('mark_seen', {
+    collegeName: currentUser.college,
+    username: currentUser.username || 'User',
+    avatar: currentUser.avatar || '👤',
+    lastMsgId: lastMsgId
+  });
+}
+
+// Also emit mark_seen when user scrolls to bottom of chat
+(function () {
+  function attachScrollSeen() {
+    const container = document.getElementById('whatsappMessages');
+    if (!container) return;
+    container.addEventListener('scroll', function () {
+      const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 80;
+      if (!atBottom) return;
+      const msgs = container.querySelectorAll('.whatsapp-message.other');
+      if (!msgs.length) return;
+      const lastMsg = msgs[msgs.length - 1];
+      const lastId = lastMsg.id.replace('wa-msg-', '');
+      if (lastId) emitMarkSeen(lastId);
+    });
+  }
+  // Try immediately and also after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachScrollSeen);
+  } else {
+    attachScrollSeen();
+  }
+  // Also re-attach whenever community chat loads
+  const _orig = window.openCommunityChat;
+  if (typeof _orig === 'function') {
+    window.openCommunityChat = function () {
+      _orig.apply(this, arguments);
+      setTimeout(attachScrollSeen, 600);
+    };
+  }
+})();
 
 // ==========================================
 // ENHANCED SEND MESSAGE
@@ -6089,8 +6432,8 @@ function appendWhatsAppMessageFixed(msg) {
   // robust sender name logic
   const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
 
-  const messageTime = msg.timestamp ? new Date(msg.timestamp) : new Date();
-  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
+  const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
 
 
@@ -6119,11 +6462,17 @@ function appendWhatsAppMessageFixed(msg) {
   const contentRaw = msg.text || msg.content || '';
   const contentText = typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw;
 
-  // Media (image/video)
+  // Media (image/video/audio/pdf/document)
   let mediaHTML = '';
   if (msg.media_url) {
     if (msg.media_type === 'video') {
       mediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+    } else if (msg.media_type === 'audio') {
+      mediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+    } else if (msg.media_type === 'pdf') {
+      mediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
+    } else if (msg.media_type === 'document') {
+      mediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
       mediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
     }
@@ -6135,7 +6484,7 @@ function appendWhatsAppMessageFixed(msg) {
       <button class="msg-opt-btn" onclick="showEmojiReactPicker('${messageId}', this)" title="React">😊</button>
       ${isOwn ? `<button class="msg-opt-btn" onclick="editChatMsg('${messageId}')" title="Edit">✏️</button>` : ''}
       ${isOwn ? `<button class="msg-opt-btn delete-opt" onclick="deleteChatMsg('${messageId}')" title="Delete">🗑️</button>` : ''}
-      <button class="msg-opt-btn seen-opt" onclick="showSeenBy('${messageId}')" title="Seen by">👁️ <span class="seen-count" id="seen-${messageId}">0</span></button>
+      ${isOwn ? `<button class="msg-opt-btn seen-opt" onclick="showSeenBy('${messageId}')" title="Seen by">👁️</button>` : ''}
     </div>
   `;
 
@@ -6149,15 +6498,23 @@ function appendWhatsAppMessageFixed(msg) {
       <div class="message-text">${contentText}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
-        ${isOwn ? `<span class="message-status">${isTemp ? '⏳' : '✓✓'}</span>` : ''}
+        ${isOwn ? `<span class="message-status" id="status-${messageId}">${isTemp ? '<span class="tick tick-sending">⏳</span>' : '<span class="tick tick-sent">✓✓</span>'}</span>` : ''}
       </div>
       ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
     </div>
     ${reactBar}
+    ${isOwn ? `<div class="seen-by-avatars" id="seenby-${messageId}"></div>` : ''}
   `;
 
   wrapper.innerHTML = messageHTML;
+
+  // 📅 WhatsApp-style date separator
+  insertDateSeparatorIfNeeded(messagesEl, messageTime);
+
   messagesEl.appendChild(wrapper);
+
+  // If we received someone else's message and we're at the bottom → mark as seen
+  if (!isOwn && !isTemp && wasAtBottom) { emitMarkSeen(messageId); }
 
   // ✅ Smart scroll: only if user was already at bottom OR it's own message
   if (isOwn || wasAtBottom) {
@@ -6408,6 +6765,22 @@ function initCommunityChat() {
     setupCommunitySocketListeners();
   }
 
+  // Ensure chat container is positioned correctly relative to header
+  requestAnimationFrame(() => {
+    const header = document.querySelector('.header');
+    const chatContainer = document.querySelector('.whatsapp-container');
+    if (header && chatContainer) {
+      if (document.body.classList.contains('header-autohide')) {
+        chatContainer.style.top = '0';
+        chatContainer.style.height = '100vh';
+      } else {
+        const hh = header.offsetHeight || 72;
+        chatContainer.style.top = hh + 'px';
+        chatContainer.style.height = `calc(100vh - ${hh}px)`;
+      }
+    }
+  });
+
   // Load Messages
   loadCommunityMessages();
 }
@@ -6456,6 +6829,14 @@ async function loadCommunityMessages() {
         const el = document.getElementById('whatsappMessages');
         if (el) el.scrollTop = el.scrollHeight;
       }
+
+      // Emit mark_seen for the last OTHER message (user has now viewed the chat)
+      const allOtherMsgs = document.querySelectorAll('.whatsapp-message.other');
+      if (allOtherMsgs.length) {
+        const lastOther = allOtherMsgs[allOtherMsgs.length - 1];
+        const lastId = lastOther.id.replace('wa-msg-', '');
+        if (lastId) emitMarkSeen(lastId);
+      }
     }
   } catch (error) {
     console.error('Failed to load messages:', error);
@@ -6468,7 +6849,7 @@ function appendCommunityMessage(msg) {
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
   const senderName = msg.users?.username || 'User';
-  const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(msg.created_at || msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const msgDiv = document.createElement('div');
   msgDiv.className = `chat-message ${isOwn ? 'right' : 'left'}`;
@@ -6477,6 +6858,12 @@ function appendCommunityMessage(msg) {
   if (msg.media_url) {
     if (msg.media_type === 'video') {
       mediaHtml = `<video src="${msg.media_url}" class="chat-media-video" controls></video>`;
+    } else if (msg.media_type === 'audio') {
+      mediaHtml = `<audio src="${msg.media_url}" class="chat-media-audio" controls></audio>`;
+    } else if (msg.media_type === 'pdf') {
+      mediaHtml = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
+    } else if (msg.media_type === 'document') {
+      mediaHtml = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
       mediaHtml = `<img src="${msg.media_url}" class="chat-media-img" onclick="openImageViewer(this.src)">`;
     }
@@ -6543,36 +6930,511 @@ function clearChatPreview() {
   if (preview) preview.style.display = 'none';
 }
 // ==========================================
-// CHAT FILE UPLOAD (replaces sticker)
+// CHAT MEDIA EDITOR — Full image/video editor popup
 // ==========================================
 
 let selectedWhatsAppMedia = null;
 
+// ── State ─────────────────────────────────────────────────────
+const _me = {
+  file: null, origImg: null, canvas: null, ctx: null,
+  rotation: 0, flipH: false, flipV: false,
+  brightness: 0, contrast: 0, saturation: 0,
+  filter: 'none',
+  drawing: false, drawColor: '#ff3b6b', drawSize: 4,
+  isDrawMode: false, isTextMode: false,
+  cropMode: false, cropStart: null, cropEnd: null,
+  lastX: 0, lastY: 0,
+  videoSrc: null
+};
+
+const FILTERS = {
+  none:    { label:'Original', css:'' },
+  vivid:   { label:'Vivid',    css:'saturate(1.8) contrast(1.1)' },
+  bw:      { label:'B&W',      css:'grayscale(1)' },
+  warm:    { label:'Warm',     css:'sepia(0.4) saturate(1.3)' },
+  cool:    { label:'Cool',     css:'hue-rotate(20deg) saturate(1.2)' },
+  fade:    { label:'Fade',     css:'opacity(0.85) saturate(0.7)' },
+  sharp:   { label:'Sharp',   css:'contrast(1.3) brightness(1.05)' },
+  dreamy:  { label:'Dreamy',  css:'blur(0.4px) brightness(1.1) saturate(1.4)' }
+};
+
 function handleChatFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
-  selectedWhatsAppMedia = file;
+  _me.file = file;
 
-  const bar = document.getElementById('chatFilePreviewBar');
-  const img = document.getElementById('chatFilePreviewImg');
-  const vid = document.getElementById('chatFilePreviewVideo');
-  const name = document.getElementById('chatFilePreviewName');
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    if (file.type.startsWith('video/')) {
-      vid.src = e.target.result;
-      vid.style.display = 'block';
-      img.style.display = 'none';
-    } else {
-      img.src = e.target.result;
-      img.style.display = 'block';
-      vid.style.display = 'none';
+  // Only open the editor for images and videos; send other files (audio, PDF, docs) directly
+  if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+    openMediaEditor(file);
+  } else {
+    // Show a plain preview bar for audio / documents / PDFs
+    selectedWhatsAppMedia = file;
+    const bar = document.getElementById('chatFilePreviewBar');
+    const img = document.getElementById('chatFilePreviewImg');
+    const vid = document.getElementById('chatFilePreviewVideo');
+    const nameEl = document.getElementById('chatFilePreviewName');
+    if (bar) {
+      if (img) img.style.display = 'none';
+      if (vid) vid.style.display = 'none';
+      if (nameEl) nameEl.textContent = file.name;
+      bar.style.display = 'flex';
     }
-    if (name) name.textContent = file.name;
-    if (bar) bar.style.display = 'flex';
-  };
-  reader.readAsDataURL(file);
+  }
+}
+
+function openMediaEditor(file) {
+  // Remove any existing editor
+  document.getElementById('mediaEditorOverlay')?.remove();
+
+  const isVideo = file.type.startsWith('video/');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'mediaEditorOverlay';
+  overlay.className = 'media-editor-overlay';
+
+  overlay.innerHTML = `
+    <div class="media-editor-modal">
+      <div class="me-header">
+        <button class="me-close-btn" onclick="closeMediaEditor()">✕</button>
+        <h3 class="me-title">${isVideo ? '🎥 Video Preview' : '🖼️ Edit Photo'}</h3>
+        <button class="me-send-btn" onclick="confirmMediaAndSend()">Send ➤</button>
+      </div>
+
+      <div class="me-body">
+        ${isVideo ? buildVideoEditor() : buildImageEditor()}
+      </div>
+
+      ${!isVideo ? `
+      <div class="me-toolbar">
+        <!-- Tabs -->
+        <div class="me-tabs">
+          <button class="me-tab active" onclick="meSetTab(this,'filters')">🎨 Filters</button>
+          <button class="me-tab" onclick="meSetTab(this,'adjust')">⚡ Adjust</button>
+          <button class="me-tab" onclick="meSetTab(this,'transform')">↻ Transform</button>
+          <button class="me-tab" onclick="meSetTab(this,'draw')">✏️ Draw</button>
+          <button class="me-tab" onclick="meSetTab(this,'text')">T Text</button>
+          <button class="me-tab" onclick="meSetTab(this,'crop')">✂️ Crop</button>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="me-panel active" id="me-panel-filters">
+          <div class="me-filters-row">
+            ${Object.entries(FILTERS).map(([k,v]) =>
+              `<button class="me-filter-pill ${k==='none'?'active':''}" onclick="meApplyFilter('${k}',this)">
+                <span class="me-filter-icon">${filterIcon(k)}</span>
+                <span>${v.label}</span>
+              </button>`
+            ).join('')}
+          </div>
+        </div>
+
+        <!-- Adjust Panel -->
+        <div class="me-panel" id="me-panel-adjust">
+          <div class="me-slider-row">
+            <label>☀️ Brightness</label>
+            <input type="range" min="-100" max="100" value="0" oninput="meAdjust('brightness',this.value,this)">
+            <span class="me-slider-val">0</span>
+          </div>
+          <div class="me-slider-row">
+            <label>◑ Contrast</label>
+            <input type="range" min="-100" max="100" value="0" oninput="meAdjust('contrast',this.value,this)">
+            <span class="me-slider-val">0</span>
+          </div>
+          <div class="me-slider-row">
+            <label>🎨 Saturation</label>
+            <input type="range" min="-100" max="100" value="0" oninput="meAdjust('saturation',this.value,this)">
+            <span class="me-slider-val">0</span>
+          </div>
+        </div>
+
+        <!-- Transform Panel -->
+        <div class="me-panel" id="me-panel-transform">
+          <div class="me-btn-grid">
+            <button class="me-tool-btn" onclick="meRotate(-90)">↺ Rotate L</button>
+            <button class="me-tool-btn" onclick="meRotate(90)">↻ Rotate R</button>
+            <button class="me-tool-btn" onclick="meFlip('H')">⇔ Flip H</button>
+            <button class="me-tool-btn" onclick="meFlip('V')">⇕ Flip V</button>
+            <button class="me-tool-btn danger" onclick="meReset()">↩ Reset All</button>
+          </div>
+        </div>
+
+        <!-- Draw Panel -->
+        <div class="me-panel" id="me-panel-draw">
+          <div class="me-draw-controls">
+            <label>Color:</label>
+            <input type="color" value="#ff3b6b" oninput="_me.drawColor=this.value">
+            <label>Size:</label>
+            <input type="range" min="2" max="24" value="4" oninput="_me.drawSize=this.value">
+            <button class="me-tool-btn ${_me.isDrawMode?'active':''}" id="meDrawToggle" onclick="meToggleDraw()">
+              ${_me.isDrawMode?'🛑 Stop':'✏️ Start Draw'}
+            </button>
+            <button class="me-tool-btn danger" onclick="meUndoDraw()">↩ Undo</button>
+          </div>
+        </div>
+
+        <!-- Text Panel -->
+        <div class="me-panel" id="me-panel-text">
+          <div class="me-text-controls">
+            <input id="meTextInput" type="text" placeholder="Type text here..." class="me-text-field">
+            <input type="color" value="#ffffff" id="meTextColor">
+            <input type="range" min="12" max="72" value="28" id="meTextSize">
+            <button class="me-tool-btn" onclick="meAddText()">Add Text ➕</button>
+          </div>
+        </div>
+
+        <!-- Crop Panel -->
+        <div class="me-panel" id="me-panel-crop">
+          <div class="me-btn-grid">
+            <button class="me-tool-btn ${_me.cropMode?'active':''}" id="meCropToggle" onclick="meToggleCrop()">✂️ Select Area</button>
+            <button class="me-tool-btn" onclick="meApplyCrop()">✅ Apply Crop</button>
+            <button class="me-tool-btn danger" onclick="meCancelCrop()">✕ Cancel</button>
+            <button class="me-tool-btn" onclick="meCropAspect(1,1)">1:1</button>
+            <button class="me-tool-btn" onclick="meCropAspect(16,9)">16:9</button>
+            <button class="me-tool-btn" onclick="meCropAspect(4,3)">4:3</button>
+          </div>
+        </div>
+      </div>
+      ` : `
+      <!-- Video caption -->
+      <div class="me-toolbar" style="padding:14px;">
+        <input id="meVideoCaption" type="text" placeholder="Add a caption (optional)..." class="me-text-field">
+      </div>
+      `}
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
+
+  if (!isVideo) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        _me.origImg = img;
+        _me.rotation = 0; _me.flipH = false; _me.flipV = false;
+        _me.brightness = 0; _me.contrast = 0; _me.saturation = 0;
+        _me.filter = 'none'; _me.isDrawMode = false; _me.isTextMode = false;
+        _me.cropMode = false; _me.cropStart = null; _me.cropEnd = null;
+        meRenderCanvas();
+        meAttachCanvasEvents();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    _me.videoSrc = URL.createObjectURL(file);
+    const vid = document.getElementById('meVideoPreview');
+    if (vid) vid.src = _me.videoSrc;
+  }
+}
+
+function buildImageEditor() {
+  return `<div class="me-canvas-wrap">
+    <canvas id="meCanvas"></canvas>
+    <canvas id="meCropCanvas" class="me-crop-canvas" style="display:none;"></canvas>
+  </div>`;
+}
+
+function buildVideoEditor() {
+  return `<div class="me-video-wrap">
+    <video id="meVideoPreview" controls playsinline style="max-width:100%;max-height:340px;border-radius:12px;"></video>
+  </div>`;
+}
+
+function filterIcon(k) {
+  const icons = {none:'🌟',vivid:'✨',bw:'⬛',warm:'🌅',cool:'❄️',fade:'🌫️',sharp:'🔍',dreamy:'💜'};
+  return icons[k]||'🎨';
+}
+
+// ── Rendering ─────────────────────────────────────────────────
+function meRenderCanvas() {
+  const canvas = document.getElementById('meCanvas');
+  if (!canvas || !_me.origImg) return;
+  _me.canvas = canvas;
+  _me.ctx = canvas.getContext('2d');
+
+  const maxW = canvas.parentElement.clientWidth - 16;
+  const maxH = 340;
+  const img = _me.origImg;
+
+  const rad = (_me.rotation * Math.PI) / 180;
+  const absCos = Math.abs(Math.cos(rad));
+  const absSin = Math.abs(Math.sin(rad));
+  const rotW = img.width * absCos + img.height * absSin;
+  const rotH = img.width * absSin + img.height * absCos;
+
+  const scale = Math.min(maxW / rotW, maxH / rotH, 1);
+  canvas.width  = Math.round(rotW * scale);
+  canvas.height = Math.round(rotH * scale);
+
+  const ctx = _me.ctx;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rad);
+  ctx.scale(_me.flipH ? -1 : 1, _me.flipV ? -1 : 1);
+
+  // CSS filter on canvas context (via filter property)
+  let f = FILTERS[_me.filter]?.css || '';
+  const b = _me.brightness;
+  const c = _me.contrast;
+  const s = _me.saturation;
+  f += ` brightness(${1 + b/100}) contrast(${1 + c/100}) saturate(${1 + s/100})`;
+  ctx.filter = f.trim();
+
+  ctx.drawImage(img, -img.width * scale / 2, -img.height * scale / 2, img.width * scale, img.height * scale);
+  ctx.restore();
+  ctx.filter = 'none';
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+function meSetTab(btn, panelId) {
+  document.querySelectorAll('.me-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.me-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('me-panel-' + panelId)?.classList.add('active');
+  if (panelId !== 'draw') { _me.isDrawMode = false; meUpdateDrawBtn(); }
+  if (panelId !== 'crop') { _me.cropMode = false; meCancelCrop(); }
+}
+
+// ── Filters ───────────────────────────────────────────────────
+function meApplyFilter(key, btn) {
+  _me.filter = key;
+  document.querySelectorAll('.me-filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  meRenderCanvas();
+}
+
+// ── Adjust ────────────────────────────────────────────────────
+function meAdjust(prop, val, input) {
+  _me[prop] = parseFloat(val);
+  input.parentElement.querySelector('.me-slider-val').textContent = Math.round(val);
+  meRenderCanvas();
+}
+
+// ── Transform ─────────────────────────────────────────────────
+function meRotate(deg) { _me.rotation = ((_me.rotation + deg) % 360 + 360) % 360; meRenderCanvas(); }
+function meFlip(dir)   { if (dir === 'H') _me.flipH = !_me.flipH; else _me.flipV = !_me.flipV; meRenderCanvas(); }
+function meReset() {
+  _me.rotation=0; _me.flipH=false; _me.flipV=false;
+  _me.brightness=0; _me.contrast=0; _me.saturation=0;
+  _me.filter='none'; _me.isDrawMode=false; _me.cropMode=false;
+  _me.cropStart=null; _me.cropEnd=null;
+  // Reset sliders
+  document.querySelectorAll('#me-panel-adjust input[type=range]').forEach(s => { s.value=0; s.parentElement.querySelector('.me-slider-val').textContent='0'; });
+  document.querySelectorAll('.me-filter-pill').forEach(b => b.classList.remove('active'));
+  document.querySelector('.me-filter-pill')?.classList.add('active');
+  meRenderCanvas();
+}
+
+// ── Draw ──────────────────────────────────────────────────────
+let _meDrawHistory = [];
+function meToggleDraw() {
+  _me.isDrawMode = !_me.isDrawMode;
+  _me.isTextMode = false;
+  meUpdateDrawBtn();
+}
+function meUpdateDrawBtn() {
+  const btn = document.getElementById('meDrawToggle');
+  if (btn) btn.textContent = _me.isDrawMode ? '🛑 Stop' : '✏️ Start Draw';
+}
+function meUndoDraw() {
+  if (!_meDrawHistory.length || !_me.canvas) return;
+  const last = _meDrawHistory.pop();
+  _me.ctx.putImageData(last, 0, 0);
+}
+
+// ── Text ──────────────────────────────────────────────────────
+function meAddText() {
+  const txt = document.getElementById('meTextInput')?.value.trim();
+  if (!txt || !_me.canvas) return;
+  const color = document.getElementById('meTextColor')?.value || '#ffffff';
+  const size  = document.getElementById('meTextSize')?.value  || 28;
+  const ctx = _me.ctx;
+  // Save for undo
+  _meDrawHistory.push(ctx.getImageData(0, 0, _me.canvas.width, _me.canvas.height));
+  ctx.font = `bold ${size}px sans-serif`;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 3;
+  ctx.textAlign = 'center';
+  ctx.strokeText(txt, _me.canvas.width/2, _me.canvas.height/2);
+  ctx.fillText(txt, _me.canvas.width/2, _me.canvas.height/2);
+  document.getElementById('meTextInput').value = '';
+}
+
+// ── Crop ──────────────────────────────────────────────────────
+let _cropRect = null;
+function meToggleCrop() {
+  _me.cropMode = !_me.cropMode;
+  const btn = document.getElementById('meCropToggle');
+  if (btn) btn.textContent = _me.cropMode ? '✕ Stop Select' : '✂️ Select Area';
+  if (!_me.cropMode) meCancelCrop();
+}
+function meCancelCrop() {
+  _cropRect = null;
+  _me.cropMode = false;
+  const cc = document.getElementById('meCropCanvas');
+  if (cc) { cc.style.display='none'; const ctx=cc.getContext('2d'); ctx.clearRect(0,0,cc.width,cc.height); }
+}
+function meCropAspect(w, h) {
+  if (!_me.canvas) return;
+  _me.cropMode = true;
+  const cw=_me.canvas.width, ch=_me.canvas.height;
+  const aspect=w/h;
+  let rw,rh;
+  if (cw/ch > aspect) { rh=ch*0.8; rw=rh*aspect; } else { rw=cw*0.8; rh=rw/aspect; }
+  const rx=(cw-rw)/2, ry=(ch-rh)/2;
+  _cropRect={x:rx,y:ry,w:rw,h:rh};
+  meDrawCropOverlay();
+}
+function meDrawCropOverlay() {
+  const cc = document.getElementById('meCropCanvas');
+  if (!cc || !_me.canvas || !_cropRect) return;
+  cc.width=_me.canvas.width; cc.height=_me.canvas.height;
+  cc.style.display='block';
+  const ctx=cc.getContext('2d');
+  ctx.clearRect(0,0,cc.width,cc.height);
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(0,0,cc.width,cc.height);
+  ctx.clearRect(_cropRect.x,_cropRect.y,_cropRect.w,_cropRect.h);
+  ctx.strokeStyle='#4f74a3';
+  ctx.lineWidth=2;
+  ctx.strokeRect(_cropRect.x,_cropRect.y,_cropRect.w,_cropRect.h);
+  // Grid lines
+  ctx.strokeStyle='rgba(255,255,255,0.4)';
+  ctx.lineWidth=1;
+  for (let i=1;i<3;i++){
+    ctx.beginPath(); ctx.moveTo(_cropRect.x+_cropRect.w*i/3,_cropRect.y); ctx.lineTo(_cropRect.x+_cropRect.w*i/3,_cropRect.y+_cropRect.h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(_cropRect.x,_cropRect.y+_cropRect.h*i/3); ctx.lineTo(_cropRect.x+_cropRect.w,_cropRect.y+_cropRect.h*i/3); ctx.stroke();
+  }
+}
+function meApplyCrop() {
+  if (!_cropRect || !_me.canvas || !_me.ctx) return;
+  const {x,y,w,h} = _cropRect;
+  const imgData = _me.ctx.getImageData(x,y,w,h);
+  _me.canvas.width=w; _me.canvas.height=h;
+  _me.ctx.putImageData(imgData,0,0);
+  meCancelCrop();
+  // Reset origImg reference to the cropped version so re-renders stay cropped
+  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
+  tmp.getContext('2d').putImageData(imgData,0,0);
+  const ni=new Image(); ni.src=tmp.toDataURL();
+  ni.onload=()=>{ _me.origImg=ni; };
+}
+
+// ── Canvas Events (draw + crop drag) ──────────────────────────
+function meAttachCanvasEvents() {
+  const canvas = document.getElementById('meCanvas');
+  const cc     = document.getElementById('meCropCanvas');
+  if (!canvas) return;
+
+  function getPos(e, el) {
+    const r=el.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:cx-r.left, y:cy-r.top};
+  }
+
+  // Draw on main canvas
+  canvas.addEventListener('mousedown', e => {
+    if (!_me.isDrawMode) return;
+    _meDrawHistory.push(_me.ctx.getImageData(0,0,canvas.width,canvas.height));
+    _me.drawing=true;
+    const p=getPos(e,canvas); _me.lastX=p.x; _me.lastY=p.y;
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!_me.drawing||!_me.isDrawMode) return;
+    const p=getPos(e,canvas);
+    _me.ctx.beginPath();
+    _me.ctx.moveTo(_me.lastX,_me.lastY);
+    _me.ctx.lineTo(p.x,p.y);
+    _me.ctx.strokeStyle=_me.drawColor;
+    _me.ctx.lineWidth=_me.drawSize;
+    _me.ctx.lineCap='round';
+    _me.ctx.lineJoin='round';
+    _me.ctx.stroke();
+    _me.lastX=p.x; _me.lastY=p.y;
+  });
+  canvas.addEventListener('mouseup', ()=>{ _me.drawing=false; });
+  canvas.addEventListener('mouseleave', ()=>{ _me.drawing=false; });
+
+  // Touch draw
+  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})); },{passive:false});
+  canvas.addEventListener('touchmove',  e=>{ e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})); },{passive:false});
+  canvas.addEventListener('touchend',   ()=>canvas.dispatchEvent(new MouseEvent('mouseup')));
+
+  // Crop drag on crop-canvas overlay
+  if (cc) {
+    let dragging=false, startX=0, startY=0;
+    cc.addEventListener('mousedown', e=>{
+      if (!_me.cropMode) return;
+      dragging=true;
+      const p=getPos(e,cc); startX=p.x; startY=p.y;
+      _cropRect=null;
+    });
+    cc.addEventListener('mousemove', e=>{
+      if (!dragging||!_me.cropMode) return;
+      const p=getPos(e,cc);
+      _cropRect={x:Math.min(startX,p.x),y:Math.min(startY,p.y),w:Math.abs(p.x-startX),h:Math.abs(p.y-startY)};
+      meDrawCropOverlay();
+    });
+    cc.addEventListener('mouseup', ()=>{ dragging=false; });
+  }
+}
+
+// ── Close / Confirm ───────────────────────────────────────────
+function closeMediaEditor() {
+  document.getElementById('mediaEditorOverlay')?.remove();
+  clearChatFilePreview();
+}
+
+async function confirmMediaAndSend() {
+  const isVideo = _me.file?.type.startsWith('video/');
+
+  if (isVideo) {
+    // Use original video file + caption
+    selectedWhatsAppMedia = _me.file;
+    const caption = document.getElementById('meVideoCaption')?.value.trim() || '';
+    document.getElementById('whatsappInput').value = caption;
+  } else {
+    // Export edited canvas as Blob → File
+    const canvas = document.getElementById('meCanvas');
+    if (!canvas) return;
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      selectedWhatsAppMedia = new File([blob], _me.file?.name || 'photo.jpg', { type: 'image/jpeg' });
+      // Show small thumbnail in preview bar
+      const bar = document.getElementById('chatFilePreviewBar');
+      const img = document.getElementById('chatFilePreviewImg');
+      if (bar && img) {
+        img.src = canvas.toDataURL();
+        img.style.display = 'block';
+        document.getElementById('chatFilePreviewVideo').style.display = 'none';
+        document.getElementById('chatFilePreviewName').textContent = selectedWhatsAppMedia.name;
+        bar.style.display = 'flex';
+      }
+    }, 'image/jpeg', 0.93);
+  }
+
+  // Close the editor
+  document.getElementById('mediaEditorOverlay')?.remove();
+
+  // For video, also show in preview bar
+  if (isVideo) {
+    const bar = document.getElementById('chatFilePreviewBar');
+    const vid = document.getElementById('chatFilePreviewVideo');
+    const img = document.getElementById('chatFilePreviewImg');
+    if (bar && vid) {
+      vid.src = URL.createObjectURL(_me.file);
+      vid.style.display = 'block';
+      if (img) img.style.display = 'none';
+      document.getElementById('chatFilePreviewName').textContent = _me.file.name;
+      bar.style.display = 'flex';
+    }
+  }
 }
 
 function clearChatFilePreview() {
@@ -6610,13 +7472,23 @@ async function sendWhatsAppMessageWithMedia() {
     timestamp: new Date(),
     isTemp: true,
     media_url: selectedWhatsAppMedia ? URL.createObjectURL(selectedWhatsAppMedia) : null,
-    media_type: selectedWhatsAppMedia ? (selectedWhatsAppMedia.type.startsWith('video/') ? 'video' : 'image') : null
+    media_name: selectedWhatsAppMedia ? selectedWhatsAppMedia.name : null,
+    media_type: selectedWhatsAppMedia ? (
+      selectedWhatsAppMedia.type.startsWith('video/') ? 'video' :
+      selectedWhatsAppMedia.type.startsWith('audio/') ? 'audio' :
+      selectedWhatsAppMedia.type === 'application/pdf' ? 'pdf' :
+      selectedWhatsAppMedia.type.startsWith('application/') || selectedWhatsAppMedia.type.startsWith('text/') ? 'document' :
+      'image'
+    ) : null
   };
+
+  // ✅ FIX: Capture media reference BEFORE clearChatFilePreview() nullifies selectedWhatsAppMedia
+  const mediaToUpload = selectedWhatsAppMedia;
 
   appendWhatsAppMessageFixed(tempMsg);
   input.value = '';
   input.style.height = 'auto';
-  clearChatFilePreview();
+  clearChatFilePreview(); // safe now — we already captured the reference above
 
   if (socket && currentUser.college) {
     socket.emit('stop_typing', { collegeName: currentUser.college, username: currentUser.username });
@@ -6624,10 +7496,10 @@ async function sendWhatsAppMessageWithMedia() {
 
   try {
     let response;
-    if (selectedWhatsAppMedia) {
+    if (mediaToUpload) {
       const fd = new FormData();
       fd.append('content', content || '');
-      fd.append('media', selectedWhatsAppMedia);
+      fd.append('media', mediaToUpload);
       response = await apiCall('/api/community/messages', 'POST', fd);
     } else {
       response = await apiCall('/api/community/messages', 'POST', { content });
@@ -6749,9 +7621,69 @@ async function deleteChatMsg(msgId) {
 }
 
 function showSeenBy(msgId) {
-  const countEl = document.getElementById('seen-' + msgId);
-  const count = countEl ? countEl.textContent : '0';
-  showMessage(`👁️ Seen by ${count} ${count === '1' ? 'person' : 'people'}`, 'success');
+  // Remove existing popup
+  document.querySelectorAll('.seen-by-popup').forEach(p => p.remove());
+
+  // Collect seen users for this message and all prior messages
+  const seenUsers = [];
+  const seen = new Set();
+  if (window._msgSeenBy) {
+    Object.values(window._msgSeenBy).forEach(arr => {
+      arr.forEach(u => {
+        if (!seen.has(u.username)) { seen.add(u.username); seenUsers.push(u); }
+      });
+    });
+  }
+
+  const popup = document.createElement('div');
+  popup.className = 'seen-by-popup';
+
+  if (seenUsers.length === 0) {
+    popup.innerHTML = `
+      <div class="sbp-header">👁️ Seen by</div>
+      <div class="sbp-empty">Not seen by anyone yet</div>
+    `;
+  } else {
+    popup.innerHTML = `
+      <div class="sbp-header">👁️ Seen by ${seenUsers.length} ${seenUsers.length === 1 ? 'person' : 'people'}</div>
+      <div class="sbp-list">
+        ${seenUsers.map(u => `
+          <div class="sbp-user">
+            <span class="sbp-avatar">${u.avatar}</span>
+            <span class="sbp-name">${u.username}</span>
+            <span class="sbp-tick">✓✓</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // Position near the message
+  const msgEl = document.getElementById('wa-msg-' + msgId);
+  const rect = msgEl ? msgEl.getBoundingClientRect() : null;
+  popup.style.position = 'fixed';
+  popup.style.zIndex = '99999';
+  if (rect) {
+    popup.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+    popup.style.right = '16px';
+  } else {
+    popup.style.bottom = '80px';
+    popup.style.right = '16px';
+  }
+
+  document.body.appendChild(popup);
+  requestAnimationFrame(() => popup.classList.add('sbp-visible'));
+
+  // Close on outside click or after 4s
+  const close = (ev) => {
+    if (!popup.contains(ev.target)) {
+      popup.classList.remove('sbp-visible');
+      setTimeout(() => popup.remove(), 200);
+      document.removeEventListener('click', close);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', close), 80);
+  setTimeout(() => { popup.classList.remove('sbp-visible'); setTimeout(() => popup.remove(), 200); }, 4000);
 }
 
 async function sendCommunityMessage() {
@@ -6766,7 +7698,12 @@ async function sendCommunityMessage() {
     content: content,
     created_at: new Date().toISOString(),
     media_url: selectedChatMedia ? URL.createObjectURL(selectedChatMedia) : null,
-    media_type: selectedChatMedia?.type.startsWith('video/') ? 'video' : 'image',
+    media_type: selectedChatMedia ? (
+      selectedChatMedia.type.startsWith('video/') ? 'video' :
+      selectedChatMedia.type.startsWith('audio/') ? 'audio' :
+      selectedChatMedia.type === 'application/pdf' ? 'pdf' :
+      (selectedChatMedia.type.startsWith('application/') || selectedChatMedia.type.startsWith('text/')) ? 'document' : 'image'
+    ) : null,
     users: { username: currentUser.username }
   });
 
@@ -6846,9 +7783,23 @@ window.showPage = function (pageId, ...args) {
     if (page) page.style.display = 'block';
   }
 
+  // Hide footer on communities, posts, realvibe
+  const footer = document.getElementById('mainFooter');
+  if (footer) {
+    const noFooterPages = ['communities', 'posts', 'realvibe'];
+    footer.style.display = noFooterPages.includes(pageId) ? 'none' : '';
+  }
+
+  // Auto-hide header on communities, posts, realvibe
+  const autoHidePages = ['communities', 'posts', 'realvibe'];
+  if (autoHidePages.includes(pageId)) {
+    enableHeaderAutohide();
+  } else {
+    disableHeaderAutohide();
+  }
+
   // Hook for Communities
   if (pageId === 'communities') {
-    // Small delay to ensure DOM is ready
     setTimeout(() => initCommunityChat(), 50);
   }
 };
