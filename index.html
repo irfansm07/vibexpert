@@ -1295,34 +1295,218 @@
          </div>
 
          <!-- POSTS -->
-         <section id="posts" class="page" style="display:none;">
-            <h2 class="title">My Posts</h2>
+         <!-- REELS / POSTS SECTION -->
+         <!-- POSTS / VIBES FEED — Full-Screen Reel Style -->
+         <section id="posts" class="page vibe-page" style="display:none;">
 
-            <div class="enhanced-post-creator">
-               <textarea id="postText" class="post-textarea" placeholder="What's on your mind? Share your vibe... ✨"
-                  maxlength="1000"></textarea>
-               <div id="selectedAssets" class="selected-assets"></div>
-               <div id="photoPreviewContainer" class="media-preview"></div>
-
-               <div id="postDestinationDisplay" class="post-destination-display">
-                  📍 Posting to: <span id="currentDestination">My Profile</span>
-                  <button type="button" class="change-destination-btn"
-                     onclick="showPostDestinationModal()">Change</button>
+            <!-- Floating Top Header -->
+            <div class="vibe-header">
+               <div class="vibe-logo-pill">
+                  <span class="vibe-logo-text">VibeXpert</span>
                </div>
+               <div class="vibe-tabs">
+                  <button class="vibe-tab active" data-tab="all" onclick="switchVibeTab('all', this)">✨ For You</button>
+                  <button class="vibe-tab" data-tab="community" onclick="switchVibeTab('community', this)">🎓 College</button>
+               </div>
+               <button class="vibe-search-btn" onclick="toggleVibeSearch()" aria-label="Search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+               </button>
+            </div>
 
-               <div class="post-actions-row">
-                  <div class="post-features">
-                     <button type="button" class="feature-btn" onclick="openPhotoGallery()">🖼️ Media</button>
-                     <button type="button" class="feature-btn" onclick="openCamera()">📷 Camera</button>
-                     <button type="button" class="feature-btn" onclick="openMusicSelector()">🎵 Music</button>
-                     <button type="button" class="feature-btn" onclick="openStickerSelector()">🎨 Stickers</button>
-                  </div>
-                  <button type="button" class="post-button" onclick="createPost()">🚀 Post</button>
+            <!-- Search Bar -->
+            <div class="vibe-search-bar" id="vibeSearchBar" style="display:none;">
+               <div class="vibe-search-inner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <input type="text" id="vibeSearchInput" placeholder="Search vibes, people, tags…" oninput="filterVibeFeed(this.value)">
+                  <button onclick="toggleVibeSearch()">✕</button>
                </div>
             </div>
 
-            <div id="postsFeed" class="posts-feed"></div>
+            <!-- Full-Screen Feed -->
+            <div class="vibe-feed" id="vibeFeed">
+               <div class="vibe-loading" id="vibeLoading">
+                  <div class="vibe-spinner-ring"></div>
+                  <p>Loading vibes…</p>
+               </div>
+            </div>
+
+            <!-- Create Post Button — Bottom RIGHT -->
+            <button class="vibe-create-btn" onclick="openVibeUpload()" aria-label="Create post">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+               </svg>
+            </button>
+
+            <!-- Comments Drawer -->
+            <div class="vibe-drawer" id="vibeCommentsDrawer">
+               <div class="vibe-drawer-handle"></div>
+               <div class="vibe-drawer-header">
+                  <h3 id="vibeCommentTitle">Comments</h3>
+                  <button class="vibe-drawer-close" onclick="closeVibeDrawer('vibeCommentsDrawer')">✕</button>
+               </div>
+               <div class="vibe-comments-list" id="vibeCommentsList">
+                  <div class="vibe-drawer-loading">Loading comments…</div>
+               </div>
+               <div class="vibe-comment-input-row">
+                  <div class="vibe-comment-avatar-wrap">
+                     <span id="vibeCommentMyAvatar">😊</span>
+                  </div>
+                  <input type="text" id="vibeCommentInput" placeholder="Add a comment…" maxlength="500"
+                     onkeydown="if(event.key==='Enter')submitVibeComment()">
+                  <button class="vibe-comment-send-btn" onclick="submitVibeComment()">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+               </div>
+            </div>
+
+            <!-- Share Drawer -->
+            <div class="vibe-drawer" id="vibeShareDrawer">
+               <div class="vibe-drawer-handle"></div>
+               <div class="vibe-drawer-header">
+                  <h3>Share this Vibe</h3>
+                  <button class="vibe-drawer-close" onclick="closeVibeDrawer('vibeShareDrawer')">✕</button>
+               </div>
+               <div class="vibe-share-grid">
+                  <div class="vibe-share-item" onclick="vibeShareWhatsApp()">
+                     <div class="vibe-share-icon" style="background:rgba(37,211,102,0.15);color:#25d366;">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.856L0 24l6.335-1.521A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.003-1.367l-.36-.213-3.727.976.994-3.629-.234-.373A9.818 9.818 0 0 1 2.182 12C2.182 6.573 6.573 2.182 12 2.182c5.427 0 9.818 4.391 9.818 9.818 0 5.427-4.391 9.818-9.818 9.818z"/></svg>
+                     </div>
+                     <span>WhatsApp</span>
+                  </div>
+                  <div class="vibe-share-item" onclick="vibeShareCopy()">
+                     <div class="vibe-share-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                     </div>
+                     <span>Copy Link</span>
+                  </div>
+                  <div class="vibe-share-item" onclick="vibeShareToChat()">
+                     <div class="vibe-share-icon" style="background:rgba(79,195,247,0.15);color:#4fc3f7;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                     </div>
+                     <span>College Chat</span>
+                  </div>
+                  <div class="vibe-share-item" onclick="vibeShareNative()">
+                     <div class="vibe-share-icon" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                     </div>
+                     <span>More</span>
+                  </div>
+               </div>
+            </div>
+
+            <!-- Drawer Backdrop -->
+            <div class="vibe-backdrop" id="vibeBackdrop" onclick="closeAllVibeDrawers()"></div>
+
          </section>
+
+         <!-- CREATE POST MODAL — Redesigned Beautiful UI -->
+         <div id="vibeUploadModal" class="vibe-upload-modal" style="display:none;">
+            <div class="vibe-upload-overlay" onclick="closeVibeUpload()"></div>
+            <div class="vibe-upload-sheet">
+
+               <!-- Drag handle -->
+               <div class="vibe-upload-handle"></div>
+
+               <!-- Header -->
+               <div class="vibe-upload-head">
+                  <button class="vibe-upload-cancel" onclick="closeVibeUpload()">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                     Cancel
+                  </button>
+                  <h3>New Vibe ✨</h3>
+                  <button class="vibe-upload-post-btn" id="vibePostBtn" onclick="submitVibePost()">
+                     Post
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+               </div>
+
+               <!-- Author row with destination pills -->
+               <div class="vibe-author-row">
+                  <div class="vibe-caption-avatar" id="vibeCaptionAvatar">😊</div>
+                  <div class="vibe-author-meta">
+                     <span class="vibe-author-name" id="vibePostUserName">You</span>
+                     <div class="vibe-dest-pills">
+                        <button class="vibe-dest-pill active" id="destRadioProfile" onclick="setVibeDest('profile', this)">
+                           👤 Profile
+                        </button>
+                        <button class="vibe-dest-pill" id="destRadioCommunity" onclick="setVibeDest('community', this)">
+                           🎓 College
+                        </button>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Caption Input Area -->
+               <div class="vibe-caption-area">
+                  <textarea id="vibeCaptionInput" class="vibe-caption-input"
+                     placeholder="What's your vibe? Add #hashtags 🔥"
+                     maxlength="500" rows="4"
+                     oninput="updateVibeCharCount(this)"></textarea>
+                  <div class="vibe-char-pill" id="vibeCharCount">500</div>
+               </div>
+
+               <!-- Media Preview -->
+               <div class="vibe-media-preview" id="vibeMediaPreview" style="display:none;"></div>
+               <input type="file" id="vibeFileInput" style="display:none" accept="video/*,image/*" multiple
+                  onchange="handleVibeFileSelect(event)">
+
+               <!-- Clear media -->
+               <button class="vibe-clear-media-btn" id="vibeClearMedia" style="display:none;"
+                  onclick="clearVibeMedia()">✕ Remove media</button>
+
+               <!-- Media Drop Zone -->
+               <div class="vibe-media-zone" id="vibeMediaZone"
+                  onclick="document.getElementById('vibeFileInput').click()"
+                  ondrop="handleVibeDrop(event)"
+                  ondragover="event.preventDefault();this.classList.add('vdz-active')"
+                  ondragleave="this.classList.remove('vdz-active')">
+                  <div class="vibe-dz-inner">
+                     <div class="vibe-dz-icon-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                     </div>
+                     <div>
+                        <p class="vibe-dz-label">Tap to add Photo or Video</p>
+                        <span class="vibe-dz-sub">MP4 · MOV · JPG · PNG — up to 100 MB</span>
+                     </div>
+                  </div>
+               </div>
+
+               <!-- Quick action toolbar -->
+               <div class="vibe-toolbar">
+                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeFileInput').click()" title="Add Photo/Video">
+                     <div class="vibe-tool-icon photo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                     </div>
+                     <span>Photo/Video</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="openCamera()" title="Camera">
+                     <div class="vibe-tool-icon camera-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                     </div>
+                     <span>Camera</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="openMusicSelector()" title="Add Music">
+                     <div class="vibe-tool-icon music-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                     </div>
+                     <span id="vibeMusicLabel">Music</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="openStickerSelector()" title="Stickers">
+                     <div class="vibe-tool-icon sticker-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                     </div>
+                     <span>Stickers</span>
+                  </button>
+               </div>
+
+               <!-- Posting overlay (shown while submitting) -->
+               <div id="vibePostingOverlay" class="vibe-posting-overlay" style="display:none;">
+                  <div class="vibe-posting-spinner"></div>
+                  <p>Posting your vibe…</p>
+               </div>
+
+            </div>
+         </div>
 
          <!-- PROFILE SECTION -->
          <section id="profile" class="page" style="display:none;">
