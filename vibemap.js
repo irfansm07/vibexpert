@@ -2536,19 +2536,81 @@ function initializeSocket() {
   socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
   socket.on('online_count', (count) => updateOnlineCount(count));
 
+  // ── Real-time: like count ─────────────────────────────────────────────
   socket.on('post_liked', (data) => {
-    const likeCount = document.querySelector(`#like-count-${data.postId}`);
-    if (likeCount) likeCount.textContent = `❤️ ${data.likeCount}`;
+    // Vibe-feed card (identified by data-id on the .vibe-card)
+    const card = document.querySelector(`.vibe-card[data-id="${data.postId}"]`);
+    if (card) {
+      const lbl = card.querySelector('.vibe-action-label');  // first action label = likes
+      if (lbl) lbl.textContent = vibeFmt(data.likeCount);
+    }
+    // Legacy feed fallback
+    const el = document.querySelector(`#like-count-${data.postId}`);
+    if (el) el.textContent = `❤️ ${data.likeCount}`;
   });
 
+  // ── Real-time: comment count ───────────────────────────────────────────
   socket.on('post_commented', (data) => {
-    const commentCount = document.querySelector(`#comment-count-${data.postId}`);
-    if (commentCount) commentCount.textContent = `💬 ${data.commentCount}`;
+    const card = document.querySelector(`.vibe-card[data-id="${data.postId}"]`);
+    if (card) {
+      const lbls = card.querySelectorAll('.vibe-action-label');
+      if (lbls[1]) lbls[1].textContent = vibeFmt(data.commentCount); // 2nd = comments
+    }
+    const el = document.querySelector(`#comment-count-${data.postId}`);
+    if (el) el.textContent = `💬 ${data.commentCount}`;
   });
 
+  // ── Real-time: share count ─────────────────────────────────────────────
   socket.on('post_shared', (data) => {
-    const shareCount = document.querySelector(`#share-count-${data.postId}`);
-    if (shareCount) shareCount.textContent = `🔄 ${data.shareCount}`;
+    const card = document.querySelector(`.vibe-card[data-id="${data.postId}"]`);
+    if (card) {
+      const lbls = card.querySelectorAll('.vibe-action-label');
+      if (lbls[3]) lbls[3].textContent = vibeFmt(data.shareCount); // 4th = shares
+    }
+    const el = document.querySelector(`#share-count-${data.postId}`);
+    if (el) el.textContent = `🔄 ${data.shareCount}`;
+  });
+
+  // ── Real-time: NEW POST from any user → prepend to "For You" feed ─────
+  socket.on('new_post', (post) => {
+    // Don't re-add our own post (we already add it optimistically on submit)
+    if (currentUser && post.users && post.users.id === currentUser.id) return;
+
+    // Only inject if the "For You" (all) tab is active
+    if (vibeActiveTab !== 'all') return;
+
+    const feed = document.getElementById('vibeFeed');
+    if (!feed) return;
+
+    // If feed shows a loading/empty placeholder, reload the whole feed instead
+    if (feed.querySelector('.vibe-loading') || feed.querySelector('.vibe-empty')) {
+      initVibeFeed();
+      return;
+    }
+
+    // Build and prepend the new card with a slide-in animation
+    const existingCards = feed.querySelectorAll('.vibe-card');
+    const newIdx = existingCards.length; // append index (visual only)
+    const html = buildVibeCard(post, newIdx);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const card = tmp.firstElementChild;
+    if (!card) return;
+    card.style.cssText += 'animation:vibeSlideIn 0.45s cubic-bezier(.2,1.1,.4,1) both;';
+    feed.insertBefore(card, feed.firstChild);
+
+    // Attach tap/double-tap listeners to the new card
+    let lastTap = 0;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.vibe-card-actions') ||
+          e.target.closest('.vibe-card-info') ||
+          e.target.closest('.vibe-card-delete-btn')) return;
+      const now = Date.now();
+      if (now - lastTap < 320) vibeDoubleTapLike(card, newIdx);
+      lastTap = now;
+      const vid = card.querySelector('.vibe-card-bg-video');
+      if (vid) vibeToggleVideo(card, newIdx, vid);
+    });
   });
 
   setupEnhancedSocketListeners();
@@ -7803,3 +7865,845 @@ window.showPage = function (pageId, ...args) {
     setTimeout(() => initCommunityChat(), 50);
   }
 };
+
+// ============================================================
+//  VIBE FEED — Full-Screen Posts · Real-Time Data
+//  Connects to existing API: /api/posts, /api/posts/community
+//  Uses existing: toggleLike(), openCommentModal(), deletePost()
+// ============================================================
+
+let vibeActiveTab = 'all';         // 'all' | 'community'
+let vibeActiveSharePostId = null;  // post id for share drawer
+let vibeActiveCommentPostId = null;// post id for comments drawer
+let vibeDestination = 'profile';   // upload destination
+let vibeSelectedFiles = [];        // files chosen in upload modal
+let vibeProgressTimers = {};       // per-card auto-advance timers
+let vibeCurrentCard = 0;          // index of visible card
+
+// ─── Gradient palettes for text-only posts ───────────────────
+const VIBE_GRADIENTS = [
+  'linear-gradient(145deg,#0a0a14 0%,#1a0a2e 50%,#2d0a4e 100%)',
+  'linear-gradient(145deg,#0d0221 0%,#1a0545 50%,#3a0ca3 100%)',
+  'linear-gradient(145deg,#03045e 0%,#0077b6 70%,#00b4d8 100%)',
+  'linear-gradient(145deg,#0a0a14 0%,#1b1b2e 40%,#ff6b35 100%)',
+  'linear-gradient(145deg,#0f0c29 0%,#302b63 50%,#24243e 100%)',
+  'linear-gradient(145deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',
+];
+function vibeGradient(id) {
+  const str = (id || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return VIBE_GRADIENTS[str % VIBE_GRADIENTS.length];
+}
+
+// ─── Utility ─────────────────────────────────────────────────
+function vibeFmt(n) {
+  n = parseInt(n) || 0;
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toString();
+}
+function vibeTimeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60)  return 'just now';
+  if (diff < 3600) return Math.floor(diff/60)+'m ago';
+  if (diff < 86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+// ─── Init: called from showPage('posts') ─────────────────────
+async function initVibeFeed() {
+  const feed = document.getElementById('vibeFeed');
+  if (!feed) return;
+
+  feed.innerHTML = `<div class="vibe-loading" id="vibeLoading">
+    <div class="vibe-spinner-ring"></div><p>Loading vibes…</p>
+  </div>`;
+
+  // Stop old timers
+  Object.values(vibeProgressTimers).forEach(t => clearInterval(t));
+  vibeProgressTimers = {};
+
+  try {
+    const endpoint = vibeActiveTab === 'community'
+      ? '/api/posts/community'
+      : '/api/posts';
+
+    const data = await apiCall(endpoint, 'GET');
+
+    const posts = data.posts || [];
+
+    if (!posts.length) {
+      feed.innerHTML = `<div class="vibe-empty">
+        <div class="vibe-empty-icon">🎬</div>
+        <h3>No vibes yet</h3>
+        <p>Be the first to share something!</p>
+        <button onclick="openVibeUpload()">+ Create Vibe</button>
+      </div>`;
+      return;
+    }
+
+    renderVibeFeed(posts);
+    setupVibeObserver();
+  } catch (err) {
+    console.error('❌ Vibe feed:', err);
+    feed.innerHTML = `<div class="vibe-empty">
+      <div class="vibe-empty-icon">⚠️</div>
+      <h3>Failed to load</h3>
+      <p>${err.message || 'Check your connection'}</p>
+      <button onclick="initVibeFeed()">Retry</button>
+    </div>`;
+  }
+}
+
+// ─── Render all cards ─────────────────────────────────────────
+function renderVibeFeed(posts) {
+  const feed = document.getElementById('vibeFeed');
+  if (!feed) return;
+  feed.innerHTML = posts.map((p, i) => buildVibeCard(p, i)).join('');
+
+  // Attach tap / double-tap listeners
+  feed.querySelectorAll('.vibe-card').forEach((card, i) => {
+    let lastTap = 0;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.vibe-card-actions') ||
+          e.target.closest('.vibe-card-info') ||
+          e.target.closest('.vibe-card-delete-btn')) return;
+      const now = Date.now();
+      if (now - lastTap < 320) {
+        vibeDoubleTapLike(card, i);
+      }
+      lastTap = now;
+      // tap to play/pause video
+      const vid = card.querySelector('.vibe-card-bg-video');
+      if (vid) vibeToggleVideo(card, i, vid);
+    });
+  });
+}
+
+// ─── Build a single card ─────────────────────────────────────
+function buildVibeCard(post, idx) {
+  const user       = post.users || {};
+  const username   = user.username || 'Unknown';
+  const userId     = user.id || '';
+  const college    = user.college || '';
+  const avatar     = user.profile_pic;
+  const caption    = post.content || '';
+  const media      = Array.isArray(post.media) ? post.media : [];
+  const isLiked    = !!post.is_liked;
+  const likes      = vibeFmt(post.like_count || 0);
+  const comments   = vibeFmt(post.comment_count || 0);
+  const shares     = vibeFmt(post.share_count || 0);
+  const music      = post.music;
+  const stickers   = post.stickers || [];
+  const isOwn      = currentUser && userId === currentUser.id;
+  const dest       = post.posted_to === 'community' ? '🎓 College' : '👤 Profile';
+  const postTime   = vibeTimeAgo(post.created_at || post.timestamp);
+
+  // ── Background layer ──
+  const firstMedia = media[0];
+  let bgLayer = '';
+  if (firstMedia?.type === 'video') {
+    bgLayer = `<video class="vibe-card-bg-video" src="${firstMedia.url}"
+      playsinline muted loop preload="metadata"></video>`;
+  } else if (firstMedia?.type === 'image' || (firstMedia?.url && !firstMedia?.type)) {
+    bgLayer = `<img class="vibe-card-bg-img" src="${firstMedia.url || firstMedia}" alt="">`;
+  } else if (media.length === 0 || firstMedia?.type === 'audio') {
+    bgLayer = `<div class="vibe-card-bg-text" style="background:${vibeGradient(post.id)};"></div>
+      <div class="vibe-text-content">
+        <p class="vibe-text-body">${caption.split('#')[0].trim() || '✨'}</p>
+      </div>`;
+  }
+
+  // ── Extra images in grid? show first only for cards ──
+  const moreMedia = media.length > 1
+    ? `<div style="position:absolute;top:56px;right:10px;z-index:12;
+         background:rgba(0,0,0,0.5);border-radius:12px;padding:3px 8px;
+         font-size:11px;color:#fff;font-weight:700;backdrop-filter:blur(6px);">
+         +${media.length - 1} more</div>` : '';
+
+  // ── Avatar HTML ──
+  const avHtml = avatar
+    ? `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')">
+         <img src="${avatar}" alt="${username}" loading="lazy">
+       </div>`
+    : `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')">
+         ${username.charAt(0).toUpperCase() || '😊'}
+       </div>`;
+
+  // ── Caption with hashtags ──
+  const captionText = caption.replace(/#(\w+)/g,
+    '<span class="vibe-card-tag">#$1</span>');
+  const shortCap = caption.length > 100;
+
+  // ── Stickers ──
+  const stickersHtml = stickers.length
+    ? `<div class="vibe-stickers-overlay">${stickers.map(s =>
+        `<span class="vibe-sticker">${s.emoji || s}</span>`).join('')}</div>`
+    : '';
+
+  // ── Music ──
+  const musicHtml = music
+    ? `<div class="vibe-music-row">
+         <span class="vibe-music-note">🎵</span>
+         <span class="vibe-music-name">${music.name} · ${music.artist}</span>
+       </div>` : '';
+
+  // ── Delete btn (own posts) ──
+  const deleteBtn = isOwn
+    ? `<button class="vibe-card-delete-btn" onclick="vibeDeletePost('${post.id}')" title="Delete">🗑️</button>`
+    : '';
+
+  return `
+  <div class="vibe-card" data-id="${post.id}" data-idx="${idx}">
+    ${bgLayer}
+    <div class="vibe-card-overlay"></div>
+    ${moreMedia}
+    ${stickersHtml}
+    ${deleteBtn}
+
+    <!-- Tap-to-play hint -->
+    <div class="vibe-play-hint" id="vph_${idx}">
+      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </div>
+
+    <!-- Bottom-left: user & caption -->
+    <div class="vibe-card-info">
+      <div class="vibe-card-user">
+        ${avHtml}
+        <div class="vibe-card-usernames">
+          <div class="vibe-card-username" onclick="showUserProfile('${userId}')">
+            @${username}
+          </div>
+          ${college ? `<div class="vibe-card-college">🎓 ${college}</div>` : ''}
+        </div>
+        ${!isOwn ? `<button class="vibe-follow-btn" id="vfb_${idx}"
+          onclick="vibeToggleFollow('${userId}', ${idx})">+ Follow</button>` : ''}
+      </div>
+
+      ${caption ? `
+      <div class="vibe-card-caption ${shortCap ? '' : 'expanded'}"
+           id="vcap_${idx}">${captionText}</div>
+      ${shortCap ? `<button class="vibe-caption-more"
+          onclick="toggleVibeCaption(${idx})">more</button>` : ''}
+      ` : ''}
+
+      ${musicHtml}
+
+      <div class="vibe-card-time">
+        ${postTime}
+        <span class="vibe-posted-to">${dest}</span>
+      </div>
+    </div>
+
+    <!-- Right action rail -->
+    <div class="vibe-card-actions">
+      <!-- Like -->
+      <div class="vibe-action ${isLiked ? 'vibe-liked' : ''}"
+           id="vact_like_${idx}"
+           onclick="vibeToggleLike('${post.id}', ${idx})">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24" ${isLiked ? 'style="fill:#ff3040;stroke:#ff3040"' : ''}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <span class="vibe-action-label" id="vlike_count_${idx}">${likes}</span>
+      </div>
+
+      <!-- Comment -->
+      <div class="vibe-action" onclick="vibeOpenComments('${post.id}', ${idx})">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="vibe-action-label" id="vcomment_count_${idx}">${comments}</span>
+      </div>
+
+      <!-- Save -->
+      <div class="vibe-action" id="vact_save_${idx}"
+           onclick="vibeToggleSave('${post.id}', ${idx})">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="vibe-action-label">Save</span>
+      </div>
+
+      <!-- Share -->
+      <div class="vibe-action" onclick="vibeOpenShare('${post.id}', '${caption.replace(/'/g,'')}')">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+        <span class="vibe-action-label" id="vshare_count_${idx}">${shares}</span>
+      </div>
+
+      <!-- Creator disc -->
+      <div class="vibe-disc-wrap" onclick="showUserProfile('${userId}')">
+        <div class="vibe-disc">
+          ${avatar ? `<img src="${avatar}" alt="">` : (username.charAt(0).toUpperCase() || '🎵')}
+        </div>
+        <div class="vibe-disc-center"></div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="vibe-card-progress">
+      <div class="vibe-card-progress-fill" id="vprog_${idx}"></div>
+    </div>
+  </div>`;
+}
+
+// ─── Intersection Observer: auto-play / progress ──────────────
+function setupVibeObserver() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const idx = parseInt(entry.target.dataset.idx);
+      const vid = entry.target.querySelector('.vibe-card-bg-video');
+      if (entry.isIntersecting) {
+        vibeCurrentCard = idx;
+        if (vid) vid.play().catch(() => {});
+        startVibeProgress(idx, vid);
+      } else {
+        if (vid) { vid.pause(); vid.currentTime = 0; }
+        stopVibeProgress(idx);
+      }
+    });
+  }, { threshold: 0.65 });
+
+  document.querySelectorAll('.vibe-card').forEach(c => obs.observe(c));
+}
+
+// ─── Progress bar ─────────────────────────────────────────────
+function startVibeProgress(idx, vid) {
+  stopVibeProgress(idx);
+  const bar = document.getElementById('vprog_' + idx);
+  if (!bar) return;
+
+  if (vid) {
+    // Sync to actual video duration
+    const tick = () => {
+      if (!vid.duration) return;
+      bar.style.width = (vid.currentTime / vid.duration * 100) + '%';
+    };
+    vibeProgressTimers[idx] = setInterval(tick, 150);
+    vid.addEventListener('ended', () => {
+      stopVibeProgress(idx);
+      scrollToVibeCard(idx + 1);
+    }, { once: true });
+  } else {
+    // Text/image: auto-advance after 6 seconds
+    let pct = 0;
+    vibeProgressTimers[idx] = setInterval(() => {
+      pct += 100 / 60; // 6s at 100ms ticks
+      if (pct >= 100) {
+        pct = 100;
+        bar.style.width = pct + '%';
+        stopVibeProgress(idx);
+        scrollToVibeCard(idx + 1);
+        return;
+      }
+      bar.style.width = pct + '%';
+    }, 100);
+  }
+}
+
+function stopVibeProgress(idx) {
+  clearInterval(vibeProgressTimers[idx]);
+  const bar = document.getElementById('vprog_' + idx);
+  if (bar) bar.style.width = '0%';
+}
+
+function scrollToVibeCard(idx) {
+  const cards = document.querySelectorAll('.vibe-card');
+  if (idx < cards.length) {
+    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ─── Video tap toggle ─────────────────────────────────────────
+function vibeToggleVideo(card, idx, vid) {
+  const hint = document.getElementById('vph_' + idx);
+  if (vid.paused) { vid.play(); } else { vid.pause(); }
+  if (hint) {
+    hint.querySelector('svg polygon, svg path').setAttribute('points',
+      vid.paused ? '5 3 19 12 5 21 5 3' : '');
+    hint.classList.remove('hide');
+    hint.classList.add('show');
+    setTimeout(() => { hint.classList.remove('show'); hint.classList.add('hide'); }, 700);
+  }
+}
+
+// ─── Double-tap like ──────────────────────────────────────────
+function vibeDoubleTapLike(card, idx) {
+  const burst = document.createElement('div');
+  burst.className = 'vibe-heart-burst';
+  burst.textContent = '❤️';
+  card.appendChild(burst);
+  setTimeout(() => burst.remove(), 750);
+
+  const likeEl = document.getElementById('vact_like_' + idx);
+  if (likeEl && !likeEl.classList.contains('vibe-liked')) {
+    const postId = card.dataset.id;
+    vibeToggleLike(postId, idx);
+  }
+}
+
+// ─── Like ─────────────────────────────────────────────────────
+async function vibeToggleLike(postId, idx) {
+  if (!currentUser) return showMessage('⚠️ Login to like', 'error');
+  try {
+    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
+    if (!data.success) return;
+    const el = document.getElementById('vact_like_' + idx);
+    const cnt = document.getElementById('vlike_count_' + idx);
+    const ico = el?.querySelector('path');
+    if (el) el.classList.toggle('vibe-liked', data.liked);
+    if (ico) { ico.style.fill = data.liked ? '#ff3040' : 'none'; ico.style.stroke = data.liked ? '#ff3040' : '#fff'; }
+    if (cnt) cnt.textContent = vibeFmt(data.likeCount);
+    if (data.liked) checkAndUpdateRewards?.('like');
+  } catch(e) { console.error('Like err', e); }
+}
+
+// ─── Save (client-side only — extend with API when ready) ─────
+function vibeToggleSave(postId, idx) {
+  const el = document.getElementById('vact_save_' + idx);
+  if (!el) return;
+  const isSaved = el.classList.toggle('vibe-saved');
+  const ico = el.querySelector('path');
+  if (ico) { ico.style.fill = isSaved ? '#ffc800' : 'none'; ico.style.stroke = isSaved ? '#ffc800' : '#fff'; }
+  showMessage(isSaved ? '🔖 Saved!' : 'Unsaved', 'success');
+}
+
+// ─── Follow toggle (calls real API) ──────────────────────────
+async function vibeToggleFollow(targetUserId, idx) {
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+  const btn = document.getElementById('vfb_' + idx);
+  const isFollowing = btn?.textContent.includes('Following');
+  try {
+    const endpoint = isFollowing
+      ? `/api/unfollow/${targetUserId}`
+      : `/api/follow/${targetUserId}`;
+    await apiCall(endpoint, 'POST');
+    if (btn) {
+      btn.textContent = isFollowing ? '+ Follow' : '✓ Following';
+      btn.classList.toggle('following', !isFollowing);
+    }
+  } catch(e) { console.error('Follow err', e); }
+}
+
+// ─── Caption expand ───────────────────────────────────────────
+function toggleVibeCaption(idx) {
+  const el = document.getElementById('vcap_' + idx);
+  if (!el) return;
+  el.classList.toggle('expanded');
+  const btn = el.nextElementSibling;
+  if (btn) btn.textContent = el.classList.contains('expanded') ? 'less' : 'more';
+}
+
+// ─── Delete own post ──────────────────────────────────────────
+async function vibeDeletePost(postId) {
+  if (!confirm('Delete this vibe?')) return;
+  try {
+    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    showMessage('🗑️ Deleted', 'success');
+    if (currentUser) {
+      currentUser.postCount = Math.max(0, (currentUser.postCount || 0) - 1);
+      saveUserToLocal?.();
+    }
+    setTimeout(() => initVibeFeed(), 400);
+  } catch(e) { showMessage('❌ ' + e.message, 'error'); }
+}
+
+// ─── Comments Drawer ──────────────────────────────────────────
+async function vibeOpenComments(postId, idx) {
+  vibeActiveCommentPostId = postId;
+  const cnt = document.getElementById('vcomment_count_' + idx);
+  const title = document.getElementById('vibeCommentTitle');
+  if (title) title.textContent = `Comments (${cnt?.textContent || 0})`;
+
+  // Set my avatar
+  const myAv = document.getElementById('vibeCommentMyAvatar');
+  if (myAv && currentUser?.profilePic) {
+    myAv.innerHTML = `<img src="${currentUser.profilePic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  }
+
+  openVibeDrawer('vibeCommentsDrawer');
+
+  const list = document.getElementById('vibeCommentsList');
+  list.innerHTML = '<div class="vibe-drawer-loading">Loading comments…</div>';
+
+  try {
+    const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
+    const comments = data.comments || [];
+    if (!comments.length) {
+      list.innerHTML = '<div class="vibe-drawer-loading">No comments yet. Be first! 💬</div>';
+      return;
+    }
+    list.innerHTML = comments.map(c => {
+      const u = c.users || {};
+      const av = u.profile_pic
+        ? `<div class="vibe-comment-av"><img src="${u.profile_pic}" alt=""></div>`
+        : `<div class="vibe-comment-av">${(u.username || '?').charAt(0).toUpperCase()}</div>`;
+      return `
+      <div class="vibe-comment-item">
+        ${av}
+        <div class="vibe-comment-body">
+          <div class="vibe-comment-username">@${u.username || 'User'}</div>
+          <div class="vibe-comment-text">${c.content || ''}</div>
+          <div class="vibe-comment-meta">
+            <span class="vibe-comment-time">${vibeTimeAgo(c.created_at)}</span>
+            <button class="vibe-comment-like">❤️ Like</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="vibe-drawer-loading">Failed to load comments</div>';
+  }
+}
+
+async function submitVibeComment() {
+  const input = document.getElementById('vibeCommentInput');
+  const content = input?.value.trim();
+  if (!content || !vibeActiveCommentPostId) return;
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+
+  input.value = '';
+  try {
+    const data = await apiCall(`/api/posts/${vibeActiveCommentPostId}/comments`, 'POST', { content });
+    if (!data.success) return;
+
+    const u = currentUser;
+    const av = u.profilePic
+      ? `<div class="vibe-comment-av"><img src="${u.profilePic}" alt=""></div>`
+      : `<div class="vibe-comment-av">${(u.username || '?').charAt(0).toUpperCase()}</div>`;
+
+    const newItem = document.createElement('div');
+    newItem.className = 'vibe-comment-item';
+    newItem.innerHTML = `
+      ${av}
+      <div class="vibe-comment-body">
+        <div class="vibe-comment-username">@${u.username}</div>
+        <div class="vibe-comment-text">${content}</div>
+        <div class="vibe-comment-meta">
+          <span class="vibe-comment-time">just now</span>
+          <button class="vibe-comment-like">❤️ Like</button>
+        </div>
+      </div>`;
+
+    const list = document.getElementById('vibeCommentsList');
+    if (list) {
+      if (list.querySelector('.vibe-drawer-loading')) list.innerHTML = '';
+      list.prepend(newItem);
+    }
+    checkAndUpdateRewards?.('comment');
+  } catch(e) { showMessage('❌ ' + e.message, 'error'); }
+}
+
+// ─── Share Drawer ─────────────────────────────────────────────
+function vibeOpenShare(postId, caption) {
+  vibeActiveSharePostId = postId;
+  openVibeDrawer('vibeShareDrawer');
+}
+
+function vibeShareWhatsApp() {
+  const url = encodeURIComponent(window.location.href + '?post=' + vibeActiveSharePostId);
+  window.open('https://wa.me/?text=Check+this+vibe+on+VibeXpert+%F0%9F%94%A5+' + url, '_blank');
+  closeVibeDrawer('vibeShareDrawer');
+}
+
+function vibeShareCopy() {
+  navigator.clipboard?.writeText(window.location.href + '?post=' + vibeActiveSharePostId)
+    .then(() => showMessage('🔗 Link copied!', 'success'));
+  closeVibeDrawer('vibeShareDrawer');
+}
+
+function vibeShareToChat() {
+  showMessage('📤 Shared to College Chat!', 'success');
+  closeVibeDrawer('vibeShareDrawer');
+  // API call to post to community_messages
+  if (vibeActiveSharePostId) {
+    apiCall('/api/posts/' + vibeActiveSharePostId + '/share', 'POST').catch(() => {});
+  }
+}
+
+function vibeShareNative() {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Check this on VibeXpert!',
+      url: window.location.href + '?post=' + vibeActiveSharePostId
+    }).catch(() => {});
+  } else {
+    vibeShareCopy();
+  }
+  closeVibeDrawer('vibeShareDrawer');
+}
+
+// ─── Drawer helpers ───────────────────────────────────────────
+function openVibeDrawer(drawerId) {
+  document.getElementById(drawerId)?.classList.add('open');
+  const bd = document.getElementById('vibeBackdrop');
+  if (bd) bd.classList.add('active');
+}
+function closeVibeDrawer(drawerId) {
+  document.getElementById(drawerId)?.classList.remove('open');
+  // Close backdrop only if no other drawer is open
+  const anyOpen = document.querySelector('.vibe-drawer.open');
+  if (!anyOpen) {
+    document.getElementById('vibeBackdrop')?.classList.remove('active');
+  }
+}
+function closeAllVibeDrawers() {
+  document.querySelectorAll('.vibe-drawer.open').forEach(d => d.classList.remove('open'));
+  document.getElementById('vibeBackdrop')?.classList.remove('active');
+}
+
+// ─── Search / filter ─────────────────────────────────────────
+function toggleVibeSearch() {
+  const bar = document.getElementById('vibeSearchBar');
+  if (!bar) return;
+  const showing = bar.style.display !== 'none' && bar.style.display !== '';
+  bar.style.display = showing ? 'none' : 'block';
+  if (!showing) document.getElementById('vibeSearchInput')?.focus();
+}
+
+function filterVibeFeed(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.vibe-card').forEach(card => {
+    const caption = card.querySelector('.vibe-card-caption')?.textContent || '';
+    const user = card.querySelector('.vibe-card-username')?.textContent || '';
+    const college = card.querySelector('.vibe-card-college')?.textContent || '';
+    card.style.display = (!q || [caption, user, college].some(t => t.toLowerCase().includes(q)))
+      ? '' : 'none';
+  });
+}
+
+// ─── Tab switching ────────────────────────────────────────────
+function switchVibeTab(tab, btn) {
+  vibeActiveTab = tab;
+  document.querySelectorAll('.vibe-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  initVibeFeed();
+}
+
+// ─── Upload Modal ─────────────────────────────────────────────
+function openVibeUpload() {
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+
+  // Populate avatar in modal
+  const avEl = document.getElementById('vibeCaptionAvatar');
+  if (avEl) {
+    if (currentUser.profilePic) {
+      avEl.innerHTML = `<img src="${currentUser.profilePic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avEl.textContent = (currentUser.name || currentUser.username || '😊')[0].toUpperCase();
+    }
+  }
+
+  // Populate user name in modal header
+  const nameEl = document.getElementById('vibePostUserName');
+  if (nameEl) nameEl.textContent = currentUser.name || currentUser.username || 'You';
+
+  vibeSelectedFiles = [];
+  vibeDestination = 'profile';
+  document.getElementById('vibeCaptionInput').value = '';
+  document.getElementById('vibeMediaPreview').style.display = 'none';
+  document.getElementById('vibeMediaZone').style.display = 'flex';
+  document.getElementById('vibeClearMedia').style.display = 'none';
+  document.getElementById('vibeCharCount').textContent = '500';
+  document.getElementById('destRadioProfile').classList.add('active');
+  document.getElementById('destRadioCommunity').classList.remove('active');
+
+  // Reset posting overlay
+  const overlay = document.getElementById('vibePostingOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.innerHTML = `<div class="vibe-posting-spinner"></div><p>Posting your vibe…</p>`;
+  }
+
+  const btn = document.getElementById('vibePostBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Post'; }
+
+  document.getElementById('vibeUploadModal').style.display = 'flex';
+  // Focus caption after animation
+  setTimeout(() => document.getElementById('vibeCaptionInput')?.focus(), 350);
+}
+
+function closeVibeUpload() {
+  document.getElementById('vibeUploadModal').style.display = 'none';
+  vibeSelectedFiles = [];
+}
+
+function handleVibeFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  vibeSelectedFiles = files;
+  showVibeMediaPreview(files[0]);
+}
+
+function handleVibeDrop(e) {
+  e.preventDefault();
+  document.getElementById('vibeMediaZone').classList.remove('vdz-active');
+  const files = Array.from(e.dataTransfer.files).filter(f =>
+    f.type.startsWith('video/') || f.type.startsWith('image/'));
+  if (!files.length) return;
+  vibeSelectedFiles = files;
+  showVibeMediaPreview(files[0]);
+}
+
+function showVibeMediaPreview(file) {
+  const url = URL.createObjectURL(file);
+  const preview = document.getElementById('vibeMediaPreview');
+  const zone = document.getElementById('vibeMediaZone');
+  const clearBtn = document.getElementById('vibeClearMedia');
+
+  preview.innerHTML = file.type.startsWith('video/')
+    ? `<video src="${url}" controls muted style="width:100%;max-height:240px;border-radius:16px;"></video>`
+    : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:16px;">`;
+
+  preview.style.display = 'block';
+  zone.style.display = 'none';
+  clearBtn.style.display = 'inline-block';
+}
+
+function clearVibeMedia() {
+  vibeSelectedFiles = [];
+  document.getElementById('vibeMediaPreview').style.display = 'none';
+  document.getElementById('vibeMediaZone').style.display = 'flex';
+  document.getElementById('vibeClearMedia').style.display = 'none';
+  document.getElementById('vibeFileInput').value = '';
+}
+
+function setVibeDest(dest, row) {
+  vibeDestination = dest;
+  document.getElementById('destRadioProfile').classList.toggle('active', dest === 'profile');
+  document.getElementById('destRadioCommunity').classList.toggle('active', dest === 'community');
+}
+
+function updateVibeCharCount(textarea) {
+  const cnt = document.getElementById('vibeCharCount');
+  if (cnt) cnt.textContent = 500 - textarea.value.length;
+}
+
+// ─── Submit post — wires to real /api/posts ───────────────────
+async function submitVibePost() {
+  const caption = document.getElementById('vibeCaptionInput')?.value.trim();
+  const btn = document.getElementById('vibePostBtn');
+  const postingOverlay = document.getElementById('vibePostingOverlay');
+
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+
+  if (!caption && !vibeSelectedFiles.length) {
+    // Shake the post area to indicate required input
+    const sheet = document.querySelector('.vibe-upload-sheet');
+    if (sheet) { sheet.style.animation = 'shakePost 0.4s ease'; setTimeout(() => sheet.style.animation = '', 400); }
+    return showMessage('⚠️ Add a caption or media to post', 'error');
+  }
+
+  // Fix: treat null/undefined communityJoined as false only when explicitly checking community post
+  const isJoined = currentUser.communityJoined || currentUser.community_joined || false;
+  if (vibeDestination === 'community' && !isJoined) {
+    return showMessage('⚠️ Join your college community first to post there', 'error');
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (postingOverlay) postingOverlay.style.display = 'flex';
+
+  try {
+    const formData = new FormData();
+    formData.append('content', caption || '');
+    formData.append('postTo', vibeDestination);
+
+    // Include music/stickers from existing selectors if they were used
+    if (typeof selectedMusic !== 'undefined' && selectedMusic) {
+      formData.append('music', JSON.stringify(selectedMusic));
+    }
+    if (typeof selectedStickers !== 'undefined' && selectedStickers?.length) {
+      formData.append('stickers', JSON.stringify(selectedStickers));
+    }
+
+    for (const file of vibeSelectedFiles) {
+      formData.append('media', file);
+    }
+
+    const data = await apiCall('/api/posts', 'POST', formData);
+
+    if (data && data.success) {
+      // ── Success overlay ─────────────────────────────────────────────────
+      if (postingOverlay) {
+        postingOverlay.innerHTML = `<div class="vibe-post-success-anim">
+          <div class="vibe-success-check">✅</div>
+          <p>Vibe Posted!</p>
+        </div>`;
+      }
+      if (currentUser) {
+        currentUser.postCount = (currentUser.postCount || 0) + 1;
+        saveUserToLocal?.();
+      }
+      checkAndUpdateRewards?.('post');
+      if (typeof selectedMusic !== 'undefined') selectedMusic = null;
+      if (typeof selectedStickers !== 'undefined') selectedStickers = [];
+
+      // ── Optimistic prepend — poster sees their post immediately ────────
+      // (The server already emitted new_post to all OTHER users via Socket.IO)
+      const newPost = data.post;
+      if (newPost && vibeActiveTab === 'all') {
+        const feed = document.getElementById('vibeFeed');
+        if (feed && !feed.querySelector('.vibe-loading') && !feed.querySelector('.vibe-empty')) {
+          const idx = feed.querySelectorAll('.vibe-card').length;
+          const tmp = document.createElement('div');
+          tmp.innerHTML = buildVibeCard(newPost, idx);
+          const card = tmp.firstElementChild;
+          if (card) {
+            card.style.cssText += 'animation:vibeSlideIn 0.45s cubic-bezier(.2,1.1,.4,1) both;';
+            feed.insertBefore(card, feed.firstChild);
+            // Wire up tap/double-tap on the newly inserted card
+            let lastTap = 0;
+            card.addEventListener('click', e => {
+              if (e.target.closest('.vibe-card-actions') || e.target.closest('.vibe-card-info') || e.target.closest('.vibe-card-delete-btn')) return;
+              const now = Date.now();
+              if (now - lastTap < 320) vibeDoubleTapLike(card, idx);
+              lastTap = now;
+              const vid = card.querySelector('.vibe-card-bg-video');
+              if (vid) vibeToggleVideo(card, idx, vid);
+            });
+          }
+        }
+      }
+
+      setTimeout(() => {
+        closeVibeUpload();
+        showMessage('✅ Vibe posted! 🔥 Everyone can see it now.', 'success');
+        // Refresh feed to get accurate like/comment counts from DB
+        setTimeout(initVibeFeed, 1500);
+      }, 800);
+    } else {
+      const errMsg = (data && data.error) ? data.error : 'Post failed — please try again';
+      showMessage('❌ ' + errMsg, 'error');
+      if (postingOverlay) postingOverlay.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('❌ Post err:', e);
+    const userMsg = e.status === 401 ? 'Session expired — please log in again'
+      : e.status === 400 ? (e.message || 'Invalid post data')
+      : e.status === 500 ? 'Server error — please try again in a moment'
+      : (e.message || 'Connection failed');
+    showMessage('❌ ' + userMsg, 'error');
+    if (postingOverlay) postingOverlay.style.display = 'none';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Post'; }
+  }
+}
+
+// ─── Hook showPage to init vibe feed ─────────────────────────
+// Override the existing showPage shim to trigger initVibeFeed
+(function() {
+  const _prev = window.showPage;
+  window.showPage = function(pageId, ...args) {
+    if (_prev) _prev(pageId, ...args);
+    if (pageId === 'posts') {
+      setTimeout(initVibeFeed, 80);
+    }
+  };
+})();
+
+// Also override the loadPosts function so any existing calls still work
+function loadPosts() {
+  initVibeFeed();
+}
