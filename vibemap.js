@@ -1179,27 +1179,56 @@ function createReactionBar(messageId, reactions) {
   return html;
 }
 
+// Track the current reaction per message for the current user
+const _userMessageReactions = new Map(); // messageId -> emoji
+
 async function toggleReaction(messageId, emoji) {
   try {
     const pill = event.target.closest('.reaction-pill');
-    const countSpan = pill.querySelector('.reaction-count');
-    let count = parseInt(countSpan?.textContent) || 0;
+    if (!pill) return;
 
-    if (pill.classList.contains('selected')) {
-      pill.classList.remove('selected');
-      count = Math.max(0, count - 1);
-    } else {
-      pill.classList.add('selected');
-      count = count + 1;
+    const msgWrapper = pill.closest('.whatsapp-message') || pill.closest('[id^="wa-msg-"]') || document.getElementById(`wa-msg-${messageId}`);
+    const allPills = msgWrapper ? msgWrapper.querySelectorAll('.reaction-pill') : document.querySelectorAll(`#reacts-${messageId} .reaction-pill`);
+
+    const prevEmoji = _userMessageReactions.get(messageId);
+    const isSameEmoji = prevEmoji === emoji;
+
+    // Deselect all pills for this message first (one reaction per user)
+    allPills.forEach(p => {
+      const pillEmoji = p.querySelector('.emoji')?.textContent;
+      if (p.classList.contains('selected') && pillEmoji) {
+        p.classList.remove('selected');
+        const cs = p.querySelector('.reaction-count');
+        if (cs) {
+          const c = Math.max(0, parseInt(cs.textContent) - 1);
+          cs.textContent = c || '';
+          if (!c) cs.remove();
+        }
+      }
+    });
+
+    if (isSameEmoji) {
+      // Toggling off — remove reaction
+      _userMessageReactions.delete(messageId);
+      await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
+      return;
     }
 
+    // Select the new pill
+    pill.classList.add('selected');
+    _userMessageReactions.set(messageId, emoji);
+    const countSpan = pill.querySelector('.reaction-count');
+    let count = parseInt(countSpan?.textContent) || 0;
+    count++;
     if (countSpan) {
-      countSpan.textContent = count || '';
-    } else if (count > 0) {
+      countSpan.textContent = count;
+    } else {
       const newCountSpan = document.createElement('span');
       newCountSpan.className = 'reaction-count';
       newCountSpan.textContent = count;
-      pill.appendChild(newCountSpan);
+      const emojiSpan = pill.querySelector('.emoji');
+      if (emojiSpan) emojiSpan.after(newCountSpan);
+      else pill.appendChild(newCountSpan);
     }
 
     await apiCall(`/api/community/messages/${messageId}/react`, 'POST', { emoji });
@@ -1540,6 +1569,8 @@ function addMessageToUI(message) {
 
 function setupEnhancedSocketListeners() {
   if (!socket) return;
+  // Restore lifetime seen data from localStorage
+  _initSeenLifetime();
 
 
   socket.on('user_typing', (data) => {
@@ -1810,8 +1841,30 @@ function loadCommunities() {
           </div>
         </div>
 
+        <!-- Media confirmation box — shown above typing area when a photo/video is selected -->
+        <div id="chatFilePreviewBar" class="chat-file-preview-bar" style="display:none;">
+          <div class="preview-bar-inner">
+            <img id="chatFilePreviewImg" style="display:none;" alt="Preview">
+            <video id="chatFilePreviewVideo" style="display:none;" playsinline muted></video>
+            <span class="preview-filename" id="chatFilePreviewName"></span>
+          </div>
+          <button class="preview-clear-btn" onclick="clearChatFilePreview()" title="Remove">✕</button>
+        </div>
+
+        <!-- Reply preview strip — shown above typing area when replying -->
+        <div id="chatReplyPreview" class="chat-reply-preview" style="display:none;">
+          <div class="reply-preview-bar">
+            <span class="reply-preview-icon">↩️</span>
+            <div class="reply-preview-body">
+              <span class="reply-preview-sender" id="replyPreviewSender"></span>
+              <span class="reply-preview-text" id="replyPreviewText"></span>
+            </div>
+            <button class="reply-cancel-btn" onclick="cancelReply()">✕</button>
+          </div>
+        </div>
+
         <div class="whatsapp-input-area">
-          <button class="icon-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
+          <button class="icon-btn emoji-open-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
           <!-- FILE BUTTON replaces sticker -->
           <input type="file" id="chatFileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" style="display:none" onchange="handleChatFileSelect(event)">
           <button class="icon-btn file-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Send Photo/Video">📎</button>
@@ -2143,6 +2196,71 @@ function replyToMessage(messageId) {
   showMessage(`↩️ Replying to ${sender}`, 'success');
 }
 
+// ── WhatsApp-style reply with preview strip ──────────────────
+let _replyToMsgId = null;
+
+function replyToWhatsAppMsg(messageId) {
+  const wrapper = document.getElementById(`wa-msg-${messageId}`);
+  if (!wrapper) return;
+
+  // Get text from message bubble, skipping any nested reply-quote
+  const bubbleEl = wrapper.querySelector('.message-bubble');
+  const textEl = bubbleEl?.querySelector('.message-text');
+  // Use only direct text nodes, ignoring nested reply quotes
+  let text = '';
+  if (textEl) {
+    // textContent of .message-text might include reply quote text if nested — use direct text
+    text = Array.from(textEl.childNodes)
+      .filter(n => n.nodeType === Node.TEXT_NODE)
+      .map(n => n.textContent)
+      .join('').trim() || textEl.textContent.trim() || '';
+  }
+
+  // Get sender: own messages show current user's name, others show sender name div
+  const isOwn = wrapper.classList.contains('own');
+  let sender;
+  if (isOwn) {
+    sender = (currentUser && (currentUser.username || currentUser.name)) || 'You';
+  } else {
+    sender = wrapper.querySelector('.message-sender-name')?.textContent?.trim() || 'User';
+  }
+
+  // Check if there's media instead
+  const mediaEl = bubbleEl?.querySelector('.msg-media, .msg-doc-link');
+  const hasMedia = !!mediaEl;
+  const previewText = text ? (text.length > 60 ? text.substring(0, 60) + '…' : text) : (hasMedia ? '📎 Media' : 'Message');
+
+  _replyToMsgId = messageId;
+
+  const preview = document.getElementById('chatReplyPreview');
+  const senderSpan = document.getElementById('replyPreviewSender');
+  const textSpan = document.getElementById('replyPreviewText');
+
+  if (preview) {
+    if (senderSpan) senderSpan.textContent = sender;
+    if (textSpan) textSpan.textContent = previewText;
+    preview.style.display = 'flex';
+  }
+
+  const input = document.getElementById('whatsappInput');
+  if (input) input.focus();
+}
+
+function cancelReply() {
+  _replyToMsgId = null;
+  const preview = document.getElementById('chatReplyPreview');
+  if (preview) preview.style.display = 'none';
+}
+
+function scrollToReplyMsg(msgId) {
+  const el = document.getElementById('wa-msg-' + msgId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Flash highlight
+  el.classList.add('reply-highlight');
+  setTimeout(() => el.classList.remove('reply-highlight'), 1500);
+}
+
 function forwardMessage(messageId) {
   showMessage('↪️ Forward feature coming soon!', 'success');
 }
@@ -2185,8 +2303,8 @@ function openEmojiPicker() {
 
   let html = `
     <div class="emoji-picker-header">
-      <input type="text" class="emoji-search" placeholder="Search emoji..." oninput="searchEmojis(this.value)">
-      <button onclick="closeEmojiPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>
+      <input type="text" class="emoji-search" placeholder="🔍 Search emoji..." oninput="searchEmojis(this.value)">
+      <button class="emoji-picker-close-btn" onclick="closeEmojiPicker()" title="Close">✕</button>
     </div>
     <div class="emoji-categories" id="emojiCategories">
   `;
@@ -2573,10 +2691,14 @@ function initializeSocket() {
 
   // ── Real-time: NEW POST from any user → prepend to "For You" feed ─────
   socket.on('new_post', (post) => {
-    // Don't re-add our own post (we already add it optimistically on submit)
-    if (currentUser && post.users && post.users.id === currentUser.id) return;
+    // If this is our own post — update My Vibes stats/grid (feed already updated optimistically)
+    if (currentUser && post.users && post.users.id === currentUser.id) {
+      // Update stats counter in header
+      _updateMvStats(_mvAllPosts);
+      return;
+    }
 
-    // Only inject if the "For You" (all) tab is active
+    // Only inject into feed if the "For You" (all) tab is active
     if (vibeActiveTab !== 'all') return;
 
     const feed = document.getElementById('vibeFeed');
@@ -2772,6 +2894,9 @@ function showProfilePage(user) {
   const targetUser = user || currentUser;
   if (!targetUser) return;
 
+  // Reset cached vibes so we always load the correct user's posts fresh
+  _resetMvCache();
+
   // Store current profile user globally for toggleFollow
   window.currentProfileUser = targetUser;
 
@@ -2867,6 +2992,11 @@ function showProfilePage(user) {
 
   // Fetch real follower/following counts from backend
   fetchProfileStats(targetUser);
+
+  // Pre-fetch My Vibes silently so it's instant when the tab is clicked
+  if (isOwn) {
+    setTimeout(() => _prefetchMyVibes(), 600);
+  }
 
   // Load default tab
   switchProfileTab('info');
@@ -3000,7 +3130,489 @@ function switchProfileTab(tabName, event) {
   if (tabName === 'cart') loadCartItems();
   else if (tabName === 'shipping') loadShippingDetails();
   else if (tabName === 'orders') loadOrderHistory();
+  else if (tabName === 'vibes') loadMyVibes();
 }
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║               MY VIBES — Profile Grid + Editor              ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+let _mvAllPosts = [];        // full list from API (filtered client-side)
+let _mvActiveFilter = 'all'; // current filter chip
+let _mvActivePostId = null;  // post open in detail modal
+let _mvDetailImgIdx = 0;     // current image index inside detail modal
+let _mvRTInterval = null;    // real-time polling handle
+
+// ── Silent background pre-fetch (called when profile page opens) ──
+async function _prefetchMyVibes() {
+  try {
+    // Only pre-fetch for the logged-in user's own profile
+    const posts = await _fetchMyPostsFromAPI(currentUser?.id);
+    _mvAllPosts = posts;
+    _updateMvStats(_mvAllPosts);
+    // If the vibes tab is already visible, render it
+    const pane = document.getElementById('profileTabVibes');
+    if (pane && pane.classList.contains('active')) {
+      _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+    }
+  } catch(e) { /* silent */ }
+}
+
+// ── Reset stale cache whenever opening a new profile ──
+function _resetMvCache() {
+  _mvAllPosts = [];
+  _mvActiveFilter = 'all';
+  clearInterval(_mvRTInterval);
+}
+
+// ── Fetch helper: fetches posts for a given user ID (or current user) ──
+async function _fetchMyPostsFromAPI(userId) {
+  if (!currentUser || !currentUser.id) return [];
+  const targetId = userId || currentUser.id;
+  const isOwnProfile = targetId === currentUser.id;
+
+  try {
+    if (isOwnProfile) {
+      // Use the fast /api/posts/my endpoint for own profile
+      const data = await apiCall('/api/posts/my', 'GET');
+      if (data && data.posts) return data.posts;
+    } else {
+      // Use the per-user endpoint for other profiles
+      const data = await apiCall(`/api/posts/user/${targetId}`, 'GET');
+      if (data && data.posts) return data.posts;
+    }
+  } catch(e) {
+    if (e.status !== 404 && e.status !== 405) throw e;
+  }
+
+  // Fallback: fetch all posts and filter by target user
+  try {
+    const data = await apiCall('/api/posts', 'GET');
+    const all = data.posts || [];
+    return all.filter(p => {
+      const uid = p.user_id || (p.users && p.users.id);
+      return uid === targetId;
+    });
+  } catch(e2) {
+    throw e2;
+  }
+}
+
+// ── Load & render ───────────────────────────────────────────────
+async function loadMyVibes() {
+  const grid = document.getElementById('myVibesGrid');
+  if (!grid) return;
+
+  // Determine whose profile we're viewing
+  const profileUserId = window.currentProfileUser ? window.currentProfileUser.id : (currentUser ? currentUser.id : null);
+  const isOwnProfile = currentUser && profileUserId === currentUser.id;
+
+  // If we already have data from the background pre-fetch AND it's our own profile, render immediately
+  if (isOwnProfile && _mvAllPosts.length > 0) {
+    _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+    _updateMvStats(_mvAllPosts);
+    // Still refresh in background to get latest counts
+    _silentRefreshMyVibes();
+    return;
+  }
+
+  // show skeleton
+  grid.innerHTML = `<div class="mv-skeleton-grid">
+    ${Array(9).fill('<div class="mv-skeleton-cell"></div>').join('')}
+  </div>`;
+
+  try {
+    const posts = await _fetchMyPostsFromAPI(profileUserId);
+    _mvAllPosts = isOwnProfile ? posts : posts; // store only for own profile caching
+    _renderMyVibesGrid(_mvFilterPosts(posts, _mvActiveFilter));
+    _updateMvStats(posts);
+
+    // only poll for refreshes on own profile
+    if (isOwnProfile) {
+      clearInterval(_mvRTInterval);
+      _mvRTInterval = setInterval(() => _silentRefreshMyVibes(), 30000);
+    }
+
+  } catch(err) {
+    console.error('My Vibes load error:', err);
+    grid.innerHTML = `<div class="mv-empty">
+      <div class="mv-empty-icon">🌌</div>
+      <p>Couldn't load your vibes.<br><button onclick="loadMyVibes()">Try again</button></p>
+    </div>`;
+  }
+}
+
+async function _silentRefreshMyVibes() {
+  try {
+    const profileUserId = window.currentProfileUser ? window.currentProfileUser.id : (currentUser ? currentUser.id : null);
+    const posts = await _fetchMyPostsFromAPI(profileUserId);
+    _mvAllPosts = posts;
+    _updateMvStats(_mvAllPosts);
+    const pane = document.getElementById('profileTabVibes');
+    if (pane && pane.classList.contains('active')) {
+      _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+    }
+  } catch(e) { /* silent */ }
+}
+
+function _mvFilterPosts(posts, filter) {
+  if (filter === 'photos') return posts.filter(p =>
+    (p.media || []).some(m => m.type === 'image' || (!m.type && m.url)));
+  if (filter === 'videos') return posts.filter(p =>
+    (p.media || []).some(m => m.type === 'video'));
+  if (filter === 'text')   return posts.filter(p => !(p.media && p.media.length));
+  return posts;
+}
+
+function filterMyVibes(filter, btn) {
+  _mvActiveFilter = filter;
+  document.querySelectorAll('.mv-filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, filter));
+}
+
+function _updateMvStats(posts) {
+  const totalLikes    = posts.reduce((s, p) => s + (p.like_count    || 0), 0);
+  const totalComments = posts.reduce((s, p) => s + (p.comment_count || 0), 0);
+  const withMedia     = posts.filter(p => p.media && p.media.length).length;
+
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = vibeFmt ? vibeFmt(val) : val;
+  };
+  setEl('mvStatPosts',    posts.length);
+  setEl('mvStatLikes',    totalLikes);
+  setEl('mvStatComments', totalComments);
+  setEl('mvStatMedia',    withMedia);
+  // also update header stat
+  const hp = document.getElementById('profileStatPosts');
+  if (hp) hp.textContent = posts.length;
+}
+
+function _patchMvGridCounts(posts) {
+  posts.forEach(p => {
+    const lcEl = document.querySelector(`.mv-cell[data-id="${p.id}"] .mv-cell-likes`);
+    if (lcEl) lcEl.textContent = vibeFmt ? vibeFmt(p.like_count || 0) : (p.like_count || 0);
+  });
+}
+
+function _renderMyVibesGrid(posts) {
+  const grid = document.getElementById('myVibesGrid');
+  if (!grid) return;
+
+  if (!posts.length) {
+    grid.innerHTML = `<div class="mv-empty">
+      <div class="mv-empty-icon">🌌</div>
+      <h3>No vibes yet</h3>
+      <p>Posts you share will appear here</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = `<div class="mv-grid-inner">
+    ${posts.map((p, i) => _buildMvCell(p, i)).join('')}
+  </div>`;
+}
+
+function _buildMvCell(post, idx) {
+  const media   = Array.isArray(post.media) ? post.media : [];
+  const first   = media[0];
+  const isVideo = first?.type === 'video';
+  const isText  = !media.length;
+  const likes   = (vibeFmt ? vibeFmt(post.like_count || 0) : (post.like_count || 0));
+  const multi   = media.length > 1;
+  const timeAgo = (vibeTimeAgo || (() => ''))( post.created_at);
+
+  let thumb = '';
+  if (isVideo) {
+    thumb = `<video class="mv-cell-media" src="${first.url}" muted preload="metadata" playsinline
+               onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+             <div class="mv-cell-video-badge">
+               <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3" fill="white"/></svg>
+             </div>`;
+  } else if (first) {
+    thumb = `<img class="mv-cell-media" src="${first.url || first}" alt="" loading="lazy">`;
+  } else {
+    const grad = (vibeGradient || (() => '#1a1a2e'))(post.id);
+    const preview = (post.content || '').slice(0, 40) || '✨';
+    thumb = `<div class="mv-cell-text-bg" style="background:${grad}">
+               <span class="mv-cell-text-preview">${preview}</span>
+             </div>`;
+  }
+
+  return `<div class="mv-cell" data-id="${post.id}" data-idx="${idx}"
+               onclick="openMvDetail('${post.id}')">
+    ${thumb}
+    <div class="mv-cell-overlay">
+      <span class="mv-cell-likes">
+        <svg viewBox="0 0 24 24" width="12" height="12" style="fill:#ff3040;stroke:none">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>${likes}
+      </span>
+      ${multi ? `<span class="mv-cell-multi">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="white" stroke-width="2">
+          <rect x="7" y="3" width="14" height="14" rx="2"/><path d="M3 7v14a2 2 0 0 0 2 2h14"/>
+        </svg>
+      </span>` : ''}
+    </div>
+    <div class="mv-cell-dest">${post.posted_to === 'community' ? '🎓' : '👤'}</div>
+  </div>`;
+}
+
+// ── Detail Modal ────────────────────────────────────────────────
+function openMvDetail(postId) {
+  const post = _mvAllPosts.find(p => p.id === postId || p.id == postId);
+  if (!post) return;
+  _mvActivePostId = postId;
+  _mvDetailImgIdx = 0;
+
+  const modal = document.getElementById('myVibeDetailModal');
+  if (!modal) return;
+
+  // Populate
+  _populateMvDetail(post);
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => modal.classList.add('mv-modal-open'));
+}
+
+function _populateMvDetail(post) {
+  const media = Array.isArray(post.media) ? post.media : [];
+  _mvDetailImgIdx = 0;
+
+  // Media area
+  const mediaEl = document.getElementById('mvDetailMedia');
+  if (mediaEl) {
+    if (media.length) {
+      mediaEl.innerHTML = _buildMvDetailSlide(media, 0);
+    } else {
+      const grad = (vibeGradient || (() => '#1a1a2e'))(post.id);
+      const txt  = (post.content || '').slice(0, 120) || '✨';
+      mediaEl.innerHTML = `<div class="mv-detail-text-bg" style="background:${grad}">
+        <p class="mv-detail-text-body">${txt}</p>
+      </div>`;
+    }
+  }
+
+  // Dots
+  const dotsEl = document.getElementById('mvDetailDots');
+  if (dotsEl) {
+    if (media.length > 1) {
+      dotsEl.innerHTML = media.map((_, i) =>
+        `<span class="mv-dot ${i === 0 ? 'active' : ''}" onclick="mvSlide(${i})"></span>`
+      ).join('');
+      dotsEl.style.display = 'flex';
+    } else {
+      dotsEl.innerHTML = '';
+      dotsEl.style.display = 'none';
+    }
+  }
+
+  // Determine the post author (could be viewing someone else's profile)
+  const postAuthor = post.users || {};
+  const authorPic = postAuthor.profile_pic || null;
+  const authorName = postAuthor.username || currentUser?.username || 'User';
+
+  // Avatar — show POST AUTHOR's avatar, not always currentUser's
+  const avEl = document.getElementById('mvDetailAvatar');
+  if (avEl) {
+    if (authorPic) {
+      avEl.innerHTML = `<img src="${authorPic}" alt="">`;
+    } else {
+      avEl.textContent = authorName.charAt(0).toUpperCase();
+    }
+  }
+
+  // Meta
+  const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || ''; };
+  setT('mvDetailUsername', '@' + authorName);
+  setT('mvDetailTime', (vibeTimeAgo || (() => ''))(post.created_at));
+  setT('mvDetailDest', post.posted_to === 'community' ? '🎓 College' : '👤 Profile');
+  setT('mvDetailCaption', post.content || '');
+  setT('mvDetailLikes', vibeFmt ? vibeFmt(post.like_count || 0) : (post.like_count || 0));
+  setT('mvDetailComments', vibeFmt ? vibeFmt(post.comment_count || 0) : (post.comment_count || 0));
+  setT('mvDetailShares', vibeFmt ? vibeFmt(post.share_count || 0) : (post.share_count || 0));
+
+  // Show Edit/Delete ONLY if current user owns this post
+  const isPostOwner = currentUser && (post.user_id === currentUser.id);
+  const editBtn = document.getElementById('mvBtnEdit');
+  const deleteBtn = document.getElementById('mvBtnDelete');
+  if (editBtn)   editBtn.style.display   = isPostOwner ? '' : 'none';
+  if (deleteBtn) deleteBtn.style.display = isPostOwner ? '' : 'none';
+
+  // Reset edit mode
+  cancelMvEdit();
+
+  // Swipe support for mobile
+  _attachMvSwipe(document.getElementById('mvDetailMedia'), media);
+}
+
+function _buildMvDetailSlide(media, idx) {
+  const item = media[idx];
+  if (!item) return '';
+  if (item.type === 'video') {
+    return `<video class="mv-detail-slide-video" src="${item.url}" controls playsinline autoplay></video>`;
+  }
+  return `<img class="mv-detail-slide-img" src="${item.url || item}" alt="">
+          <div class="mv-detail-nav">
+            ${idx > 0 ? `<button class="mv-nav-btn mv-nav-prev" onclick="mvSlide(${idx-1})">‹</button>` : ''}
+            ${idx < media.length - 1 ? `<button class="mv-nav-btn mv-nav-next" onclick="mvSlide(${idx+1})">›</button>` : ''}
+          </div>`;
+}
+
+function mvSlide(idx) {
+  const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+  if (!post) return;
+  const media = Array.isArray(post.media) ? post.media : [];
+  _mvDetailImgIdx = idx;
+
+  const mediaEl = document.getElementById('mvDetailMedia');
+  if (mediaEl) {
+    mediaEl.style.opacity = '0';
+    setTimeout(() => {
+      mediaEl.innerHTML = _buildMvDetailSlide(media, idx);
+      mediaEl.style.opacity = '1';
+    }, 150);
+  }
+
+  // Update dots
+  document.querySelectorAll('.mv-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+// Touch swipe
+function _attachMvSwipe(el, media) {
+  if (!el || media.length < 2) return;
+  let startX = 0;
+  el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) {
+      const next = _mvDetailImgIdx + (dx < 0 ? 1 : -1);
+      if (next >= 0 && next < media.length) mvSlide(next);
+    }
+  }, { passive: true });
+}
+
+function closeMvDetail(event) {
+  if (event && event.target !== document.getElementById('myVibeDetailModal')) return;
+  closeMvDetailModal();
+}
+function closeMvDetailModal() {
+  const modal = document.getElementById('myVibeDetailModal');
+  if (!modal) return;
+  modal.classList.remove('mv-modal-open');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    _mvActivePostId = null;
+    // stop any playing video
+    modal.querySelectorAll('video').forEach(v => { v.pause(); v.src = ''; });
+  }, 280);
+}
+
+// ── Edit Caption ────────────────────────────────────────────────
+function startMvEdit() {
+  const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+  if (!post) return;
+  const editArea = document.getElementById('mvCaptionEditArea');
+  if (editArea) editArea.value = post.content || '';
+  document.getElementById('mvCaptionWrap')?.style && (document.getElementById('mvCaptionWrap').style.display = 'none');
+  document.getElementById('mvEditWrap').style.display  = 'block';
+  document.getElementById('mvBtnEdit').style.display   = 'none';
+  editArea?.focus();
+}
+
+function cancelMvEdit() {
+  const cw = document.getElementById('mvCaptionWrap');
+  const ew = document.getElementById('mvEditWrap');
+  const eb = document.getElementById('mvBtnEdit');
+  if (cw) cw.style.display = '';
+  if (ew) ew.style.display = 'none';
+  if (eb) eb.style.display = '';
+}
+
+async function saveMvCaption() {
+  const newCaption = document.getElementById('mvCaptionEditArea')?.value.trim() ?? '';
+  if (!_mvActivePostId) return;
+  const saveBtn = document.querySelector('.mv-edit-save');
+  if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+
+  try {
+    await apiCall(`/api/posts/${_mvActivePostId}`, 'PATCH', { content: newCaption });
+
+    // Update local cache
+    const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+    if (post) post.content = newCaption;
+
+    // Update modal caption
+    const capEl = document.getElementById('mvDetailCaption');
+    if (capEl) capEl.textContent = newCaption;
+
+    cancelMvEdit();
+    showMessage('✅ Caption updated!', 'success');
+  } catch(err) {
+    showMessage('❌ ' + (err.message || 'Update failed'), 'error');
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false; }
+  }
+}
+
+// ── Delete ──────────────────────────────────────────────────────
+async function deleteMvPost() {
+  if (!_mvActivePostId) return;
+  if (!confirm('Delete this vibe? This cannot be undone.')) return;
+
+  const delBtn = document.querySelector('.mv-btn-delete');
+  if (delBtn) { delBtn.textContent = 'Deleting…'; delBtn.disabled = true; }
+
+  try {
+    await apiCall(`/api/posts/${_mvActivePostId}`, 'DELETE');
+    showMessage('🗑️ Vibe deleted', 'success');
+
+    // Remove from local cache & re-render
+    _mvAllPosts = _mvAllPosts.filter(p => p.id !== _mvActivePostId && p.id != _mvActivePostId);
+    closeMvDetailModal();
+    _updateMvStats(_mvAllPosts);
+    _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+  } catch(err) {
+    showMessage('❌ ' + (err.message || 'Delete failed'), 'error');
+    if (delBtn) { delBtn.textContent = 'Delete'; delBtn.disabled = false; }
+  }
+}
+
+// ── Socket real-time: update like counts inside My Vibes ────────
+(function _patchMvSocketLike() {
+  const _orig = window.socket ? null : null; // wire after socket initialises
+  const _onLike = (data) => {
+    if (!data || !data.postId) return;
+    const post = _mvAllPosts.find(p => p.id === data.postId || p.id == data.postId);
+    if (!post) return;
+    post.like_count = data.likeCount;
+    // patch cell count
+    const lcEl = document.querySelector(`.mv-cell[data-id="${data.postId}"] .mv-cell-likes`);
+    if (lcEl) lcEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" style="fill:#ff3040;stroke:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>${vibeFmt ? vibeFmt(data.likeCount) : data.likeCount}`;
+    // patch detail modal
+    if (_mvActivePostId === data.postId || _mvActivePostId == data.postId) {
+      const el = document.getElementById('mvDetailLikes');
+      if (el) el.textContent = vibeFmt ? vibeFmt(data.likeCount) : data.likeCount;
+    }
+    _updateMvStats(_mvAllPosts);
+  };
+
+  // Attach once socket is available
+  const _tryAttach = () => {
+    if (window.socket) {
+      window.socket.on('post_liked', _onLike);
+    } else {
+      setTimeout(_tryAttach, 2000);
+    }
+  };
+  setTimeout(_tryAttach, 3000);
+})();
+
+// ─────────────────────────────────────────────────────────────────
 
 function loadCartItems() {
   const container = document.getElementById('cartItemsContainer');
@@ -3438,12 +4050,26 @@ function showPage(name, e) {
     footer.style.display = noFooterPages.includes(name) ? 'none' : '';
   }
 
+  // Hide "Connected to college" notification on posts and realvibe pages
+  const liveNotif = document.getElementById('liveActivityNotif');
+  if (liveNotif) {
+    const hideNotifPages = ['posts', 'realvibe'];
+    liveNotif.style.display = hideNotifPages.includes(name) ? 'none' : '';
+  }
+
   // Auto-hide header on communities, posts, realvibe
   const autoHidePages = ['communities', 'posts', 'realvibe'];
   if (autoHidePages.includes(name)) {
     enableHeaderAutohide();
   } else {
     disableHeaderAutohide();
+  }
+
+  // Hide crown button on communities, posts, realvibe only
+  const crownBtn = document.querySelector('.premium-crown-btn');
+  if (crownBtn) {
+    const hideCrownPages = ['communities', 'posts', 'realvibe'];
+    crownBtn.style.display = hideCrownPages.includes(name) ? 'none' : '';
   }
 
   const hamburger = document.getElementById('hamburgerMenu');
@@ -3476,7 +4102,8 @@ async function createPost() {
   console.log('🚀 Creating post');
 
   if (!postText && selectedFiles.length === 0 && !selectedMusic && selectedStickers.length === 0) {
-    return showMessage('⚠️ Add content', 'error');
+    showVibeSelectFirst();
+    return;
   }
 
   if (!currentUser) return showMessage('⚠️ Login required', 'error');
@@ -3515,39 +4142,45 @@ async function createPost() {
     const data = await apiCall('/api/posts', 'POST', formData);
 
     if (data.success) {
-      const msg = selectedPostDestination === 'profile' ?
-        '✅ Posted to profile!' : '✅ Shared to community!';
-      showMessage(msg, 'success');
-      checkAndUpdateRewards('post');
-      const postCount = data.postCount || 1;
+      // 1. Reset form and close any open post modals immediately
+      resetPostForm();
+      ['createPostModal', 'vibeUploadModal', 'postCreatorModal'].forEach(id => {
+        const m = document.getElementById(id);
+        if (m) m.style.display = 'none';
+      });
 
-      // Update local post count
+      // 2. Update local post count
       if (currentUser) {
         currentUser.postCount = (currentUser.postCount || 0) + 1;
         saveUserToLocal();
       }
 
-      setTimeout(() => showPostCelebrationModal(postCount), 800);
-
-      if (data.badgeUpdated && data.newBadges?.length > 0) {
-        setTimeout(() => showMessage(`🏆 Badge: ${data.newBadges.join(', ')}`, 'success'), 6000);
+      // 3. Update My Vibes cache
+      if (data.post) {
+        _mvAllPosts.unshift(data.post);
+        _updateMvStats(_mvAllPosts);
+        const pane = document.getElementById('profileTabVibes');
+        if (pane && pane.classList.contains('active')) {
+          _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+        }
       }
 
-      resetPostForm();
+      // 4. Full feed reload so new post appears at top with all correct data
+      setTimeout(() => initVibeFeed(), 400);
 
-      setTimeout(() => {
-        loadPosts();
-        if (selectedPostDestination === 'profile') {
-          const profilePosts = document.getElementById('userProfilePosts');
-          if (profilePosts && currentUser) loadUserProfilePosts(currentUser.id);
-        }
-        if (selectedPostDestination === 'community') {
-          const communityPosts = document.getElementById('communityPostsContainer');
-          if (communityPosts) loadCommunityPosts();
-        }
-      }, 1000);
+      // 5. Show "Your Vibe is now online" toast
+      showVibeOnlineToast();
+
+      // 6. Celebration modal + badge notification
+      checkAndUpdateRewards('post');
+      const postCount = data.postCount || 1;
+      setTimeout(() => showPostCelebrationModal(postCount), 1000);
+      if (data.badgeUpdated && data.newBadges?.length > 0) {
+        setTimeout(() => showMessage(`🏆 Badge unlocked: ${data.newBadges.join(', ')}`, 'success'), 6000);
+      }
+
     } else {
-      showMessage('❌ Failed', 'error');
+      showMessage('❌ Failed to post', 'error');
     }
   } catch (error) {
     console.error('❌ Post error:', error);
@@ -3560,6 +4193,45 @@ async function createPost() {
     }
   }
 }
+
+// ── "Your New Vibe is Online" toast + auto VibeXpert logo click ──
+function showVibeOnlineToast() {
+  const old = document.getElementById('vibeOnlineToast');
+  if (old) old.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'vibeOnlineToast';
+  toast.innerHTML = `
+    <div class="vot-glow"></div>
+    <div class="vot-icon">✦</div>
+    <div class="vot-body">
+      <strong>Your New Vibe is Online</strong>
+      <span>Everyone can see it now 🔥</span>
+    </div>
+    <div class="vot-close" onclick="document.getElementById('vibeOnlineToast')?.remove()">✕</div>
+  `;
+  document.body.appendChild(toast);
+
+  // Animate in
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('vot-show')));
+
+  // After 1.8s — simulate clicking the VibeXpert logo (top-left) → hard reload
+  setTimeout(() => {
+    const logo = document.querySelector('.logo');
+    if (logo) logo.click();
+  }, 1800);
+
+  // Safety auto-remove if reload doesn't fire for some reason
+  setTimeout(() => {
+    toast.classList.remove('vot-show');
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 450);
+  }, 5000);
+}
+
+// Legacy alias kept so any old call still works
+function showVibeSuccessToast() { showVibeOnlineToast(); }
+
+
 
 function resetPostForm() {
   const postText = document.getElementById('postText');
@@ -3615,8 +4287,6 @@ function renderPosts(posts) {
              <div class="enhanced-username">@${author}</div>
              <div class="enhanced-post-meta">
                <span>${time}</span>
-               <span>•</span>
-               <span>${postedTo}</span>
              </div>
            </div>
          </div>
@@ -4906,236 +5576,502 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // ==========================================
-// REALVIBE FUNCTIONALITY
+// REALVIBE — COMPLETE SYSTEM
 // ==========================================
 
-let realVibeMediaFile = null;
-let realVibeMediaType = null;
+let rvMediaFile = null;
+let rvMediaType = null;
+let rvActiveCommentVibeId = null;
+let _rvAllVibes = [];
 
-function openRealVibeCreator() {
-  const modal = document.getElementById('realVibeCreatorModal');
-  if (modal) modal.style.display = 'flex';
-
-  // Reset form
-  clearRealVibePreview();
-  const caption = document.getElementById('realVibeCaption');
-  if (caption) caption.value = '';
-  updateCaptionCounter();
-
-  // Disable publish button
-  const publishBtn = document.getElementById('publishRealVibeBtn');
-  if (publishBtn) publishBtn.disabled = true;
-}
-
-function captureRealVibePhoto() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) handleRealVibeFile(file, 'image');
-  };
-
-  input.click();
-}
-
-function uploadRealVibeMedia() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*';
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const type = file.type.startsWith('video/') ? 'video' : 'image';
-      handleRealVibeFile(file, type);
-    }
-  };
-
-  input.click();
-}
-
-function captureRealVibeVideo() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'video/*';
-  input.capture = 'environment';
-
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) handleRealVibeFile(file, 'video');
-  };
-
-  input.click();
-}
-
-function handleRealVibeFile(file, type) {
-  if (file.size > 50 * 1024 * 1024) {
-    showMessage('⚠️ File too large (max 50MB)', 'error');
-    return;
-  }
-
-  realVibeMediaFile = file;
-  realVibeMediaType = type;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const previewArea = document.getElementById('realVibePreviewArea');
-    const previewImg = document.getElementById('realVibePreviewImg');
-    const previewVideo = document.getElementById('realVibePreviewVideo');
-
-    if (type === 'image') {
-      previewImg.src = e.target.result;
-      previewImg.style.display = 'block';
-      previewVideo.style.display = 'none';
-    } else {
-      previewVideo.src = e.target.result;
-      previewVideo.style.display = 'block';
-      previewImg.style.display = 'none';
-    }
-
-    if (previewArea) previewArea.style.display = 'block';
-
-    // Enable publish button
-    const publishBtn = document.getElementById('publishRealVibeBtn');
-    if (publishBtn) publishBtn.disabled = false;
-  };
-
-  reader.readAsDataURL(file);
-}
-
-function clearRealVibePreview() {
-  realVibeMediaFile = null;
-  realVibeMediaType = null;
-
-  const previewArea = document.getElementById('realVibePreviewArea');
-  const previewImg = document.getElementById('realVibePreviewImg');
-  const previewVideo = document.getElementById('realVibePreviewVideo');
-
-  if (previewImg) {
-    previewImg.src = '';
-    previewImg.style.display = 'none';
-  }
-  if (previewVideo) {
-    previewVideo.src = '';
-    previewVideo.style.display = 'none';
-  }
-  if (previewArea) previewArea.style.display = 'none';
-
-  // Disable publish button
-  const publishBtn = document.getElementById('publishRealVibeBtn');
-  if (publishBtn) publishBtn.disabled = true;
-}
-
-async function publishRealVibe() {
-  if (!realVibeMediaFile) {
-    showMessage('⚠️ Please add media first', 'error');
-    return;
-  }
-
+// ── Open creator — gate check ──────────────────────────────────
+async function openRealVibeCreator() {
   if (!currentUser) {
     showMessage('⚠️ Please login first', 'error');
     return;
   }
 
-  try {
-    showMessage('✨ Publishing RealVibe...', 'success');
+  // If subscription not yet fetched into memory, fetch it now before checking
+  if (!currentUser.subscription && currentUser.isPremium) {
+    await fetchSubscriptionStatus();
+  }
 
-    const caption = document.getElementById('realVibeCaption')?.value.trim();
-    const visibility = document.querySelector('input[name="realVibeVisibility"]:checked')?.value || 'public';
+  const sub = checkSubscriptionStatus();
+
+  if (!currentUser.isPremium || !sub) {
+    // Not premium — show gate modal
+    const gate = document.getElementById('rvPremiumGate');
+    if (gate) gate.style.display = 'flex';
+    return;
+  }
+
+  // Premium confirmed — show creator
+  const plan = sub.plan || 'noble';
+  const days = plan === 'royal' ? 25 : 15;
+  const badge = document.getElementById('rvCreatorPlanBadge');
+  if (badge) {
+    badge.textContent = plan === 'royal' ? '👑 Royal' : '🥈 Noble';
+    badge.className = 'rv-creator-plan-badge rv-badge-' + plan;
+  }
+  const expiryDays = document.getElementById('rvExpiryDays');
+  if (expiryDays) expiryDays.textContent = days;
+
+  clearRvPreview();
+  const captionEl = document.getElementById('rvCaption');
+  if (captionEl) captionEl.value = '';
+  updateRvCounter();
+
+  const modal = document.getElementById('realVibeCreatorModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeRvCreator(e) {
+  if (e && e.target !== document.getElementById('realVibeCreatorModal')) return;
+  closeRvCreatorModal();
+}
+
+function closeRvCreatorModal() {
+  const modal = document.getElementById('realVibeCreatorModal');
+  if (modal) modal.style.display = 'none';
+  clearRvPreview();
+}
+
+function closeRvGate(e) {
+  if (e && e.target !== document.getElementById('rvPremiumGate')) return;
+  closeRvGateModal();
+}
+function closeRvGateModal() {
+  const gate = document.getElementById('rvPremiumGate');
+  if (gate) gate.style.display = 'none';
+}
+
+// ── File picking ───────────────────────────────────────────────
+function rvTriggerFilePick() {
+  document.getElementById('rvFileInput')?.click();
+}
+
+function handleRvFile(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) { showMessage('⚠️ File too large (max 50MB)', 'error'); return; }
+
+  rvMediaFile  = file;
+  rvMediaType  = file.type.startsWith('video/') ? 'video' : 'image';
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img   = document.getElementById('rvPreviewImg');
+    const vid   = document.getElementById('rvPreviewVideo');
+    const badge = document.getElementById('rvVideoBadge');
+    const idle  = document.getElementById('rvDropIdle');
+    const prev  = document.getElementById('rvDropPreview');
+
+    if (rvMediaType === 'video') {
+      if (vid) { vid.src = ev.target.result; vid.style.display = 'block'; }
+      if (img) img.style.display = 'none';
+      if (badge) badge.style.display = 'flex';
+    } else {
+      if (img) { img.src = ev.target.result; img.style.display = 'block'; }
+      if (vid) vid.style.display = 'none';
+      if (badge) badge.style.display = 'none';
+    }
+    if (idle) idle.style.display = 'none';
+    if (prev) prev.style.display = 'flex';
+
+    const btn = document.getElementById('rvPublishBtn');
+    if (btn) btn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearRvPreview() {
+  rvMediaFile = null;
+  rvMediaType = null;
+  const idle  = document.getElementById('rvDropIdle');
+  const prev  = document.getElementById('rvDropPreview');
+  const img   = document.getElementById('rvPreviewImg');
+  const vid   = document.getElementById('rvPreviewVideo');
+  const fi    = document.getElementById('rvFileInput');
+  if (idle) idle.style.display = 'flex';
+  if (prev) prev.style.display = 'none';
+  if (img)  { img.src  = ''; img.style.display  = 'none'; }
+  if (vid)  { vid.src  = ''; vid.style.display  = 'none'; }
+  if (fi)   fi.value = '';
+  const btn = document.getElementById('rvPublishBtn');
+  if (btn) btn.disabled = true;
+}
+
+function updateRvCounter() {
+  const cap = document.getElementById('rvCaption');
+  const cnt = document.getElementById('rvCaptionCount');
+  if (cap && cnt) cnt.textContent = cap.value.length;
+}
+
+// ── Publish ────────────────────────────────────────────────────
+async function publishRealVibe() {
+  if (!rvMediaFile) { showVibeSelectFirst(); return; }
+  if (!currentUser)  { showMessage('⚠️ Please login first', 'error'); return; }
+
+  const btn = document.getElementById('rvPublishBtn');
+  const originalBtnHTML = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `
+      <span style="display:flex;align-items:center;gap:.45rem;">
+        <span style="width:13px;height:13px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;
+          border-radius:50%;animation:rvSpin .65s linear infinite;display:inline-block;flex-shrink:0;"></span>
+        Publishing…
+      </span>`;
+  }
+
+  try {
+    const caption    = document.getElementById('rvCaption')?.value.trim() || '';
+    const visibility = document.querySelector('input[name="rvVisibility"]:checked')?.value || 'public';
 
     const formData = new FormData();
-    formData.append('media', realVibeMediaFile);
-    formData.append('caption', caption);
+    formData.append('media',      rvMediaFile);
+    formData.append('caption',    caption);
     formData.append('visibility', visibility);
-    formData.append('type', realVibeMediaType);
 
-    // For now, simulate success (replace with actual API call)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const token = getToken();
+    const res  = await fetch(`${API_URL}/api/realvibes`, {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body:    formData
+    });
+    const data = await res.json();
 
-    showMessage('🎉 RealVibe published successfully!', 'success');
-    closeModal('realVibeCreatorModal');
+    if (!res.ok) {
+      // Handle specific premium/quota errors gracefully
+      if (data.code === 'PREMIUM_REQUIRED' || res.status === 403) {
+        closeRvCreatorModal();
+        const gate = document.getElementById('rvPremiumGate');
+        if (gate) gate.style.display = 'flex';
+        return;
+      }
+      if (data.code === 'SUBSCRIPTION_EXPIRED') {
+        closeRvCreatorModal();
+        showMessage('⚠️ Subscription expired — please renew', 'error');
+        setTimeout(() => openSubscriptionPopup(), 600);
+        return;
+      }
+      if (data.code === 'QUOTA_EXCEEDED') {
+        showMessage('⚠️ ' + data.error, 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+        return;
+      }
+      throw new Error(data.error || `Server error (${res.status})`);
+    }
 
-    // Reload RealVibes
-    loadRealVibes();
+    // ✅ Success
+    closeRvCreatorModal();
+    showVibeOnlineToast();
 
-  } catch (error) {
-    console.error('Publish RealVibe error:', error);
-    showMessage('❌ Failed to publish RealVibe', 'error');
+    // Prepend to feed immediately
+    if (data.vibe) {
+      _rvAllVibes.unshift(data.vibe);
+      renderRvFeed(_rvAllVibes);
+    } else {
+      setTimeout(() => loadRealVibes(), 500);
+    }
+
+  } catch (err) {
+    console.error('❌ Publish RealVibe error:', err);
+    showMessage('❌ ' + (err.message || 'Failed to publish. Try again.'), 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
   }
 }
 
-function updateCaptionCounter() {
-  const caption = document.getElementById('realVibeCaption');
-  const counter = document.getElementById('captionCount');
+// ─── "Select Your Vibe First" shake toast ────────────────────────────────────
+function showVibeSelectFirst() {
+  const old = document.getElementById('vibeSelectFirstToast');
+  if (old) old.remove();
 
-  if (caption && counter) {
-    counter.textContent = caption.value.length;
+  const toast = document.createElement('div');
+  toast.id = 'vibeSelectFirstToast';
+  toast.innerHTML = `
+    <div class="vsf-icon">📁</div>
+    <span>Select Your Vibe First</span>
+  `;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('vsf-show')));
+
+  setTimeout(() => {
+    toast.classList.remove('vsf-show');
+    setTimeout(() => toast.parentNode && toast.remove(), 400);
+  }, 3000);
+}
+
+function showRvLiveToast() {
+  const old = document.getElementById('rvLiveToast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'rvLiveToast';
+  t.innerHTML = `
+    <span class="rvlt-icon">✦</span>
+    <div class="rvlt-body">
+      <strong>RealVibe is live!</strong>
+      <span>Your exclusive post is now online</span>
+    </div>
+    <button onclick="this.closest('#rvLiveToast').remove()">✕</button>
+  `;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('rvlt-show')));
+  setTimeout(() => {
+    t.classList.remove('rvlt-show');
+    setTimeout(() => t.parentNode && t.remove(), 450);
+  }, 4000);
+}
+
+// ── Load feed ──────────────────────────────────────────────────
+async function loadRealVibes() {
+  const feed = document.getElementById('rvFeed');
+  if (!feed) return;
+
+  feed.innerHTML = `<div class="rv-loading"><div class="rv-spinner"></div><p>Loading RealVibes…</p></div>`;
+
+  try {
+    const data = await apiCall('/api/realvibes', 'GET');
+    _rvAllVibes = data.vibes || [];
+    renderRvFeed(_rvAllVibes);
+  } catch (err) {
+    console.error('Load RealVibes error:', err);
+    feed.innerHTML = `<div class="rv-empty">
+      <div class="rv-empty-icon">✦</div>
+      <h3>Couldn't load RealVibes</h3>
+      <p>Check your connection and try again.</p>
+      <button class="rv-retry-btn" onclick="loadRealVibes()">Retry</button>
+    </div>`;
   }
 }
 
-// Add caption counter listener
-document.addEventListener('DOMContentLoaded', function () {
-  const caption = document.getElementById('realVibeCaption');
-  if (caption) {
-    caption.addEventListener('input', updateCaptionCounter);
+function renderRvFeed(vibes) {
+  const feed = document.getElementById('rvFeed');
+  if (!feed) return;
+
+  if (!vibes.length) {
+    feed.innerHTML = `<div class="rv-empty">
+      <div class="rv-empty-icon">✦</div>
+      <h3>No RealVibes Yet</h3>
+      <p>Premium members can post exclusive content here.</p>
+      <button class="rv-gate-subscribe-btn" style="margin-top:1.2rem;" onclick="openRealVibeCreator()">
+        <span>✦ Add Your RealVibe</span>
+      </button>
+    </div>`;
+    return;
   }
+
+  feed.innerHTML = vibes.map(v => buildRvCard(v)).join('');
+}
+
+function buildRvCard(vibe) {
+  const author    = vibe.users || {};
+  const name      = author.username || 'Unknown';
+  const avatar    = author.profile_pic
+    ? `<img src="${author.profile_pic}" alt="">`
+    : `<span>${name.charAt(0).toUpperCase()}</span>`;
+  const planLabel = vibe.plan_type === 'royal'
+    ? '<span class="rv-card-plan-badge royal">👑 Royal</span>'
+    : '<span class="rv-card-plan-badge noble">🥈 Noble</span>';
+  const timeStr   = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
+  const expStr    = vibe.hours_left > 24
+    ? `${Math.ceil(vibe.hours_left / 24)}d left`
+    : `${vibe.hours_left}h left`;
+  const isOwn     = currentUser && vibe.user_id === currentUser.id;
+  const isLiked   = vibe.is_liked;
+
+  const media = vibe.media_type === 'video'
+    ? `<video class="rv-card-media" src="${vibe.media_url}" controls playsinline preload="metadata"></video>`
+    : `<img class="rv-card-media" src="${vibe.media_url}" alt="" loading="lazy" onclick="openRvMediaViewer('${vibe.media_url}')">`;
+
+  return `<article class="rv-card" data-vibe-id="${vibe.id}">
+    <div class="rv-card-header">
+      <div class="rv-card-author">
+        <div class="rv-card-avatar" onclick="showProfile('${author.id || ''}')">${avatar}</div>
+        <div class="rv-card-meta">
+          <span class="rv-card-name" onclick="showProfile('${author.id || ''}')">${escapeHtml(name)}</span>
+          <span class="rv-card-time">${timeStr} · <span class="rv-expiry-badge">⏳ ${expStr}</span></span>
+        </div>
+      </div>
+      <div class="rv-card-header-right">
+        ${planLabel}
+        ${isOwn ? `<button class="rv-card-delete" onclick="deleteRvPost('${vibe.id}', this)" title="Delete">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
+        </button>` : ''}
+      </div>
+    </div>
+
+    <div class="rv-card-media-wrap">${media}</div>
+
+    ${vibe.caption ? `<p class="rv-card-caption">${escapeHtml(vibe.caption)}</p>` : ''}
+
+    <div class="rv-card-actions">
+      <button class="rv-action-btn rv-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleRvLike('${vibe.id}', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="${isLiked ? '#ff3040' : 'none'}" style="stroke:${isLiked ? '#ff3040' : 'currentColor'}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.84-7.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span class="rv-like-count">${vibe.like_count || 0}</span>
+      </button>
+      <button class="rv-action-btn" onclick="openRvComments('${vibe.id}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>${vibe.comment_count || 0}</span>
+      </button>
+    </div>
+  </article>`;
+}
+
+// ── Like ───────────────────────────────────────────────────────
+async function toggleRvLike(vibeId, btn) {
+  if (!currentUser) { showMessage('Login to like', 'error'); return; }
+  const wasLiked = btn.classList.contains('liked');
+  const countEl  = btn.querySelector('.rv-like-count');
+  const svgPath  = btn.querySelector('path');
+
+  btn.classList.toggle('liked', !wasLiked);
+  const newCount = Math.max(0, parseInt(countEl.textContent || '0') + (wasLiked ? -1 : 1));
+  if (countEl) countEl.textContent = newCount;
+  if (svgPath) { svgPath.setAttribute('fill', wasLiked ? 'none' : '#ff3040'); svgPath.parentElement.style.stroke = wasLiked ? 'currentColor' : '#ff3040'; }
+
+  try {
+    const data = await apiCall(`/api/realvibes/${vibeId}/like`, 'POST');
+    if (countEl) countEl.textContent = data.likeCount ?? newCount;
+    const vibe = _rvAllVibes.find(v => v.id === vibeId);
+    if (vibe) { vibe.is_liked = data.liked; vibe.like_count = data.likeCount; }
+  } catch(err) {
+    // Revert
+    btn.classList.toggle('liked', wasLiked);
+    if (countEl) countEl.textContent = newCount + (wasLiked ? 1 : -1);
+  }
+}
+
+// ── Delete ─────────────────────────────────────────────────────
+async function deleteRvPost(vibeId, btn) {
+  if (!confirm('Delete this RealVibe? This cannot be undone.')) return;
+  try {
+    await apiCall(`/api/realvibes/${vibeId}`, 'DELETE');
+    showMessage('🗑️ Deleted', 'success');
+    _rvAllVibes = _rvAllVibes.filter(v => v.id !== vibeId);
+    renderRvFeed(_rvAllVibes);
+  } catch(err) {
+    showMessage('❌ Delete failed', 'error');
+  }
+}
+
+// ── Comments ───────────────────────────────────────────────────
+async function openRvComments(vibeId) {
+  rvActiveCommentVibeId = vibeId;
+  const drawer = document.getElementById('rvCommentsDrawer');
+  if (!drawer) return;
+  drawer.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  const list = document.getElementById('rvCommentsList');
+  if (list) list.innerHTML = '<div class="rv-comments-loading">Loading…</div>';
+
+  try {
+    const data = await apiCall(`/api/realvibes/${vibeId}/comments`, 'GET');
+    renderRvComments(data.comments || []);
+  } catch(err) {
+    if (list) list.innerHTML = '<p style="padding:1rem;opacity:.5">Failed to load comments</p>';
+  }
+}
+
+function renderRvComments(comments) {
+  const list = document.getElementById('rvCommentsList');
+  if (!list) return;
+  if (!comments.length) {
+    list.innerHTML = '<p class="rv-no-comments">No comments yet. Be first! 💬</p>';
+    return;
+  }
+  list.innerHTML = comments.map(c => {
+    const u = c.users || {};
+    const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username||'U').charAt(0).toUpperCase()}</span>`;
+    return `<div class="rv-comment-item">
+      <div class="rv-comment-avatar">${av}</div>
+      <div class="rv-comment-body">
+        <span class="rv-comment-author">${escapeHtml(u.username||'User')}</span>
+        <p class="rv-comment-text">${escapeHtml(c.content)}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function closeRvComments() {
+  const drawer = document.getElementById('rvCommentsDrawer');
+  if (drawer) drawer.style.display = 'none';
+  document.body.style.overflow = '';
+  rvActiveCommentVibeId = null;
+}
+
+async function submitRvComment() {
+  if (!rvActiveCommentVibeId) return;
+  const input = document.getElementById('rvCommentInput');
+  const content = input?.value.trim();
+  if (!content) return;
+  if (!currentUser) { showMessage('Login to comment', 'error'); return; }
+
+  input.value = '';
+  try {
+    await apiCall(`/api/realvibes/${rvActiveCommentVibeId}/comments`, 'POST', { content });
+    const vibe = _rvAllVibes.find(v => v.id === rvActiveCommentVibeId);
+    if (vibe) vibe.comment_count = (vibe.comment_count || 0) + 1;
+    // Refresh comments
+    const data = await apiCall(`/api/realvibes/${rvActiveCommentVibeId}/comments`, 'GET');
+    renderRvComments(data.comments || []);
+    // Update count on card
+    const card = document.querySelector(`.rv-card[data-vibe-id="${rvActiveCommentVibeId}"]`);
+    if (card) {
+      const countSpan = card.querySelectorAll('.rv-action-btn span')[1];
+      if (countSpan && vibe) countSpan.textContent = vibe.comment_count;
+    }
+  } catch(err) {
+    showMessage('❌ Could not post comment', 'error');
+  }
+}
+
+// Allow Enter key to submit comment
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('rvCommentInput');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitRvComment(); });
 });
 
-async function loadRealVibes() {
-  const storiesGrid = document.getElementById('realVibeStoriesGrid');
-  const yourGrid = document.getElementById('yourRealVibesGrid');
+// ── Media viewer ───────────────────────────────────────────────
+function openRvMediaViewer(url) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  ov.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:92vh;border-radius:8px;object-fit:contain;">`;
+  ov.onclick = () => document.body.removeChild(ov);
+  document.body.appendChild(ov);
+}
 
-  // For now, show empty state (replace with actual API call)
-  if (storiesGrid) {
-    storiesGrid.innerHTML = `
-      <div class="no-realvibes">
-        <div class="no-realvibes-icon">✨</div>
-        <h4>No RealVibes Yet</h4>
-        <p>Be the first to share your authentic moment!</p>
-        <button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First RealVibe</button>
-      </div>
-    `;
+// ── Real-time socket updates ───────────────────────────────────
+if (typeof io !== 'undefined') {
+  // handled via existing socket connection; listen for events
+}
+
+// Expose for socket handler in existing code
+function handleRvSocketLike(data) {
+  const vibe = _rvAllVibes.find(v => v.id === data.vibeId);
+  if (vibe) { vibe.like_count = data.likeCount; }
+  const card = document.querySelector(`.rv-card[data-vibe-id="${data.vibeId}"]`);
+  if (card) {
+    const countEl = card.querySelector('.rv-like-count');
+    if (countEl) countEl.textContent = data.likeCount;
   }
+}
 
-  if (yourGrid) {
-    yourGrid.innerHTML = '<div class="no-your-realvibes"><p>You haven\'t created any RealVibes yet</p></div>';
+function handleRvSocketNew(vibe) {
+  if (!_rvAllVibes.find(v => v.id === vibe.id)) {
+    _rvAllVibes.unshift(vibe);
+    renderRvFeed(_rvAllVibes);
   }
 }
 
-function viewRealVibe(realVibeId) {
-  const modal = document.getElementById('realVibeViewerModal');
-  if (modal) modal.style.display = 'flex';
-
-  // Load and display RealVibe (implement with actual data)
-  // For now, just show modal structure
+function handleRvSocketDelete(data) {
+  _rvAllVibes = _rvAllVibes.filter(v => v.id !== data.id);
+  renderRvFeed(_rvAllVibes);
 }
 
-function viewPreviousRealVibe() {
-  // Navigate to previous RealVibe
-  console.log('Previous RealVibe');
-}
-
-function viewNextRealVibe() {
-  // Navigate to next RealVibe
-  console.log('Next RealVibe');
-}
-
-function reactToRealVibe() {
-  showMessage('❤️ Reacted!', 'success');
-}
-
-function replyToRealVibe() {
-  showMessage('💬 Reply feature coming soon!', 'success');
-}
-
-function shareRealVibe() {
-  showMessage('🔄 Share feature coming soon!', 'success');
-}
-
-// Load RealVibes when page is shown
+// ── Load when page is shown ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
   const realVibePage = document.getElementById('realvibe');
   if (realVibePage) {
@@ -5146,11 +6082,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
     });
-
-    observer.observe(realVibePage, {
-      attributes: true,
-      attributeFilter: ['style']
-    });
+    observer.observe(realVibePage, { attributes: true, attributeFilter: ['style'] });
   }
 });
 // ==========================================
@@ -5386,6 +6318,16 @@ function updatePremiumBadge() {
     userName.innerHTML = `${planEmoji} Hi, ${currentUser.username} <span class="premium-verification-badge ${badgeClass}">✓</span>`;
   } else {
     userName.textContent = 'Hi, ' + currentUser.username;
+  }
+
+  // Crown button: glow+float only for non-subscribers; static gold for subscribers
+  const crownBtn = document.querySelector('.premium-crown-btn');
+  if (crownBtn) {
+    if (subscription) {
+      crownBtn.classList.add('subscribed');
+    } else {
+      crownBtn.classList.remove('subscribed');
+    }
   }
 }
 
@@ -6209,7 +7151,7 @@ function appendWhatsAppMessage(msg) {
       <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
-        ${isOwn ? `<span class="message-status">${msg.isTemp ? '⏳' : '✓✓'}</span>` : ''}
+        ${isOwn ? `<span class="message-status">${msg.isTemp ? '⏳' : '✓'}</span>` : ''}
       </div>
       ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
     </div>
@@ -6388,44 +7330,45 @@ function setupWhatsAppSocketListeners() {
     }
   });
 
-  // ✅ SEEN BY — someone in the room has seen messages up to lastMsgId
+  // ✅ SEEN BY — lifetime tracking (persisted in localStorage, never decreases)
   socket.on('messages_seen', (data) => {
     const { username, avatar, lastMsgId } = data;
     if (!username) return;
 
-    // Store in global map
+    // ── 1. Load lifetime seen store from localStorage ──
+    const storeKey = '_vibeSeen_' + (currentUser && currentUser.college ? currentUser.college : 'global');
+    let lifeStore = {};
+    try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch(e) { lifeStore = {}; }
+
+    // ── 2. Per-message map (in-memory, for popup per specific msg) ──
     if (!window._msgSeenBy) window._msgSeenBy = {};
     if (!window._msgSeenBy[lastMsgId]) window._msgSeenBy[lastMsgId] = [];
-    const already = window._msgSeenBy[lastMsgId].find(u => u.username === username);
-    if (!already) window._msgSeenBy[lastMsgId].push({ username, avatar: avatar || '👤' });
+    if (!window._msgSeenBy[lastMsgId].find(u => u.username === username)) {
+      window._msgSeenBy[lastMsgId].push({ username, avatar: avatar || '👤', seenAt: Date.now() });
+    }
 
-    // Find the last own message and mark it seen with blue ticks + avatar row
+    // ── 3. Lifetime user store — add user with timestamp if new ──
+    if (!lifeStore[username]) {
+      lifeStore[username] = { username, avatar: avatar || '👤', seenAt: Date.now() };
+      try { localStorage.setItem(storeKey, JSON.stringify(lifeStore)); } catch(e) {}
+    }
+    // Also update in-memory lifetime map
+    if (!window._seenLifetime) window._seenLifetime = {};
+    if (!window._seenLifetime[username]) {
+      window._seenLifetime[username] = lifeStore[username];
+    }
+
+    // ── 4. Update tick on last own message ──
     const allOwn = document.querySelectorAll('.whatsapp-message.own');
     if (!allOwn.length) return;
     const lastOwnMsg = allOwn[allOwn.length - 1];
     const lastOwnId = lastOwnMsg.id.replace('wa-msg-', '');
 
-    // Blue double ticks
     const statusEl = document.getElementById('status-' + lastOwnId);
-    if (statusEl) {
-      statusEl.innerHTML = '<span class="tick tick-seen">✓✓</span>';
-    }
+    if (statusEl) statusEl.innerHTML = '<span class="tick tick-seen" style="color:#a89dfc;font-weight:700;">✓✓</span>';
 
-    // Seen-by avatars row
-    const seenByRow = document.getElementById('seenby-' + lastOwnId);
-    if (seenByRow) {
-      // Collect ALL people who have seen ANY message (show under last message)
-      const allSeenUsers = [];
-      const seen = new Set();
-      Object.values(window._msgSeenBy).forEach(arr => {
-        arr.forEach(u => {
-          if (!seen.has(u.username)) { seen.add(u.username); allSeenUsers.push(u); }
-        });
-      });
-      seenByRow.innerHTML = allSeenUsers.slice(0, 5).map(u =>
-        `<span class="seen-avatar-chip" title="${u.username}">${u.avatar}</span>`
-      ).join('');
-    }
+    // ── 5. Update seen-by avatar chips under last own message ──
+    _refreshAllSeenByRows();
   });
 }
 
@@ -6440,7 +7383,7 @@ function emitMarkSeen(lastMsgId) {
   socket.emit('mark_seen', {
     collegeName: currentUser.college,
     username: currentUser.username || 'User',
-    avatar: currentUser.avatar || '👤',
+    avatar: currentUser.avatar || currentUser.profile_pic || '👤',
     lastMsgId: lastMsgId
   });
 }
@@ -6524,6 +7467,27 @@ function appendWhatsAppMessageFixed(msg) {
   const contentRaw = msg.text || msg.content || '';
   const contentText = typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw;
 
+  // Reply quote (shown if this message is a reply)
+  let replyQuoteHTML = '';
+  if (msg.reply_to) {
+    const rt = msg.reply_to;
+    const rtSender = escapeHtml ? escapeHtml(rt.sender_username || 'User') : (rt.sender_username || 'User');
+    let rtContent = '';
+    if (rt.content && rt.content.trim()) {
+      rtContent = `<span class="rq-text">${escapeHtml ? escapeHtml(rt.content) : rt.content}</span>`;
+    } else if (rt.media_type) {
+      const mediaLabel = rt.media_type === 'image' ? '🖼️ Image' : rt.media_type === 'video' ? '🎥 Video' : rt.media_type === 'audio' ? '🔊 Audio' : '📎 File';
+      rtContent = `<span class="rq-media">${mediaLabel}</span>`;
+    } else {
+      rtContent = `<span class="rq-text">Message</span>`;
+    }
+    replyQuoteHTML = `
+      <div class="msg-reply-quote" onclick="scrollToReplyMsg('${rt.id}')">
+        <span class="rq-sender">${rtSender}</span>
+        ${rtContent}
+      </div>`;
+  }
+
   // Media (image/video/audio/pdf/document)
   let mediaHTML = '';
   if (msg.media_url) {
@@ -6543,6 +7507,7 @@ function appendWhatsAppMessageFixed(msg) {
   // Options bar (shown on hover)
   const optionsBar = `
     <div class="msg-options-bar">
+      <button class="msg-opt-btn reply-opt" onclick="replyToWhatsAppMsg('${messageId}')" title="Reply">↩️</button>
       <button class="msg-opt-btn" onclick="showEmojiReactPicker('${messageId}', this)" title="React">😊</button>
       ${isOwn ? `<button class="msg-opt-btn" onclick="editChatMsg('${messageId}')" title="Edit">✏️</button>` : ''}
       ${isOwn ? `<button class="msg-opt-btn delete-opt" onclick="deleteChatMsg('${messageId}')" title="Delete">🗑️</button>` : ''}
@@ -6556,11 +7521,12 @@ function appendWhatsAppMessageFixed(msg) {
   messageHTML += `
     ${optionsBar}
     <div class="message-bubble" id="bubble-${messageId}">
+      ${replyQuoteHTML}
       ${mediaHTML}
       <div class="message-text">${contentText}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
-        ${isOwn ? `<span class="message-status" id="status-${messageId}">${isTemp ? '<span class="tick tick-sending">⏳</span>' : '<span class="tick tick-sent">✓✓</span>'}</span>` : ''}
+        ${isOwn ? `<span class="message-status" id="status-${messageId}" style="margin-left:auto;">${isTemp ? '<span class="tick tick-sending" style="font-size:10px;">⏳</span>' : '<span class="tick tick-sent" style="font-size:10px;">✓</span>'}</span>` : ''}
       </div>
       ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
     </div>
@@ -6883,6 +7849,10 @@ async function loadCommunityMessages() {
 
       // Save current time as "last seen"
       localStorage.setItem('lastSeenTime_' + currentUser.college, Date.now());
+
+      // Restore lifetime seen data and refresh avatar chips
+      _initSeenLifetime();
+      setTimeout(() => _refreshAllSeenByRows(), 150);
 
       // Scroll to first unread, otherwise scroll to bottom
       if (firstUnreadEl) {
@@ -7525,6 +8495,36 @@ async function sendWhatsAppMessageWithMedia() {
 
   // Optimistic bubble
   const tempId = 'temp-' + Date.now();
+  // Capture reply reference BEFORE tempMsg construction (for optimistic reply display)
+  const replyToIdForTemp = _replyToMsgId;
+  let replyToDataForTemp = null;
+  if (replyToIdForTemp) {
+    const rqEl = document.getElementById('wa-msg-' + replyToIdForTemp);
+    if (rqEl) {
+      // Clone bubble and remove nested reply-quote to get only the direct message text
+      const rqBubble = rqEl.querySelector('.message-bubble');
+      let rqText = '';
+      if (rqBubble) {
+        const clone = rqBubble.cloneNode(true);
+        clone.querySelector('.msg-reply-quote')?.remove(); // strip nested quote
+        clone.querySelector('.message-meta')?.remove();
+        clone.querySelector('.msg-options-bar')?.remove();
+        rqText = clone.querySelector('.message-text')?.textContent?.trim() || '';
+      }
+      const rqIsOwn = rqEl.classList.contains('own');
+      const rqSender = rqIsOwn
+        ? (currentUser?.username || 'You')
+        : (rqEl.querySelector('.message-sender-name')?.textContent?.trim() || 'User');
+      const rqMedia = rqEl.querySelector('.msg-media') ? { type: 'image' } : (rqEl.querySelector('video.msg-media') ? { type: 'video' } : null);
+      replyToDataForTemp = {
+        id: replyToIdForTemp,
+        content: rqText,
+        sender_username: rqSender,
+        media_type: rqMedia ? rqMedia.type : null
+      };
+    }
+  }
+
   const tempMsg = {
     id: tempId,
     content: content || '',
@@ -7533,6 +8533,7 @@ async function sendWhatsAppMessageWithMedia() {
     users: currentUser,
     timestamp: new Date(),
     isTemp: true,
+    reply_to: replyToDataForTemp,
     media_url: selectedWhatsAppMedia ? URL.createObjectURL(selectedWhatsAppMedia) : null,
     media_name: selectedWhatsAppMedia ? selectedWhatsAppMedia.name : null,
     media_type: selectedWhatsAppMedia ? (
@@ -7551,6 +8552,7 @@ async function sendWhatsAppMessageWithMedia() {
   input.value = '';
   input.style.height = 'auto';
   clearChatFilePreview(); // safe now — we already captured the reference above
+  cancelReply(); // clear reply preview
 
   if (socket && currentUser.college) {
     socket.emit('stop_typing', { collegeName: currentUser.college, username: currentUser.username });
@@ -7562,9 +8564,12 @@ async function sendWhatsAppMessageWithMedia() {
       const fd = new FormData();
       fd.append('content', content || '');
       fd.append('media', mediaToUpload);
+      if (replyToIdForTemp) fd.append('reply_to_id', replyToIdForTemp); // use captured ID (not null)
       response = await apiCall('/api/community/messages', 'POST', fd);
     } else {
-      response = await apiCall('/api/community/messages', 'POST', { content });
+      const payload = { content };
+      if (replyToIdForTemp) payload.reply_to_id = replyToIdForTemp; // use captured ID (not null)
+      response = await apiCall('/api/community/messages', 'POST', payload);
     }
 
     if (response.success && response.message) {
@@ -7682,70 +8687,132 @@ async function deleteChatMsg(msgId) {
   }
 }
 
-function showSeenBy(msgId) {
-  // Remove existing popup
-  document.querySelectorAll('.seen-by-popup').forEach(p => p.remove());
-
-  // Collect seen users for this message and all prior messages
-  const seenUsers = [];
-  const seen = new Set();
-  if (window._msgSeenBy) {
-    Object.values(window._msgSeenBy).forEach(arr => {
-      arr.forEach(u => {
-        if (!seen.has(u.username)) { seen.add(u.username); seenUsers.push(u); }
-      });
+// ── Helper: load lifetime seen users from localStorage + memory ──
+function _getLifetimeSeenUsers() {
+  const storeKey = '_vibeSeen_' + (currentUser && currentUser.college ? currentUser.college : 'global');
+  let lifeStore = {};
+  try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch(e) { lifeStore = {}; }
+  // Merge with in-memory (in case page just loaded and received new seens not yet in LS)
+  if (window._seenLifetime) {
+    Object.values(window._seenLifetime).forEach(u => {
+      if (!lifeStore[u.username]) lifeStore[u.username] = u;
     });
   }
+  return Object.values(lifeStore);
+}
 
+// ── Helper: refresh seen-by avatar chips under ALL own messages ──
+function _refreshAllSeenByRows() {
+  const allSeenUsers = _getLifetimeSeenUsers();
+  // Show chips only under the last own message
+  const allOwn = document.querySelectorAll('.whatsapp-message.own');
+  allOwn.forEach((el, i) => {
+    const id = el.id.replace('wa-msg-', '');
+    const row = document.getElementById('seenby-' + id);
+    if (!row) return;
+    if (i === allOwn.length - 1 && allSeenUsers.length > 0) {
+      row.innerHTML = allSeenUsers.slice(0, 5).map(u =>
+        `<span class="seen-avatar-chip" title="${escapeHtml(u.username)}" onclick="showSeenBy('all')">${u.avatar || '👤'}</span>`
+      ).join('') + (allSeenUsers.length > 5 ? `<span class="seen-avatar-chip seen-more-chip" onclick="showSeenBy('all')">+${allSeenUsers.length - 5}</span>` : '');
+    } else {
+      row.innerHTML = '';
+    }
+  });
+}
+
+// ── On init: load lifetime seen from localStorage into memory ──
+function _initSeenLifetime() {
+  const storeKey = '_vibeSeen_' + (currentUser && currentUser.college ? currentUser.college : 'global');
+  try {
+    const lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}');
+    window._seenLifetime = {};
+    Object.values(lifeStore).forEach(u => { window._seenLifetime[u.username] = u; });
+  } catch(e) { window._seenLifetime = {}; }
+}
+
+function showSeenBy(msgId) {
+  // Remove any existing popup + overlay
+  document.querySelectorAll('.seen-by-popup, .sbp-overlay').forEach(p => p.remove());
+
+  // ── Get lifetime users (never decreases) ──
+  const seenUsers = _getLifetimeSeenUsers();
+
+  // ── Build overlay ──
+  const overlay = document.createElement('div');
+  overlay.className = 'sbp-overlay';
+  document.body.appendChild(overlay);
+
+  // ── Build popup ──
   const popup = document.createElement('div');
   popup.className = 'seen-by-popup';
 
-  if (seenUsers.length === 0) {
-    popup.innerHTML = `
-      <div class="sbp-header">👁️ Seen by</div>
-      <div class="sbp-empty">Not seen by anyone yet</div>
-    `;
-  } else {
-    popup.innerHTML = `
-      <div class="sbp-header">👁️ Seen by ${seenUsers.length} ${seenUsers.length === 1 ? 'person' : 'people'}</div>
-      <div class="sbp-list">
-        ${seenUsers.map(u => `
-          <div class="sbp-user">
-            <span class="sbp-avatar">${u.avatar}</span>
-            <span class="sbp-name">${u.username}</span>
-            <span class="sbp-tick">✓✓</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
+  const formatTime = (ts) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const now = new Date();
+    const diffMs = now - d;
+    if (diffMs < 60000) return 'Just now';
+    if (diffMs < 3600000) return Math.floor(diffMs/60000) + 'm ago';
+    if (diffMs < 86400000) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:true});
+    return d.toLocaleDateString([], {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:true});
+  };
 
-  // Position near the message
-  const msgEl = document.getElementById('wa-msg-' + msgId);
-  const rect = msgEl ? msgEl.getBoundingClientRect() : null;
-  popup.style.position = 'fixed';
-  popup.style.zIndex = '99999';
-  if (rect) {
-    popup.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
-    popup.style.right = '16px';
-  } else {
-    popup.style.bottom = '80px';
-    popup.style.right = '16px';
-  }
+  popup.innerHTML = `
+    <div class="sbp-drag-handle"></div>
+    <div class="sbp-header">
+      <div class="sbp-title">
+        <div class="sbp-title-icon">👁️</div>
+        <span class="sbp-title-text">Seen by</span>
+        ${seenUsers.length > 0 ? `<span class="sbp-title-count">${seenUsers.length}</span>` : ''}
+      </div>
+      <button class="sbp-close-btn" title="Close">✕</button>
+    </div>
+    ${seenUsers.length === 0
+      ? `<div class="sbp-empty">
+           <div class="sbp-empty-icon">👁️</div>
+           <div class="sbp-empty-text">No one has seen this message yet</div>
+         </div>`
+      : `<div class="sbp-list">
+           ${seenUsers.map((u, i) => `
+             <div class="sbp-user" style="animation-delay:${i * 40}ms">
+               <div class="sbp-avatar">${u.avatar || '👤'}</div>
+               <div class="sbp-user-info">
+                 <span class="sbp-name">${typeof escapeHtml === 'function' ? escapeHtml(u.username) : u.username}</span>
+                 ${u.seenAt ? `<span class="sbp-seen-time">Seen ${formatTime(u.seenAt)}</span>` : ''}
+               </div>
+               <span class="sbp-tick">✓✓</span>
+             </div>`).join('')}
+         </div>`
+    }
+  `;
 
   document.body.appendChild(popup);
-  requestAnimationFrame(() => popup.classList.add('sbp-visible'));
 
-  // Close on outside click or after 4s
-  const close = (ev) => {
-    if (!popup.contains(ev.target)) {
-      popup.classList.remove('sbp-visible');
-      setTimeout(() => popup.remove(), 200);
-      document.removeEventListener('click', close);
-    }
+  const close = () => {
+    popup.style.transition = 'transform 0.28s cubic-bezier(0.32,0.72,0,1)';
+    popup.style.transform = 'translateX(-50%) translateY(100%)';
+    overlay.classList.remove('sbp-overlay-visible');
+    setTimeout(() => { popup.remove(); overlay.remove(); }, 300);
   };
-  setTimeout(() => document.addEventListener('click', close), 80);
-  setTimeout(() => { popup.classList.remove('sbp-visible'); setTimeout(() => popup.remove(), 200); }, 4000);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    overlay.classList.add('sbp-overlay-visible');
+    popup.classList.add('sbp-visible');
+  });
+
+  // Close on button
+  popup.querySelector('.sbp-close-btn')?.addEventListener('click', (e) => { e.stopPropagation(); close(); });
+
+  // Close on overlay click
+  overlay.addEventListener('click', close);
+
+  // Swipe-down to dismiss (touch)
+  let touchStartY = 0;
+  popup.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  popup.addEventListener('touchend', (e) => {
+    if (e.changedTouches[0].clientY - touchStartY > 60) close();
+  }, { passive: true });
 }
 
 async function sendCommunityMessage() {
@@ -7858,6 +8925,13 @@ window.showPage = function (pageId, ...args) {
     enableHeaderAutohide();
   } else {
     disableHeaderAutohide();
+  }
+
+  // Hide crown button on communities, posts, realvibe only
+  const crownBtn = document.querySelector('.premium-crown-btn');
+  if (crownBtn) {
+    const hideCrownPages = ['communities', 'posts', 'realvibe'];
+    crownBtn.style.display = hideCrownPages.includes(pageId) ? 'none' : '';
   }
 
   // Hook for Communities
@@ -8073,7 +9147,6 @@ function buildVibeCard(post, idx) {
           <div class="vibe-card-username" onclick="showUserProfile('${userId}')">
             @${username}
           </div>
-          ${college ? `<div class="vibe-card-college">🎓 ${college}</div>` : ''}
         </div>
         ${!isOwn ? `<button class="vibe-follow-btn" id="vfb_${idx}"
           onclick="vibeToggleFollow('${userId}', ${idx})">+ Follow</button>` : ''}
@@ -8090,7 +9163,6 @@ function buildVibeCard(post, idx) {
 
       <div class="vibe-card-time">
         ${postTime}
-        <span class="vibe-posted-to">${dest}</span>
       </div>
     </div>
 
@@ -8306,6 +9378,13 @@ async function vibeDeletePost(postId) {
       currentUser.postCount = Math.max(0, (currentUser.postCount || 0) - 1);
       saveUserToLocal?.();
     }
+    // Also remove from My Vibes data so profile tab stays in sync
+    _mvAllPosts = _mvAllPosts.filter(p => p.id !== postId && p.id != postId);
+    _updateMvStats(_mvAllPosts);
+    const mvPane = document.getElementById('profileTabVibes');
+    if (mvPane && mvPane.classList.contains('active')) {
+      _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+    }
     setTimeout(() => initVibeFeed(), 400);
   } catch(e) { showMessage('❌ ' + e.message, 'error'); }
 }
@@ -8463,6 +9542,53 @@ function toggleVibeSearch() {
   if (!showing) document.getElementById('vibeSearchInput')?.focus();
 }
 
+// ─── Scroll arrow helpers ─────────────────────────────────────
+function vibeScrollNext() {
+  const feed = document.getElementById('vibeFeed');
+  if (!feed) return;
+  const cards = feed.querySelectorAll('.vibe-card');
+  const feedRect = feed.getBoundingClientRect();
+  // Find first card whose bottom is below feed center → that's the current card
+  let targetCard = null;
+  for (const card of cards) {
+    const r = card.getBoundingClientRect();
+    if (r.bottom > feedRect.top + feedRect.height * 0.5) {
+      // next card is the one after
+      const allCards = Array.from(cards);
+      const idx = allCards.indexOf(card);
+      targetCard = allCards[idx + 1] || card;
+      break;
+    }
+  }
+  if (targetCard) {
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    feed.scrollBy({ top: feed.clientHeight, behavior: 'smooth' });
+  }
+}
+
+function vibeScrollPrev() {
+  const feed = document.getElementById('vibeFeed');
+  if (!feed) return;
+  const cards = feed.querySelectorAll('.vibe-card');
+  const feedRect = feed.getBoundingClientRect();
+  let targetCard = null;
+  for (const card of cards) {
+    const r = card.getBoundingClientRect();
+    if (r.bottom > feedRect.top + feedRect.height * 0.5) {
+      const allCards = Array.from(cards);
+      const idx = allCards.indexOf(card);
+      targetCard = allCards[Math.max(0, idx - 1)];
+      break;
+    }
+  }
+  if (targetCard) {
+    targetCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    feed.scrollBy({ top: -feed.clientHeight, behavior: 'smooth' });
+  }
+}
+
 function filterVibeFeed(query) {
   const q = query.toLowerCase().trim();
   document.querySelectorAll('.vibe-card').forEach(card => {
@@ -8477,16 +9603,25 @@ function filterVibeFeed(query) {
 // ─── Tab switching ────────────────────────────────────────────
 function switchVibeTab(tab, btn) {
   vibeActiveTab = tab;
-  document.querySelectorAll('.vibe-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
+  // Remove active from both old .vibe-tab and new .vibe-side-tab elements
+  document.querySelectorAll('.vibe-tab, .vibe-side-tab').forEach(t => t.classList.remove('active'));
+  // Activate all buttons with matching data-tab (handles both side tabs in sync)
+  document.querySelectorAll(`.vibe-side-tab[data-tab="${tab}"], .vibe-tab[data-tab="${tab}"]`).forEach(t => t.classList.add('active'));
   initVibeFeed();
 }
+
+// ─── Upload Modal ─────────────────────────────────────────────
+
+// ── State for new features ────────────────────────────────────
+let vibeMoodTag = null;          // { emoji, label }
+let vibeLocationTag = null;      // string
+let vibePollData = null;         // { options: [], duration: 1|3|7 }
+let vibeGifUrl = null;           // selected gif URL
 
 // ─── Upload Modal ─────────────────────────────────────────────
 function openVibeUpload() {
   if (!currentUser) return showMessage('⚠️ Login first', 'error');
 
-  // Populate avatar in modal
   const avEl = document.getElementById('vibeCaptionAvatar');
   if (avEl) {
     if (currentUser.profilePic) {
@@ -8496,21 +9631,33 @@ function openVibeUpload() {
     }
   }
 
-  // Populate user name in modal header
   const nameEl = document.getElementById('vibePostUserName');
   if (nameEl) nameEl.textContent = currentUser.name || currentUser.username || 'You';
 
+  // Reset all state
   vibeSelectedFiles = [];
-  vibeDestination = 'profile';
+  vibeDestination   = 'profile';
+  vibeMoodTag       = null;
+  vibeLocationTag   = null;
+  vibePollData      = null;
+  vibeGifUrl        = null;
+
   document.getElementById('vibeCaptionInput').value = '';
   document.getElementById('vibeMediaPreview').style.display = 'none';
   document.getElementById('vibeMediaZone').style.display = 'flex';
-  document.getElementById('vibeClearMedia').style.display = 'none';
   document.getElementById('vibeCharCount').textContent = '500';
+  document.getElementById('vibeCharCount').className = 'vibe-char-pill';
   document.getElementById('destRadioProfile').classList.add('active');
   document.getElementById('destRadioCommunity').classList.remove('active');
 
-  // Reset posting overlay
+  // Hide panels
+  ['vibeMoodPanel','vibeLocPanel','vibeGifPanel','vibePollBuilder'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('vibeActiveTags').style.display = 'none';
+  document.getElementById('vibeActiveTags').innerHTML = '';
+
   const overlay = document.getElementById('vibePostingOverlay');
   if (overlay) {
     overlay.style.display = 'none';
@@ -8518,10 +9665,9 @@ function openVibeUpload() {
   }
 
   const btn = document.getElementById('vibePostBtn');
-  if (btn) { btn.disabled = false; btn.textContent = 'Post'; }
+  if (btn) { btn.disabled = false; document.getElementById('vibePostBtnText').textContent = 'Post Vibe'; }
 
   document.getElementById('vibeUploadModal').style.display = 'flex';
-  // Focus caption after animation
   setTimeout(() => document.getElementById('vibeCaptionInput')?.focus(), 350);
 }
 
@@ -8531,10 +9677,17 @@ function closeVibeUpload() {
 }
 
 function handleVibeFileSelect(e) {
-  const files = Array.from(e.target.files);
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'));
   if (!files.length) return;
-  vibeSelectedFiles = files;
-  showVibeMediaPreview(files[0]);
+  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
+  showVibeMediaGridPreview();
+}
+
+function handleVibeCameraCapture(e) {
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'));
+  if (!files.length) return;
+  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
+  showVibeMediaGridPreview();
 }
 
 function handleVibeDrop(e) {
@@ -8543,30 +9696,65 @@ function handleVibeDrop(e) {
   const files = Array.from(e.dataTransfer.files).filter(f =>
     f.type.startsWith('video/') || f.type.startsWith('image/'));
   if (!files.length) return;
-  vibeSelectedFiles = files;
-  showVibeMediaPreview(files[0]);
+  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
+  showVibeMediaGridPreview();
 }
 
-function showVibeMediaPreview(file) {
-  const url = URL.createObjectURL(file);
+function showVibeMediaGridPreview() {
   const preview = document.getElementById('vibeMediaPreview');
-  const zone = document.getElementById('vibeMediaZone');
-  const clearBtn = document.getElementById('vibeClearMedia');
+  const zone    = document.getElementById('vibeMediaZone');
+  const count   = Math.min(vibeSelectedFiles.length, 4);
 
-  preview.innerHTML = file.type.startsWith('video/')
-    ? `<video src="${url}" controls muted style="width:100%;max-height:240px;border-radius:16px;"></video>`
-    : `<img src="${url}" style="width:100%;max-height:240px;object-fit:cover;border-radius:16px;">`;
+  if (!count) {
+    preview.style.display = 'none';
+    zone.style.display = 'flex';
+    return;
+  }
 
+  const cls = `vibe-preview-grid count-${Math.min(count, 4)}`;
+  let html = `<div class="${cls}">`;
+
+  for (let i = 0; i < count; i++) {
+    const file = vibeSelectedFiles[i];
+    const url  = URL.createObjectURL(file);
+    const isVid = file.type.startsWith('video/');
+    html += `<div class="vibe-prev-item">
+      ${isVid
+        ? `<video src="${url}" muted playsinline></video>`
+        : `<img src="${url}" alt="media ${i+1}">`}
+      <button class="vibe-prev-remove" onclick="removeVibeFile(${i})" title="Remove">✕</button>
+    </div>`;
+  }
+
+  // Add more button if < 4 files
+  if (count < 4) {
+    html += `<div class="vibe-prev-add-more" onclick="document.getElementById('vibeFileInput').click()">＋</div>`;
+  }
+
+  html += '</div>';
+  preview.innerHTML = html;
   preview.style.display = 'block';
   zone.style.display = 'none';
-  clearBtn.style.display = 'inline-block';
 }
 
+function removeVibeFile(index) {
+  vibeSelectedFiles.splice(index, 1);
+  if (!vibeSelectedFiles.length) {
+    document.getElementById('vibeMediaPreview').style.display = 'none';
+    document.getElementById('vibeMediaZone').style.display = 'flex';
+    document.getElementById('vibeFileInput').value = '';
+  } else {
+    showVibeMediaGridPreview();
+  }
+}
+
+// Legacy compat
+function showVibeMediaPreview(file) { showVibeMediaGridPreview(); }
 function clearVibeMedia() {
   vibeSelectedFiles = [];
+  vibeGifUrl = null;
   document.getElementById('vibeMediaPreview').style.display = 'none';
   document.getElementById('vibeMediaZone').style.display = 'flex';
-  document.getElementById('vibeClearMedia').style.display = 'none';
   document.getElementById('vibeFileInput').value = '';
 }
 
@@ -8578,8 +9766,225 @@ function setVibeDest(dest, row) {
 
 function updateVibeCharCount(textarea) {
   const cnt = document.getElementById('vibeCharCount');
-  if (cnt) cnt.textContent = 500 - textarea.value.length;
+  if (!cnt) return;
+  const remaining = 500 - textarea.value.length;
+  cnt.textContent = remaining;
+  cnt.className = 'vibe-char-pill' + (remaining < 20 ? ' limit' : remaining < 60 ? ' warn' : '');
 }
+
+// ── Mood picker ───────────────────────────────────────────────
+function openVibeMoodPicker() {
+  toggleVibePanel('vibeMoodPanel');
+}
+function setVibeMood(emoji, label) {
+  vibeMoodTag = { emoji, label };
+  document.getElementById('vibeMoodPanel').style.display = 'none';
+  document.getElementById('vibeMoodBtn').classList.add('active-tool');
+  renderVibeTags();
+  showMessage(`Mood set: ${emoji} ${label}`, 'success');
+}
+
+// ── Location picker ───────────────────────────────────────────
+function openVibeLocationPicker() {
+  toggleVibePanel('vibeLocPanel');
+  setTimeout(() => document.getElementById('vibeLocSearch')?.focus(), 150);
+}
+function searchVibeLocation(query) {
+  const results = document.getElementById('vibeLocResults');
+  const q = query.trim();
+
+  // Always show "current location" option
+  let html = `<button class="vlp-result" onclick="vibeGetCurrentLocation()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+    Use my current location
+  </button>`;
+
+  if (q.length >= 2) {
+    // Static popular suggestions (no API key needed)
+    const suggestions = [
+      `📍 ${q} Campus`,
+      `📍 ${q} Library`,
+      `📍 ${q} Canteen`,
+      `📍 ${q} Hostel`,
+      `📍 ${q} City Centre`,
+    ];
+    suggestions.forEach(s => {
+      html += `<button class="vlp-result" onclick="setVibeLocation('${s.replace(/'/g,"\\'")}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${s}
+      </button>`;
+    });
+  }
+  results.innerHTML = html;
+}
+function vibeGetCurrentLocation() {
+  if (!navigator.geolocation) return setVibeLocation('📍 Current Location');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      setVibeLocation(`📍 ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E`);
+    },
+    () => setVibeLocation('📍 Current Location')
+  );
+}
+function setVibeLocation(location) {
+  vibeLocationTag = location;
+  document.getElementById('vibeLocPanel').style.display = 'none';
+  document.getElementById('vibeLocBtn').classList.add('active-tool');
+  renderVibeTags();
+  showMessage(`Location added: ${location}`, 'success');
+}
+
+// ── Poll ──────────────────────────────────────────────────────
+function toggleVibePoll(show) {
+  const panel = document.getElementById('vibePollBuilder');
+  const btn   = document.getElementById('vibePollBtn');
+  if (show) {
+    panel.style.display = 'block';
+    btn.classList.add('active-tool');
+    vibePollData = { options: ['', ''], duration: 3 };
+  } else {
+    panel.style.display = 'none';
+    btn.classList.remove('active-tool');
+    vibePollData = null;
+  }
+}
+function addVibePollOption() {
+  const container = document.getElementById('vibePollOptions');
+  const count = container.querySelectorAll('.vpb-option-row').length;
+  if (count >= 4) return;
+  const div = document.createElement('div');
+  div.className = 'vpb-option-row';
+  div.innerHTML = `<span class="vpb-opt-num">${count + 1}</span>
+    <input type="text" class="vpb-input" placeholder="Option ${count + 1}" maxlength="60">`;
+  container.appendChild(div);
+  if (count + 1 >= 4) document.getElementById('vpbAddOpt').disabled = true;
+}
+function getVibePollData() {
+  const inputs = document.querySelectorAll('#vibePollOptions .vpb-input');
+  const options = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+  const duration = parseInt(document.getElementById('vibePollDuration')?.value || '3');
+  return options.length >= 2 ? { options, duration } : null;
+}
+
+// ── GIF picker ────────────────────────────────────────────────
+function openVibeGifPicker() {
+  toggleVibePanel('vibeGifPanel');
+  setTimeout(() => document.getElementById('vibeGifSearch')?.focus(), 150);
+}
+
+let _gifTimer = null;
+function searchVibeGif(query) {
+  clearTimeout(_gifTimer);
+  _gifTimer = setTimeout(() => _doGifSearch(query), 400);
+}
+
+function _doGifSearch(query) {
+  const grid = document.getElementById('vibeGifGrid');
+  if (!query.trim()) {
+    grid.innerHTML = '<div class="vgp-empty">Type to search for GIFs ✨</div>';
+    return;
+  }
+  grid.innerHTML = '<div class="vgp-empty">Searching…</div>';
+
+  // Use Tenor's open endpoint (no key required for basic use)
+  const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&limit=12&key=AIzaSyAyimkuYQYF_FXVALexPzFsE9dmD2X&client_key=vibexpert`;
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.results?.length) {
+        grid.innerHTML = '<div class="vgp-empty">No GIFs found — try another keyword</div>';
+        return;
+      }
+      grid.innerHTML = data.results.map(r => {
+        const gif = r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || '';
+        const preview = r.media_formats?.tinygif?.url || gif;
+        return `<div class="vgp-item" onclick="selectVibeGif('${gif}')">
+          <img src="${preview}" alt="${r.title}" loading="lazy">
+        </div>`;
+      }).join('');
+    })
+    .catch(() => {
+      // Fallback: show placeholder tiles so UI isn't broken
+      const fallbacks = ['😂','🔥','👀','💯','🎉','😍','🤣','💀','✨','🙏','😭','🤔'];
+      grid.innerHTML = fallbacks.map(e =>
+        `<div class="vgp-item" style="display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(255,255,255,0.05);" onclick="setVibeGifEmoji('${e}')">${e}</div>`
+      ).join('');
+    });
+}
+
+function selectVibeGif(gifUrl) {
+  vibeGifUrl = gifUrl;
+  document.getElementById('vibeGifPanel').style.display = 'none';
+  // Show gif in preview
+  const preview = document.getElementById('vibeMediaPreview');
+  const zone    = document.getElementById('vibeMediaZone');
+  preview.innerHTML = `<div class="vibe-preview-grid count-1">
+    <div class="vibe-prev-item" style="max-height:160px;">
+      <img src="${gifUrl}" alt="GIF">
+      <button class="vibe-prev-remove" onclick="clearVibeGif()">✕</button>
+    </div>
+  </div>`;
+  preview.style.display = 'block';
+  zone.style.display = 'none';
+  showMessage('GIF added! 🎉', 'success');
+}
+function setVibeGifEmoji(emoji) {
+  // Emoji-only fallback when Tenor is unavailable
+  const caption = document.getElementById('vibeCaptionInput');
+  if (caption) caption.value += ' ' + emoji;
+  document.getElementById('vibeGifPanel').style.display = 'none';
+}
+function clearVibeGif() {
+  vibeGifUrl = null;
+  document.getElementById('vibeMediaPreview').style.display = 'none';
+  document.getElementById('vibeMediaZone').style.display = 'flex';
+}
+
+// ── Tags bar renderer ──────────────────────────────────────────
+function renderVibeTags() {
+  const bar = document.getElementById('vibeActiveTags');
+  let html = '';
+  if (vibeMoodTag) {
+    html += `<div class="vibe-active-tag">${vibeMoodTag.emoji} ${vibeMoodTag.label}
+      <button onclick="clearVibeMood()">✕</button></div>`;
+  }
+  if (vibeLocationTag) {
+    const short = vibeLocationTag.length > 24 ? vibeLocationTag.slice(0, 22) + '…' : vibeLocationTag;
+    html += `<div class="vibe-active-tag">${short}
+      <button onclick="clearVibeLocation()">✕</button></div>`;
+  }
+  if (vibePollData) {
+    html += `<div class="vibe-active-tag">📊 Poll <button onclick="toggleVibePoll(false)">✕</button></div>`;
+  }
+  bar.innerHTML = html;
+  bar.style.display = html ? 'flex' : 'none';
+}
+function clearVibeMood() {
+  vibeMoodTag = null;
+  document.getElementById('vibeMoodBtn').classList.remove('active-tool');
+  renderVibeTags();
+}
+function clearVibeLocation() {
+  vibeLocationTag = null;
+  document.getElementById('vibeLocBtn').classList.remove('active-tool');
+  renderVibeTags();
+}
+
+// ── Panel toggle helper (one open at a time) ──────────────────
+function toggleVibePanel(panelId) {
+  const panels = ['vibeMoodPanel','vibeLocPanel','vibeGifPanel'];
+  panels.forEach(id => {
+    if (id !== panelId) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+  });
+  const target = document.getElementById(panelId);
+  if (!target) return;
+  target.style.display = target.style.display === 'none' ? 'block' : 'none';
+}
+
 
 // ─── Submit post — wires to real /api/posts ───────────────────
 async function submitVibePost() {
@@ -8589,11 +9994,12 @@ async function submitVibePost() {
 
   if (!currentUser) return showMessage('⚠️ Login first', 'error');
 
-  if (!caption && !vibeSelectedFiles.length) {
-    // Shake the post area to indicate required input
+  if (!vibeSelectedFiles.length) {
+    // Shake the post area to indicate required media
     const sheet = document.querySelector('.vibe-upload-sheet');
     if (sheet) { sheet.style.animation = 'shakePost 0.4s ease'; setTimeout(() => sheet.style.animation = '', 400); }
-    return showMessage('⚠️ Add a caption or media to post', 'error');
+    showVibeSelectFirst();
+    return;
   }
 
   // Fix: treat null/undefined communityJoined as false only when explicitly checking community post
@@ -8602,7 +10008,7 @@ async function submitVibePost() {
     return showMessage('⚠️ Join your college community first to post there', 'error');
   }
 
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (btn) { btn.disabled = true; const t = document.getElementById('vibePostBtnText'); if(t) t.textContent = '⏳ Posting...'; }
   if (postingOverlay) postingOverlay.style.display = 'flex';
 
   try {
@@ -8616,6 +10022,15 @@ async function submitVibePost() {
     }
     if (typeof selectedStickers !== 'undefined' && selectedStickers?.length) {
       formData.append('stickers', JSON.stringify(selectedStickers));
+    }
+
+    // New features: mood, location, poll, gif
+    if (vibeMoodTag)     formData.append('mood',     JSON.stringify(vibeMoodTag));
+    if (vibeLocationTag) formData.append('location', vibeLocationTag);
+    if (vibeGifUrl)      formData.append('gifUrl',   vibeGifUrl);
+    if (vibePollData) {
+      const pd = getVibePollData();
+      if (pd) formData.append('poll', JSON.stringify(pd));
     }
 
     for (const file of vibeSelectedFiles) {
@@ -8643,6 +10058,17 @@ async function submitVibePost() {
       // ── Optimistic prepend — poster sees their post immediately ────────
       // (The server already emitted new_post to all OTHER users via Socket.IO)
       const newPost = data.post;
+
+      // ── Always inject into My Vibes data so profile tab is up-to-date ──
+      if (newPost) {
+        _mvAllPosts.unshift(newPost);
+        _updateMvStats(_mvAllPosts);
+        const mvPane = document.getElementById('profileTabVibes');
+        if (mvPane && mvPane.classList.contains('active')) {
+          _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
+        }
+      }
+
       if (newPost && vibeActiveTab === 'all') {
         const feed = document.getElementById('vibeFeed');
         if (feed && !feed.querySelector('.vibe-loading') && !feed.querySelector('.vibe-empty')) {
@@ -8669,7 +10095,7 @@ async function submitVibePost() {
 
       setTimeout(() => {
         closeVibeUpload();
-        showMessage('✅ Vibe posted! 🔥 Everyone can see it now.', 'success');
+        showVibeOnlineToast();
         // Refresh feed to get accurate like/comment counts from DB
         setTimeout(initVibeFeed, 1500);
       }, 800);
@@ -8687,7 +10113,11 @@ async function submitVibePost() {
     showMessage('❌ ' + userMsg, 'error');
     if (postingOverlay) postingOverlay.style.display = 'none';
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Post'; }
+    if (btn) {
+      btn.disabled = false;
+      const btnText = document.getElementById('vibePostBtnText');
+      if (btnText) btnText.textContent = 'Post Vibe';
+    }
   }
 }
 
