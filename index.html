@@ -113,12 +113,12 @@
                <div class="about-card reveal-on-scroll">
                   <div class="about-card-icon">🌐</div>
                   <h3>500+ Universities</h3>
-                  <p>Connect with students from IITs, NITs, VITs, and universities across India</p>
+                  <p>Connect with students from IITs, AIIMS, State-universities, NITs, IIITs, VITs, NLSIUs and universities across India</p>
                </div>
                <div class="about-card reveal-on-scroll">
                   <div class="about-card-icon">💬</div>
                   <h3>Real-Time Chat</h3>
-                  <p>Engage in live conversations with your college community instantly</p>
+                  <p>Engage in live conversations with your college group instantly</p>
                </div>
                <div class="about-card reveal-on-scroll">
                   <div class="about-card-icon">�</div>
@@ -170,7 +170,7 @@
                      <li>🎵 Attach music from our library</li>
                      <li>🎨 Decorate with fun stickers</li>
                      <li>✂️ Crop and edit your media</li>
-                     <li>🌐 Share to profile or community</li>
+                     <li>🌐 Share to profile or Institute</li>
                   </ul>
                </div>
             </div>
@@ -207,7 +207,7 @@
                      <li>🎵 Attach music from our library</li>
                      <li>🎨 Decorate with fun stickers</li>
                      <li>✂️ Crop and edit your media</li>
-                     <li>🌐 Share to profile or community</li>
+                     <li>🌐 Share to profile or Institutes</li>
                   </ul>
                </div>
             </div>
@@ -217,7 +217,7 @@
                   <h3>🎓 College Communities</h3>
                   <ul>
                      <li>🔐 Verified college email system</li>
-                     <li>💬 Private community chat rooms</li>
+                     <li>💬 Private College chat rooms</li>
                      <li>📢 Share updates with classmates</li>
                      <li>👥 Real-time online indicators</li>
                      <li>🏅 Earn badges for engagement</li>
@@ -358,7 +358,7 @@
             <div class="testimonials-grid">
                <div class="testimonial-card reveal-on-scroll">
                   <div class="testimonial-avatar">👨‍🎓</div>
-                  <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The community
+                  <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The Institute
                      chat is
                      amazing for study groups."</p>
                   <div class="testimonial-author">Rahul S.</div>
@@ -878,7 +878,7 @@
 
       <!-- HEADER -->
       <header class="header">
-         <div class="logo" onclick="goHome()">VibeXpert</div>
+         <div class="logo" onclick="window.location.reload(true)" style="cursor:pointer;">VibeXpert</div>
 
          <div class="live-counter">
             <span class="live-badge">🔴 Live</span>
@@ -887,7 +887,7 @@
 
          <nav class="nav">
             <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
-            <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Communities</a>
+            <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 My Institute</a>
             <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
             <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
             <a href="#" class="nav-link" onclick="showPage('vibeshop', event)">🛒 VibeShop</a>
@@ -1127,170 +1127,152 @@
          </section>
 
          <!-- REALVIBE SECTION -->
-         <section id="realvibe" class="page" style="display:none;">
-            <div class="realvibe-header">
-               <div class="realvibe-title-section">
-                  <h1 class="realvibe-title">✨ RealVibe</h1>
-                  <p class="realvibe-subtitle">Share authentic moments that disappear in 24 hours</p>
+         <!-- ══════════════════════════════════════════════ -->
+         <!-- REALVIBE PAGE                                  -->
+         <!-- ══════════════════════════════════════════════ -->
+         <section id="realvibe" class="page rv-page" style="display:none;">
+
+            <!-- Top Bar -->
+            <div class="rv-topbar">
+               <div class="rv-topbar-left">
+                  <span class="rv-logo-icon">✦</span>
+                  <div>
+                     <h1 class="rv-title">RealVibe</h1>
+                     <p class="rv-subtitle">Exclusive · Premium · Authentic</p>
+                  </div>
                </div>
-               <button class="create-realvibe-btn" onclick="openRealVibeCreator()">
-                  <span class="btn-icon">➕</span>
-                  <span class="btn-text">Create RealVibe</span>
+               <button class="rv-add-btn" onclick="openRealVibeCreator()" title="Add RealVibe">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <span>Add RealVibe</span>
                </button>
             </div>
 
-            <!-- Stories/RealVibes Container -->
-            <div class="realvibe-stories-container">
-               <h3 class="section-subtitle">📖 Today's RealVibes</h3>
-               <div class="realvibe-stories-grid" id="realVibeStoriesGrid">
-                  <!-- Stories will be dynamically loaded here -->
-                  <div class="no-realvibes">
-                     <div class="no-realvibes-icon">✨</div>
-                     <h4>No RealVibes Yet</h4>
-                     <p>Be the first to share your authentic moment!</p>
-                     <button class="create-first-realvibe" onclick="openRealVibeCreator()">Create First
-                        RealVibe</button>
-                  </div>
+            <!-- Feed -->
+            <div class="rv-feed" id="rvFeed">
+               <div class="rv-loading">
+                  <div class="rv-spinner"></div>
+                  <p>Loading RealVibes…</p>
                </div>
             </div>
 
-            <!-- Your RealVibes -->
-            <div class="your-realvibes-section">
-               <h3 class="section-subtitle">🎬 Your RealVibes</h3>
-               <div class="your-realvibes-grid" id="yourRealVibesGrid">
-                  <div class="no-your-realvibes">
-                     <p>You haven't created any RealVibes yet</p>
-                  </div>
-               </div>
-            </div>
          </section>
 
-         <!-- RealVibe Creator Modal -->
-         <div id="realVibeCreatorModal" class="modal" style="display:none;">
-            <div class="modal-box realvibe-modal">
-               <span class="close" onclick="closeModal('realVibeCreatorModal')">&times;</span>
-               <h2>✨ Create RealVibe</h2>
-               <p class="realvibe-modal-subtitle">Share a moment that disappears in 24 hours</p>
+         <!-- ══════════════════════════════════════════════ -->
+         <!-- PREMIUM GATE MODAL (shown to non-subscribers) -->
+         <!-- ══════════════════════════════════════════════ -->
+         <div id="rvPremiumGate" class="rv-gate-overlay" style="display:none;" onclick="closeRvGate(event)">
+            <div class="rv-gate-box">
+               <button class="rv-gate-close" onclick="closeRvGateModal()">✕</button>
 
-               <div class="realvibe-creator-content">
-                  <!-- Camera/Upload Options -->
-                  <div class="realvibe-upload-options">
-                     <button class="upload-option" onclick="captureRealVibePhoto()">
-                        <span class="option-icon">📷</span>
-                        <span class="option-text">Take Photo</span>
-                     </button>
-                     <button class="upload-option" onclick="uploadRealVibeMedia()">
-                        <span class="option-icon">🖼️</span>
-                        <span class="option-text">Upload Media</span>
-                     </button>
-                     <button class="upload-option" onclick="captureRealVibeVideo()">
-                        <span class="option-icon">🎥</span>
-                        <span class="option-text">Record Video</span>
-                     </button>
+               <div class="rv-gate-crown">👑</div>
+               <h2 class="rv-gate-title">Noble & Royal Vibers Only</h2>
+               <p class="rv-gate-desc">RealVibe is an exclusive space for Premium subscribers.<br>Unlock your voice — post photos &amp; videos that last.</p>
+
+               <div class="rv-gate-plans">
+                  <div class="rv-gate-plan noble">
+                     <div class="rv-plan-badge">🥈 Noble</div>
+                     <ul>
+                        <li>📸 5 photo posts</li>
+                        <li>🎥 1 video post</li>
+                        <li>⏳ Posts live for <strong>15 days</strong></li>
+                     </ul>
                   </div>
-
-                  <!-- Preview Area -->
-                  <div class="realvibe-preview-area" id="realVibePreviewArea" style="display:none;">
-                     <div class="preview-container">
-                        <img id="realVibePreviewImg" src="" alt="Preview" style="display:none;">
-                        <video id="realVibePreviewVideo" controls style="display:none;"></video>
-                     </div>
-                     <button class="remove-preview-btn" onclick="clearRealVibePreview()">✕ Remove</button>
-                  </div>
-
-                  <!-- Caption Input -->
-                  <div class="realvibe-caption-section">
-                     <textarea id="realVibeCaption" placeholder="Add a caption... (optional)"
-                        maxlength="200"></textarea>
-                     <div class="caption-counter"><span id="captionCount">0</span>/200</div>
-                  </div>
-
-                  <!-- Visibility Options -->
-                  <div class="realvibe-visibility">
-                     <h4>👁️ Visibility</h4>
-                     <div class="visibility-options">
-                        <label class="visibility-option">
-                           <input type="radio" name="realVibeVisibility" value="public" checked>
-                           <span class="option-label">
-                              <span class="option-emoji">🌐</span>
-                              <span>Everyone</span>
-                           </span>
-                        </label>
-                        <label class="visibility-option">
-                           <input type="radio" name="realVibeVisibility" value="community">
-                           <span class="option-label">
-                              <span class="option-emoji">🎓</span>
-                              <span>My College</span>
-                           </span>
-                        </label>
-                        <label class="visibility-option">
-                           <input type="radio" name="realVibeVisibility" value="friends">
-                           <span class="option-label">
-                              <span class="option-emoji">👥</span>
-                              <span>Friends Only</span>
-                           </span>
-                        </label>
-                     </div>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="realvibe-actions">
-                     <button class="btn-secondary" onclick="closeModal('realVibeCreatorModal')">Cancel</button>
-                     <button class="btn-primary" onclick="publishRealVibe()" id="publishRealVibeBtn" disabled>
-                        <span>✨ Publish RealVibe</span>
-                     </button>
+                  <div class="rv-gate-plan royal">
+                     <div class="rv-plan-badge">👑 Royal</div>
+                     <ul>
+                        <li>📸 5 photo posts</li>
+                        <li>🎥 3 video posts</li>
+                        <li>⏳ Posts live for <strong>25 days</strong></li>
+                     </ul>
                   </div>
                </div>
+
+               <button class="rv-gate-subscribe-btn" onclick="closeRvGateModal(); openSubscriptionPopup();">
+                  <span>✦ Subscribe Now</span>
+               </button>
+               <p class="rv-gate-note">Already subscribed? <a onclick="closeRvGateModal()">Dismiss</a></p>
             </div>
          </div>
 
-         <!-- RealVibe Viewer Modal -->
-         <div id="realVibeViewerModal" class="modal realvibe-viewer-modal" style="display:none;">
-            <div class="realvibe-viewer-container">
-               <button class="viewer-close" onclick="closeModal('realVibeViewerModal')">✕</button>
-               <button class="viewer-prev" onclick="viewPreviousRealVibe()">‹</button>
-               <button class="viewer-next" onclick="viewNextRealVibe()">›</button>
+         <!-- ══════════════════════════════════════════════ -->
+         <!-- REALVIBE CREATOR MODAL (premium users only)   -->
+         <!-- ══════════════════════════════════════════════ -->
+         <div id="realVibeCreatorModal" class="rv-creator-overlay" style="display:none;" onclick="closeRvCreator(event)">
+            <div class="rv-creator-box" onclick="event.stopPropagation()">
 
-               <div class="realvibe-viewer-content">
-                  <!-- Header -->
-                  <div class="viewer-header">
-                     <div class="viewer-author">
-                        <div class="author-avatar">👤</div>
-                        <div class="author-info">
-                           <div class="author-name" id="viewerAuthorName">Username</div>
-                           <div class="author-time" id="viewerTime">2h ago</div>
-                        </div>
-                     </div>
-                     <div class="viewer-progress-bar">
-                        <div class="progress-fill" id="viewerProgressFill"></div>
-                     </div>
+               <div class="rv-creator-header">
+                  <div>
+                     <h2 class="rv-creator-title">✦ New RealVibe</h2>
+                     <span class="rv-creator-plan-badge" id="rvCreatorPlanBadge">Noble</span>
                   </div>
+                  <button class="rv-creator-close" onclick="closeRvCreatorModal()">✕</button>
+               </div>
 
-                  <!-- Media Content -->
-                  <div class="viewer-media">
-                     <img id="viewerMediaImg" src="" alt="" style="display:none;">
-                     <video id="viewerMediaVideo" playsinline style="display:none;"></video>
+               <!-- Drop zone -->
+               <div class="rv-drop-zone" id="rvDropZone" onclick="rvTriggerFilePick()">
+                  <div class="rv-drop-idle" id="rvDropIdle">
+                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                     <p>Tap to choose photo or video</p>
+                     <span>JPG · PNG · MP4 · up to 50 MB</span>
                   </div>
-
-                  <!-- Caption -->
-                  <div class="viewer-caption" id="viewerCaption"></div>
-
-                  <!-- Actions -->
-                  <div class="viewer-actions">
-                     <button class="viewer-action-btn" onclick="reactToRealVibe()">
-                        <span id="reactionIcon">❤️</span>
-                        <span id="reactionCount">0</span>
-                     </button>
-                     <button class="viewer-action-btn" onclick="replyToRealVibe()">
-                        <span>💬</span>
-                        <span>Reply</span>
-                     </button>
-                     <button class="viewer-action-btn" onclick="shareRealVibe()">
-                        <span>🔄</span>
-                        <span>Share</span>
-                     </button>
+                  <div class="rv-drop-preview" id="rvDropPreview" style="display:none;">
+                     <img id="rvPreviewImg" src="" alt="" style="display:none;">
+                     <video id="rvPreviewVideo" muted playsinline style="display:none;"></video>
+                     <button class="rv-remove-media" onclick="event.stopPropagation(); clearRvPreview()">✕</button>
+                     <div class="rv-video-badge" id="rvVideoBadge" style="display:none;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg> Video
+                     </div>
                   </div>
                </div>
+               <input type="file" id="rvFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="handleRvFile(event)">
+
+               <!-- Caption -->
+               <div class="rv-caption-wrap">
+                  <textarea class="rv-caption-input" id="rvCaption" placeholder="Write a caption… (optional)" maxlength="300" oninput="updateRvCounter()"></textarea>
+                  <span class="rv-caption-counter"><span id="rvCaptionCount">0</span>/300</span>
+               </div>
+
+               <!-- Visibility -->
+               <div class="rv-vis-row">
+                  <label class="rv-vis-opt">
+                     <input type="radio" name="rvVisibility" value="public" checked>
+                     <span>🌐 Everyone</span>
+                  </label>
+                  <label class="rv-vis-opt">
+                     <input type="radio" name="rvVisibility" value="community">
+                     <span>🎓 My College</span>
+                  </label>
+               </div>
+
+               <!-- Expiry info -->
+               <div class="rv-expiry-info" id="rvExpiryInfo">⏳ Your vibe will disappear in <strong id="rvExpiryDays">15</strong> days</div>
+
+               <!-- Actions -->
+               <div class="rv-creator-actions">
+                  <button class="rv-btn-cancel" onclick="closeRvCreatorModal()">Cancel</button>
+                  <button class="rv-btn-publish" id="rvPublishBtn" onclick="publishRealVibe()" disabled>
+                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                     Publish
+                  </button>
+               </div>
+
+            </div>
+         </div>
+
+         <!-- ══════════════════════════════════════════════ -->
+         <!-- REALVIBE COMMENTS DRAWER                       -->
+         <!-- ══════════════════════════════════════════════ -->
+         <div id="rvCommentsDrawer" class="rv-comments-drawer" style="display:none;">
+            <div class="rv-comments-header">
+               <h3>Comments</h3>
+               <button onclick="closeRvComments()">✕</button>
+            </div>
+            <div class="rv-comments-list" id="rvCommentsList"></div>
+            <div class="rv-comment-input-row">
+               <input type="text" id="rvCommentInput" placeholder="Add a comment…" maxlength="200">
+               <button onclick="submitRvComment()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+               </button>
             </div>
          </div>
 
@@ -1299,17 +1281,24 @@
          <!-- POSTS / VIBES FEED — Full-Screen Reel Style -->
          <section id="posts" class="page vibe-page" style="display:none;">
 
-            <!-- Floating Top Header -->
+            <!-- Floating Top Header (logo + search only) -->
             <div class="vibe-header">
                <div class="vibe-logo-pill">
                   <span class="vibe-logo-text">VibeXpert</span>
                </div>
-               <div class="vibe-tabs">
-                  <button class="vibe-tab active" data-tab="all" onclick="switchVibeTab('all', this)">✨ For You</button>
-                  <button class="vibe-tab" data-tab="community" onclick="switchVibeTab('community', this)">🎓 College</button>
-               </div>
                <button class="vibe-search-btn" onclick="toggleVibeSearch()" aria-label="Search">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+               </button>
+            </div>
+
+            <!-- Left-edge vertical tab switcher (For You / College) -->
+            <div class="vibe-side-tabs">
+               <button class="vibe-side-tab active" data-tab="all" onclick="switchVibeTab('all', this)">
+                  <span class="vst-text">For You</span>
+               </button>
+               <div class="vibe-side-divider"></div>
+               <button class="vibe-side-tab" data-tab="community" onclick="switchVibeTab('community', this)">
+                  <span class="vst-text">College</span>
                </button>
             </div>
 
@@ -1330,9 +1319,23 @@
                </div>
             </div>
 
-            <!-- Create Post Button — Bottom RIGHT -->
+            <!-- Right-edge scroll arrows (beside the post content) -->
+            <div class="vibe-scroll-arrows">
+               <button class="vibe-scroll-arrow vibe-scroll-up" onclick="vibeScrollPrev()" aria-label="Scroll up">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="22" height="22">
+                     <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+               </button>
+               <button class="vibe-scroll-arrow vibe-scroll-down" onclick="vibeScrollNext()" aria-label="Scroll down">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="22" height="22">
+                     <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+               </button>
+            </div>
+
+            <!-- Create Post Button — Bottom RIGHT (standalone) -->
             <button class="vibe-create-btn" onclick="openVibeUpload()" aria-label="Create post">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="34" height="34">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                </svg>
             </button>
@@ -1405,22 +1408,14 @@
             <div class="vibe-upload-sheet">
 
                <!-- Drag handle -->
-               <div class="vibe-upload-handle"></div>
+               <div class="vibe-upload-handle"><div class="vube-handle-bar"></div></div>
 
-               <!-- Header -->
+               <!-- ══ HEADER — title only ══ -->
                <div class="vibe-upload-head">
-                  <button class="vibe-upload-cancel" onclick="closeVibeUpload()">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                     Cancel
-                  </button>
-                  <h3>New Vibe ✨</h3>
-                  <button class="vibe-upload-post-btn" id="vibePostBtn" onclick="submitVibePost()">
-                     Post
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                  </button>
+                  <h3 class="vibe-modal-title">New Vibe <span class="vibe-title-spark">✨</span></h3>
                </div>
 
-               <!-- Author row with destination pills -->
+               <!-- ══ AUTHOR + DESTINATION ══ -->
                <div class="vibe-author-row">
                   <div class="vibe-caption-avatar" id="vibeCaptionAvatar">😊</div>
                   <div class="vibe-author-meta">
@@ -1436,33 +1431,37 @@
                   </div>
                </div>
 
-               <!-- Caption Input Area -->
+               <!-- ══ ACTIVE TAGS BAR (mood / location / poll) ══ -->
+               <div class="vibe-active-tags" id="vibeActiveTags" style="display:none;"></div>
+
+               <!-- ══ CAPTION ══ -->
                <div class="vibe-caption-area">
                   <textarea id="vibeCaptionInput" class="vibe-caption-input"
                      placeholder="What's your vibe? Add #hashtags 🔥"
-                     maxlength="500" rows="4"
+                     maxlength="500" rows="3"
                      oninput="updateVibeCharCount(this)"></textarea>
                   <div class="vibe-char-pill" id="vibeCharCount">500</div>
                </div>
 
-               <!-- Media Preview -->
+               <!-- ══ MEDIA PREVIEW (multi-grid) ══ -->
                <div class="vibe-media-preview" id="vibeMediaPreview" style="display:none;"></div>
+
+               <!-- Hidden file inputs -->
                <input type="file" id="vibeFileInput" style="display:none" accept="video/*,image/*" multiple
                   onchange="handleVibeFileSelect(event)">
+               <input type="file" id="vibeCameraInput" style="display:none" accept="image/*,video/*" capture="environment"
+                  onchange="handleVibeCameraCapture(event)">
 
-               <!-- Clear media -->
-               <button class="vibe-clear-media-btn" id="vibeClearMedia" style="display:none;"
-                  onclick="clearVibeMedia()">✕ Remove media</button>
-
-               <!-- Media Drop Zone -->
+               <!-- ══ MEDIA DROP ZONE ══ -->
                <div class="vibe-media-zone" id="vibeMediaZone"
                   onclick="document.getElementById('vibeFileInput').click()"
                   ondrop="handleVibeDrop(event)"
                   ondragover="event.preventDefault();this.classList.add('vdz-active')"
                   ondragleave="this.classList.remove('vdz-active')">
+                  <div class="vdz-glow-ring"></div>
                   <div class="vibe-dz-inner">
                      <div class="vibe-dz-icon-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                      </div>
                      <div>
                         <p class="vibe-dz-label">Tap to add Photo or Video</p>
@@ -1471,15 +1470,43 @@
                   </div>
                </div>
 
-               <!-- Quick action toolbar -->
+               <!-- ══ POLL BUILDER (shown when poll active) ══ -->
+               <div class="vibe-poll-builder" id="vibePollBuilder" style="display:none;">
+                  <div class="vpb-header">
+                     <span>📊 Poll</span>
+                     <button class="vpb-close" onclick="toggleVibePoll(false)">✕</button>
+                  </div>
+                  <div class="vpb-options" id="vibePollOptions">
+                     <div class="vpb-option-row">
+                        <span class="vpb-opt-num">1</span>
+                        <input type="text" class="vpb-input" placeholder="Option 1" maxlength="60">
+                     </div>
+                     <div class="vpb-option-row">
+                        <span class="vpb-opt-num">2</span>
+                        <input type="text" class="vpb-input" placeholder="Option 2" maxlength="60">
+                     </div>
+                  </div>
+                  <button class="vpb-add-opt" id="vpbAddOpt" onclick="addVibePollOption()">+ Add option</button>
+                  <div class="vpb-duration">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                     Duration:
+                     <select class="vpb-dur-select" id="vibePollDuration">
+                        <option value="1">1 day</option>
+                        <option value="3" selected>3 days</option>
+                        <option value="7">7 days</option>
+                     </select>
+                  </div>
+               </div>
+
+               <!-- ══ TOOLBAR ══ -->
                <div class="vibe-toolbar">
                   <button class="vibe-tool-btn" onclick="document.getElementById('vibeFileInput').click()" title="Add Photo/Video">
                      <div class="vibe-tool-icon photo-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                      </div>
-                     <span>Photo/Video</span>
+                     <span>Gallery</span>
                   </button>
-                  <button class="vibe-tool-btn" onclick="openCamera()" title="Camera">
+                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeCameraInput').click()" title="Camera">
                      <div class="vibe-tool-icon camera-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                      </div>
@@ -1491,11 +1518,94 @@
                      </div>
                      <span id="vibeMusicLabel">Music</span>
                   </button>
+                  <button class="vibe-tool-btn" onclick="openVibeGifPicker()" title="Add GIF">
+                     <div class="vibe-tool-icon gif-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M8 12H5v-1.5a2.5 2.5 0 0 1 5 0V12m0 0v2"/><path d="M14 9h3v2h-2v1h2v2h-3V9z"/></svg>
+                     </div>
+                     <span>GIF</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="openVibeLocationPicker()" title="Location" id="vibeLocBtn">
+                     <div class="vibe-tool-icon loc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                     </div>
+                     <span>Location</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="openVibeMoodPicker()" title="Mood" id="vibeMoodBtn">
+                     <div class="vibe-tool-icon mood-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                     </div>
+                     <span>Mood</span>
+                  </button>
+                  <button class="vibe-tool-btn" onclick="toggleVibePoll(true)" title="Poll" id="vibePollBtn">
+                     <div class="vibe-tool-icon poll-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                     </div>
+                     <span>Poll</span>
+                  </button>
                   <button class="vibe-tool-btn" onclick="openStickerSelector()" title="Stickers">
                      <div class="vibe-tool-icon sticker-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
                      </div>
                      <span>Stickers</span>
+                  </button>
+               </div>
+
+               <!-- ══ MOOD PICKER PANEL ══ -->
+               <div class="vibe-mood-panel" id="vibeMoodPanel" style="display:none;">
+                  <div class="vmp-title">How are you feeling?</div>
+                  <div class="vmp-grid">
+                     <button class="vmp-mood" onclick="setVibeMood('😍','Loving it')">😍<span>Loving it</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🔥','On Fire')">🔥<span>On Fire</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('😂','LOL')">😂<span>LOL</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('😎','Chill')">😎<span>Chill</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🥺','Emotional')">🥺<span>Emotional</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('💪','Grinding')">💪<span>Grinding</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🎉','Celebrating')">🎉<span>Celebrating</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('😴','Tired')">😴<span>Tired</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🤔','Thinking')">🤔<span>Thinking</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('😡','Frustrated')">😡<span>Frustrated</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🥳','Hyped')">🥳<span>Hyped</span></button>
+                     <button class="vmp-mood" onclick="setVibeMood('🫂','Grateful')">🫂<span>Grateful</span></button>
+                  </div>
+               </div>
+
+               <!-- ══ LOCATION PICKER PANEL ══ -->
+               <div class="vibe-loc-panel" id="vibeLocPanel" style="display:none;">
+                  <div class="vlp-search-row">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                     <input id="vibeLocSearch" class="vlp-input" type="text" placeholder="Search location…" oninput="searchVibeLocation(this.value)">
+                  </div>
+                  <div class="vlp-results" id="vibeLocResults">
+                     <button class="vlp-result" onclick="setVibeLocation('📍 Current Location')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+                        Use my current location
+                     </button>
+                  </div>
+               </div>
+
+               <!-- ══ GIF PICKER PANEL ══ -->
+               <div class="vibe-gif-panel" id="vibeGifPanel" style="display:none;">
+                  <div class="vgp-header">
+                     <div class="vgp-search-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input id="vibeGifSearch" class="vgp-input" type="text" placeholder="Search GIFs…" oninput="searchVibeGif(this.value)">
+                     </div>
+                  </div>
+                  <div class="vgp-grid" id="vibeGifGrid">
+                     <!-- Populated by searchVibeGif() -->
+                     <div class="vgp-empty">Type to search for GIFs ✨</div>
+                  </div>
+               </div>
+
+               <!-- ══ BOTTOM ACTION ROW ══ -->
+               <div class="vibe-upload-actions">
+                  <button class="vibe-action-cancel" onclick="closeVibeUpload()">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                     Cancel
+                  </button>
+                  <button class="vibe-action-post" id="vibePostBtn" onclick="submitVibePost()">
+                     <span id="vibePostBtnText">Post Vibe</span>
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                   </button>
                </div>
 
@@ -1554,6 +1664,9 @@
 
                <div class="profile-nav-tabs">
                   <button class="profile-tab-btn active" onclick="switchProfileTab('info', event)">👤 Profile</button>
+                  <button class="profile-tab-btn myvibes-tab-btn" onclick="switchProfileTab('vibes', event)">
+                    <span class="myvibes-tab-inner">✨ My Vibes</span>
+                  </button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('cart', event)">🛒 My Cart</button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('shipping', event)">🚚 Shipping</button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('orders', event)">📦 My Orders</button>
@@ -1581,6 +1694,64 @@
                         </div>
                      </div>
                   </div>
+
+                  <!-- ══════════════ MY VIBES TAB ══════════════ -->
+                  <div id="profileTabVibes" class="tab-pane">
+
+                     <!-- Stats bar -->
+                     <div class="mv-stats-bar">
+                       <div class="mv-stat">
+                         <span class="mv-stat-val" id="mvStatPosts">—</span>
+                         <span class="mv-stat-lbl">Vibes</span>
+                       </div>
+                       <div class="mv-stat-divider"></div>
+                       <div class="mv-stat">
+                         <span class="mv-stat-val" id="mvStatLikes">—</span>
+                         <span class="mv-stat-lbl">Likes</span>
+                       </div>
+                       <div class="mv-stat-divider"></div>
+                       <div class="mv-stat">
+                         <span class="mv-stat-val" id="mvStatComments">—</span>
+                         <span class="mv-stat-lbl">Comments</span>
+                       </div>
+                       <div class="mv-stat-divider"></div>
+                       <div class="mv-stat">
+                         <span class="mv-stat-val" id="mvStatMedia">—</span>
+                         <span class="mv-stat-lbl">With Media</span>
+                       </div>
+                     </div>
+
+                     <!-- Filter chips -->
+                     <div class="mv-filter-bar">
+                       <button class="mv-filter-chip active" id="mvChipAll"    onclick="filterMyVibes('all',this)">
+                         <span>⚡</span> All
+                       </button>
+                       <button class="mv-filter-chip" id="mvChipPhotos" onclick="filterMyVibes('photos',this)">
+                         <span>📷</span> Photos
+                       </button>
+                       <button class="mv-filter-chip" id="mvChipVideos" onclick="filterMyVibes('videos',this)">
+                         <span>🎬</span> Videos
+                       </button>
+                       <button class="mv-filter-chip" id="mvChipText"   onclick="filterMyVibes('text',this)">
+                         <span>✍️</span> Text
+                       </button>
+                       <div class="mv-filter-spacer"></div>
+                       <button class="mv-refresh-btn" onclick="loadMyVibes()" title="Refresh">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                       </button>
+                     </div>
+
+                     <!-- Grid skeleton + grid -->
+                     <div id="myVibesGrid" class="mv-grid">
+                       <div class="mv-skeleton-grid">
+                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
+                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
+                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
+                       </div>
+                     </div>
+
+                  </div>
+                  <!-- ══════════════ /MY VIBES TAB ══════════════ -->
 
                   <!-- Cart Tab -->
                   <div id="profileTabCart" class="tab-pane">
@@ -1729,7 +1900,6 @@
                   <li>5 Advertisement Posters</li>
                   <li>1 Advertisement Video</li>
                   <li>15 Days advertising</li>
-                  <li>Show in Community Feed</li>
                   <li>Show in RealVibes</li>
                </ul>
 
@@ -1755,7 +1925,6 @@
                   <li>5 Advertisement Posters</li>
                   <li>3 Advertisement Videos</li>
                   <li>23 Days advertising</li>
-                  <li>Priority in Community Feed</li>
                   <li>Priority in RealVibes</li>
                   <li>Premium badge on profile</li>
                </ul>
@@ -1951,6 +2120,79 @@
       </div>
    </div>
 
+   <!-- ══════ MY VIBES DETAIL MODAL ══════ -->
+   <div id="myVibeDetailModal" class="mv-detail-modal" style="display:none;" onclick="closeMvDetail(event)">
+     <div class="mv-detail-inner" onclick="event.stopPropagation()">
+
+       <!-- Close -->
+       <button class="mv-detail-close" onclick="closeMvDetailModal()">✕</button>
+
+       <!-- Media viewer -->
+       <div class="mv-detail-media" id="mvDetailMedia"></div>
+
+       <!-- Multi-image dots -->
+       <div class="mv-detail-dots" id="mvDetailDots"></div>
+
+       <!-- Info panel -->
+       <div class="mv-detail-panel">
+
+         <!-- Author row -->
+         <div class="mv-detail-author">
+           <div class="mv-detail-avatar" id="mvDetailAvatar"></div>
+           <div class="mv-detail-meta">
+             <span class="mv-detail-username" id="mvDetailUsername"></span>
+             <span class="mv-detail-time" id="mvDetailTime"></span>
+           </div>
+           <span class="mv-detail-dest" id="mvDetailDest"></span>
+         </div>
+
+         <!-- Caption (view mode) -->
+         <div class="mv-detail-caption-wrap" id="mvCaptionWrap">
+           <p class="mv-detail-caption" id="mvDetailCaption"></p>
+         </div>
+
+         <!-- Caption edit mode -->
+         <div class="mv-detail-edit-wrap" id="mvEditWrap" style="display:none;">
+           <textarea class="mv-caption-edit-area" id="mvCaptionEditArea" placeholder="What's your vibe? Add a caption…" maxlength="500"></textarea>
+           <div class="mv-edit-actions">
+             <button class="mv-edit-cancel" onclick="cancelMvEdit()">Cancel</button>
+             <button class="mv-edit-save" onclick="saveMvCaption()">Save</button>
+           </div>
+         </div>
+
+         <!-- Stats row -->
+         <div class="mv-detail-stats">
+           <div class="mv-detail-stat">
+             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+             <span id="mvDetailLikes">0</span>
+           </div>
+           <div class="mv-detail-stat">
+             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+             <span id="mvDetailComments">0</span>
+           </div>
+           <div class="mv-detail-stat">
+             <svg viewBox="0 0 24 24" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+             <span id="mvDetailShares">0</span>
+           </div>
+         </div>
+
+         <!-- Action buttons -->
+         <div class="mv-detail-btns">
+           <button class="mv-btn-edit" id="mvBtnEdit" onclick="startMvEdit()">
+             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+             Edit Caption
+           </button>
+           <button class="mv-btn-delete" id="mvBtnDelete" onclick="deleteMvPost()">
+             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
+             Delete
+           </button>
+         </div>
+
+       </div>
+     </div>
+   </div>
+   <!-- ══════ /MY VIBES DETAIL MODAL ══════ -->
+
    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
    <script src="vibemap.js"></script>
 
@@ -1972,9 +2214,9 @@
                minWidth: 200.00,
                scale: 1.00,
                scaleMobile: 1.00,
-               color: 0x4f74a3,         // Your primary blue
-               color2: 0x8da4d3,        // Your light blue
-               size: 1.20,
+               color: 0x644aa9,
+               size: 2.00,
+               backgroundColor: 0x1a1933,
             });
             console.log('Globe background initialized');
          }
