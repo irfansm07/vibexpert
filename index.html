@@ -4,7 +4,7 @@
 <head>
    <meta charset="UTF-8" />
    <meta name="google-adsense-account" content="ca-pub-2362238474761949">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <link rel="icon" href="favicon.png" type="image/png">
    <link rel="shortcut icon" href="favicon.png">
    <link rel="apple-touch-icon" href="favicon.png">
@@ -113,7 +113,8 @@
                <div class="about-card reveal-on-scroll">
                   <div class="about-card-icon">🌐</div>
                   <h3>500+ Universities</h3>
-                  <p>Connect with students from IITs, AIIMS, State-universities, NITs, IIITs, VITs, NLSIUs and universities across India</p>
+                  <p>Connect with students from IITs, AIIMS, State-universities, NITs, IIITs, VITs, NLSIUs and
+                     universities across India</p>
                </div>
                <div class="about-card reveal-on-scroll">
                   <div class="about-card-icon">💬</div>
@@ -121,7 +122,7 @@
                   <p>Engage in live conversations with your college group instantly</p>
                </div>
                <div class="about-card reveal-on-scroll">
-                  <div class="about-card-icon">�</div>
+                  <div class="about-card-icon">🎬</div>
                   <h3>Rich Media Sharing</h3>
                   <p>Share photos, videos, music, and stickers to express yourself</p>
                </div>
@@ -184,30 +185,27 @@
                         <span class="mockup-dot"></span>
                      </div>
                      <div class="mockup-content">
-                        <div class="mockup-post">
-                           <div class="mockup-avatar">👤</div>
-                           <div class="mockup-text">
-                              <div class="mockup-line"></div>
-                              <div class="mockup-line short"></div>
-                           </div>
+                        <div class="mockup-chat-message left">
+                           <div class="chat-bubble"
+                              style="width: 80%; background: #3b3b4f; border-radius: 15px; padding: 10px; margin-bottom: 10px;">
+                              Hey! Anyone online? 👋</div>
                         </div>
-                        <div class="mockup-image"></div>
-                        <div class="mockup-actions">
-                           <span>❤️</span>
-                           <span>💬</span>
-                           <span>🔄</span>
+                        <div class="mockup-chat-message right">
+                           <div class="chat-bubble"
+                              style="width: 60%; background: #4F46E5; color: white; border-radius: 15px; padding: 10px; margin-left: auto;">
+                              Yes! Let's chat! 💬</div>
                         </div>
                      </div>
                   </div>
                </div>
                <div class="feature-showcase-text">
-                  <h3>📱 Enhanced Post Creation</h3>
+                  <h3>💬 Real-Time Chat</h3>
                   <ul>
-                     <li>✨ Add photos, videos, and audio</li>
-                     <li>🎵 Attach music from our library</li>
-                     <li>🎨 Decorate with fun stickers</li>
-                     <li>✂️ Crop and edit your media</li>
-                     <li>🌐 Share to profile or Institutes</li>
+                     <li>⚡ Instant messaging with no delays</li>
+                     <li>👥 Group chats for your institute</li>
+                     <li>🔔 Live notifications for new messages</li>
+                     <li>😊 Send emojis and stickers easily</li>
+                     <li>🌐 Connect instantly with your community</li>
                   </ul>
                </div>
             </div>
@@ -362,7 +360,6 @@
                      chat is
                      amazing for study groups."</p>
                   <div class="testimonial-author">Rahul S.</div>
-                  <div class="testimonial-author">Antony.S</div>
                   <div class="testimonial-college">IIT Delhi</div>
                   <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
                </div>
@@ -429,7 +426,8 @@
                </div>
             </div>
             <div class="footer-bottom">
-               <p>&copy; 2025 VibeXpert. All rights reserved.</p>
+               <p>&copy; <span id="footerYear1">2025</span> VibeXpert. All rights reserved.</p>
+               <script>document.getElementById('footerYear1').textContent = new Date().getFullYear();</script>
             </div>
          </div>
       </footer>
@@ -703,8 +701,8 @@
                   <div class="auth-divider">
                      <span>or</span>
                   </div>
-                  <button type="button" class="auth-google-btn"
-                     onclick="showMessage('Google login coming soon!', 'success')">
+                  <button type="button" class="auth-google-btn" disabled title="Coming soon!"
+                     style="cursor: not-allowed; opacity: 0.5;" onclick="">
                      <svg width="18" height="18" viewBox="0 0 18 18">
                         <path fill="#4285F4"
                            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" />
@@ -878,7 +876,7 @@
 
       <!-- HEADER -->
       <header class="header">
-         <div class="logo" onclick="window.location.reload(true)" style="cursor:pointer;">VibeXpert</div>
+         <div class="logo" onclick="window.location.reload()" style="cursor:pointer;">VibeXpert</div>
 
          <div class="live-counter">
             <span class="live-badge">🔴 Live</span>
@@ -888,8 +886,8 @@
          <nav class="nav">
             <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
             <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 My Institute</a>
-            <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibe</a>
-            <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Posts</a>
+            <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibes</a>
+            <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Vibers</a>
             <a href="#" class="nav-link" onclick="showPage('vibeshop', event)">🛒 VibeShop</a>
          </nav>
 
@@ -1142,7 +1140,10 @@
                   </div>
                </div>
                <button class="rv-add-btn" onclick="openRealVibeCreator()" title="Add RealVibe">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                     <line x1="12" y1="5" x2="12" y2="19" />
+                     <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
                   <span>Add RealVibe</span>
                </button>
             </div>
@@ -1166,7 +1167,8 @@
 
                <div class="rv-gate-crown">👑</div>
                <h2 class="rv-gate-title">Noble & Royal Vibers Only</h2>
-               <p class="rv-gate-desc">RealVibe is an exclusive space for Premium subscribers.<br>Unlock your voice — post photos &amp; videos that last.</p>
+               <p class="rv-gate-desc">RealVibe is an exclusive space for Premium subscribers.<br>Unlock your voice —
+                  post photos &amp; videos that last.</p>
 
                <div class="rv-gate-plans">
                   <div class="rv-gate-plan noble">
@@ -1197,7 +1199,8 @@
          <!-- ══════════════════════════════════════════════ -->
          <!-- REALVIBE CREATOR MODAL (premium users only)   -->
          <!-- ══════════════════════════════════════════════ -->
-         <div id="realVibeCreatorModal" class="rv-creator-overlay" style="display:none;" onclick="closeRvCreator(event)">
+         <div id="realVibeCreatorModal" class="rv-creator-overlay" style="display:none;"
+            onclick="closeRvCreator(event)">
             <div class="rv-creator-box" onclick="event.stopPropagation()">
 
                <div class="rv-creator-header">
@@ -1211,7 +1214,12 @@
                <!-- Drop zone -->
                <div class="rv-drop-zone" id="rvDropZone" onclick="rvTriggerFilePick()">
                   <div class="rv-drop-idle" id="rvDropIdle">
-                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                     </svg>
                      <p>Tap to choose photo or video</p>
                      <span>JPG · PNG · MP4 · up to 50 MB</span>
                   </div>
@@ -1220,15 +1228,19 @@
                      <video id="rvPreviewVideo" muted playsinline style="display:none;"></video>
                      <button class="rv-remove-media" onclick="event.stopPropagation(); clearRvPreview()">✕</button>
                      <div class="rv-video-badge" id="rvVideoBadge" style="display:none;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg> Video
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                           <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg> Video
                      </div>
                   </div>
                </div>
-               <input type="file" id="rvFileInput" accept="image/*,video/mp4,video/webm,video/quicktime" style="display:none;" onchange="handleRvFile(event)">
+               <input type="file" id="rvFileInput" accept="image/*,video/mp4,video/webm,video/quicktime"
+                  style="display:none;" onchange="handleRvFile(event)">
 
                <!-- Caption -->
                <div class="rv-caption-wrap">
-                  <textarea class="rv-caption-input" id="rvCaption" placeholder="Write a caption… (optional)" maxlength="300" oninput="updateRvCounter()"></textarea>
+                  <textarea class="rv-caption-input" id="rvCaption" placeholder="Write a caption… (optional)"
+                     maxlength="300" oninput="updateRvCounter()"></textarea>
                   <span class="rv-caption-counter"><span id="rvCaptionCount">0</span>/300</span>
                </div>
 
@@ -1245,13 +1257,17 @@
                </div>
 
                <!-- Expiry info -->
-               <div class="rv-expiry-info" id="rvExpiryInfo">⏳ Your vibe will disappear in <strong id="rvExpiryDays">15</strong> days</div>
+               <div class="rv-expiry-info" id="rvExpiryInfo">⏳ Your vibe will disappear in <strong
+                     id="rvExpiryDays">15</strong> days</div>
 
                <!-- Actions -->
                <div class="rv-creator-actions">
                   <button class="rv-btn-cancel" onclick="closeRvCreatorModal()">Cancel</button>
                   <button class="rv-btn-publish" id="rvPublishBtn" onclick="publishRealVibe()" disabled>
-                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                     </svg>
                      Publish
                   </button>
                </div>
@@ -1271,7 +1287,10 @@
             <div class="rv-comment-input-row">
                <input type="text" id="rvCommentInput" placeholder="Add a comment…" maxlength="200">
                <button onclick="submitRvComment()">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                     <line x1="22" y1="2" x2="11" y2="13" />
+                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
                </button>
             </div>
          </div>
@@ -1283,11 +1302,14 @@
 
             <!-- Floating Top Header (logo + search only) -->
             <div class="vibe-header">
-               <div class="vibe-logo-pill">
+               <div class="vibe-logo-pill" onclick="window.location.reload()" style="cursor:pointer;">
                   <span class="vibe-logo-text">VibeXpert</span>
                </div>
                <button class="vibe-search-btn" onclick="toggleVibeSearch()" aria-label="Search">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                     <circle cx="11" cy="11" r="8" />
+                     <path d="m21 21-4.35-4.35" />
+                  </svg>
                </button>
             </div>
 
@@ -1305,8 +1327,12 @@
             <!-- Search Bar -->
             <div class="vibe-search-bar" id="vibeSearchBar" style="display:none;">
                <div class="vibe-search-inner">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                  <input type="text" id="vibeSearchInput" placeholder="Search vibes, people, tags…" oninput="filterVibeFeed(this.value)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                     <circle cx="11" cy="11" r="8" />
+                     <path d="m21 21-4.35-4.35" />
+                  </svg>
+                  <input type="text" id="vibeSearchInput" placeholder="Search vibes, people, tags…"
+                     oninput="filterVibeFeed(this.value)">
                   <button onclick="toggleVibeSearch()">✕</button>
                </div>
             </div>
@@ -1323,12 +1349,12 @@
             <div class="vibe-scroll-arrows">
                <button class="vibe-scroll-arrow vibe-scroll-up" onclick="vibeScrollPrev()" aria-label="Scroll up">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="22" height="22">
-                     <polyline points="18 15 12 9 6 15"/>
+                     <polyline points="18 15 12 9 6 15" />
                   </svg>
                </button>
                <button class="vibe-scroll-arrow vibe-scroll-down" onclick="vibeScrollNext()" aria-label="Scroll down">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="22" height="22">
-                     <polyline points="6 9 12 15 18 9"/>
+                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                </button>
             </div>
@@ -1336,7 +1362,8 @@
             <!-- Create Post Button — Bottom RIGHT (standalone) -->
             <button class="vibe-create-btn" onclick="openVibeUpload()" aria-label="Create post">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="34" height="34">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                </svg>
             </button>
 
@@ -1357,7 +1384,10 @@
                   <input type="text" id="vibeCommentInput" placeholder="Add a comment…" maxlength="500"
                      onkeydown="if(event.key==='Enter')submitVibeComment()">
                   <button class="vibe-comment-send-btn" onclick="submitVibeComment()">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                     </svg>
                   </button>
                </div>
             </div>
@@ -1372,25 +1402,42 @@
                <div class="vibe-share-grid">
                   <div class="vibe-share-item" onclick="vibeShareWhatsApp()">
                      <div class="vibe-share-icon" style="background:rgba(37,211,102,0.15);color:#25d366;">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.856L0 24l6.335-1.521A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.003-1.367l-.36-.213-3.727.976.994-3.629-.234-.373A9.818 9.818 0 0 1 2.182 12C2.182 6.573 6.573 2.182 12 2.182c5.427 0 9.818 4.391 9.818 9.818 0 5.427-4.391 9.818-9.818 9.818z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                           <path
+                              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                           <path
+                              d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.856L0 24l6.335-1.521A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.003-1.367l-.36-.213-3.727.976.994-3.629-.234-.373A9.818 9.818 0 0 1 2.182 12C2.182 6.573 6.573 2.182 12 2.182c5.427 0 9.818 4.391 9.818 9.818 0 5.427-4.391 9.818-9.818 9.818z" />
+                        </svg>
                      </div>
                      <span>WhatsApp</span>
                   </div>
                   <div class="vibe-share-item" onclick="vibeShareCopy()">
                      <div class="vibe-share-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
                      </div>
                      <span>Copy Link</span>
                   </div>
                   <div class="vibe-share-item" onclick="vibeShareToChat()">
                      <div class="vibe-share-icon" style="background:rgba(79,195,247,0.15);color:#4fc3f7;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
                      </div>
                      <span>College Chat</span>
                   </div>
                   <div class="vibe-share-item" onclick="vibeShareNative()">
-                     <div class="vibe-share-icon" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                     <div class="vibe-share-icon"
+                        style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <circle cx="18" cy="5" r="3" />
+                           <circle cx="6" cy="12" r="3" />
+                           <circle cx="18" cy="19" r="3" />
+                           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
                      </div>
                      <span>More</span>
                   </div>
@@ -1403,25 +1450,49 @@
          </section>
 
          <!-- CREATE POST MODAL — Redesigned Beautiful UI -->
+         <!-- ══════════════════════════════════════════════
+              ✦ PREMIUM NEW VIBE POST POPUP — REDESIGNED
+              ══════════════════════════════════════════════ -->
          <div id="vibeUploadModal" class="vibe-upload-modal" style="display:none;">
             <div class="vibe-upload-overlay" onclick="closeVibeUpload()"></div>
             <div class="vibe-upload-sheet">
 
-               <!-- Drag handle -->
-               <div class="vibe-upload-handle"><div class="vube-handle-bar"></div></div>
+               <!-- Animated gradient glow bar at top -->
+               <div class="vup-glow-bar"></div>
 
-               <!-- ══ HEADER — title only ══ -->
+               <!-- Drag handle -->
+               <div class="vibe-upload-handle">
+                  <div class="vube-handle-bar"></div>
+               </div>
+
+               <!-- ══ PREMIUM HEADER ══ -->
                <div class="vibe-upload-head">
-                  <h3 class="vibe-modal-title">New Vibe <span class="vibe-title-spark">✨</span></h3>
+                  <div class="vup-header-left">
+                     <div class="vup-title-icon">✦</div>
+                     <div>
+                        <h3 class="vibe-modal-title">New Vibe</h3>
+                        <span class="vup-subtitle">Share your moment</span>
+                     </div>
+                  </div>
+                  <button class="vup-close-btn" onclick="closeVibeUpload()" aria-label="Close">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16"
+                        height="16">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                     </svg>
+                  </button>
                </div>
 
                <!-- ══ AUTHOR + DESTINATION ══ -->
                <div class="vibe-author-row">
-                  <div class="vibe-caption-avatar" id="vibeCaptionAvatar">😊</div>
+                  <div class="vup-avatar-wrap">
+                     <div class="vibe-caption-avatar" id="vibeCaptionAvatar">😊</div>
+                     <div class="vup-online-dot"></div>
+                  </div>
                   <div class="vibe-author-meta">
                      <span class="vibe-author-name" id="vibePostUserName">You</span>
                      <div class="vibe-dest-pills">
-                        <button class="vibe-dest-pill active" id="destRadioProfile" onclick="setVibeDest('profile', this)">
+                        <button class="vibe-dest-pill active" id="destRadioProfile"
+                           onclick="setVibeDest('profile', this)">
                            👤 Profile
                         </button>
                         <button class="vibe-dest-pill" id="destRadioCommunity" onclick="setVibeDest('community', this)">
@@ -1437,8 +1508,7 @@
                <!-- ══ CAPTION ══ -->
                <div class="vibe-caption-area">
                   <textarea id="vibeCaptionInput" class="vibe-caption-input"
-                     placeholder="What's your vibe? Add #hashtags 🔥"
-                     maxlength="500" rows="3"
+                     placeholder="What's your vibe? Add #hashtags 🔥" maxlength="500" rows="3"
                      oninput="updateVibeCharCount(this)"></textarea>
                   <div class="vibe-char-pill" id="vibeCharCount">500</div>
                </div>
@@ -1449,25 +1519,34 @@
                <!-- Hidden file inputs -->
                <input type="file" id="vibeFileInput" style="display:none" accept="video/*,image/*" multiple
                   onchange="handleVibeFileSelect(event)">
-               <input type="file" id="vibeCameraInput" style="display:none" accept="image/*,video/*" capture="environment"
-                  onchange="handleVibeCameraCapture(event)">
+               <input type="file" id="vibeCameraInput" style="display:none" accept="image/*,video/*"
+                  capture="environment" onchange="handleVibeCameraCapture(event)">
 
-               <!-- ══ MEDIA DROP ZONE ══ -->
+               <!-- ══ PREMIUM MEDIA DROP ZONE ══ -->
                <div class="vibe-media-zone" id="vibeMediaZone"
-                  onclick="document.getElementById('vibeFileInput').click()"
-                  ondrop="handleVibeDrop(event)"
+                  onclick="document.getElementById('vibeFileInput').click()" ondrop="handleVibeDrop(event)"
                   ondragover="event.preventDefault();this.classList.add('vdz-active')"
                   ondragleave="this.classList.remove('vdz-active')">
-                  <div class="vdz-glow-ring"></div>
+                  <div class="vdz-bg-glow"></div>
                   <div class="vibe-dz-inner">
                      <div class="vibe-dz-icon-wrap">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="26"
+                           height="26">
+                           <rect x="3" y="3" width="18" height="18" rx="3" />
+                           <circle cx="8.5" cy="8.5" r="1.5" />
+                           <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                        <div class="vdz-icon-ring"></div>
                      </div>
-                     <div>
+                     <div class="vdz-text-block">
                         <p class="vibe-dz-label">Tap to add Photo or Video</p>
                         <span class="vibe-dz-sub">MP4 · MOV · JPG · PNG — up to 100 MB</span>
                      </div>
                   </div>
+                  <div class="vdz-corner-accent top-left"></div>
+                  <div class="vdz-corner-accent top-right"></div>
+                  <div class="vdz-corner-accent bottom-left"></div>
+                  <div class="vdz-corner-accent bottom-right"></div>
                </div>
 
                <!-- ══ POLL BUILDER (shown when poll active) ══ -->
@@ -1488,7 +1567,10 @@
                   </div>
                   <button class="vpb-add-opt" id="vpbAddOpt" onclick="addVibePollOption()">+ Add option</button>
                   <div class="vpb-duration">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                     </svg>
                      Duration:
                      <select class="vpb-dur-select" id="vibePollDuration">
                         <option value="1">1 day</option>
@@ -1498,53 +1580,88 @@
                   </div>
                </div>
 
-               <!-- ══ TOOLBAR ══ -->
+               <!-- ══ PREMIUM TOOLBAR ══ -->
                <div class="vibe-toolbar">
-                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeFileInput').click()" title="Add Photo/Video">
+                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeFileInput').click()"
+                     title="Add Photo/Video">
                      <div class="vibe-tool-icon photo-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <rect x="3" y="3" width="18" height="18" rx="3" />
+                           <circle cx="8.5" cy="8.5" r="1.5" />
+                           <polyline points="21 15 16 10 5 21" />
+                        </svg>
                      </div>
                      <span>Gallery</span>
                   </button>
-                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeCameraInput').click()" title="Camera">
+                  <button class="vibe-tool-btn" onclick="document.getElementById('vibeCameraInput').click()"
+                     title="Camera">
                      <div class="vibe-tool-icon camera-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path
+                              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                           <circle cx="12" cy="13" r="4" />
+                        </svg>
                      </div>
                      <span>Camera</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="openMusicSelector()" title="Add Music">
                      <div class="vibe-tool-icon music-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M9 18V5l12-2v13" />
+                           <circle cx="6" cy="18" r="3" />
+                           <circle cx="18" cy="16" r="3" />
+                        </svg>
                      </div>
                      <span id="vibeMusicLabel">Music</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="openVibeGifPicker()" title="Add GIF">
                      <div class="vibe-tool-icon gif-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M8 12H5v-1.5a2.5 2.5 0 0 1 5 0V12m0 0v2"/><path d="M14 9h3v2h-2v1h2v2h-3V9z"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <rect x="2" y="5" width="20" height="14" rx="3" />
+                           <path d="M8 12H5v-1.5a2.5 2.5 0 0 1 5 0V12m0 0v2" />
+                           <path d="M14 9h3v2h-2v1h2v2h-3V9z" />
+                        </svg>
                      </div>
                      <span>GIF</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="openVibeLocationPicker()" title="Location" id="vibeLocBtn">
                      <div class="vibe-tool-icon loc-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                           <circle cx="12" cy="10" r="3" />
+                        </svg>
                      </div>
                      <span>Location</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="openVibeMoodPicker()" title="Mood" id="vibeMoodBtn">
                      <div class="vibe-tool-icon mood-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <circle cx="12" cy="12" r="10" />
+                           <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                           <line x1="9" y1="9" x2="9.01" y2="9" />
+                           <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                      </div>
                      <span>Mood</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="toggleVibePoll(true)" title="Poll" id="vibePollBtn">
                      <div class="vibe-tool-icon poll-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <line x1="18" y1="20" x2="18" y2="10" />
+                           <line x1="12" y1="20" x2="12" y2="4" />
+                           <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
                      </div>
                      <span>Poll</span>
                   </button>
                   <button class="vibe-tool-btn" onclick="openStickerSelector()" title="Stickers">
                      <div class="vibe-tool-icon sticker-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <circle cx="12" cy="12" r="10" />
+                           <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                           <line x1="9" y1="9" x2="9.01" y2="9" />
+                           <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                      </div>
                      <span>Stickers</span>
                   </button>
@@ -1560,10 +1677,12 @@
                      <button class="vmp-mood" onclick="setVibeMood('😎','Chill')">😎<span>Chill</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('🥺','Emotional')">🥺<span>Emotional</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('💪','Grinding')">💪<span>Grinding</span></button>
-                     <button class="vmp-mood" onclick="setVibeMood('🎉','Celebrating')">🎉<span>Celebrating</span></button>
+                     <button class="vmp-mood"
+                        onclick="setVibeMood('🎉','Celebrating')">🎉<span>Celebrating</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('😴','Tired')">😴<span>Tired</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('🤔','Thinking')">🤔<span>Thinking</span></button>
-                     <button class="vmp-mood" onclick="setVibeMood('😡','Frustrated')">😡<span>Frustrated</span></button>
+                     <button class="vmp-mood"
+                        onclick="setVibeMood('😡','Frustrated')">😡<span>Frustrated</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('🥳','Hyped')">🥳<span>Hyped</span></button>
                      <button class="vmp-mood" onclick="setVibeMood('🫂','Grateful')">🫂<span>Grateful</span></button>
                   </div>
@@ -1572,12 +1691,20 @@
                <!-- ══ LOCATION PICKER PANEL ══ -->
                <div class="vibe-loc-panel" id="vibeLocPanel" style="display:none;">
                   <div class="vlp-search-row">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                     <input id="vibeLocSearch" class="vlp-input" type="text" placeholder="Search location…" oninput="searchVibeLocation(this.value)">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                     </svg>
+                     <input id="vibeLocSearch" class="vlp-input" type="text" placeholder="Search location…"
+                        oninput="searchVibeLocation(this.value)">
                   </div>
                   <div class="vlp-results" id="vibeLocResults">
                      <button class="vlp-result" onclick="setVibeLocation('📍 Current Location')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                           height="14">
+                           <circle cx="12" cy="12" r="3" />
+                           <path d="M12 1v4M12 19v4M1 12h4M19 12h4" />
+                        </svg>
                         Use my current location
                      </button>
                   </div>
@@ -1587,25 +1714,36 @@
                <div class="vibe-gif-panel" id="vibeGifPanel" style="display:none;">
                   <div class="vgp-header">
                      <div class="vgp-search-row">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <input id="vibeGifSearch" class="vgp-input" type="text" placeholder="Search GIFs…" oninput="searchVibeGif(this.value)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                           height="14">
+                           <circle cx="11" cy="11" r="8" />
+                           <path d="m21 21-4.35-4.35" />
+                        </svg>
+                        <input id="vibeGifSearch" class="vgp-input" type="text" placeholder="Search GIFs…"
+                           oninput="searchVibeGif(this.value)">
                      </div>
                   </div>
                   <div class="vgp-grid" id="vibeGifGrid">
-                     <!-- Populated by searchVibeGif() -->
                      <div class="vgp-empty">Type to search for GIFs ✨</div>
                   </div>
                </div>
 
-               <!-- ══ BOTTOM ACTION ROW ══ -->
+               <!-- ══ PREMIUM BOTTOM ACTION ROW ══ -->
                <div class="vibe-upload-actions">
                   <button class="vibe-action-cancel" onclick="closeVibeUpload()">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15"
+                        height="15">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                     </svg>
                      Cancel
                   </button>
                   <button class="vibe-action-post" id="vibePostBtn" onclick="submitVibePost()">
                      <span id="vibePostBtnText">Post Vibe</span>
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15"
+                        height="15">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                     </svg>
                   </button>
                </div>
 
@@ -1622,51 +1760,97 @@
          <section id="profile" class="page" style="display:none;">
             <input type="file" id="profilePicInput" style="display:none" accept="image/*"
                onchange="handleProfilePicUpload(event)">
-            <div class="profile-page-container">
-               <div class="profile-premium-header">
-                  <div class="profile-header-main">
-                     <div class="profile-avatar-large">
-                        <img id="profilePageAvatarImg" src="" alt="Avatar" style="display:none;">
-                        <span id="profilePageAvatarInitial">👤</span>
-                        <button class="avatar-edit-overlay" onclick="uploadProfilePic()">📷</button>
+            <input type="file" id="coverPhotoInput" style="display:none" accept="image/*"
+               onchange="handleCoverPhotoUpload(event)">
+
+            <!-- Cover photo hero -->
+            <div style="position:relative;">
+               <div id="profileCoverPhoto"
+                  style="height:200px;background:linear-gradient(135deg,#4f74a3,#7aa3d4);position:relative;cursor:pointer;overflow:hidden;"
+                  onclick="document.getElementById('coverPhotoInput').click()">
+                  <img id="profileCoverImg" src="" alt=""
+                     style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;">
+                  <div
+                     style="position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,0.5);color:#fff;font-size:11px;padding:3px 8px;border-radius:99px;pointer-events:none;">
+                     ✏️ Edit cover</div>
+               </div>
+               <!-- Overlapping avatar -->
+               <div style="position:absolute;left:20px;bottom:-40px;z-index:5;">
+                  <div style="position:relative;width:88px;height:88px;">
+                     <div class="profile-avatar-large"
+                        style="width:88px;height:88px;border-radius:50%;border:3px solid #0a0a14;overflow:hidden;">
+                        <img id="profilePageAvatarImg" src="" alt="Avatar"
+                           style="width:100%;height:100%;object-fit:cover;display:none;">
+                        <span id="profilePageAvatarInitial"
+                           style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;background:#1a1933;">👤</span>
+                        <button class="avatar-edit-overlay" onclick="uploadProfilePic()"
+                           style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:12px;cursor:pointer;padding:4px 0;">📷</button>
                      </div>
-                     <div class="profile-header-info">
-                        <h1 id="profilePageName">User Name</h1>
-                        <p id="profilePageUsername">@username</p>
-                        <div id="profilePageUserId"
-                           style="font-family: monospace; color: rgba(255,255,255,0.4); font-size: 11px; margin-bottom: 10px;">
-                           ID: #000000</div>
-                        <div class="profile-header-actions">
-                           <button id="followBtn" class="btn-primary"
-                              style="display:none; padding: 8px 25px; font-size: 14px; margin-bottom: 15px;"
-                              onclick="toggleFollow()">Follow</button>
-                        </div>
-                        <div class="profile-badges" id="profilePageBadges">
-                           <!-- Badges populated dynamically from real data -->
-                        </div>
-                     </div>
-                     <div class="profile-header-stats">
-                        <div class="header-stat-item">
-                           <span class="stat-value" id="profileStatPosts">0</span>
-                           <span class="stat-label">Posts</span>
-                        </div>
-                        <div class="header-stat-item">
-                           <span class="stat-value" id="profileStatFollowers">0</span>
-                           <span class="stat-label">Followers</span>
-                        </div>
-                        <div class="header-stat-item">
-                           <span class="stat-value" id="profileStatFollowing">0</span>
-                           <span class="stat-label">Following</span>
-                        </div>
-                     </div>
+                     <div id="profilePresenceDot"
+                        style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #0a0a14;"></div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="profile-page-container" style="padding-top:52px;">
+               <!-- Name + actions row -->
+               <div
+                  style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                  <div>
+                     <h1 id="profilePageName"
+                        style="margin:0;font-size:20px;font-weight:700;color:#fff;">User Name</h1>
+                     <p id="profilePageUsername"
+                        style="margin:2px 0 0;color:rgba(255,255,255,0.5);font-size:13px;">@username</p>
+                     <p id="profileStatusText"
+                        style="margin:4px 0 0;font-size:12px;color:#a78bfa;font-style:italic;">Vibing</p>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:4px;">
+                     <button id="followBtn" class="btn-primary"
+                        style="display:none;padding:7px 18px;font-size:13px;"
+                        onclick="toggleFollow()">Follow</button>
+                     <button id="dmBtn" class="btn-secondary"
+                        style="display:none;padding:7px 14px;font-size:13px;"
+                        onclick="openDmDrawer(currentProfileUserId)">💬 Message</button>
+                  </div>
+               </div>
+
+               <div class="profile-badges" id="profilePageBadges" style="margin-top:8px;"></div>
+               <div id="profilePageUserId"
+                  style="font-family:monospace;color:rgba(255,255,255,0.25);font-size:10px;margin-top:4px;">ID:
+                  #000000</div>
+
+               <!-- 3-col glassmorphic stats strip -->
+               <div
+                  style="display:grid;grid-template-columns:1fr 1fr 1fr;margin:16px 0 0;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.08);overflow:hidden;">
+                  <div
+                     style="padding:14px 8px;text-align:center;border-right:1px solid rgba(255,255,255,0.06);">
+                     <span class="stat-value" id="profileStatPosts"
+                        style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
+                     <span style="font-size:11px;color:rgba(255,255,255,0.45);">Vibes</span>
+                  </div>
+                  <div
+                     style="padding:14px 8px;text-align:center;border-right:1px solid rgba(255,255,255,0.06);">
+                     <span class="stat-value" id="profileStatFollowers"
+                        style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
+                     <span style="font-size:11px;color:rgba(255,255,255,0.45);">Followers</span>
+                  </div>
+                  <div style="padding:14px 8px;text-align:center;">
+                     <span class="stat-value" id="profileStatFollowing"
+                        style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
+                     <span style="font-size:11px;color:rgba(255,255,255,0.45);">Following</span>
                   </div>
                </div>
 
                <div class="profile-nav-tabs">
                   <button class="profile-tab-btn active" onclick="switchProfileTab('info', event)">👤 Profile</button>
                   <button class="profile-tab-btn myvibes-tab-btn" onclick="switchProfileTab('vibes', event)">
-                    <span class="myvibes-tab-inner">✨ My Vibes</span>
+                     <span class="myvibes-tab-inner">✨ My Vibes</span>
                   </button>
+                  <button class="profile-tab-btn" id="messagesTabBtn" onclick="switchProfileTab('messages', event)">
+                     💬 Messages
+                     <span id="dmUnreadBadge" style="display:none;background:#ef4444;color:#fff;font-size:10px;padding:1px 5px;border-radius:99px;margin-left:4px;">0</span>
+                  </button>
+                  <button class="profile-tab-btn" onclick="switchProfileTab('achievements', event)">🏆 Achievements</button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('cart', event)">🛒 My Cart</button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('shipping', event)">🚚 Shipping</button>
                   <button class="profile-tab-btn" onclick="switchProfileTab('orders', event)">📦 My Orders</button>
@@ -1700,54 +1884,64 @@
 
                      <!-- Stats bar -->
                      <div class="mv-stats-bar">
-                       <div class="mv-stat">
-                         <span class="mv-stat-val" id="mvStatPosts">—</span>
-                         <span class="mv-stat-lbl">Vibes</span>
-                       </div>
-                       <div class="mv-stat-divider"></div>
-                       <div class="mv-stat">
-                         <span class="mv-stat-val" id="mvStatLikes">—</span>
-                         <span class="mv-stat-lbl">Likes</span>
-                       </div>
-                       <div class="mv-stat-divider"></div>
-                       <div class="mv-stat">
-                         <span class="mv-stat-val" id="mvStatComments">—</span>
-                         <span class="mv-stat-lbl">Comments</span>
-                       </div>
-                       <div class="mv-stat-divider"></div>
-                       <div class="mv-stat">
-                         <span class="mv-stat-val" id="mvStatMedia">—</span>
-                         <span class="mv-stat-lbl">With Media</span>
-                       </div>
+                        <div class="mv-stat">
+                           <span class="mv-stat-val" id="mvStatPosts">—</span>
+                           <span class="mv-stat-lbl">Vibes</span>
+                        </div>
+                        <div class="mv-stat-divider"></div>
+                        <div class="mv-stat">
+                           <span class="mv-stat-val" id="mvStatLikes">—</span>
+                           <span class="mv-stat-lbl">Likes</span>
+                        </div>
+                        <div class="mv-stat-divider"></div>
+                        <div class="mv-stat">
+                           <span class="mv-stat-val" id="mvStatComments">—</span>
+                           <span class="mv-stat-lbl">Comments</span>
+                        </div>
+                        <div class="mv-stat-divider"></div>
+                        <div class="mv-stat">
+                           <span class="mv-stat-val" id="mvStatMedia">—</span>
+                           <span class="mv-stat-lbl">With Media</span>
+                        </div>
                      </div>
 
                      <!-- Filter chips -->
                      <div class="mv-filter-bar">
-                       <button class="mv-filter-chip active" id="mvChipAll"    onclick="filterMyVibes('all',this)">
-                         <span>⚡</span> All
-                       </button>
-                       <button class="mv-filter-chip" id="mvChipPhotos" onclick="filterMyVibes('photos',this)">
-                         <span>📷</span> Photos
-                       </button>
-                       <button class="mv-filter-chip" id="mvChipVideos" onclick="filterMyVibes('videos',this)">
-                         <span>🎬</span> Videos
-                       </button>
-                       <button class="mv-filter-chip" id="mvChipText"   onclick="filterMyVibes('text',this)">
-                         <span>✍️</span> Text
-                       </button>
-                       <div class="mv-filter-spacer"></div>
-                       <button class="mv-refresh-btn" onclick="loadMyVibes()" title="Refresh">
-                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                       </button>
+                        <button class="mv-filter-chip active" id="mvChipAll" onclick="filterMyVibes('all',this)">
+                           <span>⚡</span> All
+                        </button>
+                        <button class="mv-filter-chip" id="mvChipPhotos" onclick="filterMyVibes('photos',this)">
+                           <span>📷</span> Photos
+                        </button>
+                        <button class="mv-filter-chip" id="mvChipVideos" onclick="filterMyVibes('videos',this)">
+                           <span>🎬</span> Videos
+                        </button>
+                        <button class="mv-filter-chip" id="mvChipText" onclick="filterMyVibes('text',this)">
+                           <span>✍️</span> Text
+                        </button>
+                        <div class="mv-filter-spacer"></div>
+                        <button class="mv-refresh-btn" onclick="loadMyVibes()" title="Refresh">
+                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"
+                              height="15">
+                              <path d="M23 4v6h-6M1 20v-6h6" />
+                              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                           </svg>
+                        </button>
                      </div>
 
                      <!-- Grid skeleton + grid -->
                      <div id="myVibesGrid" class="mv-grid">
-                       <div class="mv-skeleton-grid">
-                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
-                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
-                         <div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div><div class="mv-skeleton-cell"></div>
-                       </div>
+                        <div class="mv-skeleton-grid">
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                           <div class="mv-skeleton-cell"></div>
+                        </div>
                      </div>
 
                   </div>
@@ -1800,17 +1994,149 @@
                      </div>
                   </div>
 
+                  <!-- ══ MESSAGES TAB ══ -->
+                  <div id="profileTabMessages" class="tab-pane">
+                     <div id="dmConversationsList"
+                        style="display:flex;flex-direction:column;gap:2px;padding:8px 0;">
+                        <div class="empty-state">
+                           <div class="empty-icon">💬</div>
+                           <p>No conversations yet.</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  <!-- ══ ACHIEVEMENTS TAB ══ -->
+                  <div id="profileTabAchievements" class="tab-pane">
+                     <div id="achievementsGrid"
+                        style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 0;">
+                        <!-- populated by renderAchievements() -->
+                     </div>
+                     <div style="margin-top:24px;">
+                        <h4
+                           style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:10px;">
+                           Activity Heatmap</h4>
+                        <div id="activityHeatmap"
+                           style="display:grid;grid-template-columns:repeat(26,1fr);gap:2px;">
+                        </div>
+                     </div>
+                  </div>
+
                </div>
             </div>
-   </div>
-   </section>
+         </section>
+
+         <!-- ══════════ DM DRAWER ══════════ -->
+         <!-- Header height CSS variable set by JS so drawer doesn't overlap it -->
+         <div id="dmDrawer"
+            style="position:fixed;top:0;right:-440px;width:420px;height:100vh;height:100dvh;z-index:9999;background:rgba(10,10,20,0.96);backdrop-filter:blur(28px);border-left:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;transition:right 0.32s cubic-bezier(.4,0,.2,1);box-shadow:-8px 0 40px rgba(0,0,0,0.7);overflow:hidden;">
+            <!-- Drawer header — fixed height, never scrolls -->
+            <div id="dmDrawerHeader"
+               style="flex-shrink:0;display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(10,10,20,0.98);z-index:2;">
+               <button onclick="closeDmDrawer()"
+                  style="background:rgba(255,255,255,0.07);border:none;color:#fff;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;flex-shrink:0;">←</button>
+               <div
+                  style="width:40px;height:40px;border-radius:50%;background:#1a1933;overflow:hidden;flex-shrink:0;position:relative;">
+                  <span id="dmDrawerAvatarInitial"
+                     style="display:flex;align-items:center;justify-content:center;height:100%;font-size:18px;">👤</span>
+                  <img id="dmDrawerAvatarImg" src="" alt=""
+                     style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+               </div>
+               <div style="flex:1;min-width:0;">
+                  <div id="dmDrawerName"
+                     style="font-weight:600;color:#fff;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                  <div id="dmDrawerStatus" style="font-size:12px;color:#22c55e;">● Online</div>
+               </div>
+            </div>
+            <!-- Messages area — flex:1 fills all remaining space between header and input -->
+            <div id="dmMessagesArea"
+               style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+            <!-- Typing indicator — zero-height when hidden -->
+            <div id="dmTypingIndicator"
+               style="flex-shrink:0;padding:4px 16px 0;font-size:12px;color:#a78bfa;height:0;overflow:hidden;transition:height 0.2s;">typing…</div>
+            <!-- Input bar — fixed at bottom, never scrolls -->
+            <div
+               style="flex-shrink:0;padding:12px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;background:rgba(10,10,20,0.98);">
+               <input id="dmInput" type="text" placeholder="Message…"
+                  style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:20px;padding:10px 16px;font-size:14px;outline:none;"
+                  oninput="handleDmTyping()"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDm();}">
+               <button onclick="sendDm()"
+                  style="background:linear-gradient(135deg,#4f74a3,#7aa3d4);border:none;color:#fff;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">➤</button>
+            </div>
+         </div>
+         <div id="dmDrawerBackdrop" onclick="closeDmDrawer()"
+            style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;"></div>
+
+         <!-- ══════════ MINI PROFILE CARD ══════════ -->
+         <div id="miniProfileCard"
+            style="display:none;position:fixed;z-index:10000;width:280px;background:rgba(26,25,51,0.97);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,0.7);padding:20px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+               <div
+                  style="width:52px;height:52px;border-radius:50%;background:#1a1933;overflow:hidden;flex-shrink:0;position:relative;">
+                  <span id="mpcAvatarInitial"
+                     style="display:flex;align-items:center;justify-content:center;height:100%;font-size:22px;">👤</span>
+                  <img id="mpcAvatarImg" src="" alt=""
+                     style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+               </div>
+               <div style="flex:1;min-width:0;">
+                  <div id="mpcName" style="font-weight:700;color:#fff;font-size:15px;"></div>
+                  <div id="mpcUsername" style="color:rgba(255,255,255,0.45);font-size:12px;"></div>
+                  <div id="mpcPresence" style="font-size:11px;color:#22c55e;margin-top:2px;">● Online</div>
+               </div>
+               <button onclick="closeMiniProfileCard()"
+                  style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:18px;align-self:flex-start;flex-shrink:0;">✕</button>
+            </div>
+            <div id="mpcBio"
+               style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:12px;min-height:14px;"></div>
+            <div style="display:flex;gap:20px;margin-bottom:14px;">
+               <div style="text-align:center;">
+                  <div id="mpcFollowers" style="font-weight:700;color:#fff;font-size:15px;">0</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);">Followers</div>
+               </div>
+               <div style="text-align:center;">
+                  <div id="mpcFollowing" style="font-weight:700;color:#fff;font-size:15px;">0</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);">Following</div>
+               </div>
+               <div style="text-align:center;">
+                  <div id="mpcPosts" style="font-weight:700;color:#fff;font-size:15px;">0</div>
+                  <div style="font-size:10px;color:rgba(255,255,255,0.4);">Vibes</div>
+               </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+               <button id="mpcFollowBtn" onclick="mpcToggleFollow()"
+                  style="flex:1;background:linear-gradient(135deg,#4f74a3,#7aa3d4);border:none;color:#fff;border-radius:8px;padding:9px 0;cursor:pointer;font-size:13px;font-weight:600;">Follow</button>
+               <button onclick="mpcOpenDm()"
+                  style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:9px 0;cursor:pointer;font-size:13px;">💬
+                  Message</button>
+            </div>
+         </div>
+
+         <!-- ══════════ GHOST MODE MODAL ══════════ -->
+         <div id="ghostModeModal"
+            style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+            <div
+               style="background:#1a1933;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;width:320px;box-shadow:0 24px 64px rgba(0,0,0,0.8);max-width:90vw;">
+               <h3 style="margin:0 0 8px;color:#a78bfa;font-size:18px;">👻 Ghost Mode</h3>
+               <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;">Chat anonymously. Your
+                  real identity stays hidden.</p>
+               <input id="ghostNicknameInput" type="text" placeholder="Choose a ghost name…"
+                  style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:10px 14px;font-size:14px;margin-bottom:14px;box-sizing:border-box;outline:none;">
+               <div style="display:flex;gap:8px;">
+                  <button onclick="activateGhostMode()"
+                     style="flex:1;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;color:#fff;border-radius:8px;padding:10px;cursor:pointer;font-weight:600;">👻
+                     Go Ghost</button>
+                  <button onclick="closeGhostModal()"
+                     style="flex:1;background:rgba(255,255,255,0.07);border:none;color:#fff;border-radius:8px;padding:10px;cursor:pointer;">Cancel</button>
+               </div>
+            </div>
+         </div>
 
    <!-- EDIT PROFILE SECTION -->
    <section id="editProfile" class="page" style="display:none;">
       <div class="edit-profile-container">
          <div class="edit-profile-header">
             <button class="back-btn" onclick="showPage('profile')">← Back</button>
-            <h1 class="vibe-hard-branding">VIBE HARD</h1>
+            <h2>Edit Your Profile</h2>
          </div>
 
          <div class="edit-profile-form">
@@ -1851,7 +2177,6 @@
             <p>The exclusive VibeShop is under construction. Check back soon for amazing items!</p>
          </div>
       </div>
-   </section>
    </section>
    <!-- SUBSCRIPTION PLANS PAGE -->
    <section id="subscriptionPlans" class="page" style="display:none;">
@@ -1916,7 +2241,7 @@
 
                <div class="plan-price-section">
                   <div class="plan-original-price">₹99</div>
-                  <div class="plan-price">₹15</div>
+                  <div class="plan-price">₹25</div>
                   <div class="plan-duration">First time only • Then ₹99</div>
                </div>
 
@@ -1940,7 +2265,6 @@
          </div>
       </div>
    </section>
-   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
    <script>
       // Initialize roadmap when rewards page loads
       document.addEventListener('DOMContentLoaded', function () {
@@ -1965,7 +2289,9 @@
    </main>
 
    <footer id="mainFooter">
-      <p>&copy; 2025 VibeXpert. All rights reserved. | <span id="footerUsers">0</span> Users Online</p>
+      <p>&copy; <span id="footerYear2">2025</span> VibeXpert. All rights reserved. | <span id="footerUsers">0</span>
+         Users Online</p>
+      <script>document.getElementById('footerYear2').textContent = new Date().getFullYear();</script>
    </footer>
    </div>
 
@@ -2122,74 +2448,89 @@
 
    <!-- ══════ MY VIBES DETAIL MODAL ══════ -->
    <div id="myVibeDetailModal" class="mv-detail-modal" style="display:none;" onclick="closeMvDetail(event)">
-     <div class="mv-detail-inner" onclick="event.stopPropagation()">
+      <div class="mv-detail-inner" onclick="event.stopPropagation()">
 
-       <!-- Close -->
-       <button class="mv-detail-close" onclick="closeMvDetailModal()">✕</button>
+         <!-- Close -->
+         <button class="mv-detail-close" onclick="closeMvDetailModal()">✕</button>
 
-       <!-- Media viewer -->
-       <div class="mv-detail-media" id="mvDetailMedia"></div>
+         <!-- Media viewer -->
+         <div class="mv-detail-media" id="mvDetailMedia"></div>
 
-       <!-- Multi-image dots -->
-       <div class="mv-detail-dots" id="mvDetailDots"></div>
+         <!-- Multi-image dots -->
+         <div class="mv-detail-dots" id="mvDetailDots"></div>
 
-       <!-- Info panel -->
-       <div class="mv-detail-panel">
+         <!-- Info panel -->
+         <div class="mv-detail-panel">
 
-         <!-- Author row -->
-         <div class="mv-detail-author">
-           <div class="mv-detail-avatar" id="mvDetailAvatar"></div>
-           <div class="mv-detail-meta">
-             <span class="mv-detail-username" id="mvDetailUsername"></span>
-             <span class="mv-detail-time" id="mvDetailTime"></span>
-           </div>
-           <span class="mv-detail-dest" id="mvDetailDest"></span>
+            <!-- Author row -->
+            <div class="mv-detail-author">
+               <div class="mv-detail-avatar" id="mvDetailAvatar"></div>
+               <div class="mv-detail-meta">
+                  <span class="mv-detail-username" id="mvDetailUsername"></span>
+                  <span class="mv-detail-time" id="mvDetailTime"></span>
+               </div>
+               <span class="mv-detail-dest" id="mvDetailDest"></span>
+            </div>
+
+            <!-- Caption (view mode) -->
+            <div class="mv-detail-caption-wrap" id="mvCaptionWrap">
+               <p class="mv-detail-caption" id="mvDetailCaption"></p>
+            </div>
+
+            <!-- Caption edit mode -->
+            <div class="mv-detail-edit-wrap" id="mvEditWrap" style="display:none;">
+               <textarea class="mv-caption-edit-area" id="mvCaptionEditArea"
+                  placeholder="What's your vibe? Add a caption…" maxlength="500"></textarea>
+               <div class="mv-edit-actions">
+                  <button class="mv-edit-cancel" onclick="cancelMvEdit()">Cancel</button>
+                  <button class="mv-edit-save" onclick="saveMvCaption()">Save</button>
+               </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="mv-detail-stats">
+               <div class="mv-detail-stat">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                     <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <span id="mvDetailLikes">0</span>
+               </div>
+               <div class="mv-detail-stat">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span id="mvDetailComments">0</span>
+               </div>
+               <div class="mv-detail-stat">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                     <line x1="22" y1="2" x2="11" y2="13" />
+                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                  <span id="mvDetailShares">0</span>
+               </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="mv-detail-btns">
+               <button class="mv-btn-edit" id="mvBtnEdit" onclick="startMvEdit()">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit Caption
+               </button>
+               <button class="mv-btn-delete" id="mvBtnDelete" onclick="deleteMvPost()">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                     <polyline points="3 6 5 6 21 6" />
+                     <path d="M19 6l-1 14H6L5 6m5 0V4h4v2" />
+                  </svg>
+                  Delete
+               </button>
+            </div>
+
          </div>
-
-         <!-- Caption (view mode) -->
-         <div class="mv-detail-caption-wrap" id="mvCaptionWrap">
-           <p class="mv-detail-caption" id="mvDetailCaption"></p>
-         </div>
-
-         <!-- Caption edit mode -->
-         <div class="mv-detail-edit-wrap" id="mvEditWrap" style="display:none;">
-           <textarea class="mv-caption-edit-area" id="mvCaptionEditArea" placeholder="What's your vibe? Add a caption…" maxlength="500"></textarea>
-           <div class="mv-edit-actions">
-             <button class="mv-edit-cancel" onclick="cancelMvEdit()">Cancel</button>
-             <button class="mv-edit-save" onclick="saveMvCaption()">Save</button>
-           </div>
-         </div>
-
-         <!-- Stats row -->
-         <div class="mv-detail-stats">
-           <div class="mv-detail-stat">
-             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-             <span id="mvDetailLikes">0</span>
-           </div>
-           <div class="mv-detail-stat">
-             <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-             <span id="mvDetailComments">0</span>
-           </div>
-           <div class="mv-detail-stat">
-             <svg viewBox="0 0 24 24" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-             <span id="mvDetailShares">0</span>
-           </div>
-         </div>
-
-         <!-- Action buttons -->
-         <div class="mv-detail-btns">
-           <button class="mv-btn-edit" id="mvBtnEdit" onclick="startMvEdit()">
-             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-             Edit Caption
-           </button>
-           <button class="mv-btn-delete" id="mvBtnDelete" onclick="deleteMvPost()">
-             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6m5 0V4h4v2"/></svg>
-             Delete
-           </button>
-         </div>
-
-       </div>
-     </div>
+      </div>
    </div>
    <!-- ══════ /MY VIBES DETAIL MODAL ══════ -->
 
