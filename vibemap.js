@@ -5,6 +5,386 @@
 
 const API_URL = 'https://vibexpert-backend-main.onrender.com';
 
+// ── Media Proxy ────────────────────────────────────────────────────────────────
+// Routes Supabase storage URLs through our Render backend to bypass Indian mobile
+// carrier (Jio / Airtel / Vi) throttling/blocking of *.supabase.co domains.
+function proxyMediaUrl(url) {
+  if (!url) return url;
+  // Only proxy Supabase storage URLs; leave everything else as-is
+  if (url.includes('.supabase.co/storage/')) {
+    return `${API_URL}/api/proxy/media?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
+// ── Rewards stub (prevents ReferenceError crash on like / post / comment) ─────
+// Replace this with your real rewards logic if/when you add that feature back.
+function checkAndUpdateRewards(action) {
+  // no-op placeholder — add reward logic here when needed
+  console.log('[Rewards] action:', action);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  INSTITUTE COMMUNITY CHAT — SAFETY MODULE
+//  ① Mandatory ghost name gate
+//  ② Bad-word filter (EN + HI + regional) with 3-strike mute system
+//  ③ Media safety (no videos; image upload consent warning)
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── 1. Ghost-name gate ─────────────────────────────────────────────────
+// Every user MUST set a ghost name before they can view or send messages.
+// Real name / avatar is NEVER shown in community chat.
+
+let _ghostName = localStorage.getItem('vx_ghost_name') || '';
+
+function getGhostName() { return _ghostName; }
+
+function hasGhostName() { return !!_ghostName && _ghostName.length >= 2; }
+
+function saveGhostName(name) {
+  _ghostName = (name || '').trim().slice(0, 30);
+  if (_ghostName.length >= 2) {
+    localStorage.setItem('vx_ghost_name', _ghostName);
+    return true;
+  }
+  return false;
+}
+
+// Show the mandatory ghost-name setup modal and block chat until done
+function requireGhostName(onSuccess) {
+  if (hasGhostName()) { if (onSuccess) onSuccess(); return; }
+
+  // Build modal if not already in DOM
+  let modal = document.getElementById('ghostNameRequiredModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'ghostNameRequiredModal';
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:#12102a;border:1px solid rgba(167,139,250,0.3);border-radius:18px;padding:32px 28px;width:340px;max-width:92vw;box-shadow:0 32px 80px rgba(0,0,0,0.9);text-align:center;">
+        <div style="font-size:44px;margin-bottom:10px;">👻</div>
+        <h3 style="margin:0 0 6px;color:#a78bfa;font-size:20px;font-weight:700;">Choose Your Ghost Name</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;line-height:1.5;">
+          Institute Chat is <strong style="color:#a78bfa">100% anonymous</strong>.<br>
+          Pick a nickname — your real name will <em>never</em> be shown.
+        </p>
+        <input id="ghostNameReqInput" type="text" maxlength="30" placeholder="e.g. NightOwl, CoolBean…"
+          style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(167,139,250,0.3);color:#fff;border-radius:10px;padding:12px 14px;font-size:15px;margin-bottom:6px;box-sizing:border-box;outline:none;text-align:center;">
+        <p id="ghostNameReqErr" style="color:#ff6b6b;font-size:12px;min-height:18px;margin-bottom:10px;"></p>
+        <button onclick="confirmGhostName()" 
+          style="width:100%;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;color:#fff;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.3px;">
+          👻 Enter Chat
+        </button>
+        <p style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px;">You can change this anytime from chat settings</p>
+      </div>`;
+    document.body.appendChild(modal);
+
+    // Submit on Enter
+    modal.querySelector('#ghostNameReqInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmGhostName();
+    });
+  }
+
+  // Store callback
+  modal._onSuccess = onSuccess;
+  modal.style.display = 'flex';
+  setTimeout(() => modal.querySelector('#ghostNameReqInput').focus(), 100);
+}
+
+function confirmGhostName() {
+  const modal = document.getElementById('ghostNameRequiredModal');
+  const input = document.getElementById('ghostNameReqInput');
+  const err   = document.getElementById('ghostNameReqErr');
+  const val   = (input?.value || '').trim();
+
+  if (!val || val.length < 2) {
+    if (err) err.textContent = '⚠️ Please enter at least 2 characters.';
+    return;
+  }
+  if (val.length > 30) {
+    if (err) err.textContent = '⚠️ Max 30 characters allowed.';
+    return;
+  }
+
+  saveGhostName(val);
+  if (modal) modal.style.display = 'none';
+  showMessage(`👻 Ghost name set: "${_ghostName}"`, 'success');
+
+  if (modal?._onSuccess) modal._onSuccess();
+}
+
+// Allow user to change ghost name from inside chat
+function changeGhostName() {
+  const newName = prompt('Enter new ghost name (2-30 chars):', _ghostName);
+  if (newName === null) return; // cancelled
+  if (!newName.trim() || newName.trim().length < 2) {
+    showMessage('⚠️ Too short! Min 2 characters.', 'error');
+    return;
+  }
+  saveGhostName(newName);
+  showMessage(`👻 Ghost name changed to "${_ghostName}"`, 'success');
+}
+
+
+// ── 2. Bad-word filter + 3-strike mute system ─────────────────────────
+
+// Strike state persisted in localStorage
+const CHAT_STRIKE_KEY  = 'vx_chat_strikes';
+const CHAT_MUTE_KEY    = 'vx_chat_muted_until';
+const MAX_STRIKES      = 3;
+const MUTE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function getChatStrikes() {
+  try { return parseInt(localStorage.getItem(CHAT_STRIKE_KEY) || '0', 10); } catch { return 0; }
+}
+function addChatStrike() {
+  const s = Math.min(getChatStrikes() + 1, MAX_STRIKES);
+  localStorage.setItem(CHAT_STRIKE_KEY, String(s));
+  if (s >= MAX_STRIKES) {
+    const muteUntil = Date.now() + MUTE_DURATION_MS;
+    localStorage.setItem(CHAT_MUTE_KEY, String(muteUntil));
+    localStorage.setItem(CHAT_STRIKE_KEY, '0'); // reset after mute
+  }
+  return s;
+}
+function isChatMuted() {
+  try {
+    const until = parseInt(localStorage.getItem(CHAT_MUTE_KEY) || '0', 10);
+    if (!until) return false;
+    if (Date.now() < until) return true;
+    // Mute expired — clean up
+    localStorage.removeItem(CHAT_MUTE_KEY);
+    return false;
+  } catch { return false; }
+}
+function muteTimeLeft() {
+  try {
+    const until = parseInt(localStorage.getItem(CHAT_MUTE_KEY) || '0', 10);
+    if (!until) return '';
+    const ms = until - Date.now();
+    if (ms <= 0) return '';
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return `${h}h ${m}m`;
+  } catch { return ''; }
+}
+
+// ── Banned word list ───────────────────────────────────────────────────
+// Covers: English, Hindi (roman), Punjabi, Tamil, Telugu, Kannada,
+//         Malayalam, Bengali, Marathi + universal family slurs
+const BANNED_WORDS = [
+  // ── English profanity ──
+  'fuck','f u c k','fucker','fucking','fucked','fucks','motherfucker','motherfucking',
+  'shit','shits','shitty','bullshit','horseshit','apeshit',
+  'bitch','bitches','bitching','son of a bitch',
+  'asshole','ass hole','arsehole','arse',
+  'cunt','cunts','crap','crappy',
+  'dick','dicks','dickhead','cock','cocks','cocksucker',
+  'pussy','pussies','whore','slut','slutty',
+  'bastard','bastards','nigger','nigga','faggot','fag','dyke',
+  'retard','retarded','spastic','twat','wanker','jerk off','jackass',
+  'piss','pissed','pissing','damn','damnit','goddamn','hell yeah',
+  'nude','naked','nudes','sex','sexy','porn','porno','hentai','xxx',
+  'boobs','boob','tits','tit','penis','vagina','erotic','orgasm',
+  // ── Family slurs (EN) ──
+  'your mother','ur mother','yo mama','your mama','your mom','ur mom',
+  'your father','ur father','your dad','ur dad',
+  'your sister','ur sister','your sis',
+
+  // ── Hindi / Urdu (roman) ──
+  'madarchod','madar chod','maa ki aankh','maa ka','teri maa','teri ma',
+  'teri maa ki','bhen chod','bhen ki aankh','behenchod','behen chod',
+  'bhosdi','bhosda','bhosdike','chutiya','chut','chut ki',
+  'gaand','gaandu','gandu','lund','loda','lauda','lawda','lundbaaz',
+  'randi','raand','rand','harami','haraami','suwar','suar','kutte',
+  'kamine','kamina','kaminey','saala','saali','haramzada','haramzadi',
+  'maa chod','baap chod','bap chod','teri maa ko','teri behan ko',
+  // Family slurs (HI roman)
+  'teri maa','tera baap','teri behen','teri behan','tera bap',
+  'maa','mata','maa ko','behen ko','behan ko','baap ko','bap ko',
+
+  // ── Punjabi (roman) ──
+  'teri maa di','teri pen di','pen di lun','maa di','penchod',
+  'pen chod','teri pen','tera pyo','tere pyo','tenu','kutta',
+
+  // ── Tamil (roman transliteration) ──
+  'ommala','omala','punda','otha','thevidiya','mayiru','sunni','poolu',
+  'thevdiya','koothi','puluthi','naaye','naai','loosu',
+  // Family (Tamil)
+  'amma','appan','akka','thangachi','anni',
+
+  // ── Telugu (roman) ──
+  'dengu','dengey','lanja','pooku','modda','gudda','naayala','sala',
+  'baadu','nee amma','nee amma ki','nee amma tho',
+  // Family (Telugu)
+  'amma','nana','akka','atta',
+
+  // ── Kannada (roman) ──
+  'sule','sulemagane','holemagane','tika','ninna amma','nin taayi',
+  'taayi','thaayi','akka','tangi',
+
+  // ── Malayalam (roman) ──
+  'myru','myiru','poorr','pooru','kunna','kunni','patti',
+  'ammayude','ammaye','achan','chechi','ammachi',
+
+  // ── Bengali (roman) ──
+  'magi','boga','khanki','shala','khankir chele','chele','maa ke',
+  'tor ma','tor baap','tor bon','tor didi',
+
+  // ── Marathi (roman) ──
+  'aai zava','aai zhav','bhadwa','bhadwi','rand','raand','haram',
+  'aai ga','aai chi','bai cha','bai chi',
+
+  // ── Universal ──
+  'nude send','send nudes','send pic','naughty pic','dirty pic',
+  '18+','adult content','explicit','nsfw',
+];
+
+// Pre-process list: sort longest first, normalize
+const _BANNED_SORTED = [...new Set(BANNED_WORDS.map(w => w.toLowerCase().trim()))]
+  .sort((a, b) => b.length - a.length);
+
+/**
+ * Check text for banned words.
+ * Returns { clean: false, word: 'foundWord' } or { clean: true }
+ */
+function checkBannedWords(text) {
+  if (!text || typeof text !== 'string') return { clean: true };
+  // Normalize: lowercase, collapse multiple spaces, remove common obfuscation chars
+  const normalized = text.toLowerCase()
+    .replace(/[@4]/g, 'a').replace(/[3]/g, 'e').replace(/[1!|]/g, 'i')
+    .replace(/[0]/g, 'o').replace(/[5\$]/g, 's').replace(/[7]/g, 't')
+    .replace(/[+]/g, 't').replace(/\*/g, '').replace(/\./g, '')
+    .replace(/\s+/g, ' ');
+
+  for (const word of _BANNED_SORTED) {
+    // Use word-boundary-aware check (allow partial for multi-word phrases)
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rx = word.includes(' ')
+      ? new RegExp(escaped, 'i')
+      : new RegExp(`(?:^|[^a-z])${escaped}(?:[^a-z]|$)`, 'i');
+    if (rx.test(normalized)) return { clean: false, word };
+  }
+  return { clean: true };
+}
+
+/**
+ * Called before every message send in community chat.
+ * Returns true if the message can be sent, false if blocked.
+ */
+function communitySafetyCheck(text) {
+  // ── Mute check ──────────────────────────────────────────────────────
+  if (isChatMuted()) {
+    const left = muteTimeLeft();
+    showCommunityMutedBanner(left);
+    return false;
+  }
+
+  // ── Bad-word check ───────────────────────────────────────────────────
+  const result = checkBannedWords(text);
+  if (!result.clean) {
+    const strikes = addChatStrike();
+    const remaining = MAX_STRIKES - strikes;
+
+    if (isChatMuted()) {
+      // Just got 3rd strike → now muted
+      showMessage(
+        `🚫 You have been muted for 24 hours due to repeated use of banned language.`,
+        'error', 8000
+      );
+      showCommunityMutedBanner(muteTimeLeft());
+    } else {
+      // 1st or 2nd strike warning
+      const icon  = strikes === 1 ? '⚠️' : '🔴';
+      const label = strikes === 1 ? 'Warning' : 'Final Warning';
+      showMessage(
+        `${icon} ${label} (Strike ${strikes}/${MAX_STRIKES}): Message contains banned language. ` +
+        `${remaining > 0 ? remaining + ' strike(s) left before 24h mute.' : ''}`,
+        'error', 7000
+      );
+    }
+    return false;
+  }
+  return true;
+}
+
+function showCommunityMutedBanner(timeLeft) {
+  const existing = document.getElementById('chatMutedBanner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'chatMutedBanner';
+  banner.style.cssText = `position:absolute;bottom:0;left:0;right:0;background:#3d0000;
+    color:#ff9999;padding:14px 18px;text-align:center;font-size:13px;
+    font-weight:600;z-index:999;border-top:1px solid rgba(255,50,50,0.3);`;
+  banner.innerHTML = `🔇 You are muted for <strong>${timeLeft || '24h'}</strong> due to repeated violations. You can read but not send messages.`;
+  const chatArea = document.querySelector('.whatsapp-container') || document.getElementById('communityChatState');
+  if (chatArea) chatArea.style.position = 'relative', chatArea.appendChild(banner);
+}
+
+
+// ── 3. Media safety for community chat ────────────────────────────────
+// Videos are BLOCKED. Images require an explicit consent warning.
+
+let _imageConsentAcknowledged = sessionStorage.getItem('vx_img_consent') === '1';
+
+/**
+ * Call this before allowing image upload in community chat.
+ * Returns a promise that resolves true (agreed) or false (cancelled).
+ */
+function requireImageConsent() {
+  if (_imageConsentAcknowledged) return Promise.resolve(true);
+
+  return new Promise(resolve => {
+    let modal = document.getElementById('imgConsentModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'imgConsentModal';
+      modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:20001;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#12102a;border:1px solid rgba(255,165,0,0.3);border-radius:16px;padding:28px;width:330px;max-width:92vw;text-align:center;">
+          <div style="font-size:36px;margin-bottom:8px;">📎</div>
+          <h3 style="margin:0 0 8px;color:#fbbf24;font-size:17px;">Media Upload Warning</h3>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:18px;">
+            By uploading this file you confirm it does <strong style="color:#fff">NOT</strong> contain:<br>
+            🔞 18+ / adult / explicit content<br>
+            🚫 Nudity or sexual imagery<br>
+            ⚠️ Harassment or offensive material<br><br>
+            Violations will result in a <strong style="color:#ff9999">permanent ban</strong>.
+          </p>
+          <div style="display:flex;gap:10px;">
+            <button id="imgConsentAgree"
+              style="flex:1;background:linear-gradient(135deg,#15803d,#22c55e);border:none;color:#fff;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;">
+              ✅ I Agree
+            </button>
+            <button id="imgConsentCancel"
+              style="flex:1;background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:10px;padding:11px;cursor:pointer;">
+              Cancel
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    modal._resolve = resolve;
+
+    document.getElementById('imgConsentAgree').onclick = () => {
+      _imageConsentAcknowledged = true;
+      sessionStorage.setItem('vx_img_consent', '1');
+      modal.style.display = 'none';
+      resolve(true);
+    };
+    document.getElementById('imgConsentCancel').onclick = () => {
+      modal.style.display = 'none';
+      resolve(false);
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  END SAFETY MODULE
+// ═══════════════════════════════════════════════════════════════════════
+
 // Emoji Picker Functions
 let currentEmojiCategory = 'emotions';
 let emojiPickerVisible = false;
@@ -21,13 +401,15 @@ function toggleEmojiPicker() {
   }
 }
 
-function showEmojiCategory(category) {
+function showEmojiCategory(category, event) {
   currentEmojiCategory = category;
 
   // Update active category button
   const categoryButtons = document.querySelectorAll('.emoji-category');
   categoryButtons.forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
 
   loadEmojiCategory(category);
 }
@@ -1068,6 +1450,14 @@ async function sendEnhancedMessage() {
   const content = chatInput?.value.trim();
   if (!content) return;
 
+  // ── SAFETY CHECKS ──
+  if (!hasGhostName()) { requireGhostName(() => sendEnhancedMessage()); return; }
+  if (!communitySafetyCheck(content)) return;
+  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
+  // ───────────────────
+
+  const ghostName = getGhostName();
+
   try {
     const messageData = {
       content,
@@ -1079,7 +1469,8 @@ async function sendEnhancedMessage() {
       id: messageData.tempId,
       content,
       sender_id: currentUser.id,
-      users: currentUser,
+      anon_name: ghostName,
+      users: { id: currentUser.id, username: ghostName, profile_pic: null },
       timestamp: new Date(),
       status: 'sending'
     });
@@ -1087,7 +1478,7 @@ async function sendEnhancedMessage() {
     chatInput.value = '';
     chatInput.style.height = 'auto';
 
-    await apiCall('/api/community/messages', 'POST', { content });
+    await apiCall('/api/community/messages', 'POST', { content, anon_name: ghostName });
     updateMessageStatus(messageData.tempId, 'sent');
     playMessageSound('send');
 
@@ -1107,7 +1498,7 @@ function appendMessageToChat(msg) {
   if (!messagesEl) return;
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  const sender = msg.anon_name || (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || '👻 Ghost';
   const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
   const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
@@ -1502,7 +1893,8 @@ function setupInfiniteScroll() {
 
 function renderMessage(msg) {
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  // Ghost name only in community chat
+  const sender = msg.anon_name || (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || '👻 Ghost';
   const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
   const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
@@ -1511,20 +1903,20 @@ function renderMessage(msg) {
   let renderMediaHTML = '';
   if (msg.media_url) {
     if (msg.media_type === 'video') {
-      renderMediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+      renderMediaHTML = `<video class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls playsinline></video>`;
     } else if (msg.media_type === 'audio') {
-      renderMediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+      renderMediaHTML = `<audio class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls></audio>`;
     } else if (msg.media_type === 'pdf') {
       renderMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
     } else if (msg.media_type === 'document') {
       renderMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
-      renderMediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+      renderMediaHTML = `<img class="msg-media" src="${proxyMediaUrl(msg.media_url)}" alt="image" onclick="openImageViewer(this.src)">`;
     }
   }
 
   let html = `<div class="chat-message ${isOwn ? 'own' : 'other'}" id="msg-${messageId}">`;
-  if (!isOwn) html += `<div class="sender">@${escapeHtml(sender)}</div>`;
+  if (!isOwn) html += `<div class="sender" style="color:#a78bfa;">👻 ${escapeHtml(sender)}</div>`;
   html += `
    ${renderMediaHTML}
    <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
@@ -2725,8 +3117,8 @@ function initializeSocket() {
     let lastTap = 0;
     card.addEventListener('click', e => {
       if (e.target.closest('.vibe-card-actions') ||
-          e.target.closest('.vibe-card-info') ||
-          e.target.closest('.vibe-card-delete-btn')) return;
+        e.target.closest('.vibe-card-info') ||
+        e.target.closest('.vibe-card-delete-btn')) return;
       const now = Date.now();
       if (now - lastTap < 320) vibeDoubleTapLike(card, newIdx);
       lastTap = now;
@@ -2973,6 +3365,9 @@ function showProfilePage(user) {
   // Ownership Visibility
   const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
 
+  // ── Set global so dmBtn can find who to message ──────────────────
+  currentProfileUserId = isOwn ? null : (targetUser.id || null);
+
   document.querySelectorAll('.edit-cover-btn, .avatar-edit-overlay, .btn-micro').forEach(btn => {
     btn.style.display = isOwn ? 'block' : 'none';
   });
@@ -2988,6 +3383,12 @@ function showProfilePage(user) {
       followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
       followBtn.style.opacity = isFollowing ? '0.7' : '1';
     }
+  }
+
+  // Handle DM Button — show only when viewing someone else's profile
+  const dmBtn = document.getElementById('dmBtn');
+  if (dmBtn) {
+    dmBtn.style.display = isOwn ? 'none' : 'block';
   }
 
   // Fetch real follower/following counts from backend
@@ -3155,7 +3556,7 @@ async function _prefetchMyVibes() {
     if (pane && pane.classList.contains('active')) {
       _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
     }
-  } catch(e) { /* silent */ }
+  } catch (e) { /* silent */ }
 }
 
 // ── Reset stale cache whenever opening a new profile ──
@@ -3181,7 +3582,7 @@ async function _fetchMyPostsFromAPI(userId) {
       const data = await apiCall(`/api/posts/user/${targetId}`, 'GET');
       if (data && data.posts) return data.posts;
     }
-  } catch(e) {
+  } catch (e) {
     if (e.status !== 404 && e.status !== 405) throw e;
   }
 
@@ -3193,7 +3594,7 @@ async function _fetchMyPostsFromAPI(userId) {
       const uid = p.user_id || (p.users && p.users.id);
       return uid === targetId;
     });
-  } catch(e2) {
+  } catch (e2) {
     throw e2;
   }
 }
@@ -3233,7 +3634,7 @@ async function loadMyVibes() {
       _mvRTInterval = setInterval(() => _silentRefreshMyVibes(), 30000);
     }
 
-  } catch(err) {
+  } catch (err) {
     console.error('My Vibes load error:', err);
     grid.innerHTML = `<div class="mv-empty">
       <div class="mv-empty-icon">🌌</div>
@@ -3252,7 +3653,7 @@ async function _silentRefreshMyVibes() {
     if (pane && pane.classList.contains('active')) {
       _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
     }
-  } catch(e) { /* silent */ }
+  } catch (e) { /* silent */ }
 }
 
 function _mvFilterPosts(posts, filter) {
@@ -3260,7 +3661,7 @@ function _mvFilterPosts(posts, filter) {
     (p.media || []).some(m => m.type === 'image' || (!m.type && m.url)));
   if (filter === 'videos') return posts.filter(p =>
     (p.media || []).some(m => m.type === 'video'));
-  if (filter === 'text')   return posts.filter(p => !(p.media && p.media.length));
+  if (filter === 'text') return posts.filter(p => !(p.media && p.media.length));
   return posts;
 }
 
@@ -3272,18 +3673,18 @@ function filterMyVibes(filter, btn) {
 }
 
 function _updateMvStats(posts) {
-  const totalLikes    = posts.reduce((s, p) => s + (p.like_count    || 0), 0);
+  const totalLikes = posts.reduce((s, p) => s + (p.like_count || 0), 0);
   const totalComments = posts.reduce((s, p) => s + (p.comment_count || 0), 0);
-  const withMedia     = posts.filter(p => p.media && p.media.length).length;
+  const withMedia = posts.filter(p => p.media && p.media.length).length;
 
   const setEl = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.textContent = vibeFmt ? vibeFmt(val) : val;
   };
-  setEl('mvStatPosts',    posts.length);
-  setEl('mvStatLikes',    totalLikes);
+  setEl('mvStatPosts', posts.length);
+  setEl('mvStatLikes', totalLikes);
   setEl('mvStatComments', totalComments);
-  setEl('mvStatMedia',    withMedia);
+  setEl('mvStatMedia', withMedia);
   // also update header stat
   const hp = document.getElementById('profileStatPosts');
   if (hp) hp.textContent = posts.length;
@@ -3315,13 +3716,13 @@ function _renderMyVibesGrid(posts) {
 }
 
 function _buildMvCell(post, idx) {
-  const media   = Array.isArray(post.media) ? post.media : [];
-  const first   = media[0];
+  const media = Array.isArray(post.media) ? post.media : [];
+  const first = media[0];
   const isVideo = first?.type === 'video';
-  const isText  = !media.length;
-  const likes   = (vibeFmt ? vibeFmt(post.like_count || 0) : (post.like_count || 0));
-  const multi   = media.length > 1;
-  const timeAgo = (vibeTimeAgo || (() => ''))( post.created_at);
+  const isText = !media.length;
+  const likes = (vibeFmt ? vibeFmt(post.like_count || 0) : (post.like_count || 0));
+  const multi = media.length > 1;
+  const timeAgo = (vibeTimeAgo || (() => ''))(post.created_at);
 
   let thumb = '';
   if (isVideo) {
@@ -3331,7 +3732,7 @@ function _buildMvCell(post, idx) {
                <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3" fill="white"/></svg>
              </div>`;
   } else if (first) {
-    thumb = `<img class="mv-cell-media" src="${first.url || first}" alt="" loading="lazy">`;
+    thumb = `<img class="mv-cell-media" src="${proxyMediaUrl(first.url || first)}" alt="" loading="lazy">`;
   } else {
     const grad = (vibeGradient || (() => '#1a1a2e'))(post.id);
     const preview = (post.content || '').slice(0, 40) || '✨';
@@ -3387,7 +3788,7 @@ function _populateMvDetail(post) {
       mediaEl.innerHTML = _buildMvDetailSlide(media, 0);
     } else {
       const grad = (vibeGradient || (() => '#1a1a2e'))(post.id);
-      const txt  = (post.content || '').slice(0, 120) || '✨';
+      const txt = (post.content || '').slice(0, 120) || '✨';
       mediaEl.innerHTML = `<div class="mv-detail-text-bg" style="background:${grad}">
         <p class="mv-detail-text-body">${txt}</p>
       </div>`;
@@ -3437,7 +3838,7 @@ function _populateMvDetail(post) {
   const isPostOwner = currentUser && (post.user_id === currentUser.id);
   const editBtn = document.getElementById('mvBtnEdit');
   const deleteBtn = document.getElementById('mvBtnDelete');
-  if (editBtn)   editBtn.style.display   = isPostOwner ? '' : 'none';
+  if (editBtn) editBtn.style.display = isPostOwner ? '' : 'none';
   if (deleteBtn) deleteBtn.style.display = isPostOwner ? '' : 'none';
 
   // Reset edit mode
@@ -3453,10 +3854,10 @@ function _buildMvDetailSlide(media, idx) {
   if (item.type === 'video') {
     return `<video class="mv-detail-slide-video" src="${item.url}" controls playsinline autoplay></video>`;
   }
-  return `<img class="mv-detail-slide-img" src="${item.url || item}" alt="">
+  return `<img class="mv-detail-slide-img" src="${proxyMediaUrl(item.url || item)}" alt="">
           <div class="mv-detail-nav">
-            ${idx > 0 ? `<button class="mv-nav-btn mv-nav-prev" onclick="mvSlide(${idx-1})">‹</button>` : ''}
-            ${idx < media.length - 1 ? `<button class="mv-nav-btn mv-nav-next" onclick="mvSlide(${idx+1})">›</button>` : ''}
+            ${idx > 0 ? `<button class="mv-nav-btn mv-nav-prev" onclick="mvSlide(${idx - 1})">‹</button>` : ''}
+            ${idx < media.length - 1 ? `<button class="mv-nav-btn mv-nav-next" onclick="mvSlide(${idx + 1})">›</button>` : ''}
           </div>`;
 }
 
@@ -3519,8 +3920,8 @@ function startMvEdit() {
   const editArea = document.getElementById('mvCaptionEditArea');
   if (editArea) editArea.value = post.content || '';
   document.getElementById('mvCaptionWrap')?.style && (document.getElementById('mvCaptionWrap').style.display = 'none');
-  document.getElementById('mvEditWrap').style.display  = 'block';
-  document.getElementById('mvBtnEdit').style.display   = 'none';
+  document.getElementById('mvEditWrap').style.display = 'block';
+  document.getElementById('mvBtnEdit').style.display = 'none';
   editArea?.focus();
 }
 
@@ -3552,7 +3953,7 @@ async function saveMvCaption() {
 
     cancelMvEdit();
     showMessage('✅ Caption updated!', 'success');
-  } catch(err) {
+  } catch (err) {
     showMessage('❌ ' + (err.message || 'Update failed'), 'error');
   } finally {
     if (saveBtn) { saveBtn.textContent = 'Save'; saveBtn.disabled = false; }
@@ -3576,7 +3977,7 @@ async function deleteMvPost() {
     closeMvDetailModal();
     _updateMvStats(_mvAllPosts);
     _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
-  } catch(err) {
+  } catch (err) {
     showMessage('❌ ' + (err.message || 'Delete failed'), 'error');
     if (delBtn) { delBtn.textContent = 'Delete'; delBtn.disabled = false; }
   }
@@ -4194,42 +4595,53 @@ async function createPost() {
   }
 }
 
-// ── "Your New Vibe is Online" toast + auto VibeXpert logo click ──
-function showVibeOnlineToast() {
-  const old = document.getElementById('vibeOnlineToast');
-  if (old) old.remove();
+// ── Post Success: show popup then hard-reload via VibeXpert logo ──
+function showVibePostSuccessAndReload() {
+  // Remove any stale copies
+  ['vibeOnlineToast', 'vibeSuccessPopup'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
 
-  const toast = document.createElement('div');
-  toast.id = 'vibeOnlineToast';
-  toast.innerHTML = `
-    <div class="vot-glow"></div>
-    <div class="vot-icon">✦</div>
-    <div class="vot-body">
-      <strong>Your New Vibe is Online</strong>
-      <span>Everyone can see it now 🔥</span>
+  // Build the success popup
+  const popup = document.createElement('div');
+  popup.id = 'vibeSuccessPopup';
+  popup.innerHTML = `
+    <div class="vsp-bg-glow"></div>
+    <div class="vsp-icon-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
     </div>
-    <div class="vot-close" onclick="document.getElementById('vibeOnlineToast')?.remove()">✕</div>
+    <div class="vsp-text">
+      <strong>Successfully Posted!</strong>
+      <span>Your vibe is now live on Vibes 🚀</span>
+    </div>
+    <div class="vsp-timer-bar"><div class="vsp-timer-fill"></div></div>
   `;
-  document.body.appendChild(toast);
+  document.body.appendChild(popup);
 
   // Animate in
-  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('vot-show')));
+  requestAnimationFrame(() => requestAnimationFrame(() => popup.classList.add('vsp-show')));
 
-  // After 1.8s — simulate clicking the VibeXpert logo (top-left) → hard reload
+  // After 1.5s — animate out, then hard-reload (VibeXpert logo top-left)
   setTimeout(() => {
-    const logo = document.querySelector('.logo');
-    if (logo) logo.click();
-  }, 1800);
-
-  // Safety auto-remove if reload doesn't fire for some reason
-  setTimeout(() => {
-    toast.classList.remove('vot-show');
-    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 450);
-  }, 5000);
+    popup.classList.add('vsp-hide');
+    setTimeout(() => {
+      // Try SPA logo click first; fall back to hard reload
+      const vibeLogo = document.querySelector('.vibe-logo-pill');
+      const mainLogo = document.querySelector('.logo');
+      if (vibeLogo) { vibeLogo.click(); }
+      else if (mainLogo) { mainLogo.click(); }
+      else { window.location.reload(); }
+    }, 300);
+  }, 1500);
 }
 
-// Legacy alias kept so any old call still works
-function showVibeSuccessToast() { showVibeOnlineToast(); }
+// ── Legacy aliases — kept so any old calls still work ──
+function showVibeOnlineToast() { showVibePostSuccessAndReload(); }
+function showVibeSuccessToast() { showVibePostSuccessAndReload(); }
+function showVibeSuccessPopup() { showVibePostSuccessAndReload(); }
 
 
 
@@ -4276,7 +4688,7 @@ function renderPosts(posts) {
     html += `
      <div class="enhanced-post" id="post-${post.id}">
        <div class="enhanced-post-header">
-         <div class="enhanced-user-info" onclick="showUserProfile('${authorId}')" style="cursor:pointer;">
+         <div class="enhanced-user-info" onclick="showMiniProfileCard('${authorId}',event)" style="cursor:pointer;">
            <div class="enhanced-user-avatar">
              ${post.users?.profile_pic ?
         `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` :
@@ -4319,10 +4731,10 @@ function renderPosts(posts) {
         `<div class="enhanced-post-media">
              ${media.map(m =>
           m.type === 'image' ?
-            `<div class="enhanced-media-item"><img src="${m.url}"></div>` :
+            `<div class="enhanced-media-item"><img src="${proxyMediaUrl(m.url)}"></div>` :
             m.type === 'video' ?
-              `<div class="enhanced-media-item"><video src="${m.url}" controls></video></div>` :
-              `<div class="enhanced-media-item"><audio src="${m.url}" controls></audio></div>`
+              `<div class="enhanced-media-item"><video src="${proxyMediaUrl(m.url)}" controls></video></div>` :
+              `<div class="enhanced-media-item"><audio src="${proxyMediaUrl(m.url)}" controls></audio></div>`
         ).join('')}
            </div>` : ''
       }
@@ -5232,14 +5644,19 @@ async function submitFeedback() {
   }
 }
 
-function submitComplaint() {
+async function submitComplaint() {
   const text = document.getElementById('complaintText')?.value.trim();
 
   if (text) {
-    showMessage('✅ Submitted!', 'success');
-    const input = document.getElementById('complaintText');
-    if (input) input.value = '';
-    closeModal('complaintModal');
+    try {
+      await apiCall('/api/complaint', 'POST', { text });
+      showMessage('✅ Submitted!', 'success');
+      const input = document.getElementById('complaintText');
+      if (input) input.value = '';
+      closeModal('complaintModal');
+    } catch (error) {
+      showMessage('❌ Failed', 'error');
+    }
   } else {
     showMessage('⚠️ Enter details', 'error');
   }
@@ -5655,16 +6072,16 @@ function handleRvFile(e) {
   if (!file) return;
   if (file.size > 50 * 1024 * 1024) { showMessage('⚠️ File too large (max 50MB)', 'error'); return; }
 
-  rvMediaFile  = file;
-  rvMediaType  = file.type.startsWith('video/') ? 'video' : 'image';
+  rvMediaFile = file;
+  rvMediaType = file.type.startsWith('video/') ? 'video' : 'image';
 
   const reader = new FileReader();
   reader.onload = (ev) => {
-    const img   = document.getElementById('rvPreviewImg');
-    const vid   = document.getElementById('rvPreviewVideo');
+    const img = document.getElementById('rvPreviewImg');
+    const vid = document.getElementById('rvPreviewVideo');
     const badge = document.getElementById('rvVideoBadge');
-    const idle  = document.getElementById('rvDropIdle');
-    const prev  = document.getElementById('rvDropPreview');
+    const idle = document.getElementById('rvDropIdle');
+    const prev = document.getElementById('rvDropPreview');
 
     if (rvMediaType === 'video') {
       if (vid) { vid.src = ev.target.result; vid.style.display = 'block'; }
@@ -5687,16 +6104,16 @@ function handleRvFile(e) {
 function clearRvPreview() {
   rvMediaFile = null;
   rvMediaType = null;
-  const idle  = document.getElementById('rvDropIdle');
-  const prev  = document.getElementById('rvDropPreview');
-  const img   = document.getElementById('rvPreviewImg');
-  const vid   = document.getElementById('rvPreviewVideo');
-  const fi    = document.getElementById('rvFileInput');
+  const idle = document.getElementById('rvDropIdle');
+  const prev = document.getElementById('rvDropPreview');
+  const img = document.getElementById('rvPreviewImg');
+  const vid = document.getElementById('rvPreviewVideo');
+  const fi = document.getElementById('rvFileInput');
   if (idle) idle.style.display = 'flex';
   if (prev) prev.style.display = 'none';
-  if (img)  { img.src  = ''; img.style.display  = 'none'; }
-  if (vid)  { vid.src  = ''; vid.style.display  = 'none'; }
-  if (fi)   fi.value = '';
+  if (img) { img.src = ''; img.style.display = 'none'; }
+  if (vid) { vid.src = ''; vid.style.display = 'none'; }
+  if (fi) fi.value = '';
   const btn = document.getElementById('rvPublishBtn');
   if (btn) btn.disabled = true;
 }
@@ -5710,7 +6127,7 @@ function updateRvCounter() {
 // ── Publish ────────────────────────────────────────────────────
 async function publishRealVibe() {
   if (!rvMediaFile) { showVibeSelectFirst(); return; }
-  if (!currentUser)  { showMessage('⚠️ Please login first', 'error'); return; }
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
 
   const btn = document.getElementById('rvPublishBtn');
   const originalBtnHTML = btn ? btn.innerHTML : '';
@@ -5725,19 +6142,19 @@ async function publishRealVibe() {
   }
 
   try {
-    const caption    = document.getElementById('rvCaption')?.value.trim() || '';
+    const caption = document.getElementById('rvCaption')?.value.trim() || '';
     const visibility = document.querySelector('input[name="rvVisibility"]:checked')?.value || 'public';
 
     const formData = new FormData();
-    formData.append('media',      rvMediaFile);
-    formData.append('caption',    caption);
+    formData.append('media', rvMediaFile);
+    formData.append('caption', caption);
     formData.append('visibility', visibility);
 
     const token = getToken();
-    const res  = await fetch(`${API_URL}/api/realvibes`, {
-      method:  'POST',
+    const res = await fetch(`${API_URL}/api/realvibes`, {
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
-      body:    formData
+      body: formData
     });
     const data = await res.json();
 
@@ -5866,24 +6283,24 @@ function renderRvFeed(vibes) {
 }
 
 function buildRvCard(vibe) {
-  const author    = vibe.users || {};
-  const name      = author.username || 'Unknown';
-  const avatar    = author.profile_pic
+  const author = vibe.users || {};
+  const name = author.username || 'Unknown';
+  const avatar = author.profile_pic
     ? `<img src="${author.profile_pic}" alt="">`
     : `<span>${name.charAt(0).toUpperCase()}</span>`;
   const planLabel = vibe.plan_type === 'royal'
     ? '<span class="rv-card-plan-badge royal">👑 Royal</span>'
     : '<span class="rv-card-plan-badge noble">🥈 Noble</span>';
-  const timeStr   = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
-  const expStr    = vibe.hours_left > 24
+  const timeStr = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
+  const expStr = vibe.hours_left > 24
     ? `${Math.ceil(vibe.hours_left / 24)}d left`
     : `${vibe.hours_left}h left`;
-  const isOwn     = currentUser && vibe.user_id === currentUser.id;
-  const isLiked   = vibe.is_liked;
+  const isOwn = currentUser && vibe.user_id === currentUser.id;
+  const isLiked = vibe.is_liked;
 
   const media = vibe.media_type === 'video'
-    ? `<video class="rv-card-media" src="${vibe.media_url}" controls playsinline preload="metadata"></video>`
-    : `<img class="rv-card-media" src="${vibe.media_url}" alt="" loading="lazy" onclick="openRvMediaViewer('${vibe.media_url}')">`;
+    ? `<video class="rv-card-media" src="${proxyMediaUrl(vibe.media_url)}" controls playsinline preload="metadata"></video>`
+    : `<img class="rv-card-media" src="${proxyMediaUrl(vibe.media_url)}" alt="" loading="lazy" onclick="openRvMediaViewer(proxyMediaUrl(vibe.media_url))">`;
 
   return `<article class="rv-card" data-vibe-id="${vibe.id}">
     <div class="rv-card-header">
@@ -5923,8 +6340,8 @@ function buildRvCard(vibe) {
 async function toggleRvLike(vibeId, btn) {
   if (!currentUser) { showMessage('Login to like', 'error'); return; }
   const wasLiked = btn.classList.contains('liked');
-  const countEl  = btn.querySelector('.rv-like-count');
-  const svgPath  = btn.querySelector('path');
+  const countEl = btn.querySelector('.rv-like-count');
+  const svgPath = btn.querySelector('path');
 
   btn.classList.toggle('liked', !wasLiked);
   const newCount = Math.max(0, parseInt(countEl.textContent || '0') + (wasLiked ? -1 : 1));
@@ -5936,7 +6353,7 @@ async function toggleRvLike(vibeId, btn) {
     if (countEl) countEl.textContent = data.likeCount ?? newCount;
     const vibe = _rvAllVibes.find(v => v.id === vibeId);
     if (vibe) { vibe.is_liked = data.liked; vibe.like_count = data.likeCount; }
-  } catch(err) {
+  } catch (err) {
     // Revert
     btn.classList.toggle('liked', wasLiked);
     if (countEl) countEl.textContent = newCount + (wasLiked ? 1 : -1);
@@ -5951,7 +6368,7 @@ async function deleteRvPost(vibeId, btn) {
     showMessage('🗑️ Deleted', 'success');
     _rvAllVibes = _rvAllVibes.filter(v => v.id !== vibeId);
     renderRvFeed(_rvAllVibes);
-  } catch(err) {
+  } catch (err) {
     showMessage('❌ Delete failed', 'error');
   }
 }
@@ -5970,7 +6387,7 @@ async function openRvComments(vibeId) {
   try {
     const data = await apiCall(`/api/realvibes/${vibeId}/comments`, 'GET');
     renderRvComments(data.comments || []);
-  } catch(err) {
+  } catch (err) {
     if (list) list.innerHTML = '<p style="padding:1rem;opacity:.5">Failed to load comments</p>';
   }
 }
@@ -5984,11 +6401,11 @@ function renderRvComments(comments) {
   }
   list.innerHTML = comments.map(c => {
     const u = c.users || {};
-    const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username||'U').charAt(0).toUpperCase()}</span>`;
+    const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username || 'U').charAt(0).toUpperCase()}</span>`;
     return `<div class="rv-comment-item">
       <div class="rv-comment-avatar">${av}</div>
       <div class="rv-comment-body">
-        <span class="rv-comment-author">${escapeHtml(u.username||'User')}</span>
+        <span class="rv-comment-author">${escapeHtml(u.username || 'User')}</span>
         <p class="rv-comment-text">${escapeHtml(c.content)}</p>
       </div>
     </div>`;
@@ -6023,7 +6440,7 @@ async function submitRvComment() {
       const countSpan = card.querySelectorAll('.rv-action-btn span')[1];
       if (countSpan && vibe) countSpan.textContent = vibe.comment_count;
     }
-  } catch(err) {
+  } catch (err) {
     showMessage('❌ Could not post comment', 'error');
   }
 }
@@ -6438,7 +6855,7 @@ function renderTwitterPosts(posts) {
     html += `
       <div class="twitter-post" id="twitter-post-${post.id}">
         <div class="twitter-post-header">
-          <div class="twitter-user-info" onclick="showUserProfile('${authorId}')">
+          <div class="twitter-user-info" onclick="showMiniProfileCard('${authorId}',event)">
             <div class="twitter-avatar">
               ${post.users?.profile_pic ?
         `<img src="${post.users.profile_pic}">` :
@@ -6460,9 +6877,9 @@ function renderTwitterPosts(posts) {
             <div class="twitter-media ${media.length === 1 ? 'single' : 'grid'}">
               ${media.slice(0, 4).map((m, idx) => {
         if (m.type === 'image') {
-          return `<img src="${m.url}" onclick="openMediaViewer('${post.id}', ${idx})">`;
+          return `<img src="${proxyMediaUrl(m.url)}" onclick="openMediaViewer('${post.id}', ${idx})">`;
         } else if (m.type === 'video') {
-          return `<video src="${m.url}" controls></video>`;
+          return `<video src="${proxyMediaUrl(m.url)}" controls></video>`;
         }
         return '';
       }).join('')}
@@ -7103,7 +7520,7 @@ function appendWhatsAppMessage(msg) {
   if (!messagesEl) return;
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  const sender = msg.anon_name || (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || '👻 Ghost';
   const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
   const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const messageId = msg.id || ('tmp-' + Math.random().toString(36).slice(2, 8));
@@ -7133,15 +7550,15 @@ function appendWhatsAppMessage(msg) {
   let baseMediaHTML = '';
   if (msg.media_url) {
     if (msg.media_type === 'video') {
-      baseMediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+      baseMediaHTML = `<video class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls playsinline></video>`;
     } else if (msg.media_type === 'audio') {
-      baseMediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+      baseMediaHTML = `<audio class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls></audio>`;
     } else if (msg.media_type === 'pdf') {
       baseMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
     } else if (msg.media_type === 'document') {
       baseMediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
-      baseMediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+      baseMediaHTML = `<img class="msg-media" src="${proxyMediaUrl(msg.media_url)}" alt="image" onclick="openImageViewer(this.src)">`;
     }
   }
 
@@ -7338,7 +7755,7 @@ function setupWhatsAppSocketListeners() {
     // ── 1. Load lifetime seen store from localStorage ──
     const storeKey = '_vibeSeen_' + (currentUser && currentUser.college ? currentUser.college : 'global');
     let lifeStore = {};
-    try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch(e) { lifeStore = {}; }
+    try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch (e) { lifeStore = {}; }
 
     // ── 2. Per-message map (in-memory, for popup per specific msg) ──
     if (!window._msgSeenBy) window._msgSeenBy = {};
@@ -7350,7 +7767,7 @@ function setupWhatsAppSocketListeners() {
     // ── 3. Lifetime user store — add user with timestamp if new ──
     if (!lifeStore[username]) {
       lifeStore[username] = { username, avatar: avatar || '👤', seenAt: Date.now() };
-      try { localStorage.setItem(storeKey, JSON.stringify(lifeStore)); } catch(e) {}
+      try { localStorage.setItem(storeKey, JSON.stringify(lifeStore)); } catch (e) { }
     }
     // Also update in-memory lifetime map
     if (!window._seenLifetime) window._seenLifetime = {};
@@ -7434,8 +7851,8 @@ function appendWhatsAppMessageFixed(msg) {
   const isTemp = msg.isTemp || (msg.id && typeof msg.id === 'string' && (msg.id.startsWith('temp-') || msg.id.startsWith('tmp-')));
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  // robust sender name logic
-  const sender = (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || 'User';
+  // Use ghost name — never show real username in community chat
+  const sender = msg.anon_name || (msg.users && (msg.users.username || msg.users.name)) || msg.sender_name || '👻 Ghost';
 
   const messageTime = new Date(msg.created_at || msg.timestamp || Date.now());
   const timeLabel = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -7460,8 +7877,25 @@ function appendWhatsAppMessageFixed(msg) {
   let messageHTML = '';
 
   if (!isOwn) {
-    const safeSender = typeof escapeHtml === 'function' ? escapeHtml(sender) : sender;
-    messageHTML += `<div class="message-sender-name">${safeSender}</div>`;
+    // Ghost avatar + name — real identity never shown
+    const displaySender = (msg.anon_name) || sender || 'Ghost';
+    const safeSender = typeof escapeHtml === 'function' ? escapeHtml(displaySender) : displaySender;
+    // Generate a consistent hue from the ghost name for colour variety
+    let hue = 0;
+    for (let i = 0; i < displaySender.length; i++) hue = (hue + displaySender.charCodeAt(i) * 37) % 360;
+    const avatarBg = `hsl(${hue},55%,28%)`;
+    const nameColor = `hsl(${hue},80%,75%)`;
+    messageHTML += `
+      <div class="community-msg-header" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <div class="ghost-chat-avatar" style="
+          width:28px;height:28px;min-width:28px;border-radius:50%;
+          background:${avatarBg};
+          display:flex;align-items:center;justify-content:center;
+          font-size:14px;line-height:1;border:1.5px solid rgba(255,255,255,0.12);">
+          👻
+        </div>
+        <span class="message-sender-name" style="color:${nameColor};font-size:12px;font-weight:600;">${safeSender}</span>
+      </div>`;
   }
 
   const contentRaw = msg.text || msg.content || '';
@@ -7492,15 +7926,15 @@ function appendWhatsAppMessageFixed(msg) {
   let mediaHTML = '';
   if (msg.media_url) {
     if (msg.media_type === 'video') {
-      mediaHTML = `<video class="msg-media" src="${msg.media_url}" controls playsinline></video>`;
+      mediaHTML = `<video class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls playsinline></video>`;
     } else if (msg.media_type === 'audio') {
-      mediaHTML = `<audio class="msg-media" src="${msg.media_url}" controls></audio>`;
+      mediaHTML = `<audio class="msg-media" src="${proxyMediaUrl(msg.media_url)}" controls></audio>`;
     } else if (msg.media_type === 'pdf') {
       mediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
     } else if (msg.media_type === 'document') {
       mediaHTML = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
-      mediaHTML = `<img class="msg-media" src="${msg.media_url}" alt="image" onclick="openImageViewer(this.src)">`;
+      mediaHTML = `<img class="msg-media" src="${proxyMediaUrl(msg.media_url)}" alt="image" onclick="openImageViewer(this.src)">`;
     }
   }
 
@@ -7532,6 +7966,11 @@ function appendWhatsAppMessageFixed(msg) {
     </div>
     ${reactBar}
     ${isOwn ? `<div class="seen-by-avatars" id="seenby-${messageId}"></div>` : ''}
+    ${isOwn ? `
+      <div class="community-msg-header own-header" style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:3px;">
+        <span style="font-size:11px;color:rgba(167,139,250,0.7);">You (👻 ${escapeHtml ? escapeHtml(getGhostName() || 'Ghost') : (getGhostName() || 'Ghost')})</span>
+        <div style="width:24px;height:24px;min-width:24px;border-radius:50%;background:#3b2080;display:flex;align-items:center;justify-content:center;font-size:12px;border:1.5px solid rgba(167,139,250,0.3);">👻</div>
+      </div>` : ''}
   `;
 
   wrapper.innerHTML = messageHTML;
@@ -7565,60 +8004,51 @@ async function sendWhatsAppMessageFixed() {
   const input = document.getElementById('whatsappInput');
   const content = input?.value.trim();
 
-  if (!content) {
-    showMessage('⚠️ Message cannot be empty', 'error');
-    input?.focus();
-    return;
-  }
+  if (!content) { showMessage('⚠️ Message cannot be empty', 'error'); input?.focus(); return; }
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
 
-  if (!currentUser) {
-    showMessage('⚠️ Please login first', 'error');
+  // ── SAFETY CHECKS ──────────────────────────────────────────────────
+  if (!hasGhostName()) {
+    requireGhostName(() => sendWhatsAppMessageFixed());
     return;
   }
+  if (!communitySafetyCheck(content)) return; // bad words / mute
+  // ───────────────────────────────────────────────────────────────────
+
+  const ghostName = getGhostName();
 
   try {
-    // Optimistic UI update
     const tempMsg = {
       id: 'temp-' + Date.now(),
       content,
       sender_id: currentUser.id,
-      users: currentUser,
+      anon_name: ghostName,
+      users: { id: currentUser.id, username: ghostName, profile_pic: null },
       timestamp: new Date(),
       text: content,
-      isTemp: true          // ← ADD THIS LINE
+      isTemp: true
     };
 
     appendWhatsAppMessageFixed(tempMsg);
     input.value = '';
     input.style.height = 'auto';
 
-    // Stop typing indicator immediately
     if (socket && currentUser.college) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
+      socket.emit('stop_typing', { collegeName: currentUser.college, username: ghostName });
     }
 
-    // Send to server
-    const response = await apiCall('/api/community/messages', 'POST', { content });
+    const response = await apiCall('/api/community/messages', 'POST', { content, anon_name: ghostName });
 
     if (response.success && response.message) {
       playMessageSound('send');
-
-      // Remove temp message
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
       if (tempEl) tempEl.remove();
-
-      // Server excludes sender from socket broadcast, so we add the real message directly
       appendWhatsAppMessageFixed(response.message);
     }
 
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
-
-    // Remove temp message on error
     const tempEl = document.querySelector('[id^="wa-msg-temp-"]');
     if (tempEl) tempEl.remove();
   }
@@ -7756,61 +8186,56 @@ function initCommunityChat() {
 
   const chatState = document.getElementById('communityChatState');
   const joinState = document.getElementById('joinCommunityState');
-  const communitySection = document.getElementById('communities');
 
   if (!currentUser || !currentUser.college) {
     console.log('❌ User not joined to a college. Showing Join State.');
-    if (joinState) {
-      joinState.style.display = 'flex';
-      joinState.classList.remove('hidden');
-    }
-    if (chatState) {
-      chatState.style.display = 'none';
-      chatState.classList.add('hidden');
-    }
+    if (joinState) { joinState.style.display = 'flex'; joinState.classList.remove('hidden'); }
+    if (chatState) { chatState.style.display = 'none'; chatState.classList.add('hidden'); }
     return;
   }
 
-  // User is joined
-  console.log('✅ User is joined. Showing Chat State.');
-  if (joinState) {
-    joinState.style.display = 'none';
-    joinState.classList.add('hidden');
-  }
-  if (chatState) {
-    chatState.style.display = 'flex';
-    chatState.classList.remove('hidden');
-  }
+  // ── GHOST NAME GATE ─────────────────────────────────────────────────
+  // If muted, still let them in (read-only), but require ghost name first.
+  requireGhostName(() => {
+    // Update ghost name display in header if present
+    const gnEl = document.getElementById('chatGhostNameDisplay');
+    if (gnEl) gnEl.textContent = `👻 ${getGhostName()}`;
 
-  // Update Header
-  const title = document.getElementById('communityTitle');
-  if (title) title.textContent = `Welcome to ${currentUser.college}`;
+    // User is joined — show chat
+    if (joinState) { joinState.style.display = 'none'; joinState.classList.add('hidden'); }
+    if (chatState) { chatState.style.display = 'flex'; chatState.classList.remove('hidden'); }
 
-  // Join Socket Room
-  if (socket) {
-    console.log('🔌 Joining socket room:', currentUser.college);
-    socket.emit('join_college', currentUser.college);
-    setupCommunitySocketListeners();
-  }
+    // Update Header
+    const title = document.getElementById('communityTitle');
+    if (title) title.textContent = `👻 ${currentUser.college} — Anonymous Chat`;
 
-  // Ensure chat container is positioned correctly relative to header
-  requestAnimationFrame(() => {
-    const header = document.querySelector('.header');
-    const chatContainer = document.querySelector('.whatsapp-container');
-    if (header && chatContainer) {
-      if (document.body.classList.contains('header-autohide')) {
-        chatContainer.style.top = '0';
-        chatContainer.style.height = '100vh';
-      } else {
-        const hh = header.offsetHeight || 72;
-        chatContainer.style.top = hh + 'px';
-        chatContainer.style.height = `calc(100vh - ${hh}px)`;
-      }
+    // Join Socket Room
+    if (socket) {
+      socket.emit('join_college', currentUser.college);
+      setupCommunitySocketListeners();
     }
-  });
 
-  // Load Messages
-  loadCommunityMessages();
+    // Check mute state
+    if (isChatMuted()) showCommunityMutedBanner(muteTimeLeft());
+
+    // Position chat container
+    requestAnimationFrame(() => {
+      const header = document.querySelector('.header');
+      const chatContainer = document.querySelector('.whatsapp-container');
+      if (header && chatContainer) {
+        if (document.body.classList.contains('header-autohide')) {
+          chatContainer.style.top = '0';
+          chatContainer.style.height = '100vh';
+        } else {
+          const hh = header.offsetHeight || 72;
+          chatContainer.style.top = hh + 'px';
+          chatContainer.style.height = `calc(100vh - ${hh}px)`;
+        }
+      }
+    });
+
+    loadCommunityMessages();
+  });
 }
 
 async function loadCommunityMessages() {
@@ -7880,7 +8305,8 @@ function appendCommunityMessage(msg) {
   if (!messagesArea) return;
 
   const isOwn = msg.sender_id === (currentUser && currentUser.id);
-  const senderName = msg.users?.username || 'User';
+  // Ghost name only — never real name
+  const senderName = msg.anon_name || msg.users?.username || '👻 Ghost';
   const time = new Date(msg.created_at || msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
   const msgDiv = document.createElement('div');
@@ -7889,20 +8315,20 @@ function appendCommunityMessage(msg) {
   let mediaHtml = '';
   if (msg.media_url) {
     if (msg.media_type === 'video') {
-      mediaHtml = `<video src="${msg.media_url}" class="chat-media-video" controls></video>`;
+      mediaHtml = `<video src="${proxyMediaUrl(msg.media_url)}" class="chat-media-video" controls></video>`;
     } else if (msg.media_type === 'audio') {
-      mediaHtml = `<audio src="${msg.media_url}" class="chat-media-audio" controls></audio>`;
+      mediaHtml = `<audio src="${proxyMediaUrl(msg.media_url)}" class="chat-media-audio" controls></audio>`;
     } else if (msg.media_type === 'pdf') {
       mediaHtml = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📄 ${msg.media_name || 'Document.pdf'}</a>`;
     } else if (msg.media_type === 'document') {
       mediaHtml = `<a class="msg-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${msg.media_name || 'File'}</a>`;
     } else {
-      mediaHtml = `<img src="${msg.media_url}" class="chat-media-img" onclick="openImageViewer(this.src)">`;
+      mediaHtml = `<img src="${proxyMediaUrl(msg.media_url)}" class="chat-media-img" onclick="openImageViewer(this.src)">`;
     }
   }
 
   msgDiv.innerHTML = `
-    ${!isOwn ? `<div class="chat-sender-name">${senderName}</div>` : ''}
+    ${!isOwn ? `<div class="chat-sender-name" style="color:#a78bfa;">👻 ${senderName}</div>` : ''}
     <div class="chat-bubble">
       ${msg.content || ''}
       ${mediaHtml}
@@ -7981,37 +8407,45 @@ const _me = {
 };
 
 const FILTERS = {
-  none:    { label:'Original', css:'' },
-  vivid:   { label:'Vivid',    css:'saturate(1.8) contrast(1.1)' },
-  bw:      { label:'B&W',      css:'grayscale(1)' },
-  warm:    { label:'Warm',     css:'sepia(0.4) saturate(1.3)' },
-  cool:    { label:'Cool',     css:'hue-rotate(20deg) saturate(1.2)' },
-  fade:    { label:'Fade',     css:'opacity(0.85) saturate(0.7)' },
-  sharp:   { label:'Sharp',   css:'contrast(1.3) brightness(1.05)' },
-  dreamy:  { label:'Dreamy',  css:'blur(0.4px) brightness(1.1) saturate(1.4)' }
+  none: { label: 'Original', css: '' },
+  vivid: { label: 'Vivid', css: 'saturate(1.8) contrast(1.1)' },
+  bw: { label: 'B&W', css: 'grayscale(1)' },
+  warm: { label: 'Warm', css: 'sepia(0.4) saturate(1.3)' },
+  cool: { label: 'Cool', css: 'hue-rotate(20deg) saturate(1.2)' },
+  fade: { label: 'Fade', css: 'opacity(0.85) saturate(0.7)' },
+  sharp: { label: 'Sharp', css: 'contrast(1.3) brightness(1.05)' },
+  dreamy: { label: 'Dreamy', css: 'blur(0.4px) brightness(1.1) saturate(1.4)' }
 };
 
 function handleChatFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // ── INSTITUTE CHAT: 18+ content consent required for photos & videos ──
+  if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+    requireImageConsent().then(agreed => {
+      if (!agreed) { event.target.value = ''; return; }
+      _me.file = file;
+      // Open the media editor for images and videos; send other files directly
+      openMediaEditor(file);
+    });
+    return;
+  }
+  // ─────────────────────────────────────────────────────────────────────
+
   _me.file = file;
 
-  // Only open the editor for images and videos; send other files (audio, PDF, docs) directly
-  if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-    openMediaEditor(file);
-  } else {
-    // Show a plain preview bar for audio / documents / PDFs
-    selectedWhatsAppMedia = file;
-    const bar = document.getElementById('chatFilePreviewBar');
-    const img = document.getElementById('chatFilePreviewImg');
-    const vid = document.getElementById('chatFilePreviewVideo');
-    const nameEl = document.getElementById('chatFilePreviewName');
-    if (bar) {
-      if (img) img.style.display = 'none';
-      if (vid) vid.style.display = 'none';
-      if (nameEl) nameEl.textContent = file.name;
-      bar.style.display = 'flex';
-    }
+  // Send audio / documents / PDFs directly (no editor needed)
+  selectedWhatsAppMedia = file;
+  const bar = document.getElementById('chatFilePreviewBar');
+  const img = document.getElementById('chatFilePreviewImg');
+  const vid = document.getElementById('chatFilePreviewVideo');
+  const nameEl = document.getElementById('chatFilePreviewName');
+  if (bar) {
+    if (img) img.style.display = 'none';
+    if (vid) vid.style.display = 'none';
+    if (nameEl) nameEl.textContent = file.name;
+    bar.style.display = 'flex';
   }
 }
 
@@ -8052,12 +8486,12 @@ function openMediaEditor(file) {
         <!-- Filters Panel -->
         <div class="me-panel active" id="me-panel-filters">
           <div class="me-filters-row">
-            ${Object.entries(FILTERS).map(([k,v]) =>
-              `<button class="me-filter-pill ${k==='none'?'active':''}" onclick="meApplyFilter('${k}',this)">
+            ${Object.entries(FILTERS).map(([k, v]) =>
+    `<button class="me-filter-pill ${k === 'none' ? 'active' : ''}" onclick="meApplyFilter('${k}',this)">
                 <span class="me-filter-icon">${filterIcon(k)}</span>
                 <span>${v.label}</span>
               </button>`
-            ).join('')}
+  ).join('')}
           </div>
         </div>
 
@@ -8098,8 +8532,8 @@ function openMediaEditor(file) {
             <input type="color" value="#ff3b6b" oninput="_me.drawColor=this.value">
             <label>Size:</label>
             <input type="range" min="2" max="24" value="4" oninput="_me.drawSize=this.value">
-            <button class="me-tool-btn ${_me.isDrawMode?'active':''}" id="meDrawToggle" onclick="meToggleDraw()">
-              ${_me.isDrawMode?'🛑 Stop':'✏️ Start Draw'}
+            <button class="me-tool-btn ${_me.isDrawMode ? 'active' : ''}" id="meDrawToggle" onclick="meToggleDraw()">
+              ${_me.isDrawMode ? '🛑 Stop' : '✏️ Start Draw'}
             </button>
             <button class="me-tool-btn danger" onclick="meUndoDraw()">↩ Undo</button>
           </div>
@@ -8118,7 +8552,7 @@ function openMediaEditor(file) {
         <!-- Crop Panel -->
         <div class="me-panel" id="me-panel-crop">
           <div class="me-btn-grid">
-            <button class="me-tool-btn ${_me.cropMode?'active':''}" id="meCropToggle" onclick="meToggleCrop()">✂️ Select Area</button>
+            <button class="me-tool-btn ${_me.cropMode ? 'active' : ''}" id="meCropToggle" onclick="meToggleCrop()">✂️ Select Area</button>
             <button class="me-tool-btn" onclick="meApplyCrop()">✅ Apply Crop</button>
             <button class="me-tool-btn danger" onclick="meCancelCrop()">✕ Cancel</button>
             <button class="me-tool-btn" onclick="meCropAspect(1,1)">1:1</button>
@@ -8176,8 +8610,8 @@ function buildVideoEditor() {
 }
 
 function filterIcon(k) {
-  const icons = {none:'🌟',vivid:'✨',bw:'⬛',warm:'🌅',cool:'❄️',fade:'🌫️',sharp:'🔍',dreamy:'💜'};
-  return icons[k]||'🎨';
+  const icons = { none: '🌟', vivid: '✨', bw: '⬛', warm: '🌅', cool: '❄️', fade: '🌫️', sharp: '🔍', dreamy: '💜' };
+  return icons[k] || '🎨';
 }
 
 // ── Rendering ─────────────────────────────────────────────────
@@ -8198,7 +8632,7 @@ function meRenderCanvas() {
   const rotH = img.width * absSin + img.height * absCos;
 
   const scale = Math.min(maxW / rotW, maxH / rotH, 1);
-  canvas.width  = Math.round(rotW * scale);
+  canvas.width = Math.round(rotW * scale);
   canvas.height = Math.round(rotH * scale);
 
   const ctx = _me.ctx;
@@ -8213,7 +8647,7 @@ function meRenderCanvas() {
   const b = _me.brightness;
   const c = _me.contrast;
   const s = _me.saturation;
-  f += ` brightness(${1 + b/100}) contrast(${1 + c/100}) saturate(${1 + s/100})`;
+  f += ` brightness(${1 + b / 100}) contrast(${1 + c / 100}) saturate(${1 + s / 100})`;
   ctx.filter = f.trim();
 
   ctx.drawImage(img, -img.width * scale / 2, -img.height * scale / 2, img.width * scale, img.height * scale);
@@ -8248,14 +8682,14 @@ function meAdjust(prop, val, input) {
 
 // ── Transform ─────────────────────────────────────────────────
 function meRotate(deg) { _me.rotation = ((_me.rotation + deg) % 360 + 360) % 360; meRenderCanvas(); }
-function meFlip(dir)   { if (dir === 'H') _me.flipH = !_me.flipH; else _me.flipV = !_me.flipV; meRenderCanvas(); }
+function meFlip(dir) { if (dir === 'H') _me.flipH = !_me.flipH; else _me.flipV = !_me.flipV; meRenderCanvas(); }
 function meReset() {
-  _me.rotation=0; _me.flipH=false; _me.flipV=false;
-  _me.brightness=0; _me.contrast=0; _me.saturation=0;
-  _me.filter='none'; _me.isDrawMode=false; _me.cropMode=false;
-  _me.cropStart=null; _me.cropEnd=null;
+  _me.rotation = 0; _me.flipH = false; _me.flipV = false;
+  _me.brightness = 0; _me.contrast = 0; _me.saturation = 0;
+  _me.filter = 'none'; _me.isDrawMode = false; _me.cropMode = false;
+  _me.cropStart = null; _me.cropEnd = null;
   // Reset sliders
-  document.querySelectorAll('#me-panel-adjust input[type=range]').forEach(s => { s.value=0; s.parentElement.querySelector('.me-slider-val').textContent='0'; });
+  document.querySelectorAll('#me-panel-adjust input[type=range]').forEach(s => { s.value = 0; s.parentElement.querySelector('.me-slider-val').textContent = '0'; });
   document.querySelectorAll('.me-filter-pill').forEach(b => b.classList.remove('active'));
   document.querySelector('.me-filter-pill')?.classList.add('active');
   meRenderCanvas();
@@ -8283,7 +8717,7 @@ function meAddText() {
   const txt = document.getElementById('meTextInput')?.value.trim();
   if (!txt || !_me.canvas) return;
   const color = document.getElementById('meTextColor')?.value || '#ffffff';
-  const size  = document.getElementById('meTextSize')?.value  || 28;
+  const size = document.getElementById('meTextSize')?.value || 28;
   const ctx = _me.ctx;
   // Save for undo
   _meDrawHistory.push(ctx.getImageData(0, 0, _me.canvas.width, _me.canvas.height));
@@ -8292,8 +8726,8 @@ function meAddText() {
   ctx.strokeStyle = 'rgba(0,0,0,0.7)';
   ctx.lineWidth = 3;
   ctx.textAlign = 'center';
-  ctx.strokeText(txt, _me.canvas.width/2, _me.canvas.height/2);
-  ctx.fillText(txt, _me.canvas.width/2, _me.canvas.height/2);
+  ctx.strokeText(txt, _me.canvas.width / 2, _me.canvas.height / 2);
+  ctx.fillText(txt, _me.canvas.width / 2, _me.canvas.height / 2);
   document.getElementById('meTextInput').value = '';
 }
 
@@ -8309,111 +8743,111 @@ function meCancelCrop() {
   _cropRect = null;
   _me.cropMode = false;
   const cc = document.getElementById('meCropCanvas');
-  if (cc) { cc.style.display='none'; const ctx=cc.getContext('2d'); ctx.clearRect(0,0,cc.width,cc.height); }
+  if (cc) { cc.style.display = 'none'; const ctx = cc.getContext('2d'); ctx.clearRect(0, 0, cc.width, cc.height); }
 }
 function meCropAspect(w, h) {
   if (!_me.canvas) return;
   _me.cropMode = true;
-  const cw=_me.canvas.width, ch=_me.canvas.height;
-  const aspect=w/h;
-  let rw,rh;
-  if (cw/ch > aspect) { rh=ch*0.8; rw=rh*aspect; } else { rw=cw*0.8; rh=rw/aspect; }
-  const rx=(cw-rw)/2, ry=(ch-rh)/2;
-  _cropRect={x:rx,y:ry,w:rw,h:rh};
+  const cw = _me.canvas.width, ch = _me.canvas.height;
+  const aspect = w / h;
+  let rw, rh;
+  if (cw / ch > aspect) { rh = ch * 0.8; rw = rh * aspect; } else { rw = cw * 0.8; rh = rw / aspect; }
+  const rx = (cw - rw) / 2, ry = (ch - rh) / 2;
+  _cropRect = { x: rx, y: ry, w: rw, h: rh };
   meDrawCropOverlay();
 }
 function meDrawCropOverlay() {
   const cc = document.getElementById('meCropCanvas');
   if (!cc || !_me.canvas || !_cropRect) return;
-  cc.width=_me.canvas.width; cc.height=_me.canvas.height;
-  cc.style.display='block';
-  const ctx=cc.getContext('2d');
-  ctx.clearRect(0,0,cc.width,cc.height);
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  ctx.fillRect(0,0,cc.width,cc.height);
-  ctx.clearRect(_cropRect.x,_cropRect.y,_cropRect.w,_cropRect.h);
-  ctx.strokeStyle='#4f74a3';
-  ctx.lineWidth=2;
-  ctx.strokeRect(_cropRect.x,_cropRect.y,_cropRect.w,_cropRect.h);
+  cc.width = _me.canvas.width; cc.height = _me.canvas.height;
+  cc.style.display = 'block';
+  const ctx = cc.getContext('2d');
+  ctx.clearRect(0, 0, cc.width, cc.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, 0, cc.width, cc.height);
+  ctx.clearRect(_cropRect.x, _cropRect.y, _cropRect.w, _cropRect.h);
+  ctx.strokeStyle = '#4f74a3';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(_cropRect.x, _cropRect.y, _cropRect.w, _cropRect.h);
   // Grid lines
-  ctx.strokeStyle='rgba(255,255,255,0.4)';
-  ctx.lineWidth=1;
-  for (let i=1;i<3;i++){
-    ctx.beginPath(); ctx.moveTo(_cropRect.x+_cropRect.w*i/3,_cropRect.y); ctx.lineTo(_cropRect.x+_cropRect.w*i/3,_cropRect.y+_cropRect.h); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(_cropRect.x,_cropRect.y+_cropRect.h*i/3); ctx.lineTo(_cropRect.x+_cropRect.w,_cropRect.y+_cropRect.h*i/3); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 3; i++) {
+    ctx.beginPath(); ctx.moveTo(_cropRect.x + _cropRect.w * i / 3, _cropRect.y); ctx.lineTo(_cropRect.x + _cropRect.w * i / 3, _cropRect.y + _cropRect.h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(_cropRect.x, _cropRect.y + _cropRect.h * i / 3); ctx.lineTo(_cropRect.x + _cropRect.w, _cropRect.y + _cropRect.h * i / 3); ctx.stroke();
   }
 }
 function meApplyCrop() {
   if (!_cropRect || !_me.canvas || !_me.ctx) return;
-  const {x,y,w,h} = _cropRect;
-  const imgData = _me.ctx.getImageData(x,y,w,h);
-  _me.canvas.width=w; _me.canvas.height=h;
-  _me.ctx.putImageData(imgData,0,0);
+  const { x, y, w, h } = _cropRect;
+  const imgData = _me.ctx.getImageData(x, y, w, h);
+  _me.canvas.width = w; _me.canvas.height = h;
+  _me.ctx.putImageData(imgData, 0, 0);
   meCancelCrop();
   // Reset origImg reference to the cropped version so re-renders stay cropped
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
-  tmp.getContext('2d').putImageData(imgData,0,0);
-  const ni=new Image(); ni.src=tmp.toDataURL();
-  ni.onload=()=>{ _me.origImg=ni; };
+  const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').putImageData(imgData, 0, 0);
+  const ni = new Image(); ni.src = tmp.toDataURL();
+  ni.onload = () => { _me.origImg = ni; };
 }
 
 // ── Canvas Events (draw + crop drag) ──────────────────────────
 function meAttachCanvasEvents() {
   const canvas = document.getElementById('meCanvas');
-  const cc     = document.getElementById('meCropCanvas');
+  const cc = document.getElementById('meCropCanvas');
   if (!canvas) return;
 
   function getPos(e, el) {
-    const r=el.getBoundingClientRect();
-    const cx=e.touches?e.touches[0].clientX:e.clientX;
-    const cy=e.touches?e.touches[0].clientY:e.clientY;
-    return {x:cx-r.left, y:cy-r.top};
+    const r = el.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: cx - r.left, y: cy - r.top };
   }
 
   // Draw on main canvas
   canvas.addEventListener('mousedown', e => {
     if (!_me.isDrawMode) return;
-    _meDrawHistory.push(_me.ctx.getImageData(0,0,canvas.width,canvas.height));
-    _me.drawing=true;
-    const p=getPos(e,canvas); _me.lastX=p.x; _me.lastY=p.y;
+    _meDrawHistory.push(_me.ctx.getImageData(0, 0, canvas.width, canvas.height));
+    _me.drawing = true;
+    const p = getPos(e, canvas); _me.lastX = p.x; _me.lastY = p.y;
   });
   canvas.addEventListener('mousemove', e => {
-    if (!_me.drawing||!_me.isDrawMode) return;
-    const p=getPos(e,canvas);
+    if (!_me.drawing || !_me.isDrawMode) return;
+    const p = getPos(e, canvas);
     _me.ctx.beginPath();
-    _me.ctx.moveTo(_me.lastX,_me.lastY);
-    _me.ctx.lineTo(p.x,p.y);
-    _me.ctx.strokeStyle=_me.drawColor;
-    _me.ctx.lineWidth=_me.drawSize;
-    _me.ctx.lineCap='round';
-    _me.ctx.lineJoin='round';
+    _me.ctx.moveTo(_me.lastX, _me.lastY);
+    _me.ctx.lineTo(p.x, p.y);
+    _me.ctx.strokeStyle = _me.drawColor;
+    _me.ctx.lineWidth = _me.drawSize;
+    _me.ctx.lineCap = 'round';
+    _me.ctx.lineJoin = 'round';
     _me.ctx.stroke();
-    _me.lastX=p.x; _me.lastY=p.y;
+    _me.lastX = p.x; _me.lastY = p.y;
   });
-  canvas.addEventListener('mouseup', ()=>{ _me.drawing=false; });
-  canvas.addEventListener('mouseleave', ()=>{ _me.drawing=false; });
+  canvas.addEventListener('mouseup', () => { _me.drawing = false; });
+  canvas.addEventListener('mouseleave', () => { _me.drawing = false; });
 
   // Touch draw
-  canvas.addEventListener('touchstart', e=>{ e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})); },{passive:false});
-  canvas.addEventListener('touchmove',  e=>{ e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY})); },{passive:false});
-  canvas.addEventListener('touchend',   ()=>canvas.dispatchEvent(new MouseEvent('mouseup')));
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY })); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY })); }, { passive: false });
+  canvas.addEventListener('touchend', () => canvas.dispatchEvent(new MouseEvent('mouseup')));
 
   // Crop drag on crop-canvas overlay
   if (cc) {
-    let dragging=false, startX=0, startY=0;
-    cc.addEventListener('mousedown', e=>{
+    let dragging = false, startX = 0, startY = 0;
+    cc.addEventListener('mousedown', e => {
       if (!_me.cropMode) return;
-      dragging=true;
-      const p=getPos(e,cc); startX=p.x; startY=p.y;
-      _cropRect=null;
+      dragging = true;
+      const p = getPos(e, cc); startX = p.x; startY = p.y;
+      _cropRect = null;
     });
-    cc.addEventListener('mousemove', e=>{
-      if (!dragging||!_me.cropMode) return;
-      const p=getPos(e,cc);
-      _cropRect={x:Math.min(startX,p.x),y:Math.min(startY,p.y),w:Math.abs(p.x-startX),h:Math.abs(p.y-startY)};
+    cc.addEventListener('mousemove', e => {
+      if (!dragging || !_me.cropMode) return;
+      const p = getPos(e, cc);
+      _cropRect = { x: Math.min(startX, p.x), y: Math.min(startY, p.y), w: Math.abs(p.x - startX), h: Math.abs(p.y - startY) };
       meDrawCropOverlay();
     });
-    cc.addEventListener('mouseup', ()=>{ dragging=false; });
+    cc.addEventListener('mouseup', () => { dragging = false; });
   }
 }
 
@@ -8486,12 +8920,18 @@ async function sendWhatsAppMessageWithMedia() {
   const input = document.getElementById('whatsappInput');
   const content = input?.value.trim();
 
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
+
+  // ── SAFETY CHECKS ──────────────────────────────────────────────────
+  if (!hasGhostName()) { requireGhostName(() => sendWhatsAppMessageWithMedia()); return; }
+  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
+  if (content && !communitySafetyCheck(content)) return;
+  // ───────────────────────────────────────────────────────────────────
+
   if (!content && !selectedWhatsAppMedia) {
     input?.focus();
     return;
   }
-
-  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
 
   // Optimistic bubble
   const tempId = 'temp-' + Date.now();
@@ -8525,12 +8965,14 @@ async function sendWhatsAppMessageWithMedia() {
     }
   }
 
+  const _gn = getGhostName();
   const tempMsg = {
     id: tempId,
     content: content || '',
     text: content || '',
     sender_id: currentUser.id,
-    users: currentUser,
+    anon_name: _gn,
+    users: { id: currentUser.id, username: _gn, profile_pic: null },
     timestamp: new Date(),
     isTemp: true,
     reply_to: replyToDataForTemp,
@@ -8538,10 +8980,10 @@ async function sendWhatsAppMessageWithMedia() {
     media_name: selectedWhatsAppMedia ? selectedWhatsAppMedia.name : null,
     media_type: selectedWhatsAppMedia ? (
       selectedWhatsAppMedia.type.startsWith('video/') ? 'video' :
-      selectedWhatsAppMedia.type.startsWith('audio/') ? 'audio' :
-      selectedWhatsAppMedia.type === 'application/pdf' ? 'pdf' :
-      selectedWhatsAppMedia.type.startsWith('application/') || selectedWhatsAppMedia.type.startsWith('text/') ? 'document' :
-      'image'
+        selectedWhatsAppMedia.type.startsWith('audio/') ? 'audio' :
+          selectedWhatsAppMedia.type === 'application/pdf' ? 'pdf' :
+            selectedWhatsAppMedia.type.startsWith('application/') || selectedWhatsAppMedia.type.startsWith('text/') ? 'document' :
+              'image'
     ) : null
   };
 
@@ -8564,11 +9006,12 @@ async function sendWhatsAppMessageWithMedia() {
       const fd = new FormData();
       fd.append('content', content || '');
       fd.append('media', mediaToUpload);
-      if (replyToIdForTemp) fd.append('reply_to_id', replyToIdForTemp); // use captured ID (not null)
+      fd.append('anon_name', getGhostName()); // ghost name required
+      if (replyToIdForTemp) fd.append('reply_to_id', replyToIdForTemp);
       response = await apiCall('/api/community/messages', 'POST', fd);
     } else {
-      const payload = { content };
-      if (replyToIdForTemp) payload.reply_to_id = replyToIdForTemp; // use captured ID (not null)
+      const payload = { content, anon_name: getGhostName() };
+      if (replyToIdForTemp) payload.reply_to_id = replyToIdForTemp;
       response = await apiCall('/api/community/messages', 'POST', payload);
     }
 
@@ -8691,7 +9134,7 @@ async function deleteChatMsg(msgId) {
 function _getLifetimeSeenUsers() {
   const storeKey = '_vibeSeen_' + (currentUser && currentUser.college ? currentUser.college : 'global');
   let lifeStore = {};
-  try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch(e) { lifeStore = {}; }
+  try { lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}'); } catch (e) { lifeStore = {}; }
   // Merge with in-memory (in case page just loaded and received new seens not yet in LS)
   if (window._seenLifetime) {
     Object.values(window._seenLifetime).forEach(u => {
@@ -8727,7 +9170,7 @@ function _initSeenLifetime() {
     const lifeStore = JSON.parse(localStorage.getItem(storeKey) || '{}');
     window._seenLifetime = {};
     Object.values(lifeStore).forEach(u => { window._seenLifetime[u.username] = u; });
-  } catch(e) { window._seenLifetime = {}; }
+  } catch (e) { window._seenLifetime = {}; }
 }
 
 function showSeenBy(msgId) {
@@ -8752,9 +9195,9 @@ function showSeenBy(msgId) {
     const now = new Date();
     const diffMs = now - d;
     if (diffMs < 60000) return 'Just now';
-    if (diffMs < 3600000) return Math.floor(diffMs/60000) + 'm ago';
-    if (diffMs < 86400000) return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:true});
-    return d.toLocaleDateString([], {month:'short', day:'numeric'}) + ' · ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:true});
+    if (diffMs < 3600000) return Math.floor(diffMs / 60000) + 'm ago';
+    if (diffMs < 86400000) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   popup.innerHTML = `
@@ -8829,9 +9272,9 @@ async function sendCommunityMessage() {
     media_url: selectedChatMedia ? URL.createObjectURL(selectedChatMedia) : null,
     media_type: selectedChatMedia ? (
       selectedChatMedia.type.startsWith('video/') ? 'video' :
-      selectedChatMedia.type.startsWith('audio/') ? 'audio' :
-      selectedChatMedia.type === 'application/pdf' ? 'pdf' :
-      (selectedChatMedia.type.startsWith('application/') || selectedChatMedia.type.startsWith('text/')) ? 'document' : 'image'
+        selectedChatMedia.type.startsWith('audio/') ? 'audio' :
+          selectedChatMedia.type === 'application/pdf' ? 'pdf' :
+            (selectedChatMedia.type.startsWith('application/') || selectedChatMedia.type.startsWith('text/')) ? 'document' : 'image'
     ) : null,
     users: { username: currentUser.username }
   });
@@ -8971,16 +9414,16 @@ function vibeGradient(id) {
 // ─── Utility ─────────────────────────────────────────────────
 function vibeFmt(n) {
   n = parseInt(n) || 0;
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
   return n.toString();
 }
 function vibeTimeAgo(ts) {
   const diff = (Date.now() - new Date(ts)) / 1000;
-  if (diff < 60)  return 'just now';
-  if (diff < 3600) return Math.floor(diff/60)+'m ago';
-  if (diff < 86400) return Math.floor(diff/3600)+'h ago';
-  return Math.floor(diff/86400)+'d ago';
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
 }
 
 // ─── Init: called from showPage('posts') ─────────────────────
@@ -9039,8 +9482,8 @@ function renderVibeFeed(posts) {
     let lastTap = 0;
     card.addEventListener('click', e => {
       if (e.target.closest('.vibe-card-actions') ||
-          e.target.closest('.vibe-card-info') ||
-          e.target.closest('.vibe-card-delete-btn')) return;
+        e.target.closest('.vibe-card-info') ||
+        e.target.closest('.vibe-card-delete-btn')) return;
       const now = Date.now();
       if (now - lastTap < 320) {
         vibeDoubleTapLike(card, i);
@@ -9055,22 +9498,22 @@ function renderVibeFeed(posts) {
 
 // ─── Build a single card ─────────────────────────────────────
 function buildVibeCard(post, idx) {
-  const user       = post.users || {};
-  const username   = user.username || 'Unknown';
-  const userId     = user.id || '';
-  const college    = user.college || '';
-  const avatar     = user.profile_pic;
-  const caption    = post.content || '';
-  const media      = Array.isArray(post.media) ? post.media : [];
-  const isLiked    = !!post.is_liked;
-  const likes      = vibeFmt(post.like_count || 0);
-  const comments   = vibeFmt(post.comment_count || 0);
-  const shares     = vibeFmt(post.share_count || 0);
-  const music      = post.music;
-  const stickers   = post.stickers || [];
-  const isOwn      = currentUser && userId === currentUser.id;
-  const dest       = post.posted_to === 'community' ? '🎓 College' : '👤 Profile';
-  const postTime   = vibeTimeAgo(post.created_at || post.timestamp);
+  const user = post.users || {};
+  const username = user.username || 'Unknown';
+  const userId = user.id || '';
+  const college = user.college || '';
+  const avatar = user.profile_pic;
+  const caption = post.content || '';
+  const media = Array.isArray(post.media) ? post.media : [];
+  const isLiked = !!post.is_liked;
+  const likes = vibeFmt(post.like_count || 0);
+  const comments = vibeFmt(post.comment_count || 0);
+  const shares = vibeFmt(post.share_count || 0);
+  const music = post.music;
+  const stickers = post.stickers || [];
+  const isOwn = currentUser && userId === currentUser.id;
+  const dest = post.posted_to === 'community' ? '🎓 College' : '👤 Profile';
+  const postTime = vibeTimeAgo(post.created_at || post.timestamp);
 
   // ── Background layer ──
   const firstMedia = media[0];
@@ -9096,10 +9539,10 @@ function buildVibeCard(post, idx) {
 
   // ── Avatar HTML ──
   const avHtml = avatar
-    ? `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')">
+    ? `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
          <img src="${avatar}" alt="${username}" loading="lazy">
        </div>`
-    : `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')">
+    : `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
          ${username.charAt(0).toUpperCase() || '😊'}
        </div>`;
 
@@ -9111,7 +9554,7 @@ function buildVibeCard(post, idx) {
   // ── Stickers ──
   const stickersHtml = stickers.length
     ? `<div class="vibe-stickers-overlay">${stickers.map(s =>
-        `<span class="vibe-sticker">${s.emoji || s}</span>`).join('')}</div>`
+      `<span class="vibe-sticker">${s.emoji || s}</span>`).join('')}</div>`
     : '';
 
   // ── Music ──
@@ -9144,7 +9587,7 @@ function buildVibeCard(post, idx) {
       <div class="vibe-card-user">
         ${avHtml}
         <div class="vibe-card-usernames">
-          <div class="vibe-card-username" onclick="showUserProfile('${userId}')">
+          <div class="vibe-card-username" onclick="showMiniProfileCard('${userId}',event)">
             @${username}
           </div>
         </div>
@@ -9198,7 +9641,7 @@ function buildVibeCard(post, idx) {
       </div>
 
       <!-- Share -->
-      <div class="vibe-action" onclick="vibeOpenShare('${post.id}', '${caption.replace(/'/g,'')}')">
+      <div class="vibe-action" onclick="vibeOpenShare('${post.id}', '${caption.replace(/'/g, '')}')">
         <div class="vibe-action-bubble">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </div>
@@ -9229,7 +9672,7 @@ function setupVibeObserver() {
       const vid = entry.target.querySelector('.vibe-card-bg-video');
       if (entry.isIntersecting) {
         vibeCurrentCard = idx;
-        if (vid) vid.play().catch(() => {});
+        if (vid) vid.play().catch(() => { });
         startVibeProgress(idx, vid);
       } else {
         if (vid) { vid.pause(); vid.currentTime = 0; }
@@ -9329,7 +9772,7 @@ async function vibeToggleLike(postId, idx) {
     if (ico) { ico.style.fill = data.liked ? '#ff3040' : 'none'; ico.style.stroke = data.liked ? '#ff3040' : '#fff'; }
     if (cnt) cnt.textContent = vibeFmt(data.likeCount);
     if (data.liked) checkAndUpdateRewards?.('like');
-  } catch(e) { console.error('Like err', e); }
+  } catch (e) { console.error('Like err', e); }
 }
 
 // ─── Save (client-side only — extend with API when ready) ─────
@@ -9356,7 +9799,7 @@ async function vibeToggleFollow(targetUserId, idx) {
       btn.textContent = isFollowing ? '+ Follow' : '✓ Following';
       btn.classList.toggle('following', !isFollowing);
     }
-  } catch(e) { console.error('Follow err', e); }
+  } catch (e) { console.error('Follow err', e); }
 }
 
 // ─── Caption expand ───────────────────────────────────────────
@@ -9386,7 +9829,7 @@ async function vibeDeletePost(postId) {
       _renderMyVibesGrid(_mvFilterPosts(_mvAllPosts, _mvActiveFilter));
     }
     setTimeout(() => initVibeFeed(), 400);
-  } catch(e) { showMessage('❌ ' + e.message, 'error'); }
+  } catch (e) { showMessage('❌ ' + e.message, 'error'); }
 }
 
 // ─── Comments Drawer ──────────────────────────────────────────
@@ -9432,7 +9875,7 @@ async function vibeOpenComments(postId, idx) {
         </div>
       </div>`;
     }).join('');
-  } catch(e) {
+  } catch (e) {
     list.innerHTML = '<div class="vibe-drawer-loading">Failed to load comments</div>';
   }
 }
@@ -9472,7 +9915,7 @@ async function submitVibeComment() {
       list.prepend(newItem);
     }
     checkAndUpdateRewards?.('comment');
-  } catch(e) { showMessage('❌ ' + e.message, 'error'); }
+  } catch (e) { showMessage('❌ ' + e.message, 'error'); }
 }
 
 // ─── Share Drawer ─────────────────────────────────────────────
@@ -9498,7 +9941,7 @@ function vibeShareToChat() {
   closeVibeDrawer('vibeShareDrawer');
   // API call to post to community_messages
   if (vibeActiveSharePostId) {
-    apiCall('/api/posts/' + vibeActiveSharePostId + '/share', 'POST').catch(() => {});
+    apiCall('/api/posts/' + vibeActiveSharePostId + '/share', 'POST').catch(() => { });
   }
 }
 
@@ -9507,7 +9950,7 @@ function vibeShareNative() {
     navigator.share({
       title: 'Check this on VibeXpert!',
       url: window.location.href + '?post=' + vibeActiveSharePostId
-    }).catch(() => {});
+    }).catch(() => { });
   } else {
     vibeShareCopy();
   }
@@ -9636,11 +10079,11 @@ function openVibeUpload() {
 
   // Reset all state
   vibeSelectedFiles = [];
-  vibeDestination   = 'profile';
-  vibeMoodTag       = null;
-  vibeLocationTag   = null;
-  vibePollData      = null;
-  vibeGifUrl        = null;
+  vibeDestination = 'profile';
+  vibeMoodTag = null;
+  vibeLocationTag = null;
+  vibePollData = null;
+  vibeGifUrl = null;
 
   document.getElementById('vibeCaptionInput').value = '';
   document.getElementById('vibeMediaPreview').style.display = 'none';
@@ -9651,7 +10094,7 @@ function openVibeUpload() {
   document.getElementById('destRadioCommunity').classList.remove('active');
 
   // Hide panels
-  ['vibeMoodPanel','vibeLocPanel','vibeGifPanel','vibePollBuilder'].forEach(id => {
+  ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel', 'vibePollBuilder'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -9702,8 +10145,8 @@ function handleVibeDrop(e) {
 
 function showVibeMediaGridPreview() {
   const preview = document.getElementById('vibeMediaPreview');
-  const zone    = document.getElementById('vibeMediaZone');
-  const count   = Math.min(vibeSelectedFiles.length, 4);
+  const zone = document.getElementById('vibeMediaZone');
+  const count = Math.min(vibeSelectedFiles.length, 4);
 
   if (!count) {
     preview.style.display = 'none';
@@ -9716,12 +10159,12 @@ function showVibeMediaGridPreview() {
 
   for (let i = 0; i < count; i++) {
     const file = vibeSelectedFiles[i];
-    const url  = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
     const isVid = file.type.startsWith('video/');
     html += `<div class="vibe-prev-item">
       ${isVid
         ? `<video src="${url}" muted playsinline></video>`
-        : `<img src="${url}" alt="media ${i+1}">`}
+        : `<img src="${url}" alt="media ${i + 1}">`}
       <button class="vibe-prev-remove" onclick="removeVibeFile(${i})" title="Remove">✕</button>
     </div>`;
   }
@@ -9809,7 +10252,7 @@ function searchVibeLocation(query) {
       `📍 ${q} City Centre`,
     ];
     suggestions.forEach(s => {
-      html += `<button class="vlp-result" onclick="setVibeLocation('${s.replace(/'/g,"\\'")}')">
+      html += `<button class="vlp-result" onclick="setVibeLocation('${s.replace(/'/g, "\\'")}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         ${s}
       </button>`;
@@ -9838,7 +10281,7 @@ function setVibeLocation(location) {
 // ── Poll ──────────────────────────────────────────────────────
 function toggleVibePoll(show) {
   const panel = document.getElementById('vibePollBuilder');
-  const btn   = document.getElementById('vibePollBtn');
+  const btn = document.getElementById('vibePollBtn');
   if (show) {
     panel.style.display = 'block';
     btn.classList.add('active-tool');
@@ -9906,7 +10349,7 @@ function _doGifSearch(query) {
     })
     .catch(() => {
       // Fallback: show placeholder tiles so UI isn't broken
-      const fallbacks = ['😂','🔥','👀','💯','🎉','😍','🤣','💀','✨','🙏','😭','🤔'];
+      const fallbacks = ['😂', '🔥', '👀', '💯', '🎉', '😍', '🤣', '💀', '✨', '🙏', '😭', '🤔'];
       grid.innerHTML = fallbacks.map(e =>
         `<div class="vgp-item" style="display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(255,255,255,0.05);" onclick="setVibeGifEmoji('${e}')">${e}</div>`
       ).join('');
@@ -9918,7 +10361,7 @@ function selectVibeGif(gifUrl) {
   document.getElementById('vibeGifPanel').style.display = 'none';
   // Show gif in preview
   const preview = document.getElementById('vibeMediaPreview');
-  const zone    = document.getElementById('vibeMediaZone');
+  const zone = document.getElementById('vibeMediaZone');
   preview.innerHTML = `<div class="vibe-preview-grid count-1">
     <div class="vibe-prev-item" style="max-height:160px;">
       <img src="${gifUrl}" alt="GIF">
@@ -9973,7 +10416,7 @@ function clearVibeLocation() {
 
 // ── Panel toggle helper (one open at a time) ──────────────────
 function toggleVibePanel(panelId) {
-  const panels = ['vibeMoodPanel','vibeLocPanel','vibeGifPanel'];
+  const panels = ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel'];
   panels.forEach(id => {
     if (id !== panelId) {
       const el = document.getElementById(id);
@@ -10008,7 +10451,7 @@ async function submitVibePost() {
     return showMessage('⚠️ Join your college community first to post there', 'error');
   }
 
-  if (btn) { btn.disabled = true; const t = document.getElementById('vibePostBtnText'); if(t) t.textContent = '⏳ Posting...'; }
+  if (btn) { btn.disabled = true; const t = document.getElementById('vibePostBtnText'); if (t) t.textContent = '⏳ Posting...'; }
   if (postingOverlay) postingOverlay.style.display = 'flex';
 
   try {
@@ -10025,9 +10468,9 @@ async function submitVibePost() {
     }
 
     // New features: mood, location, poll, gif
-    if (vibeMoodTag)     formData.append('mood',     JSON.stringify(vibeMoodTag));
+    if (vibeMoodTag) formData.append('mood', JSON.stringify(vibeMoodTag));
     if (vibeLocationTag) formData.append('location', vibeLocationTag);
-    if (vibeGifUrl)      formData.append('gifUrl',   vibeGifUrl);
+    if (vibeGifUrl) formData.append('gifUrl', vibeGifUrl);
     if (vibePollData) {
       const pd = getVibePollData();
       if (pd) formData.append('poll', JSON.stringify(pd));
@@ -10093,23 +10536,20 @@ async function submitVibePost() {
         }
       }
 
-      setTimeout(() => {
-        closeVibeUpload();
-        showVibeOnlineToast();
-        // Refresh feed to get accurate like/comment counts from DB
-        setTimeout(initVibeFeed, 1500);
-      }, 800);
+      // ── Instantly close the modal, then show success popup + hard reload ──
+      closeVibeUpload();
+      showVibePostSuccessAndReload();
     } else {
       const errMsg = (data && data.error) ? data.error : 'Post failed — please try again';
       showMessage('❌ ' + errMsg, 'error');
       if (postingOverlay) postingOverlay.style.display = 'none';
     }
-  } catch(e) {
+  } catch (e) {
     console.error('❌ Post err:', e);
     const userMsg = e.status === 401 ? 'Session expired — please log in again'
       : e.status === 400 ? (e.message || 'Invalid post data')
-      : e.status === 500 ? 'Server error — please try again in a moment'
-      : (e.message || 'Connection failed');
+        : e.status === 500 ? 'Server error — please try again in a moment'
+          : (e.message || 'Connection failed');
     showMessage('❌ ' + userMsg, 'error');
     if (postingOverlay) postingOverlay.style.display = 'none';
   } finally {
@@ -10123,9 +10563,9 @@ async function submitVibePost() {
 
 // ─── Hook showPage to init vibe feed ─────────────────────────
 // Override the existing showPage shim to trigger initVibeFeed
-(function() {
+(function () {
   const _prev = window.showPage;
-  window.showPage = function(pageId, ...args) {
+  window.showPage = function (pageId, ...args) {
     if (_prev) _prev(pageId, ...args);
     if (pageId === 'posts') {
       setTimeout(initVibeFeed, 80);
@@ -10137,3 +10577,746 @@ async function submitVibePost() {
 function loadPosts() {
   initVibeFeed();
 }
+// ================================================================
+// VibeXpert — DM System, Mini Profile Card, Ghost Mode, Presence
+// ================================================================
+
+// ── State ─────────────────────────────────────────────────────────
+let _dmCurrentReceiverId = null;
+let _mpcCache = {};           // userId → profile data
+let _mpcCurrentUserId = null;
+let _dmTypingTimeout = null;
+let _anonModeActive = false;
+let _anonName = localStorage.getItem('vx_anon_name') || '';
+if (_anonName) _anonModeActive = true;
+// currentProfileUserId is declared as var so showProfilePage (earlier in the file) can write to it
+var currentProfileUserId = null;
+
+// ── DM Ping Sound ──────────────────────────────────────────────────
+function playDmPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (e) { /* AudioContext blocked — silent */ }
+}
+
+// ── DM Drawer ─────────────────────────────────────────────────────
+async function openDmDrawer(userId) {
+  // Guard: need a real userId and a logged-in user
+  if (!userId || userId === 'null' || userId === 'undefined') {
+    showMessage('⚠️ No user selected to message', 'error');
+    return;
+  }
+  if (!currentUser) {
+    showMessage('⚠️ Please log in first', 'error');
+    return;
+  }
+
+  _dmCurrentReceiverId = userId;
+
+  const drawer   = document.getElementById('dmDrawer');
+  const backdrop = document.getElementById('dmDrawerBackdrop');
+  const area     = document.getElementById('dmMessagesArea');
+  const nameEl   = document.getElementById('dmDrawerName');
+  const statusEl = document.getElementById('dmDrawerStatus');
+  const avatarImg    = document.getElementById('dmDrawerAvatarImg');
+  const avatarInitial = document.getElementById('dmDrawerAvatarInitial');
+
+  if (!drawer || !area) {
+    console.error('DM drawer elements not found in DOM');
+    showMessage('❌ DM drawer not ready — please refresh', 'error');
+    return;
+  }
+
+  // ── Open the drawer immediately so the user sees something ───────
+  drawer.style.right = (window.innerWidth <= 768) ? '0' : '0';
+  drawer.classList.add('dm-open');
+  backdrop.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  // ── Show loading state ────────────────────────────────────────────
+  area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:32px;text-align:center;color:rgba(255,255,255,0.4);">
+    <div style="font-size:32px;animation:spin 1s linear infinite;">⏳</div>
+    <div style="font-size:13px;">Loading messages…</div>
+  </div>`;
+  if (!document.getElementById('dmSpinStyle')) {
+    const s = document.createElement('style');
+    s.id = 'dmSpinStyle';
+    s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(s);
+  }
+
+  // ── Load profile info (use cache) ─────────────────────────────────
+  let profile = _mpcCache[userId];
+  if (!profile) {
+    try {
+      const d = await apiCall(`/api/profile/${userId}`);
+      if (d?.user) { profile = d.user; _mpcCache[userId] = profile; }
+    } catch (e) { /* profile load failure is non-fatal */ }
+  }
+
+  if (profile && nameEl) {
+    nameEl.textContent = profile.username || 'User';
+    const online = !profile.last_seen;
+    if (statusEl) {
+      statusEl.textContent = online ? '● Online' : '● ' + (profile.status_text || 'Offline');
+      statusEl.style.color = online ? '#22c55e' : '#a78bfa';
+    }
+    if (profile.profile_pic && avatarImg) {
+      avatarImg.src = profile.profile_pic;
+      avatarImg.style.display = 'block';
+      if (avatarInitial) avatarInitial.style.display = 'none';
+    } else if (avatarInitial) {
+      if (avatarImg) avatarImg.style.display = 'none';
+      avatarInitial.style.display = 'flex';
+      avatarInitial.textContent = (profile.username || '?')[0].toUpperCase();
+    }
+  }
+
+  // ── Fetch messages ────────────────────────────────────────────────
+  try {
+    const data = await apiCall(`/api/dm/messages/${userId}`);
+
+    if (!data || !data.success) {
+      throw new Error(data?.error || 'Server returned an error');
+    }
+
+    const msgs = data.messages || [];
+    if (msgs.length === 0) {
+      const name = profile?.username || 'them';
+      area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;">
+        <div style="font-size:48px;">💬</div>
+        <div style="color:rgba(255,255,255,0.8);font-size:15px;font-weight:600;">Start chatting with ${escapeHtml(name)}</div>
+        <div style="color:rgba(255,255,255,0.35);font-size:13px;">Your messages are private and secure</div>
+      </div>`;
+    } else {
+      renderDmMessages(msgs, area);
+    }
+    updateDmBadge(-1, true);
+
+  } catch (e) {
+    console.error('DM load error:', e);
+
+    // Give a useful, specific error message
+    let errorMsg = 'Could not load messages';
+    let hint = '';
+    const msg = (e.message || '').toLowerCase();
+
+    if (e.status === 401 || e.status === 403) {
+      errorMsg = 'Session expired';
+      hint = 'Please log out and log back in.';
+    } else if (e.status === 503 || msg.includes('migration') || msg.includes('tables')) {
+      errorMsg = 'DM feature not set up';
+      hint = 'Run the database.sql migration in Supabase first.';
+    } else if (e.status === 404 || msg.includes('not found') || msg.includes('endpoint')) {
+      errorMsg = 'DM endpoint not found';
+      hint = 'Deploy the updated server.js to your backend.';
+    } else if (msg.includes('network') || msg.includes('failed to fetch') || msg.includes('abort')) {
+      errorMsg = 'Connection failed';
+      hint = 'Check your internet connection.';
+    } else if (e.status >= 500) {
+      errorMsg = 'Server error (' + e.status + ')';
+      hint = e.message || 'Check your Render.com logs.';
+    }
+
+    area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;">
+      <div style="font-size:40px;">⚠️</div>
+      <div style="color:#ef4444;font-size:15px;font-weight:600;">${escapeHtml(errorMsg)}</div>
+      ${hint ? `<div style="color:rgba(255,255,255,0.4);font-size:12px;max-width:260px;line-height:1.5;">${escapeHtml(hint)}</div>` : ''}
+      <button onclick="openDmDrawer('${userId}')" style="margin-top:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;">🔄 Try again</button>
+    </div>`;
+  }
+
+  document.getElementById('dmInput')?.focus();
+}
+
+function closeDmDrawer() {
+  const drawer = document.getElementById('dmDrawer');
+  if (drawer) {
+    drawer.style.right = '-440px';
+    drawer.classList.remove('dm-open');
+    // On mobile the drawer is full width; slide it fully off
+    if (window.innerWidth <= 768) drawer.style.right = '-100%';
+  }
+  const backdrop = document.getElementById('dmDrawerBackdrop');
+  if (backdrop) backdrop.style.display = 'none';
+  document.body.style.overflow = '';
+  _dmCurrentReceiverId = null;
+}
+
+function renderDmMessages(messages, container) {
+  if (!messages.length) {
+    container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;"><div style="font-size:48px;">💬</div><div style="color:rgba(255,255,255,0.7);font-size:15px;font-weight:600;">No messages yet</div><div style="color:rgba(255,255,255,0.35);font-size:13px;">Be the first to say hi!</div></div>';
+    return;
+  }
+  container.innerHTML = messages.map(m => {
+    const own = m.sender_id === currentUser?.id;
+    return `<div style="display:flex;flex-direction:column;align-items:${own ? 'flex-end' : 'flex-start'};">
+      <div style="max-width:75%;background:${own ? 'linear-gradient(135deg,#4f74a3,#7aa3d4)' : 'rgba(255,255,255,0.08)'};color:#fff;border-radius:${own ? '14px 14px 2px 14px' : '14px 14px 14px 2px'};padding:10px 14px;font-size:14px;word-break:break-word;">
+        ${m.media_url ? renderDmMedia(m) : escapeHtml(m.content || '')}
+      </div>
+      <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">${formatDmTime(m.created_at)}</span>
+    </div>`;
+  }).join('');
+  // Scroll to bottom after paint
+  requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+}
+
+function renderDmMedia(m) {
+  if (!m.media_url) return escapeHtml(m.content || '');
+  if (m.media_type === 'image') return `<img src="${proxyMediaUrl(m.media_url)}" style="max-width:100%;border-radius:8px;" loading="lazy">`;
+  if (m.media_type === 'video') return `<video src="${proxyMediaUrl(m.media_url)}" controls style="max-width:100%;border-radius:8px;"></video>`;
+  return `<a href="${m.media_url}" target="_blank" style="color:#7aa3d4;">${escapeHtml(m.content || 'File')}</a>`;
+}
+
+function formatDmTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── Header height CSS variable — keeps chat/messages below the sticky header ──
+function syncHeaderHeight() {
+  const h = document.querySelector('.header')?.offsetHeight || 72;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+syncHeaderHeight();
+window.addEventListener('resize', syncHeaderHeight);
+
+// ── DM empty-state removal when first message is sent ─────────────────────────
+function appendDmMessage(msg) {
+  const area = document.getElementById('dmMessagesArea');
+  if (!area) return;
+  // Clear empty/loading/error state if present
+  const isEmpty = area.querySelector('[style*="48px"]') || area.querySelector('[style*="Loading"]') || area.querySelector('[style*="⏳"]');
+  if (isEmpty) area.innerHTML = '';
+
+  const own = msg.sender_id === currentUser?.id;
+  const isOptimistic = msg.id && msg.id.startsWith('opt_');
+  const el = document.createElement('div');
+  if (isOptimistic) el.setAttribute('data-opt', msg.id);
+  el.style.cssText = `display:flex;flex-direction:column;align-items:${own ? 'flex-end' : 'flex-start'};${isOptimistic ? 'opacity:0.7;' : ''}`;
+  el.innerHTML = `<div style="max-width:75%;background:${own ? 'linear-gradient(135deg,#4f74a3,#7aa3d4)' : 'rgba(255,255,255,0.08)'};color:#fff;border-radius:${own ? '14px 14px 2px 14px' : '14px 14px 14px 2px'};padding:10px 14px;font-size:14px;word-break:break-word;">${msg.media_url ? renderDmMedia(msg) : escapeHtml(msg.content || '')}</div><span style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">${isOptimistic ? 'Sending…' : formatDmTime(msg.created_at)}</span>`;
+  area.appendChild(el);
+  requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+}
+
+async function sendDm() {
+  const input = document.getElementById('dmInput');
+  const text = input?.value.trim();
+  if (!text) return;
+  if (!_dmCurrentReceiverId) {
+    showMessage('⚠️ No conversation open', 'error');
+    return;
+  }
+
+  // Optimistically clear input and show message immediately
+  input.value = '';
+  const optimistic = {
+    id: 'opt_' + Date.now(),
+    sender_id: currentUser?.id,
+    receiver_id: _dmCurrentReceiverId,
+    content: text,
+    created_at: new Date().toISOString()
+  };
+  appendDmMessage(optimistic);
+
+  try {
+    const data = await apiCall('/api/dm/send', 'POST', {
+      receiverId: _dmCurrentReceiverId,
+      content: text
+    });
+    if (!data || !data.success) throw new Error(data?.error || 'Send failed');
+  } catch (e) {
+    console.error('DM send error:', e);
+    const msg = (e.message || '').toLowerCase();
+    if (msg.includes('migration') || msg.includes('tables') || e.status === 503) {
+      showMessage('❌ DM tables not set up — run database.sql in Supabase', 'error', 6000);
+    } else if (e.status === 401 || e.status === 403) {
+      showMessage('❌ Session expired — please log in again', 'error');
+    } else {
+      showMessage('❌ Message failed to send', 'error');
+    }
+    // Put text back in input so user doesn't lose it
+    if (input) input.value = text;
+    // Remove the optimistic message
+    const area = document.getElementById('dmMessagesArea');
+    const optEl = area?.querySelector(`[data-opt="${optimistic.id}"]`);
+    if (optEl) optEl.remove();
+  }
+}
+
+function handleDmTyping() {
+  if (!_dmCurrentReceiverId || !window.socket) return;
+  window.socket.emit('dm_typing', { receiverId: _dmCurrentReceiverId });
+  clearTimeout(_dmTypingTimeout);
+  _dmTypingTimeout = setTimeout(() => {
+    window.socket.emit('dm_stop_typing', { receiverId: _dmCurrentReceiverId });
+  }, 2000);
+}
+
+function handleIncomingDm(msg) {
+  const drawer = document.getElementById('dmDrawer');
+  const isDrawerOpen = drawer && drawer.style.right === '0px';
+  const isFromCurrentConv = _dmCurrentReceiverId === msg.sender_id;
+
+  if (isDrawerOpen && isFromCurrentConv) {
+    appendDmMessage(msg);
+  } else {
+    playDmPing();
+    const senderName = msg.senderUser?.username || 'Someone';
+    showMessage(`💬 ${senderName}: ${(msg.content || '').slice(0, 40)}${(msg.content || '').length > 40 ? '…' : ''}`, 'success', 4000);
+    updateDmBadge(1, false);
+  }
+
+  // Refresh conversations list if messages tab open
+  const msgsTab = document.getElementById('profileTabMessages');
+  if (msgsTab && msgsTab.classList.contains('active')) loadDmConversations();
+}
+
+// DM unread badge (global)
+let _dmTotalUnread = 0;
+function updateDmBadge(delta, reset) {
+  if (reset) _dmTotalUnread = 0;
+  else _dmTotalUnread = Math.max(0, _dmTotalUnread + delta);
+  const badge = document.getElementById('dmUnreadBadge');
+  if (!badge) return;
+  if (_dmTotalUnread > 0) {
+    badge.style.display = 'inline';
+    badge.textContent = _dmTotalUnread > 99 ? '99+' : _dmTotalUnread;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function loadDmConversations() {
+  const container = document.getElementById('dmConversationsList');
+  if (!container) return;
+  try {
+    const data = await apiCall('/api/dm/conversations');
+    const convs = data?.conversations || [];
+    if (!convs.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">💬</div><p>No conversations yet.</p></div>';
+      return;
+    }
+    let total = 0;
+    container.innerHTML = convs.map(c => {
+      const other = c.otherUser || {};
+      total += (c.unreadCount || 0);
+      const online = !other.last_seen;
+      const avatarHtml = other.profile_pic
+        ? `<img src="${other.profile_pic}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">`
+        : `<div style="width:44px;height:44px;border-radius:50%;background:#1a1933;display:flex;align-items:center;justify-content:center;font-size:18px;">${(other.username || '?')[0].toUpperCase()}</div>`;
+      return `<div onclick="openDmDrawer('${other.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;border-radius:8px;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.04)'" onmouseleave="this.style.background='transparent'">
+        <div style="position:relative;flex-shrink:0;">${avatarHtml}<div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:${online ? '#22c55e' : '#666'};border:2px solid #0a0a14;"></div></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:#fff;font-size:14px;">${escapeHtml(other.username || 'User')}</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.last_message || '')}</div>
+        </div>
+        ${c.unreadCount > 0 ? `<span style="background:#ef4444;color:#fff;font-size:11px;padding:2px 7px;border-radius:99px;flex-shrink:0;">${c.unreadCount}</span>` : ''}
+      </div>`;
+    }).join('');
+    updateDmBadge(total, true);
+    _dmTotalUnread = total;
+    updateDmBadge(0, false);
+  } catch (e) { /* ignore */ }
+}
+
+// ── Mini Profile Card ──────────────────────────────────────────────
+// currentProfileUserId is declared near the top of the DM state block
+
+async function showMiniProfileCard(userId, event) {
+  if (!userId || userId === currentUser?.id) {
+    showUserProfile(userId);
+    return;
+  }
+  _mpcCurrentUserId = userId;
+  const card = document.getElementById('miniProfileCard');
+  if (!card) return;
+
+  // Position with boundary detection
+  const padding = 12;
+  const cw = 280, ch = 260;
+  let x = event.clientX + 10, y = event.clientY + 10;
+  if (x + cw > window.innerWidth - padding) x = event.clientX - cw - 10;
+  if (y + ch > window.innerHeight - padding) y = event.clientY - ch - 10;
+  card.style.left = Math.max(padding, x) + 'px';
+  card.style.top = Math.max(padding, y) + 'px';
+  card.style.display = 'block';
+
+  // Show loading state
+  document.getElementById('mpcName').textContent = '…';
+  document.getElementById('mpcUsername').textContent = '';
+  document.getElementById('mpcBio').textContent = '';
+  document.getElementById('mpcFollowers').textContent = '—';
+  document.getElementById('mpcFollowing').textContent = '—';
+  document.getElementById('mpcPosts').textContent = '—';
+
+  // Load from cache or API
+  let profile = _mpcCache[userId];
+  if (!profile) {
+    try {
+      const data = await apiCall(`/api/profile/${userId}`);
+      if (data?.user) { profile = data.user; _mpcCache[userId] = data.user; }
+    } catch (e) { closeMiniProfileCard(); return; }
+  }
+  if (!profile) { closeMiniProfileCard(); return; }
+
+  document.getElementById('mpcName').textContent = profile.username || 'User';
+  document.getElementById('mpcUsername').textContent = '@' + (profile.username || '');
+  document.getElementById('mpcBio').textContent = profile.bio || '';
+  document.getElementById('mpcFollowers').textContent = profile.followersCount ?? 0;
+  document.getElementById('mpcFollowing').textContent = profile.followingCount ?? 0;
+  document.getElementById('mpcPosts').textContent = profile.postCount ?? 0;
+
+  const online = !profile.last_seen;
+  const presenceEl = document.getElementById('mpcPresence');
+  presenceEl.textContent = online ? '● Online' : '● Offline';
+  presenceEl.style.color = online ? '#22c55e' : '#a78bfa';
+
+  const avatarImg = document.getElementById('mpcAvatarImg');
+  const avatarInitial = document.getElementById('mpcAvatarInitial');
+  if (profile.profile_pic) {
+    avatarImg.src = profile.profile_pic;
+    avatarImg.style.display = 'block';
+    avatarInitial.style.display = 'none';
+  } else {
+    avatarImg.style.display = 'none';
+    avatarInitial.style.display = 'flex';
+    avatarInitial.textContent = (profile.username || '?')[0].toUpperCase();
+  }
+
+  const followBtn = document.getElementById('mpcFollowBtn');
+  if (profile.isFollowing) {
+    followBtn.textContent = 'Unfollow';
+    followBtn.style.background = 'rgba(255,255,255,0.1)';
+  } else {
+    followBtn.textContent = 'Follow';
+    followBtn.style.background = 'linear-gradient(135deg,#4f74a3,#7aa3d4)';
+  }
+
+  // Close card when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', _closeMpcOnOutsideClick, { once: true, capture: true });
+  }, 50);
+}
+
+function _closeMpcOnOutsideClick(e) {
+  const card = document.getElementById('miniProfileCard');
+  if (card && !card.contains(e.target)) closeMiniProfileCard();
+}
+
+function closeMiniProfileCard() {
+  const card = document.getElementById('miniProfileCard');
+  if (card) card.style.display = 'none';
+  _mpcCurrentUserId = null;
+}
+
+async function mpcToggleFollow() {
+  if (!_mpcCurrentUserId) return;
+  const profile = _mpcCache[_mpcCurrentUserId];
+  try {
+    const endpoint = profile?.isFollowing ? `/api/unfollow/${_mpcCurrentUserId}` : `/api/follow/${_mpcCurrentUserId}`;
+    await apiCall(endpoint, 'POST');
+    if (_mpcCache[_mpcCurrentUserId]) {
+      _mpcCache[_mpcCurrentUserId].isFollowing = !profile.isFollowing;
+      _mpcCache[_mpcCurrentUserId].followersCount = (_mpcCache[_mpcCurrentUserId].followersCount || 0) + (profile.isFollowing ? -1 : 1);
+    }
+    const followBtn = document.getElementById('mpcFollowBtn');
+    if (followBtn) {
+      const nowFollowing = !profile?.isFollowing;
+      followBtn.textContent = nowFollowing ? 'Unfollow' : 'Follow';
+      followBtn.style.background = nowFollowing ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#4f74a3,#7aa3d4)';
+      document.getElementById('mpcFollowers').textContent = _mpcCache[_mpcCurrentUserId].followersCount;
+    }
+  } catch (e) { showMessage('❌ Action failed', 'error'); }
+}
+
+function mpcOpenDm() {
+  const uid = _mpcCurrentUserId;
+  closeMiniProfileCard();
+  openDmDrawer(uid);
+}
+
+// Replace showUserProfile calls in feed with mini card (patch buildVibeCard avatar clicks)
+const _origBuildVibeCard = typeof buildVibeCard === 'function' ? buildVibeCard : null;
+
+// ── Ghost Mode ─────────────────────────────────────────────────────
+function openGhostModal() {
+  const modal = document.getElementById('ghostModeModal');
+  if (modal) { modal.style.display = 'flex'; }
+  document.getElementById('ghostNicknameInput').value = _anonName || '';
+}
+
+function closeGhostModal() {
+  const modal = document.getElementById('ghostModeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function activateGhostMode() {
+  const name = document.getElementById('ghostNicknameInput')?.value.trim();
+  if (!name || name.length < 2) { showMessage('⚠️ Enter a name (min 2 chars)', 'error'); return; }
+  _anonName = name;
+  _anonModeActive = true;
+  localStorage.setItem('vx_anon_name', name);
+  closeGhostModal();
+  showMessage(`👻 Ghost mode active as "${name}"`, 'success');
+}
+
+function deactivateGhostMode() {
+  _anonModeActive = false;
+  _anonName = '';
+  localStorage.removeItem('vx_anon_name');
+  showMessage('👤 Back to normal mode', 'success');
+}
+
+// Intercept sendWhatsAppMessage to inject anon_name when ghost mode is on
+const _origSendWA = window.sendWhatsAppMessage;
+window.sendWhatsAppMessage = async function (...args) {
+  if (!_anonModeActive) return _origSendWA ? _origSendWA(...args) : undefined;
+
+  const chatInput = document.getElementById('chatInput');
+  const content = chatInput?.value?.trim();
+  if (!content) return;
+
+  // Build FormData manually to inject anon_name
+  try {
+    const fd = new FormData();
+    fd.append('content', content);
+    fd.append('anon_name', _anonName);
+    const replyId = window._replyToMsgId;
+    if (replyId) fd.append('reply_to_id', replyId);
+
+    if (chatInput) chatInput.value = '';
+
+    const fakeMsg = {
+      id: `local_${Date.now()}`,
+      sender_id: currentUser?.id,
+      content,
+      anon_name: _anonName,
+      college_name: currentUser?.college,
+      created_at: new Date().toISOString(),
+      users: { id: currentUser?.id, username: _anonName, profile_pic: null }
+    };
+    if (typeof appendMessageToChat === 'function') appendMessageToChat(fakeMsg, false);
+
+    await apiCall('/api/community/messages', 'POST', fd);
+  } catch (e) {
+    showMessage('❌ Send failed', 'error');
+  }
+};
+
+// ── Achievements Renderer ──────────────────────────────────────────
+const ACHIEVEMENTS = [
+  { id: 'first_vibe', icon: '✨', label: 'First Vibe', desc: 'Post your first vibe', req: p => (p.postCount || 0) >= 1 },
+  { id: 'social_butterfly', icon: '🦋', label: 'Social Butterfly', desc: '10+ followers', req: p => (p.followersCount || 0) >= 10 },
+  { id: 'explorer', icon: '🗺️', label: 'Explorer', desc: 'Join a college community', req: p => !!p.community_joined },
+  { id: 'verified', icon: '✅', label: 'Verified', desc: 'Verified student', req: p => (p.badges || []).includes('verified_student') },
+  { id: 'vibe_master', icon: '🔥', label: 'Vibe Master', desc: '50+ vibes posted', req: p => (p.postCount || 0) >= 50 },
+  { id: 'popular', icon: '⭐', label: 'Popular', desc: '100+ followers', req: p => (p.followersCount || 0) >= 100 },
+  { id: 'premium', icon: '👑', label: 'Premium', desc: 'Subscribed member', req: p => !!p.isPremium },
+  { id: 'ghost', icon: '👻', label: 'Ghost', desc: 'Used ghost mode', req: () => !!localStorage.getItem('vx_anon_name') },
+  { id: 'og', icon: '🎖️', label: 'OG Member', desc: 'Early adopter', req: () => true },
+];
+
+function renderAchievements(profile) {
+  const grid = document.getElementById('achievementsGrid');
+  if (!grid) return;
+  grid.innerHTML = ACHIEVEMENTS.map(a => {
+    const earned = a.req(profile || currentUser || {});
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,${earned ? '0.15' : '0.05'});border-radius:12px;padding:16px 8px;text-align:center;opacity:${earned ? '1' : '0.4'};transition:all 0.2s;">
+      <div style="font-size:28px;margin-bottom:6px;">${a.icon}</div>
+      <div style="font-size:12px;font-weight:600;color:${earned ? '#fff' : 'rgba(255,255,255,0.5)'};">${a.label}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;">${a.desc}</div>
+      ${earned ? '<div style="font-size:10px;color:#22c55e;margin-top:4px;">✓ Earned</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderActivityHeatmap() {
+  const container = document.getElementById('activityHeatmap');
+  if (!container) return;
+  // Generate 26 weeks × 7 days = 182 cells
+  const cells = [];
+  for (let i = 0; i < 182; i++) {
+    const intensity = Math.random();
+    const level = intensity < 0.6 ? 0 : intensity < 0.75 ? 1 : intensity < 0.88 ? 2 : intensity < 0.96 ? 3 : 4;
+    const colors = ['rgba(255,255,255,0.05)', '#1a3a5c', '#2d6a9f', '#4f96d9', '#7aa3d4'];
+    cells.push(`<div style="aspect-ratio:1;border-radius:2px;background:${colors[level]};"></div>`);
+  }
+  container.innerHTML = cells.join('');
+}
+
+// ── Cover Photo Handler ────────────────────────────────────────────
+async function handleCoverPhotoUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('profileCoverImg');
+    if (img) { img.src = e.target.result; img.style.display = 'block'; }
+  };
+  reader.readAsDataURL(file);
+  showMessage('Cover photo updated locally (backend storage optional)', 'success');
+}
+
+// ── Profile tab switcher patch — handle new tabs ───────────────────
+const _origSwitchProfileTab = window.switchProfileTab;
+window.switchProfileTab = function (tab, event) {
+  // Handle new tabs
+  if (tab === 'messages') {
+    // Deactivate all panes and buttons
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+    const pane = document.getElementById('profileTabMessages');
+    if (pane) pane.classList.add('active');
+    if (event?.target) event.target.classList.add('active');
+    loadDmConversations();
+    return;
+  }
+  if (tab === 'achievements') {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+    const pane = document.getElementById('profileTabAchievements');
+    if (pane) pane.classList.add('active');
+    if (event?.target) event.target.classList.add('active');
+    renderAchievements(currentUser);
+    renderActivityHeatmap();
+    return;
+  }
+  // Fall through to original handler
+  if (_origSwitchProfileTab) _origSwitchProfileTab(tab, event);
+};
+
+// ── Follow Animator (confetti on follower gain) ────────────────────
+function handleFollowerUpdate(data) {
+  if (!data || !currentUser) return;
+  const isOwnProfile = data.userId === currentUser.id || data.followingId === currentUser.id;
+  if (!isOwnProfile) return;
+
+  const countEl = document.getElementById('profileStatFollowers');
+  if (countEl) {
+    const current = parseInt(countEl.textContent) || 0;
+    countEl.textContent = current + 1;
+    countEl.style.transition = 'transform 0.3s ease, color 0.3s ease';
+    countEl.style.transform = 'scale(1.4)';
+    countEl.style.color = '#4f74a3';
+    setTimeout(() => { countEl.style.transform = 'scale(1)'; countEl.style.color = '#fff'; }, 400);
+    triggerConfetti();
+  }
+  if (currentUser) currentUser.followersCount = (currentUser.followersCount || 0) + 1;
+}
+
+function triggerConfetti() {
+  const colors = ['#4f74a3', '#7aa3d4', '#a78bfa', '#22c55e', '#fff'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;z-index:99999;width:7px;height:7px;border-radius:50%;background:${colors[i % colors.length]};pointer-events:none;top:${30 + Math.random() * 40}%;left:${30 + Math.random() * 40}%;animation:confettiPiece 1s ease forwards;`;
+    document.body.appendChild(el);
+    el.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+    el.style.setProperty('--ty', (Math.random() * -200 - 50) + 'px');
+    setTimeout(() => el.remove(), 1200);
+  }
+}
+// Inject confetti keyframes
+if (!document.getElementById('confettiStyle')) {
+  const s = document.createElement('style');
+  s.id = 'confettiStyle';
+  s.textContent = `@keyframes confettiPiece{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}`;
+  document.head.appendChild(s);
+}
+
+// ── Presence & DM socket wiring ────────────────────────────────────
+// Wait for socket to be ready then hook events
+function wireNewSocketEvents() {
+  const sock = window.socket;
+  if (!sock) return;
+
+  sock.on('new_dm', (msg) => handleIncomingDm(msg));
+
+  sock.on('dm_typing', ({ senderId }) => {
+    if (senderId === _dmCurrentReceiverId) {
+      const el = document.getElementById('dmTypingIndicator');
+      if (el) { el.classList.add('dm-typing-active'); el.style.height = '22px'; }
+      clearTimeout(window._dmTypingHideTimeout);
+      window._dmTypingHideTimeout = setTimeout(() => {
+        if (el) { el.classList.remove('dm-typing-active'); el.style.height = '0'; }
+      }, 3000);
+    }
+  });
+
+  sock.on('dm_stop_typing', ({ senderId }) => {
+    if (senderId === _dmCurrentReceiverId) {
+      const el = document.getElementById('dmTypingIndicator');
+      if (el) { el.classList.remove('dm-typing-active'); el.style.height = '0'; }
+    }
+  });
+
+  sock.on('user_offline', ({ userId }) => {
+    if (userId === _dmCurrentReceiverId) {
+      const status = document.getElementById('dmDrawerStatus');
+      if (status) { status.textContent = '● Offline'; status.style.color = '#a78bfa'; }
+    }
+    // Invalidate cache so presence updates next load
+    if (_mpcCache[userId]) _mpcCache[userId].last_seen = new Date().toISOString();
+  });
+
+  sock.on('user_online_broadcast', ({ userId }) => {
+    if (userId === _dmCurrentReceiverId) {
+      const status = document.getElementById('dmDrawerStatus');
+      if (status) { status.textContent = '● Online'; status.style.color = '#22c55e'; }
+    }
+    if (_mpcCache[userId]) _mpcCache[userId].last_seen = null;
+  });
+
+  // Follower update — if someone follows current user
+  sock.on('new_follow', (data) => handleFollowerUpdate(data));
+}
+
+// Hook into socket once it's available (retries up to 10s)
+(function pollSocket() {
+  if (window.socket) { wireNewSocketEvents(); return; }
+  let attempts = 0;
+  const t = setInterval(() => {
+    if (window.socket || ++attempts > 40) {
+      clearInterval(t);
+      if (window.socket) wireNewSocketEvents();
+    }
+  }, 250);
+})();
+
+// ── Patch showPage to load DM conversations when profile is shown ──
+(function () {
+  const _prev = window.showPage;
+  window.showPage = function (pageId, ...args) {
+    if (_prev) _prev(pageId, ...args);
+    if (pageId === 'profile' && currentUser) {
+      // Prefetch DM convs in background
+      setTimeout(loadDmConversations, 300);
+    }
+  };
+})();
+
+// ── Ghost mode toggle button wiring ───────────────────────────────
+// Add a ghost button to community chat toolbar if it doesn't exist
+document.addEventListener('DOMContentLoaded', () => {
+  const chatActions = document.querySelector('.chat-actions, .chat-toolbar, #chatToolbar');
+  if (chatActions && !document.getElementById('ghostToggleBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'ghostToggleBtn';
+    btn.title = 'Ghost Mode';
+    btn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;padding:6px;';
+    btn.textContent = '👻';
+    btn.onclick = () => _anonModeActive ? deactivateGhostMode() : openGhostModal();
+    chatActions.appendChild(btn);
+  }
+});
