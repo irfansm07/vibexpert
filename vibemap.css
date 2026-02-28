@@ -8848,9 +8848,9 @@ body.light-theme .realvibe-subtitle {
 
 .realvibe-stories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
+  padding: 28px;
   background: rgba(15, 25, 45, 0.5);
   border-radius: 20px;
   border: 2px solid rgba(79, 116, 163, 0.2);
@@ -8862,13 +8862,14 @@ body.light-theme .realvibe-stories-grid {
 
 .realvibe-story-card {
   position: relative;
-  aspect-ratio: 9/16;
-  border-radius: 20px;
+  aspect-ratio: 1 / 1;
+  border-radius: 22px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 3px solid transparent;
   background: linear-gradient(135deg, rgba(79, 116, 163, 0.3), rgba(141, 164, 211, 0.3));
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .realvibe-story-card::before {
@@ -9446,13 +9447,13 @@ body.light-theme .option-label {
   }
 
   .realvibe-stories-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
-    padding: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+    padding: 18px;
   }
 
   .your-realvibes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 
   .create-realvibe-btn {
@@ -9511,7 +9512,7 @@ body.light-theme .option-label {
   }
 
   .realvibe-stories-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
@@ -10355,7 +10356,7 @@ body.light-theme .chat-info h4 {
   font-size: 13px;
   color: #888;
   overflow: hidden;
-  text-overflow: ellipsis;
+   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
 }
@@ -22902,4 +22903,570 @@ video.rv-card-media {
   min-width: 20px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(109,40,217,0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GHOST WALLPAPER — NIGHT SKY BASE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Stars scattered across sky */
+.gw-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.2px 1.2px at 7%  9%,  rgba(255,255,255,0.72) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 14% 26%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 21% 6%,  rgba(255,255,255,0.82) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 31% 19%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 44% 4%,  rgba(255,255,255,0.65) 0%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 54% 16%, rgba(255,255,255,0.78) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 63% 8%,  rgba(255,255,255,0.52) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 74% 22%, rgba(255,255,255,0.60) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 84% 12%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 93% 28%, rgba(255,255,255,0.48) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 11% 44%, rgba(255,255,255,0.38) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 27% 51%, rgba(255,255,255,0.32) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 39% 38%, rgba(255,255,255,0.42) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 57% 35%, rgba(255,255,255,0.28) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 71% 48%, rgba(255,255,255,0.38) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 89% 33%, rgba(255,255,255,0.52) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 4%  65%, rgba(255,255,255,0.28) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 16% 72%, rgba(255,255,255,0.32) 0%, transparent 100%),
+    radial-gradient(1.3px 1.3px at 35% 67%, rgba(255,255,255,0.48) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 49% 62%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 77% 69%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px   1px   at 92% 58%, rgba(255,255,255,0.40) 0%, transparent 100%);
+}
+
+/* ─── Moon — smaller, softer glow ──────────────────────────────────── */
+.gw-moon {
+  position: absolute;
+  top: 22px;
+  right: 48px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%,
+    #fffef0 0%,
+    #fff8d0 35%,
+    #ffe9a0 65%,
+    #e8c050 100%);
+  /* Much reduced glow — just a subtle halo */
+  box-shadow:
+    0 0 10px 4px  rgba(255,240,140,0.30),
+    0 0 28px 12px rgba(255,230,100,0.14),
+    0 0 55px 25px rgba(255,215,70, 0.06);
+  z-index: 1;
+}
+.gw-moon-glow {
+  position: absolute;
+  top: 6px;
+  right: 30px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,245,140,0.09) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   REALISTIC BATS — body, wings, hover effect
+   ═══════════════════════════════════════════════════════════════════════ */
+.gw-bat {
+  position: absolute;
+  z-index: 3;
+  cursor: pointer;
+  filter: drop-shadow(0 0 3px rgba(80,30,140,0.35));
+  transition: filter 0.2s ease;
+}
+
+/* Hover — bat glows purple and pauses flap briefly */
+.gw-bat:hover {
+  filter:
+    drop-shadow(0 0 8px rgba(160,80,255,0.90))
+    drop-shadow(0 0 16px rgba(120,40,220,0.55))
+    brightness(1.35);
+  cursor: crosshair;
+}
+
+/* Wing-flap — asymmetric for realism: up stroke faster than down */
+@keyframes gwBatFlap {
+  0%   { transform: scaleY(1.0);   }
+  30%  { transform: scaleY(0.45);  }
+  55%  { transform: scaleY(0.80);  }
+  75%  { transform: scaleY(0.38);  }
+  100% { transform: scaleY(1.0);   }
+}
+
+/* ── Bat 1 — large, slow L→R cruise ──────────────── */
+@keyframes gwBat1Path {
+  0%   { left: -90px;  top: 20%;  }
+  15%  { left: 12%;    top: 17%;  }
+  40%  { left: 42%;    top: 14%;  }
+  70%  { left: 72%;    top: 19%;  }
+  100% { left: 110%;   top: 22%;  }
+}
+.gw-bat-1 {
+  animation:
+    gwBat1Path 16s 0s  linear infinite,
+    gwBatFlap  0.30s ease-in-out infinite;
+}
+
+/* ── Bat 2 — medium, R→L higher up ───────────────── */
+@keyframes gwBat2Path {
+  0%   { right: -70px; top: 8%;   transform: scaleX(-1); }
+  20%  { right: 18%;   top: 10%;  transform: scaleX(-1); }
+  60%  { right: 62%;   top: 6%;   transform: scaleX(-1); }
+  100% { right: 110%;  top: 11%;  transform: scaleX(-1); }
+}
+.gw-bat-2 {
+  animation:
+    gwBat2Path 19s 4s  linear infinite,
+    gwBatFlap  0.25s 0.06s ease-in-out infinite;
+}
+
+/* ── Bat 3 — small, fast, diagonal ───────────────── */
+@keyframes gwBat3Path {
+  0%   { left: -55px;  top: 42%; }
+  30%  { left: 28%;    top: 36%; }
+  60%  { left: 62%;    top: 44%; }
+  100% { left: 110%;   top: 38%; }
+}
+.gw-bat-3 {
+  animation:
+    gwBat3Path 9s 2s   linear infinite,
+    gwBatFlap  0.22s 0.11s ease-in-out infinite;
+}
+
+/* ── Bat 4 — large, swooping arc ─────────────────── */
+@keyframes gwBat4Path {
+  0%   { right: -100px; top: 5%;  transform: scaleX(-1) rotate(-4deg); }
+  25%  { right: 25%;    top: 22%; transform: scaleX(-1) rotate(0deg); }
+  60%  { right: 65%;    top: 28%; transform: scaleX(-1) rotate(3deg); }
+  100% { right: 110%;   top: 14%; transform: scaleX(-1) rotate(-2deg); }
+}
+.gw-bat-4 {
+  animation:
+    gwBat4Path 22s 9s  linear infinite,
+    gwBatFlap  0.35s ease-in-out infinite;
+}
+
+/* ── Bat 5 — tiny, very fast ─────────────────────── */
+@keyframes gwBat5Path {
+  0%   { left: -50px;  bottom: 28%; transform: rotate(-12deg); }
+  100% { left: 110%;   bottom: 38%; transform: rotate(-12deg); }
+}
+.gw-bat-5 {
+  animation:
+    gwBat5Path 7s 5s   linear infinite,
+    gwBatFlap  0.20s ease-in-out infinite;
+}
+
+/* ── Bat 6 — medium, gentle wave ─────────────────── */
+@keyframes gwBat6Path {
+  0%   { left: -75px;  top: 52%; }
+  20%  { left: 18%;    top: 46%; }
+  40%  { left: 45%;    top: 54%; }
+  65%  { left: 70%;    top: 49%; }
+  85%  { left: 90%;    top: 55%; }
+  100% { left: 110%;   top: 52%; }
+}
+.gw-bat-6 {
+  animation:
+    gwBat6Path 12s 1.5s linear infinite,
+    gwBatFlap  0.27s 0.08s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GHOSTS — float, drift, pulse
+   ═══════════════════════════════════════════════════════════════════════ */
+.gw-ghost {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgba(200,200,255,0.40));
+}
+
+@keyframes gwFloat {
+  0%,100% { transform: translateY(0)     rotate(-1.5deg); }
+  28%      { transform: translateY(-20px) rotate( 1.2deg); }
+  55%      { transform: translateY(-9px)  rotate(-0.8deg); }
+  78%      { transform: translateY(-24px) rotate( 2deg);   }
+}
+@keyframes gwDrift {
+  0%,100% { margin-left: 0;    }
+  50%      { margin-left: 16px; }
+}
+@keyframes gwPulse {
+  0%,100% { opacity: 0.82; }
+  50%      { opacity: 0.50; }
+}
+
+.gw-ghost-1 {
+  left: 5%; top: 28%;
+  animation: gwFloat 5.5s ease-in-out infinite,
+             gwDrift 7.0s ease-in-out infinite,
+             gwPulse 4.2s ease-in-out infinite;
+}
+.gw-ghost-2 {
+  right: 9%; top: 38%;
+  animation: gwFloat 6.8s 1.5s ease-in-out infinite,
+             gwDrift 8.2s 2.0s ease-in-out infinite,
+             gwPulse 5.0s 1.0s ease-in-out infinite;
+}
+.gw-ghost-3 {
+  left: 26%; bottom: 20%;
+  animation: gwFloat 4.5s 3.0s ease-in-out infinite,
+             gwDrift 6.0s 1.0s ease-in-out infinite,
+             gwPulse 3.5s       ease-in-out infinite;
+}
+.gw-ghost-4 {
+  right: 20%; bottom: 16%;
+  animation: gwFloat 7.2s 0.8s ease-in-out infinite,
+             gwDrift 9.0s 0.5s ease-in-out infinite,
+             gwPulse 5.5s 2.0s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCARECROWS — gentle sway in wind
+   ═══════════════════════════════════════════════════════════════════════ */
+.gw-scarecrow {
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(2px 0 8px rgba(0,0,0,0.7));
+  transform-origin: bottom center;
+}
+
+@keyframes gwSway {
+  0%,100% { transform: rotate(0deg);    }
+  20%      { transform: rotate(1.8deg);  }
+  50%      { transform: rotate(-1.5deg); }
+  75%      { transform: rotate(1.2deg);  }
+}
+@keyframes gwSwayB {
+  0%,100% { transform: rotate(0deg);    }
+  25%      { transform: rotate(-2deg);   }
+  60%      { transform: rotate(1.6deg);  }
+  85%      { transform: rotate(-1deg);   }
+}
+
+.gw-sc-1 {
+  left: 6%;
+  animation: gwSway 6s 0s ease-in-out infinite;
+}
+.gw-sc-2 {
+  left: 38%;
+  animation: gwSwayB 7.5s 2s ease-in-out infinite;
+}
+.gw-sc-3 {
+  right: 7%;
+  animation: gwSway 5.5s 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FOG WISPS
+   ═══════════════════════════════════════════════════════════════════════ */
+.gw-fog {
+  position: absolute;
+  height: 35px;
+  border-radius: 50px;
+  filter: blur(22px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes gwFogDrift {
+  0%   { transform: translateX(0) scaleY(1.0); opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { transform: translateX(65px) scaleY(1.5); }
+  92%  { opacity: 0.55; }
+  100% { transform: translateX(115%) scaleY(1.0); opacity: 0; }
+}
+
+.gw-fog-1 {
+  bottom: 38%; left: -25%;
+  width: 58%;
+  background: rgba(175,165,215,0.13);
+  animation: gwFogDrift 20s 0s linear infinite;
+}
+.gw-fog-2 {
+  bottom: 22%; left: -35%;
+  width: 72%;
+  background: rgba(155,145,205,0.10);
+  animation: gwFogDrift 26s 7s linear infinite;
+}
+.gw-fog-3 {
+  bottom: 54%; left: -15%;
+  width: 48%;
+  background: rgba(195,185,235,0.08);
+  animation: gwFogDrift 22s 13s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GHOST PANEL — glass UI over wallpaper
+   ═══════════════════════════════════════════════════════════════════════ */
+#ghostChatPanel .whatsapp-messages {
+  background: transparent !important;
+}
+#ghostChatPanel .whatsapp-chat-header {
+  background: rgba(6, 4, 18, 0.75) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(130,90,210,0.22);
+}
+#ghostChatPanel .whatsapp-input-area {
+  background: rgba(6, 4, 18, 0.82) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-top: 1px solid rgba(130,90,210,0.18);
+}
+#ghostChatPanel .date-separator span {
+  background: rgba(18, 12, 45, 0.72);
+  color: rgba(195,175,255,0.72);
+  backdrop-filter: blur(6px);
+}
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EXECUTIVE CHAT — ROYAL BLUE (DEEP NAVY + ELECTRIC BLUE GLOW)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.exec-chat-item {
+  position: relative;
+  background: linear-gradient(135deg,
+    rgba(10,  30,  80,  0.92) 0%,
+    rgba(15,  45, 110,  0.85) 50%,
+    rgba(8,   22,  65,  0.95) 100%
+  ) !important;
+  border-left: 3px solid rgba(30, 120, 255, 0.90) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(30, 120, 255, 0.12),
+    0 2px 8px rgba(10, 40, 120, 0.4);
+}
+
+/* Animated shimmer sweep */
+.exec-chat-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(60, 140, 255, 0.08) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: execShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes execShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Pulsing electric blue dot top-right */
+.exec-chat-item::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1e90ff;
+  box-shadow: 0 0 8px 3px rgba(30, 144, 255, 0.85);
+  animation: execPulse 2.2s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes execPulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.4; transform: scale(0.70); }
+}
+
+.exec-avatar {
+  background: linear-gradient(135deg, #0a3080, #1e6fff, #0d4fd6) !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  box-shadow:
+    0 0 14px rgba(30, 111, 255, 0.60),
+    0 0 4px  rgba(30, 144, 255, 0.40);
+}
+
+.exec-title {
+  color: #60a5fa !important;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.50);
+}
+
+.exec-time {
+  color: rgba(96, 165, 250, 0.65) !important;
+}
+
+.exec-preview {
+  color: rgba(147, 197, 253, 0.70) !important;
+  font-size: 12px;
+}
+
+.exec-badge {
+  background: linear-gradient(135deg, #0d4fd6, #1e90ff) !important;
+  color: #fff !important;
+  box-shadow: 0 0 8px rgba(30, 144, 255, 0.65);
+}
+
+/* Active state */
+.exec-chat-item.active {
+  background: linear-gradient(135deg,
+    rgba(12,  38, 100,  0.98) 0%,
+    rgba(20,  60, 140,  0.92) 50%,
+    rgba(10,  28,  85,  0.98) 100%
+  ) !important;
+  box-shadow:
+    inset 0 0 24px rgba(30, 100, 255, 0.10),
+    0 2px 16px rgba(15, 60, 200, 0.30),
+    0 0 0 1px rgba(30, 120, 255, 0.20);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EXEC READERS POPUP — PROFILE-CLICKABLE ROWS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.exec-reader-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.exec-reader-row:hover {
+  background: rgba(30, 100, 255, 0.12);
+}
+
+.exec-reader-clickable {
+  cursor: pointer;
+}
+
+.exec-reader-profile-arrow {
+  margin-left: auto;
+  font-size: 13px;
+  color: rgba(96, 165, 250, 0.6);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.exec-reader-row:hover .exec-reader-profile-arrow {
+  transform: translateX(3px);
+  color: #60a5fa;
+}
+
+.exec-reader-name {
+  font-size: 12px;
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.exec-reader-name.exec-reader-clickable:hover {
+  text-decoration: underline;
+  color: #60a5fa;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CHAT RULES — BOLD DARK CARD WITH RED GLOW BORDER
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.chat-rules-card {
+  margin: 10px 12px 4px;
+  padding: 14px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 6, 6, 0.96) 0%,
+    rgba(30, 8, 8, 0.94) 100%
+  );
+  border: 1px solid rgba(255, 50, 50, 0.55);
+  border-radius: 12px;
+  box-shadow:
+    0 0 12px rgba(255, 30, 30, 0.20),
+    0 0 28px rgba(255, 30, 30, 0.10),
+    inset 0 1px 0 rgba(255, 100, 100, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle red glow sweep in background */
+.chat-rules-card::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 60%;
+  height: 180%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 30, 30, 0.07) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.chat-rules-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(255, 50, 50, 0.22);
+}
+
+.chat-rules-icon {
+  font-size: 14px;
+  filter: drop-shadow(0 0 4px rgba(255, 80, 80, 0.8));
+}
+
+.chat-rules-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ff4444;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 60, 60, 0.6);
+}
+
+.chat-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-rule-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 11px;
+  color: rgba(220, 200, 200, 0.85);
+  line-height: 1.5;
+}
+
+.chat-rule-item strong {
+  color: #ff6060;
+  font-weight: 700;
+}
+
+.rule-emoji {
+  font-size: 13px;
+  line-height: 1.3;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 3px rgba(255, 60, 60, 0.5));
 }
