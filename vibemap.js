@@ -1776,18 +1776,16 @@ function updateTypingDisplay() {
 
   if (!container) return;
 
-  // Ghost chat: no typing indicators shown
-  if (true || typingUsers.size === 0) {
+  // Ghost chat: always show anonymous typing text, never real names
+  if (typingUsers.size === 0) {
     container.innerHTML = '';
     return;
   }
 
-  const usersList = Array.from(typingUsers);
-  let text = '';
-
-  if (usersList.length === 1) text = `${usersList[0]} is typing`;
-  else if (usersList.length === 2) text = `${usersList[0]} and ${usersList[1]} are typing`;
-  else text = `${usersList.length} people are typing`;
+  const count = typingUsers.size;
+  const text = count === 1
+    ? '👻 Typing - Have Patience...'
+    : `👻 ${count} Ghosts Typing - Have Patience...`;
 
   container.innerHTML = `
    <div class="typing-indicator">
@@ -2216,41 +2214,138 @@ function loadCommunities() {
         </div>
         
         <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Community Group Chat -->
-          <div class="chat-item active" id="ghostChatItem" data-chat="ghost" onclick="openCommunityChat()">
+          <!-- Executive Chat (DEFAULT) -->
+          <div class="chat-item active exec-chat-item" id="execSidebarItem" data-chat="executive" onclick="openExecutiveChat()">
             <div class="chat-avatar">
-              <div class="group-avatar" style="padding:0;overflow:hidden;"><img src="data:image/jpeg;base64,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" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Ghost"></div>
+              <div class="group-avatar exec-avatar">🎓</div>
+            </div>
+            <div class="chat-info">
+              <div class="chat-header-row">
+                <h4 class="exec-title">${currentUser.college} · Executive</h4>
+                <span class="chat-time exec-time"></span>
+              </div>
+              <div class="chat-preview">
+                <span class="preview-text exec-preview">Real identity · Official</span>
+                <span id="execUnreadBadge" class="unread-badge exec-badge" style="display:none;">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Community Group Chat -->
+          <!-- Ghost Group Chat -->
+          <div class="chat-item" id="ghostChatItem" data-chat="ghost" onclick="openCommunityChat()" style="position:relative;overflow:hidden;">
+            <!-- ⛔ Realistic 5-tape criss-cross caution barrier -->
+            
+            <div class="chat-avatar">
+              <!-- 🎃 Halloween pumpkin DP -->
+              <div class="group-avatar" style="padding:0;overflow:hidden;background:#100500;border-radius:50%;">
+                <img src="https://www.dhresource.com/webp/m/0x0/f2/albu/g21/M01/3D/B7/rBVaqmDe2UmADG8pAAFL_e_I94Q482.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Ghost">
+                    <radialGradient id="gcSky" cx="50%" cy="30%" r="75%">
+                      <stop offset="0%" stop-color="#2d1200"/>
+                      <stop offset="100%" stop-color="#080200"/>
+                    </radialGradient>
+                    <radialGradient id="gcMoon" cx="38%" cy="38%" r="55%">
+                      <stop offset="0%" stop-color="#fff8d0"/>
+                      <stop offset="60%" stop-color="#ffcc44"/>
+                      <stop offset="100%" stop-color="#aa6600"/>
+                    </radialGradient>
+                    <radialGradient id="gcPump1" cx="42%" cy="32%" r="62%">
+                      <stop offset="0%" stop-color="#ff9900"/>
+                      <stop offset="65%" stop-color="#cc4400"/>
+                      <stop offset="100%" stop-color="#6a1a00"/>
+                    </radialGradient>
+                    <radialGradient id="gcPump2" cx="42%" cy="32%" r="62%">
+                      <stop offset="0%" stop-color="#ee8800"/>
+                      <stop offset="65%" stop-color="#bb3300"/>
+                      <stop offset="100%" stop-color="#5a1400"/>
+                    </radialGradient>
+                    <radialGradient id="gcGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="rgba(255,120,0,0.65)"/>
+                      <stop offset="100%" stop-color="rgba(255,60,0,0)"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="50" height="50" fill="url(#gcSky)" rx="25"/>
+                  <circle cx="37" cy="11" r="8" fill="rgba(255,190,50,0.12)"/>
+                  <circle cx="37" cy="11" r="5.5" fill="url(#gcMoon)"/>
+                  <circle cx="35.5" cy="9.5" r="0.6" fill="rgba(160,90,0,0.28)"/>
+                  <circle cx="38" cy="13" r="0.45" fill="rgba(160,90,0,0.28)"/>
+                  <!-- Bare trees -->
+                  <line x1="5" y1="50" x2="5" y2="26" stroke="#220a00" stroke-width="1.4"/>
+                  <line x1="5" y1="32" x2="2" y2="25" stroke="#220a00" stroke-width="0.9"/>
+                  <line x1="5" y1="32" x2="8" y2="26" stroke="#220a00" stroke-width="0.9"/>
+                  <line x1="5" y1="26" x2="3" y2="20" stroke="#220a00" stroke-width="0.7"/>
+                  <line x1="5" y1="26" x2="7" y2="19" stroke="#220a00" stroke-width="0.7"/>
+                  <!-- Bat silhouettes -->
+                  <path d="M18,9 C16,7 13,7 13,9 C13,11 15,11 18,9Z M18,9 C20,7 23,7 23,9 C23,11 21,11 18,9Z" fill="#1a0800"/>
+                  <path d="M27,6.5 C25.5,5 23.5,5 23.5,6.5 C23.5,8 25,8 27,6.5Z M27,6.5 C28.5,5 30.5,5 30.5,6.5 C30.5,8 29,8 27,6.5Z" fill="#1a0800"/>
+                  <!-- Ground -->
+                  <rect x="0" y="43" width="50" height="7" fill="#100500" rx="0"/>
+                  <ellipse cx="25" cy="44" rx="12" ry="3.5" fill="url(#gcGlow)" opacity="0.55"/>
+                  <!-- Grass -->
+                  <line x1="9" y1="43" x2="8" y2="39" stroke="#1a3000" stroke-width="0.9"/>
+                  <line x1="13" y1="43" x2="14" y2="38" stroke="#1a3000" stroke-width="0.9"/>
+                  <line x1="37" y1="43" x2="36" y2="39" stroke="#1a3000" stroke-width="0.9"/>
+                  <line x1="41" y1="43" x2="42" y2="38" stroke="#1a3000" stroke-width="0.9"/>
+                  <!-- Center pumpkin (large) -->
+                  <ellipse cx="25" cy="40" rx="8.5" ry="6.5" fill="url(#gcPump1)"/>
+                  <line x1="25" y1="33.5" x2="25" y2="46" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+                  <path d="M18,37 Q25,35 32,37" stroke="rgba(0,0,0,0.14)" stroke-width="0.5" fill="none"/>
+                  <rect x="23.5" y="32" width="3" height="2.5" rx="0.8" fill="#264d00"/>
+                  <!-- Triangle eyes -->
+                  <polygon points="20.5,38 18.8,41 22.2,41" fill="rgba(255,185,0,0.95)"/>
+                  <polygon points="29.5,38 27.8,41 31.2,41" fill="rgba(255,185,0,0.95)"/>
+                  <!-- Nose -->
+                  <polygon points="25,40.5 24,42 26,42" fill="rgba(255,165,0,0.88)"/>
+                  <!-- Jagged grin -->
+                  <path d="M19.5,43.5 L21,42 L22.5,43.5 L24,42 L25.5,43.5 L27,42 L28.5,43.5 L30.5,42" stroke="rgba(255,175,0,0.92)" stroke-width="0.75" fill="none" stroke-linecap="round"/>
+                  <!-- Left pumpkin -->
+                  <ellipse cx="11" cy="43.5" rx="5.5" ry="4.2" fill="url(#gcPump2)"/>
+                  <rect x="10" y="37.8" width="2.2" height="2" rx="0.5" fill="#264d00"/>
+                  <polygon points="10,41.5 8.5,43.5 11.5,43.5" fill="rgba(255,170,0,0.9)"/>
+                  <polygon points="12,41.5 10.5,43.5 13.5,43.5" fill="rgba(255,170,0,0.9)"/>
+                  <path d="M8.5,45 L10,43.5 L11.5,45 L13,43.5 L14.5,45" stroke="rgba(255,165,0,0.85)" stroke-width="0.65" fill="none"/>
+                  <!-- Right pumpkin -->
+                  <ellipse cx="39" cy="43.5" rx="5.5" ry="4.2" fill="url(#gcPump1)" opacity="0.82"/>
+                  <rect x="38" y="37.8" width="2.2" height="2" rx="0.5" fill="#264d00"/>
+                  <polygon points="38,41.5 36.5,43.5 39.5,43.5" fill="rgba(255,170,0,0.9)"/>
+                  <polygon points="40,41.5 38.5,43.5 41.5,43.5" fill="rgba(255,170,0,0.9)"/>
+                  <path d="M36.5,45 L38,43.5 L39.5,45 L41,43.5 L42.5,45" stroke="rgba(255,165,0,0.85)" stroke-width="0.65" fill="none"/>
+                </svg>
+              </div>
             </div>
             <div class="chat-info">
               <div class="chat-header-row">
                 <h4>👻 Ghosts' Conceled</h4>
-                <span class="chat-time">Now</span>
+                <span class="chat-time"></span>
               </div>
               <div class="chat-preview">
-                <span class="preview-text">Click to open group chat</span>
+                <span class="preview-text">☠️☠️☠️</span>
                 <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
               </div>
             </div>
           </div>
-          
-          <!-- Announcements Channel -->
-          <!-- Executive Chat -->
-          <div class="chat-item" id="execSidebarItem" data-chat="executive" onclick="openExecutiveChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;font-size:20px;">🎓</div>
+
+          <!-- Chat Rules -->
+          <div class="chat-rules-card">
+            <div class="chat-rules-header">
+              <span class="chat-rules-icon">⚠️</span>
+              <span class="chat-rules-title">CHAT RULES</span>
             </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4 style="color:#d4a700;">${currentUser.college} · Executive</h4>
-                <span class="chat-time" style="color:rgba(212,167,0,0.8);">Official</span>
+            <div class="chat-rules-list">
+              <div class="chat-rule-item">
+                <span class="rule-emoji">🚫</span>
+                <span>No hate speech — violators get <strong>permanently banned</strong>.</span>
               </div>
-              <div class="chat-preview">
-                <span class="preview-text">Real identity · Gold verified chat</span>
-                <span id="execUnreadBadge" class="unread-badge" style="display:none;background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;">0</span>
+              <div class="chat-rule-item">
+                <span class="rule-emoji">🔞</span>
+                <span>No explicit content — account <strong>suspended immediately</strong>.</span>
+              </div>
+              <div class="chat-rule-item">
+                <span class="rule-emoji">🔗</span>
+                <span>No spam or links — messages <strong>deleted, user muted</strong>.</span>
               </div>
             </div>
           </div>
-          
           <!-- Study Groups -->
           <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
             <div class="chat-avatar">
@@ -2268,7 +2363,7 @@ function loadCommunities() {
       <!-- Right Main Chat Area -->
       <div class="whatsapp-main" id="whatsappMain">
         <!-- Ghost Chat Panel -->
-        <div id="ghostChatPanel" style="display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;">
+        <div id="ghostChatPanel" style="display:none;flex-direction:column;width:100%;height:100%;overflow:hidden;position:relative;">
         <div class="whatsapp-chat-header">
           <div class="chat-header-info">
             <div class="chat-avatar-large">🎓</div>
@@ -2279,7 +2374,279 @@ function loadCommunities() {
           </div>
         </div>
 
-        <div class="whatsapp-messages" id="whatsappMessages">
+        <!-- ═══ GHOST WALLPAPER ═══ -->
+        <div id="ghostWallpaper" style="position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(175deg,#060412 0%,#0b0820 35%,#09071c 65%,#040310 100%);">
+          <!-- Stars -->
+          <div class="gw-stars"></div>
+          <!-- Moon -->
+          <div class="gw-moon"></div>
+          <div class="gw-moon-glow"></div>
+          <!-- 6 realistic bats -->
+          <svg class="gw-bat gw-bat-1" id="gwb1" viewBox="0 0 100 44" xmlns="http://www.w3.org/2000/svg" width="70" height="30">
+            <g class="gw-bat-body">
+              <!-- Body -->
+              <ellipse cx="50" cy="24" rx="7" ry="9" fill="#1a1028"/>
+              <!-- Head -->
+              <ellipse cx="50" cy="14" rx="5.5" ry="5" fill="#1a1028"/>
+              <!-- Ears -->
+              <polygon points="45,10 43,4 48,9" fill="#1a1028"/>
+              <polygon points="55,10 57,4 52,9" fill="#1a1028"/>
+              <!-- Eyes -->
+              <circle cx="47.5" cy="13" r="1.4" fill="rgba(200,100,255,0.9)"/>
+              <circle cx="52.5" cy="13" r="1.4" fill="rgba(200,100,255,0.9)"/>
+              <!-- Left wing -->
+              <path d="M43,20 C35,14 18,10 5,18 C12,22 22,21 30,22 C36,23 40,25 43,28Z" fill="#1a1028"/>
+              <path d="M43,20 C38,16 28,12 18,15 C24,18 31,18 37,20Z" fill="#231535" opacity="0.6"/>
+              <!-- Wing membrane lines left -->
+              <path d="M43,22 C35,18 20,15 8,20" stroke="#2a1a45" stroke-width="0.6" fill="none" opacity="0.7"/>
+              <path d="M43,24 C36,21 25,18 14,21" stroke="#2a1a45" stroke-width="0.5" fill="none" opacity="0.6"/>
+              <!-- Right wing -->
+              <path d="M57,20 C65,14 82,10 95,18 C88,22 78,21 70,22 C64,23 60,25 57,28Z" fill="#1a1028"/>
+              <path d="M57,20 C62,16 72,12 82,15 C76,18 69,18 63,20Z" fill="#231535" opacity="0.6"/>
+              <!-- Wing membrane lines right -->
+              <path d="M57,22 C65,18 80,15 92,20" stroke="#2a1a45" stroke-width="0.6" fill="none" opacity="0.7"/>
+              <path d="M57,24 C64,21 75,18 86,21" stroke="#2a1a45" stroke-width="0.5" fill="none" opacity="0.6"/>
+              <!-- Legs -->
+              <path d="M47,32 L44,38 L46,38 L47,35 L48,38 L49,38 L48,32Z" fill="#1a1028"/>
+              <path d="M53,32 L50,38 L52,38 L53,35 L54,38 L55,38 L54,32Z" fill="#1a1028"/>
+            </g>
+          </svg>
+          <svg class="gw-bat gw-bat-2" id="gwb2" viewBox="0 0 80 36" xmlns="http://www.w3.org/2000/svg" width="54" height="24">
+            <g class="gw-bat-body">
+              <ellipse cx="40" cy="19" rx="5.5" ry="7" fill="#160e22"/>
+              <ellipse cx="40" cy="11" rx="4.5" ry="4" fill="#160e22"/>
+              <polygon points="36,8 34,3 39,8" fill="#160e22"/>
+              <polygon points="44,8 46,3 41,8" fill="#160e22"/>
+              <circle cx="37.8" cy="10.5" r="1.1" fill="rgba(180,80,240,0.85)"/>
+              <circle cx="42.2" cy="10.5" r="1.1" fill="rgba(180,80,240,0.85)"/>
+              <path d="M34.5,16 C27,11 14,8 3,14 C9,18 18,17 25,18 C30,19 33,21 34.5,23Z" fill="#160e22"/>
+              <path d="M45.5,16 C53,11 66,8 77,14 C71,18 62,17 55,18 C50,19 47,21 45.5,23Z" fill="#160e22"/>
+              <path d="M34.5,18 C27,15 16,12 6,16" stroke="#22103a" stroke-width="0.5" fill="none" opacity="0.65"/>
+              <path d="M45.5,18 C53,15 64,12 74,16" stroke="#22103a" stroke-width="0.5" fill="none" opacity="0.65"/>
+              <path d="M38,26 L36,31 L37.5,31 L38,28.5 L38.5,31 L40,31Z" fill="#160e22"/>
+              <path d="M42,26 L40,31 L41.5,31 L42,28.5 L42.5,31 L44,31Z" fill="#160e22"/>
+            </g>
+          </svg>
+          <svg class="gw-bat gw-bat-3" id="gwb3" viewBox="0 0 60 26" xmlns="http://www.w3.org/2000/svg" width="42" height="18">
+            <g class="gw-bat-body">
+              <ellipse cx="30" cy="15" rx="4" ry="5.5" fill="#1c1230"/>
+              <ellipse cx="30" cy="8" rx="3.5" ry="3.2" fill="#1c1230"/>
+              <polygon points="27,6 25,2 29,5.5" fill="#1c1230"/>
+              <polygon points="33,6 35,2 31,5.5" fill="#1c1230"/>
+              <circle cx="28.2" cy="7.5" r="0.9" fill="rgba(190,90,255,0.80)"/>
+              <circle cx="31.8" cy="7.5" r="0.9" fill="rgba(190,90,255,0.80)"/>
+              <path d="M26,12 C19,8 9,6 2,10 C7,13 14,13 20,14 C23,14.5 25,16 26,18Z" fill="#1c1230"/>
+              <path d="M34,12 C41,8 51,6 58,10 C53,13 46,13 40,14 C37,14.5 35,16 34,18Z" fill="#1c1230"/>
+              <path d="M29,20 L28,24 L30,24 L30,21.5 L30,24 L32,24 L31,20Z" fill="#1c1230"/>
+            </g>
+          </svg>
+          <svg class="gw-bat gw-bat-4" id="gwb4" viewBox="0 0 110 48" xmlns="http://www.w3.org/2000/svg" width="78" height="34">
+            <g class="gw-bat-body">
+              <ellipse cx="55" cy="26" rx="8" ry="10" fill="#130d1e"/>
+              <ellipse cx="55" cy="15" rx="6.5" ry="5.8" fill="#130d1e"/>
+              <polygon points="49,11 46,4 52,10" fill="#130d1e"/>
+              <polygon points="61,11 64,4 58,10" fill="#130d1e"/>
+              <circle cx="51.5" cy="14" r="1.6" fill="rgba(210,110,255,0.92)"/>
+              <circle cx="58.5" cy="14" r="1.6" fill="rgba(210,110,255,0.92)"/>
+              <path d="M47,22 C37,15 20,11 5,20 C13,25 25,23 34,24 C40,25 44,28 47,31Z" fill="#130d1e"/>
+              <path d="M47,22 C40,17 28,13 16,17 C23,21 33,21 40,23Z" fill="#1c1530" opacity="0.55"/>
+              <path d="M47,24 C38,20 24,17 10,22" stroke="#201540" stroke-width="0.65" fill="none" opacity="0.7"/>
+              <path d="M47,27 C39,23 27,20 14,25" stroke="#201540" stroke-width="0.5" fill="none" opacity="0.6"/>
+              <path d="M63,22 C73,15 90,11 105,20 C97,25 85,23 76,24 C70,25 66,28 63,31Z" fill="#130d1e"/>
+              <path d="M63,22 C70,17 82,13 94,17 C87,21 77,21 70,23Z" fill="#1c1530" opacity="0.55"/>
+              <path d="M63,24 C72,20 86,17 100,22" stroke="#201540" stroke-width="0.65" fill="none" opacity="0.7"/>
+              <path d="M63,27 C71,23 83,20 96,25" stroke="#201540" stroke-width="0.5" fill="none" opacity="0.6"/>
+              <path d="M52,36 L49,43 L51.5,43 L52.5,39 L53.5,43 L55,43 L53.5,36Z" fill="#130d1e"/>
+              <path d="M58,36 L55,43 L57.5,43 L58.5,39 L59.5,43 L61,43 L59,36Z" fill="#130d1e"/>
+            </g>
+          </svg>
+          <svg class="gw-bat gw-bat-5" id="gwb5" viewBox="0 0 68 30" xmlns="http://www.w3.org/2000/svg" width="46" height="20">
+            <g class="gw-bat-body">
+              <ellipse cx="34" cy="17" rx="5" ry="6.5" fill="#18102a"/>
+              <ellipse cx="34" cy="9.5" rx="4" ry="3.8" fill="#18102a"/>
+              <polygon points="30,7 28,2.5 33,7" fill="#18102a"/>
+              <polygon points="38,7 40,2.5 35,7" fill="#18102a"/>
+              <circle cx="31.5" cy="9" r="1.15" fill="rgba(195,95,255,0.82)"/>
+              <circle cx="36.5" cy="9" r="1.15" fill="rgba(195,95,255,0.82)"/>
+              <path d="M29,14 C22,10 11,7 2,12 C7,16 16,15 22,16 C26,17 28,19 29,21Z" fill="#18102a"/>
+              <path d="M39,14 C46,10 57,7 66,12 C61,16 52,15 46,16 C42,17 40,19 39,21Z" fill="#18102a"/>
+              <path d="M29,16 C23,13 13,11 4,14" stroke="#24143e" stroke-width="0.5" fill="none" opacity="0.7"/>
+              <path d="M39,16 C45,13 55,11 64,14" stroke="#24143e" stroke-width="0.5" fill="none" opacity="0.7"/>
+              <path d="M32,23 L30.5,28 L32,28 L32.5,25.5 L33,28 L34.5,28 L33.5,23Z" fill="#18102a"/>
+              <path d="M36,23 L34.5,28 L36,28 L36.5,25.5 L37,28 L38.5,28 L37.5,23Z" fill="#18102a"/>
+            </g>
+          </svg>
+          <svg class="gw-bat gw-bat-6" id="gwb6" viewBox="0 0 88 38" xmlns="http://www.w3.org/2000/svg" width="60" height="26">
+            <g class="gw-bat-body">
+              <ellipse cx="44" cy="21" rx="6" ry="7.5" fill="#151020"/>
+              <ellipse cx="44" cy="12" rx="5" ry="4.5" fill="#15102a"/>
+              <polygon points="39.5,9 37,3.5 43,8.5" fill="#15102a"/>
+              <polygon points="48.5,9 51,3.5 45,8.5" fill="#15102a"/>
+              <circle cx="41" cy="11.5" r="1.3" fill="rgba(205,105,255,0.88)"/>
+              <circle cx="47" cy="11.5" r="1.3" fill="rgba(205,105,255,0.88)"/>
+              <path d="M38,18 C30,12 16,9 3,16 C10,20 21,19 29,20 C34,21 37,23 38,26Z" fill="#15102a"/>
+              <path d="M38,20 C31,17 19,14 8,18" stroke="#201540" stroke-width="0.55" fill="none" opacity="0.65"/>
+              <path d="M50,18 C58,12 72,9 85,16 C78,20 67,19 59,20 C54,21 51,23 50,26Z" fill="#15102a"/>
+              <path d="M50,20 C57,17 69,14 80,18" stroke="#201540" stroke-width="0.55" fill="none" opacity="0.65"/>
+              <path d="M42,29 L40,35 L42,35 L43,32 L43,35 L45,35 L44,29Z" fill="#15102a"/>
+              <path d="M46,29 L44,35 L46,35 L47,32 L47,35 L49,35 L48,29Z" fill="#15102a"/>
+            </g>
+          </svg>
+          <!-- Ghosts -->
+          <div class="gw-ghost gw-ghost-1">
+            <svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg" width="60" height="80">
+              <defs><radialGradient id="gh1g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(255,255,255,0.96)"/><stop offset="100%" stop-color="rgba(220,220,255,0.38)"/></radialGradient></defs>
+              <path d="M10,55 C8,55 5,52 5,48 L5,25 C5,12 15,4 30,4 C45,4 55,12 55,25 L55,48 C55,52 52,55 50,55 L46,50 L42,55 L38,50 L34,55 L30,50 L26,55 L22,50 L18,55 L14,50 Z" fill="url(#gh1g)"/>
+              <ellipse cx="22" cy="28" rx="5.5" ry="7" fill="rgba(60,40,100,0.75)"/>
+              <ellipse cx="38" cy="28" rx="5.5" ry="7" fill="rgba(60,40,100,0.75)"/>
+              <ellipse cx="21" cy="27" rx="2" ry="2.5" fill="rgba(130,80,200,0.9)"/>
+              <ellipse cx="37" cy="27" rx="2" ry="2.5" fill="rgba(130,80,200,0.9)"/>
+              <path d="M23,40 Q30,46 37,40" stroke="rgba(80,50,140,0.45)" stroke-width="1.5" fill="none"/>
+            </svg>
+          </div>
+          <div class="gw-ghost gw-ghost-2">
+            <svg viewBox="0 0 44 58" xmlns="http://www.w3.org/2000/svg" width="44" height="58">
+              <defs><radialGradient id="gh2g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(240,240,255,0.90)"/><stop offset="100%" stop-color="rgba(200,200,255,0.28)"/></radialGradient></defs>
+              <path d="M7,40 C5,40 3,38 3,35 L3,18 C3,8 11,3 22,3 C33,3 41,8 41,18 L41,35 C41,38 39,40 37,40 L34,37 L31,40 L28,37 L25,40 L22,37 L19,40 L16,37 L13,40 L10,37 Z" fill="url(#gh2g)"/>
+              <ellipse cx="15.5" cy="20" rx="4" ry="5.5" fill="rgba(50,30,90,0.70)"/>
+              <ellipse cx="28.5" cy="20" rx="4" ry="5.5" fill="rgba(50,30,90,0.70)"/>
+              <ellipse cx="15" cy="19" rx="1.5" ry="2" fill="rgba(110,65,185,0.85)"/>
+              <ellipse cx="28" cy="19" rx="1.5" ry="2" fill="rgba(110,65,185,0.85)"/>
+            </svg>
+          </div>
+          <div class="gw-ghost gw-ghost-3">
+            <svg viewBox="0 0 36 48" xmlns="http://www.w3.org/2000/svg" width="36" height="48">
+              <defs><radialGradient id="gh3g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(255,255,255,0.88)"/><stop offset="100%" stop-color="rgba(210,210,255,0.22)"/></radialGradient></defs>
+              <path d="M5,33 C4,33 2,31 2,29 L2,15 C2,7 9,2 18,2 C27,2 34,7 34,15 L34,29 C34,31 32,33 31,33 L28.5,30 L26,33 L23.5,30 L21,33 L18,30 L15,33 L12.5,30 L10,33 L7.5,30 Z" fill="url(#gh3g)"/>
+              <ellipse cx="12" cy="16" rx="3" ry="4" fill="rgba(40,25,80,0.65)"/>
+              <ellipse cx="24" cy="16" rx="3" ry="4" fill="rgba(40,25,80,0.65)"/>
+              <ellipse cx="11.5" cy="15.5" rx="1.1" ry="1.4" fill="rgba(100,60,175,0.82)"/>
+              <ellipse cx="23.5" cy="15.5" rx="1.1" ry="1.4" fill="rgba(100,60,175,0.82)"/>
+            </svg>
+          </div>
+          <div class="gw-ghost gw-ghost-4">
+            <svg viewBox="0 0 50 66" xmlns="http://www.w3.org/2000/svg" width="50" height="66">
+              <defs><radialGradient id="gh4g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(245,245,255,0.92)"/><stop offset="100%" stop-color="rgba(215,215,255,0.32)"/></radialGradient></defs>
+              <path d="M8,46 C6,46 4,44 4,41 L4,22 C4,10 13,3 25,3 C37,3 46,10 46,22 L46,41 C46,44 44,46 42,46 L39,42 L36,46 L33,42 L30,46 L27,42 L24,46 L21,42 L18,46 L15,42 L12,46 Z" fill="url(#gh4g)"/>
+              <ellipse cx="18" cy="24" rx="4.5" ry="6" fill="rgba(55,35,95,0.72)"/>
+              <ellipse cx="32" cy="24" rx="4.5" ry="6" fill="rgba(55,35,95,0.72)"/>
+              <ellipse cx="17.5" cy="23" rx="1.8" ry="2.2" fill="rgba(120,75,200,0.88)"/>
+              <ellipse cx="31.5" cy="23" rx="1.8" ry="2.2" fill="rgba(120,75,200,0.88)"/>
+              <path d="M19,35 Q25,41 31,35" stroke="rgba(80,50,140,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <!-- Scarecrows -->
+          <div class="gw-scarecrow gw-sc-1">
+            <svg viewBox="0 0 36 80" xmlns="http://www.w3.org/2000/svg" width="36" height="80">
+              <!-- Hat -->
+              <rect x="9" y="2" width="18" height="3" rx="1" fill="#2a1800"/>
+              <rect x="12" y="4" width="12" height="10" rx="1.5" fill="#331e00"/>
+              <!-- Head (sack) -->
+              <ellipse cx="18" cy="19" rx="8" ry="9" fill="#8b7040"/>
+              <!-- Stitched eyes -->
+              <path d="M13,17 L15,19 M15,17 L13,19" stroke="#2a1800" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M21,17 L23,19 M23,17 L21,19" stroke="#2a1800" stroke-width="1.2" stroke-linecap="round"/>
+              <!-- Stitched mouth -->
+              <path d="M14,23 L15.5,24 L17,23 L18.5,24 L20,23 L21.5,24 L23,23" stroke="#2a1800" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+              <!-- Neck -->
+              <rect x="16.5" y="27" width="3" height="4" fill="#6b5530"/>
+              <!-- Body (shirt) -->
+              <rect x="8" y="30" width="20" height="22" rx="2" fill="#4a3020"/>
+              <!-- Tattered shirt edges -->
+              <path d="M8,50 L10,55 L12,50 L14,56 L16,50 L18,55 L20,50 L22,56 L24,50 L26,55 L28,50" stroke="#4a3020" stroke-width="1.5" fill="none"/>
+              <!-- Arm post (horizontal stick) -->
+              <rect x="0" y="31" width="36" height="2.5" rx="1" fill="#2a1800"/>
+              <!-- Left sleeve -->
+              <rect x="0" y="33" width="9" height="12" rx="2" fill="#5a3828"/>
+              <!-- Left hand (straw) -->
+              <path d="M2,45 L0,50 M4,45 L3,51 M6,45 L6,50 M8,45 L9,50" stroke="#8b7040" stroke-width="1.1" stroke-linecap="round"/>
+              <!-- Right sleeve -->
+              <rect x="27" y="33" width="9" height="12" rx="2" fill="#5a3828"/>
+              <!-- Right hand (straw) -->
+              <path d="M28,45 L27,50 M30,45 L30,51 M32,45 L32,50 M34,45 L35,50" stroke="#8b7040" stroke-width="1.1" stroke-linecap="round"/>
+              <!-- Stake/post (vertical) -->
+              <rect x="16.5" y="28" width="3" height="52" rx="1" fill="#2a1800"/>
+              <!-- Legs (pants) -->
+              <rect x="10" y="51" width="7" height="22" rx="2" fill="#2a3020"/>
+              <rect x="19" y="51" width="7" height="22" rx="2" fill="#2a3020"/>
+              <!-- Straw feet -->
+              <path d="M10,73 L8,78 M12,73 L11,79 M14,73 L14,78 M16,73 L17,78" stroke="#8b7040" stroke-width="1" stroke-linecap="round"/>
+              <path d="M19,73 L18,78 M21,73 L20,79 M23,73 L24,78 M25,73 L26,78" stroke="#8b7040" stroke-width="1" stroke-linecap="round"/>
+              <!-- Patches -->
+              <rect x="10" y="35" width="5" height="4" rx="0.5" fill="#3a2515" opacity="0.7"/>
+              <rect x="20" y="40" width="4" height="4" rx="0.5" fill="#3a2515" opacity="0.7"/>
+              <!-- Crow on shoulder -->
+              <ellipse cx="30" cy="30.5" rx="3" ry="2" fill="#111"/>
+              <ellipse cx="32" cy="30" rx="1.8" ry="1.5" fill="#111"/>
+              <path d="M33.5,29.5 L36,28.5" stroke="#111" stroke-width="0.5"/>
+              <circle cx="33" cy="29" r="0.4" fill="rgba(255,220,0,0.9)"/>
+            </svg>
+          </div>
+          <div class="gw-scarecrow gw-sc-2">
+            <svg viewBox="0 0 30 66" xmlns="http://www.w3.org/2000/svg" width="28" height="62">
+              <!-- Hat -->
+              <rect x="7" y="1" width="16" height="2.5" rx="0.8" fill="#1e1200"/>
+              <rect x="10" y="3" width="10" height="8" rx="1.2" fill="#261800"/>
+              <!-- Head -->
+              <ellipse cx="15" cy="16" rx="7" ry="7.5" fill="#7a6035"/>
+              <!-- X eyes -->
+              <path d="M10.5,13.5 L12.5,15.5 M12.5,13.5 L10.5,15.5" stroke="#1e1200" stroke-width="1" stroke-linecap="round"/>
+              <path d="M17.5,13.5 L19.5,15.5 M19.5,13.5 L17.5,15.5" stroke="#1e1200" stroke-width="1" stroke-linecap="round"/>
+              <!-- Smile -->
+              <path d="M11,20 L12.5,21 L14,20 L15.5,21 L17,20 L18.5,21 L20,20" stroke="#1e1200" stroke-width="0.7" fill="none"/>
+              <!-- Body -->
+              <rect x="7" y="23" width="16" height="18" rx="1.5" fill="#3a2515"/>
+              <!-- Arms -->
+              <rect x="0" y="25" width="30" height="2" rx="1" fill="#1e1200"/>
+              <rect x="0" y="27" width="7" height="10" rx="1.5" fill="#4a3020"/>
+              <path d="M1,37 L0,41 M3,37 L2,42 M5,37 L5,41 M7,37 L8,42" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
+              <rect x="23" y="27" width="7" height="10" rx="1.5" fill="#4a3020"/>
+              <path d="M23,37 L22,41 M25,37 L25,42 M27,37 L27,41 M29,37 L30,42" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
+              <!-- Stake -->
+              <rect x="13.5" y="24" width="3" height="42" rx="1" fill="#1e1200"/>
+              <!-- Legs -->
+              <rect x="8" y="40" width="5.5" height="18" rx="1.5" fill="#202818"/>
+              <rect x="16.5" y="40" width="5.5" height="18" rx="1.5" fill="#202818"/>
+              <path d="M8,58 L7,62 M10,58 L9,63 M12,58 L13,62" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
+              <path d="M16.5,58 L15.5,62 M18.5,58 L18,63 M21,58 L22,62" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="gw-scarecrow gw-sc-3">
+            <svg viewBox="0 0 32 70" xmlns="http://www.w3.org/2000/svg" width="30" height="64">
+              <!-- Hat (wide brim) -->
+              <ellipse cx="16" cy="4" rx="12" ry="2.5" fill="#1a1000"/>
+              <rect x="11" y="1" width="10" height="7" rx="1.5" fill="#221400"/>
+              <!-- Head -->
+              <ellipse cx="16" cy="16" rx="7.5" ry="8" fill="#8a6a38"/>
+              <!-- Triangle eyes (eerie) -->
+              <polygon points="11,13 12.5,16.5 9.5,16.5" fill="#1a1000" opacity="0.85"/>
+              <polygon points="21,13 22.5,16.5 19.5,16.5" fill="#1a1000" opacity="0.85"/>
+              <!-- Mouth -->
+              <path d="M11.5,21 Q16,24 20.5,21" stroke="#1a1000" stroke-width="0.9" fill="none"/>
+              <!-- Body -->
+              <rect x="8" y="24" width="16" height="20" rx="2" fill="#2d3820"/>
+              <!-- Arms post -->
+              <rect x="0" y="26" width="32" height="2.5" rx="1" fill="#1a1000"/>
+              <rect x="0" y="28.5" width="8" height="11" rx="2" fill="#3a4828"/>
+              <path d="M1,39.5 L0,44 M3,39.5 L2.5,45 M5,39.5 L5.5,44 M7,39.5 L7.5,44" stroke="#8a6a38" stroke-width="1" stroke-linecap="round"/>
+              <rect x="24" y="28.5" width="8" height="11" rx="2" fill="#3a4828"/>
+              <path d="M25,39.5 L24,44 M27,39.5 L26.5,45 M29,39.5 L29.5,44 M31,39.5 L31.5,44" stroke="#8a6a38" stroke-width="1" stroke-linecap="round"/>
+              <!-- Stake -->
+              <rect x="14.5" y="24" width="3" height="46" rx="1" fill="#1a1000"/>
+              <!-- Legs -->
+              <rect x="9" y="43" width="5.5" height="20" rx="1.5" fill="#1a2815"/>
+              <rect x="17.5" y="43" width="5.5" height="20" rx="1.5" fill="#1a2815"/>
+              <path d="M9,63 L7.5,68 M11,63 L11,69 M13.5,63 L14,68" stroke="#8a6a38" stroke-width="0.9" stroke-linecap="round"/>
+              <path d="M17.5,63 L16.5,68 M19.5,63 L19.5,69 M22,63 L22.5,68" stroke="#8a6a38" stroke-width="0.9" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <!-- Fog wisps -->
+          <div class="gw-fog gw-fog-1"></div>
+          <div class="gw-fog gw-fog-2"></div>
+          <div class="gw-fog gw-fog-3"></div>
+        </div>
+        <!-- ═══ END GHOST WALLPAPER ═══ -->
+        <div class="whatsapp-messages" id="whatsappMessages" style="position:relative;z-index:1;background:transparent;">
           <div class="date-separator">
             <span>Today</span>
           </div>
@@ -2325,7 +2692,7 @@ function loadCommunities() {
         </div>
         </div>
         <!-- Executive Chat Panel (injected on first open) -->
-        <div id="executiveChatPanel" style="display:none;flex-direction:column;width:100%;height:100%;overflow:hidden;"></div>
+        <div id="executiveChatPanel" style="display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;"></div>
       </div>
 
       <!-- Twitter-style Feed (Initially Hidden) -->
@@ -6933,7 +7300,7 @@ function showSubscriptionSuccessModal(plan) {
       <p class="celebration-message">You can now advertise your content</p>
       <div class="celebration-stats" style="background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.2));">
         <div class="celebration-count">${plan.posters} Posters + ${plan.videos} Video${plan.videos > 1 ? 's' : ''}</div>
-        <div class="celebration-label">Available Now</div>
+        <div class="celebration-label"> </div>
       </div>
       <div class="celebration-quote">
         <strong>Duration:</strong> ${plan.days} days<br>
@@ -7387,9 +7754,10 @@ function showTypingIndicator(username) {
     indicator.className = 'whatsapp-typing-indicator';
     document.getElementById('whatsappMessages')?.appendChild(indicator);
   }
+  // Ghost mode — never reveal real identity, always show anonymous message
   indicator.innerHTML = `
     <div class="typing-bubble">
-      <span>${username} is typing</span>
+      <span>👻 Typing - Have Patience...</span>
       <div class="typing-dots">
         <span></span><span></span><span></span>
       </div>
@@ -9668,7 +10036,7 @@ window.showPage = function (pageId, ...args) {
 
   // Hook for Communities
   if (pageId === 'communities') {
-    setTimeout(() => initCommunityChat(), 50);
+    setTimeout(() => { initCommunityChat(); setTimeout(() => openExecutiveChat(), 200); }, 50);
   }
 };
 
@@ -11713,7 +12081,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── State ─────────────────────────────────────────────────────────────
 let execMessages           = [];
-let execActiveChat         = 'ghost';     // 'ghost' | 'executive'
+let execActiveChat         = 'executive'; // 'ghost' | 'executive'
 let execTypingUsers        = new Set();
 let execTypingEmitTimeout  = null;
 let execMediaRecorder      = null;
@@ -12556,14 +12924,15 @@ async function execShowReadersPopup(messageId, event) {
       ? '<div class="exec-readers-empty">No one has read this yet</div>'
       : `<div class="exec-readers-header">👁 Seen by ${readers.length}</div>
          <div class="exec-readers-list">
-           ${readers.map(r => `<div class="exec-reader-row">
+           ${readers.map(r => `<div class="exec-reader-row" onclick="execOpenReaderProfile('${escapeHtml(r.id||'')}', event)" title="View ${escapeHtml(r.username||'User')}'s profile">
              ${r.profile_pic
-               ? `<img src="${escapeHtml(r.profile_pic)}" class="exec-reader-avatar">`
-               : `<div class="exec-reader-avatar exec-reader-avatar-fb">${escapeHtml((r.username||'U').charAt(0).toUpperCase())}</div>`}
+               ? `<img src="${escapeHtml(r.profile_pic)}" class="exec-reader-avatar exec-reader-clickable">`
+               : `<div class="exec-reader-avatar exec-reader-avatar-fb exec-reader-clickable">${escapeHtml((r.username||'U').charAt(0).toUpperCase())}</div>`}
              <div>
-               <div class="exec-reader-name">${escapeHtml(r.username||'User')}</div>
+               <div class="exec-reader-name exec-reader-clickable">@${escapeHtml(r.username||'User')}</div>
                <div class="exec-reader-time">${execFormatTime(r.read_at)}</div>
              </div>
+             <span class="exec-reader-profile-arrow">→</span>
            </div>`).join('')}
          </div>`;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -12571,6 +12940,17 @@ async function execShowReadersPopup(messageId, event) {
     document.body.appendChild(popup);
     setTimeout(() => document.addEventListener('click', () => popup.remove(), { once:true }), 100);
   } catch (err) { console.error('Readers popup error:', err); }
+}
+
+// ── Open reader's profile from seen-by popup ──────────────────────────
+function execOpenReaderProfile(userId, event) {
+  event.stopPropagation();
+  // Close the popup first
+  document.querySelector('.exec-readers-popup')?.remove();
+  // Navigate to their profile
+  if (userId && typeof showUserProfile === 'function') {
+    showUserProfile(userId);
+  }
 }
 
 // ── Scroll to reply ───────────────────────────────────────────────────
