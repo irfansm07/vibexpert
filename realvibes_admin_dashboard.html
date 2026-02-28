@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VibeXpert — RealVibe Moderation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7c;
+    --green: #22d87a;
+    --red: #ff4757;
+    --yellow: #ffc94a;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --font: 'Syne', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── LOGIN SCREEN ─── */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: var(--bg);
+  }
+
+  .login-box {
+    width: 380px;
+    padding: 48px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(124,92,252,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .login-logo {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .login-box input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+
+  .login-box input:focus { border-color: var(--accent); }
+  .login-box input::placeholder { color: var(--muted); }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #5a3fd4);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-login:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-login:active { transform: translateY(0); }
+
+  .login-error {
+    color: var(--red);
+    font-size: 0.8rem;
+    margin-top: 12px;
+    font-family: var(--mono);
+    display: none;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  #app {
+    display: none;
+    min-height: 100vh;
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+  .sidebar-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: rgba(124,92,252,0.15);
+    color: var(--accent);
+    border-color: rgba(124,92,252,0.3);
+  }
+
+  .nav-badge {
+    position: absolute;
+    right: 12px;
+    background: var(--accent2);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    padding: 2px 7px;
+    animation: pulse-badge 2s infinite;
+  }
+
+  @keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+  }
+
+  .server-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    margin-left: 240px;
+    padding: 32px 36px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .page-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+
+  .btn-refresh {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── STAT CARDS ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 16px 16px;
+  }
+  .stat-card.pending::after { background: var(--yellow); }
+  .stat-card.approved::after { background: var(--green); }
+  .stat-card.rejected::after { background: var(--red); }
+  .stat-card.total::after { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  .stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-card.pending .stat-value { color: var(--yellow); }
+  .stat-card.approved .stat-value { color: var(--green); }
+  .stat-card.rejected .stat-value { color: var(--red); }
+
+  .stat-icon {
+    position: absolute;
+    right: 18px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 2.2rem;
+    opacity: 0.12;
+  }
+
+  /* ─── FILTER TABS ─── */
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    width: fit-content;
+  }
+
+  .filter-tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    font-family: var(--font);
+  }
+
+  .filter-tab.active {
+    background: var(--accent);
+    color: white;
+  }
+  .filter-tab:not(.active):hover { color: var(--text); }
+
+  /* ─── QUEUE GRID ─── */
+  .queue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  /* ─── VIBE CARD ─── */
+  .vibe-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    animation: slide-in 0.4s ease both;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .vibe-card:hover { transform: translateY(-3px); border-color: #3a3a4a; }
+
+  .vibe-card.status-approved { border-color: rgba(34,216,122,0.3); }
+  .vibe-card.status-rejected { border-color: rgba(255,71,87,0.3); }
+
+  /* Media preview */
+  .vibe-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #0d0d14;
+    overflow: hidden;
+  }
+
+  .vibe-media img,
+  .vibe-media video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  .media-type-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-family: var(--mono);
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+  }
+
+  .media-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    font-size: 2.5rem;
+  }
+
+  /* Status banner */
+  .status-banner {
+    padding: 7px 14px;
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-banner.pending  { background: rgba(255,201,74,0.15);  color: var(--yellow); }
+  .status-banner.approved { background: rgba(34,216,122,0.15); color: var(--green); }
+  .status-banner.rejected { background: rgba(255,71,87,0.15);  color: var(--red); }
+
+  .status-dot-sm {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pending  .status-dot-sm { background: var(--yellow); }
+  .approved .status-dot-sm { background: var(--green); }
+  .rejected .status-dot-sm { background: var(--red); }
+
+  /* Card body */
+  .vibe-body {
+    padding: 16px;
+  }
+
+  .vibe-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .vibe-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+  }
+
+  .vibe-user-info .username {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .vibe-user-info .meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .plan-badge {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .plan-badge.noble  { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
+  .plan-badge.royal  { background: rgba(255,201,74,0.2);  color: var(--yellow); border: 1px solid rgba(255,201,74,0.4); }
+
+  .vibe-caption {
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  .vibe-time {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-bottom: 14px;
+  }
+
+  /* Rejection reason display */
+  .rejection-msg {
+    background: rgba(255,71,87,0.1);
+    border: 1px solid rgba(255,71,87,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: var(--red);
+    font-family: var(--mono);
+    margin-bottom: 14px;
+  }
+
+  /* Action buttons */
+  .vibe-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-approve, .btn-reject {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    background: rgba(34,216,122,0.15);
+    color: var(--green);
+    border: 1px solid rgba(34,216,122,0.3);
+  }
+  .btn-approve:hover {
+    background: var(--green);
+    color: #0a0a0f;
+    transform: translateY(-1px);
+  }
+
+  .btn-reject {
+    background: rgba(255,71,87,0.1);
+    color: var(--red);
+    border: 1px solid rgba(255,71,87,0.25);
+  }
+  .btn-reject:hover {
+    background: var(--red);
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .btn-approve:disabled, .btn-reject:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+  .empty-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .empty-sub { font-size: 0.85rem; }
+
+  /* ─── REJECT MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 440px;
+    max-width: 90vw;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .modal-sub {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+  }
+
+  .reason-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .reason-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reason-option:hover { border-color: var(--accent2); background: rgba(252,92,124,0.05); }
+  .reason-option input[type="radio"] { accent-color: var(--accent2); }
+  .reason-option label { cursor: pointer; font-size: 0.9rem; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: #4a4a5a; }
+
+  .btn-confirm-reject {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--red), #c0392b);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: var(--font);
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-confirm-reject:hover { opacity: 0.88; }
+
+  /* ─── TOAST ─── */
+  .toast-container {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 200;
+  }
+
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+    font-weight: 600;
+    min-width: 260px;
+    animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s both;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error   { border-left: 3px solid var(--red); }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(20px); }
+  }
+
+  /* ─── LOADING SPINNER ─── */
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 60px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── CONFIG BANNER ─── */
+  .config-banner {
+    background: rgba(255,201,74,0.1);
+    border: 1px solid rgba(255,201,74,0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.82rem;
+    color: var(--yellow);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ─── MEDIA MODAL ─── */
+  .media-expand-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .media-expand-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .media-expand-overlay img,
+  .media-expand-overlay video {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    object-fit: contain;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">VibeXpert</div>
+    <div class="login-sub">Moderation Panel</div>
+    <input type="text" id="serverUrl" placeholder="Server URL (e.g. https://your-server.com)" value="" />
+    <input type="password" id="adminSecret" placeholder="Admin Secret Key" />
+    <button class="btn-login" onclick="login()">Access Dashboard</button>
+    <div class="login-error" id="loginError">⚠ Invalid credentials or server unreachable</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MAIN APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">VibeXpert</div>
+    <div class="sidebar-label">Mod Panel</div>
+
+    <div class="nav-item active" onclick="setTab('pending')" id="nav-pending">
+      ⏳ Pending Review
+      <span class="nav-badge" id="pending-badge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="setTab('approved')" id="nav-approved">
+      ✅ Approved
+    </div>
+    <div class="nav-item" onclick="setTab('rejected')" id="nav-rejected">
+      ❌ Rejected
+    </div>
+    <div class="nav-item" onclick="setTab('all')" id="nav-all">
+      🗂 All Submissions
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="server-status">
+        <div class="status-dot"></div>
+        <span id="server-url-display">Connected</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="page-title">⏳ Pending <span>Review</span></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-refresh" onclick="loadVibes()">↻ Refresh</button>
+        <button class="btn btn-refresh" onclick="logout()" style="color:var(--red)">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card pending">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="stat-pending">—</div>
+        <div class="stat-icon">⏳</div>
+      </div>
+      <div class="stat-card approved">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value" id="stat-approved">—</div>
+        <div class="stat-icon">✅</div>
+      </div>
+      <div class="stat-card rejected">
+        <div class="stat-label">Rejected</div>
+        <div class="stat-value" id="stat-rejected">—</div>
+        <div class="stat-icon">❌</div>
+      </div>
+      <div class="stat-card total">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-icon">🗂</div>
+      </div>
+    </div>
+
+    <!-- Vibes Grid -->
+    <div class="filter-tabs" id="filter-tabs" style="display:none">
+      <button class="filter-tab active" onclick="filterByStatus('all')">All</button>
+      <button class="filter-tab" onclick="filterByStatus('pending')">Pending</button>
+      <button class="filter-tab" onclick="filterByStatus('approved')">Approved</button>
+      <button class="filter-tab" onclick="filterByStatus('rejected')">Rejected</button>
+    </div>
+
+    <div class="queue-grid" id="queue-grid">
+      <div class="spinner"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════ REJECT MODAL -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal">
+    <div class="modal-title">Reject this RealVibe?</div>
+    <div class="modal-sub" id="reject-modal-sub">@username — This action will notify the user</div>
+    <div class="reason-options">
+      <div class="reason-option">
+        <input type="radio" name="reject-reason" id="r-vulgar" value="vulgar" checked />
+        <label for="r-vulgar">🚫 Inappropriate / Vulgar content</label>
+      </div>
+      <div class="reason-option">
+        <input type="radio" name="reject-reason" id="r-spam" value="spam" />
+        <label for="r-spam">💬 Spam or repetitive content</label>
+      </div>
+      <div class="reason-option">
+        <input type="radio" name="reject-reason" id="r-irrelevant" value="irrelevant" />
+        <label for="r-irrelevant">🔍 Does not meet guidelines</label>
+      </div>
+      <div class="reason-option">
+        <input type="radio" name="reject-reason" id="r-other" value="other" />
+        <label for="r-other">📝 Other reason</label>
+      </div>
+    </div>
+    <div id="custom-msg-wrap" style="display:none; margin-bottom:12px">
+      <input type="text" id="custom-reject-msg" placeholder="Custom rejection message..."
+        style="width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:0.85rem;outline:none" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn-confirm-reject" onclick="confirmReject()">Reject & Notify User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ MEDIA EXPAND -->
+<div class="media-expand-overlay" id="media-expand" onclick="closeMediaExpand()">
+  <div id="media-expand-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ TOASTS -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────
+let SERVER_URL = '';
+let ADMIN_SECRET = '';
+let currentTab = 'pending';
+let pendingRejectVibeId = null;
+let pendingRejectUsername = null;
+let allVibes = [];
+let filterStatus = 'all';
+
+// ─── AUTH ─────────────────────────────────────────────────────────
+async function login() {
+  const url = document.getElementById('serverUrl').value.trim().replace(/\/$/, '');
+  const secret = document.getElementById('adminSecret').value.trim();
+
+  if (!url || !secret) {
+    showLoginError();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${url}/api/admin/realvibes/stats`, {
+      headers: { 'x-admin-secret': secret }
+    });
+
+    if (!res.ok) throw new Error('Bad response');
+
+    SERVER_URL = url;
+    ADMIN_SECRET = secret;
+
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('server-url-display').textContent = new URL(url).hostname;
+
+    await loadStats();
+    await loadVibes();
+
+    // Auto-refresh every 30s
+    setInterval(() => {
+      loadStats();
+      if (currentTab === 'pending') loadVibes();
+    }, 30000);
+
+  } catch (e) {
+    showLoginError();
+  }
+}
+
+function showLoginError() {
+  const el = document.getElementById('loginError');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function logout() {
+  SERVER_URL = '';
+  ADMIN_SECRET = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ─── API HELPERS ──────────────────────────────────────────────────
+async function apiFetch(endpoint, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'x-admin-secret': ADMIN_SECRET,
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${SERVER_URL}${endpoint}`, opts);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ─── STATS ────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const data = await apiFetch('/api/admin/realvibes/stats');
+    const s = data.stats;
+    document.getElementById('stat-pending').textContent  = s.pending  ?? 0;
+    document.getElementById('stat-approved').textContent = s.approved ?? 0;
+    document.getElementById('stat-rejected').textContent = s.rejected ?? 0;
+    document.getElementById('stat-total').textContent    = s.total    ?? 0;
+
+    const badge = document.getElementById('pending-badge');
+    if ((s.pending ?? 0) > 0) {
+      badge.textContent = s.pending;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('Stats error:', e);
+  }
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────
+function setTab(tab) {
+  currentTab = tab;
+
+  // Update nav highlight
+  ['pending','approved','rejected','all'].forEach(t => {
+    document.getElementById(`nav-${t}`).classList.toggle('active', t === tab);
+  });
+
+  // Update page title
+  const titles = {
+    pending:  '⏳ Pending <span>Review</span>',
+    approved: '✅ <span>Approved</span> Vibes',
+    rejected: '❌ <span>Rejected</span> Vibes',
+    all:      '🗂 All <span>Submissions</span>'
+  };
+  document.getElementById('page-title').innerHTML = titles[tab];
+
+  document.getElementById('filter-tabs').style.display = tab === 'all' ? 'flex' : 'none';
+
+  loadVibes();
+}
+
+// ─── LOAD VIBES ───────────────────────────────────────────────────
+async function loadVibes() {
+  const grid = document.getElementById('queue-grid');
+  grid.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    let endpoint;
+    if (currentTab === 'pending') {
+      endpoint = '/api/admin/realvibes/pending';
+    } else {
+      const statusParam = currentTab === 'all' ? '' : `?status=${currentTab}`;
+      endpoint = `/api/admin/realvibes${statusParam}`;
+    }
+
+    const data = await apiFetch(endpoint);
+    allVibes = data.vibes || [];
+    renderVibes(allVibes);
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">⚠️</div>
+      <div class="empty-title">Failed to load</div>
+      <div class="empty-sub">Check your server connection</div>
+    </div>`;
+  }
+}
+
+// ─── FILTER (for "all" tab) ────────────────────────────────────────
+function filterByStatus(status) {
+  filterStatus = status;
+  document.querySelectorAll('.filter-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['all','pending','approved','rejected'][i] === status);
+  });
+  const filtered = status === 'all' ? allVibes : allVibes.filter(v => v.status === status);
+  renderVibes(filtered);
+}
+
+// ─── RENDER VIBES ─────────────────────────────────────────────────
+function renderVibes(vibes) {
+  const grid = document.getElementById('queue-grid');
+
+  if (!vibes.length) {
+    const msgs = {
+      pending:  { icon: '🎉', title: 'Queue is clear!', sub: 'No posts waiting for review.' },
+      approved: { icon: '✅', title: 'Nothing here', sub: 'No approved posts yet.' },
+      rejected: { icon: '🚫', title: 'No rejections', sub: 'No rejected posts yet.' },
+      all:      { icon: '📭', title: 'No submissions', sub: 'No RealVibes have been posted yet.' }
+    };
+    const m = msgs[currentTab] || msgs.all;
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${m.icon}</div>
+      <div class="empty-title">${m.title}</div>
+      <div class="empty-sub">${m.sub}</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = vibes.map((v, i) => buildCard(v, i)).join('');
+}
+
+function buildCard(vibe, idx) {
+  const user = vibe.users || {};
+  const isPending  = vibe.status === 'pending';
+  const isApproved = vibe.status === 'approved';
+
+  const statusLabel = { pending: '⏳ Awaiting Review', approved: '✅ Approved', rejected: '❌ Rejected' }[vibe.status];
+  const timeAgo = formatAgo(vibe.created_at);
+
+  const mediaHtml = vibe.media_type === 'video'
+    ? `<video src="${escHtml(vibe.media_url)}" controls muted style="width:100%;height:100%;object-fit:cover" onclick="event.stopPropagation()"></video>`
+    : `<img src="${escHtml(vibe.media_url)}" alt="vibe media" loading="lazy" onclick="expandMedia('${escHtml(vibe.media_url)}', 'image')" style="cursor:zoom-in" />`;
+
+  const rejectionHtml = vibe.rejection_reason
+    ? `<div class="rejection-msg">⚠ ${escHtml(vibe.rejection_reason)}</div>` : '';
+
+  const actionsHtml = isPending
+    ? `<button class="btn-approve" onclick="approveVibe('${vibe.id}')">✅ Approve</button>
+       <button class="btn-reject"  onclick="openRejectModal('${vibe.id}', '${escHtml(user.username || 'user')}')">❌ Reject</button>`
+    : `<div style="font-size:0.78rem;color:var(--muted);font-family:var(--mono);text-align:center;width:100%;padding:4px">
+        Reviewed ${vibe.reviewed_at ? formatAgo(vibe.reviewed_at) : '—'}
+       </div>`;
+
+  return `
+  <div class="vibe-card status-${vibe.status}" id="card-${vibe.id}" style="animation-delay:${idx * 0.04}s">
+    <div class="vibe-media">
+      ${mediaHtml}
+      <div class="media-type-badge">${vibe.media_type === 'video' ? '🎥 Video' : '📸 Image'}</div>
+    </div>
+    <div class="status-banner ${vibe.status}">
+      <div class="status-dot-sm"></div>
+      ${statusLabel}
+    </div>
+    <div class="vibe-body">
+      <div class="vibe-user">
+        <img class="vibe-avatar"
+          src="${user.profile_pic || ''}"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><rect fill=%22%232a2a3a%22 width=%2240%22 height=%2240%22/><text x=%2250%%22 y=%2258%%22 text-anchor=%22middle%22 font-size=%2218%22>👤</text></svg>'"
+          alt="avatar" />
+        <div class="vibe-user-info">
+          <div class="username">@${escHtml(user.username || 'unknown')}</div>
+          <div class="meta">${escHtml(user.college || '—')}</div>
+        </div>
+        ${user.subscription_plan ? `<span class="plan-badge ${user.subscription_plan}">${user.subscription_plan}</span>` : ''}
+      </div>
+      ${vibe.caption ? `<div class="vibe-caption">${escHtml(vibe.caption)}</div>` : ''}
+      <div class="vibe-time">Submitted ${timeAgo}</div>
+      ${rejectionHtml}
+      <div class="vibe-actions">${actionsHtml}</div>
+    </div>
+  </div>`;
+}
+
+// ─── APPROVE ──────────────────────────────────────────────────────
+async function approveVibe(vibeId) {
+  const card = document.getElementById(`card-${vibeId}`);
+  const btns = card.querySelectorAll('button');
+  btns.forEach(b => b.disabled = true);
+
+  try {
+    await apiFetch(`/api/admin/realvibes/${vibeId}/approve`, 'POST', { admin_name: 'Admin' });
+    showToast('✅ Approved! Post is now live.', 'success');
+    card.style.transition = 'opacity 0.4s, transform 0.4s';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      card.remove();
+      loadStats();
+    }, 400);
+  } catch(e) {
+    showToast('❌ Failed to approve. Try again.', 'error');
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ─── REJECT MODAL ─────────────────────────────────────────────────
+function openRejectModal(vibeId, username) {
+  pendingRejectVibeId = vibeId;
+  pendingRejectUsername = username;
+  document.getElementById('reject-modal-sub').textContent = `@${username} — User will be notified of this decision`;
+  document.getElementById('reject-modal').classList.add('open');
+  document.getElementById('r-vulgar').checked = true;
+  document.getElementById('custom-msg-wrap').style.display = 'none';
+
+  // Show custom input when "other" is selected
+  document.querySelectorAll('input[name="reject-reason"]').forEach(r => {
+    r.onchange = () => {
+      document.getElementById('custom-msg-wrap').style.display =
+        document.getElementById('r-other').checked ? 'block' : 'none';
+    };
+  });
+}
+
+function closeRejectModal() {
+  document.getElementById('reject-modal').classList.remove('open');
+  pendingRejectVibeId = null;
+}
+
+async function confirmReject() {
+  if (!pendingRejectVibeId) return;
+
+  const reason = document.querySelector('input[name="reject-reason"]:checked').value;
+  const custom_message = document.getElementById('custom-reject-msg').value.trim();
+
+  closeRejectModal();
+
+  const card = document.getElementById(`card-${pendingRejectVibeId}`);
+  if (card) {
+    const btns = card.querySelectorAll('button');
+    btns.forEach(b => b.disabled = true);
+  }
+
+  try {
+    await apiFetch(`/api/admin/realvibes/${pendingRejectVibeId}/reject`, 'POST', {
+      reason,
+      custom_message,
+      admin_name: 'Admin'
+    });
+    showToast('❌ Rejected. User has been notified.', 'success');
+    if (card) {
+      card.style.transition = 'opacity 0.4s, transform 0.4s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.95)';
+      setTimeout(() => { card.remove(); loadStats(); }, 400);
+    }
+  } catch(e) {
+    showToast('⚠ Failed to reject. Try again.', 'error');
+    if (card) card.querySelectorAll('button').forEach(b => b.disabled = false);
+  }
+}
+
+// ─── MEDIA EXPAND ─────────────────────────────────────────────────
+function expandMedia(url, type) {
+  const overlay = document.getElementById('media-expand');
+  const content = document.getElementById('media-expand-content');
+  content.innerHTML = type === 'video'
+    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:90vh;border-radius:12px"></video>`
+    : `<img src="${url}" style="max-width:90vw;max-height:90vh;border-radius:12px;object-fit:contain" />`;
+  overlay.classList.add('open');
+}
+
+function closeMediaExpand() {
+  document.getElementById('media-expand').classList.remove('open');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatAgo(isoDate) {
+  if (!isoDate) return '—';
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  const d = Math.floor(diff / 86400000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  if (h < 24) return `${h}h ago`;
+  return `${d}d ago`;
+}
+
+// Press Enter on login
+document.getElementById('adminSecret').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>
