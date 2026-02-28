@@ -2217,7 +2217,7 @@ function loadCommunities() {
         
         <div class="whatsapp-chats-list" id="chatsList">
           <!-- Community Group Chat -->
-          <div class="chat-item active" onclick="openCommunityChat()">
+          <div class="chat-item active" id="ghostChatItem" data-chat="ghost" onclick="openCommunityChat()">
             <div class="chat-avatar">
               <div class="group-avatar" style="padding:0;overflow:hidden;"><img src="data:image/jpeg;base64,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" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Ghost"></div>
             </div>
@@ -2234,17 +2234,19 @@ function loadCommunities() {
           </div>
           
           <!-- Announcements Channel -->
-          <div class="chat-item" onclick="openAnnouncementsChannel()">
+          <!-- Executive Chat -->
+          <div class="chat-item" id="execSidebarItem" data-chat="executive" onclick="openExecutiveChat()">
             <div class="chat-avatar">
-              <div class="group-avatar" style="background:linear-gradient(135deg,#ff6b6b,#ff8787);">📢</div>
+              <div class="group-avatar" style="background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;font-size:20px;">🎓</div>
             </div>
             <div class="chat-info">
               <div class="chat-header-row">
-                <h4>📢 ${currentUser.college} - Executive</h4>
-                <span class="chat-time">"COMING SOON"</span>
+                <h4 style="color:#d4a700;">${currentUser.college} · Executive</h4>
+                <span class="chat-time" style="color:rgba(212,167,0,0.8);">Official</span>
               </div>
               <div class="chat-preview">
-                <span class="preview-text">Important college updates</span>
+                <span class="preview-text">Real identity · Gold verified chat</span>
+                <span id="execUnreadBadge" class="unread-badge" style="display:none;background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;">0</span>
               </div>
             </div>
           </div>
@@ -2265,6 +2267,8 @@ function loadCommunities() {
 
       <!-- Right Main Chat Area -->
       <div class="whatsapp-main" id="whatsappMain">
+        <!-- Ghost Chat Panel -->
+        <div id="ghostChatPanel" style="display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;">
         <div class="whatsapp-chat-header">
           <div class="chat-header-info">
             <div class="chat-avatar-large">🎓</div>
@@ -2319,6 +2323,9 @@ function loadCommunities() {
             <span class="send-icon">➤</span>
           </button>
         </div>
+        </div>
+        <!-- Executive Chat Panel (injected on first open) -->
+        <div id="executiveChatPanel" style="display:none;flex-direction:column;width:100%;height:100%;overflow:hidden;"></div>
       </div>
 
       <!-- Twitter-style Feed (Initially Hidden) -->
@@ -3202,7 +3209,7 @@ function openCommunityChat() {
 }
 
 function openAnnouncementsChannel() {
-  showMessage('📢 Announcements coming soon!', 'success');
+  openExecutiveChat();
 }
 
 function searchChatMessages() {
@@ -11697,3 +11704,1305 @@ document.addEventListener('DOMContentLoaded', () => {
     chatActions.appendChild(btn);
   }
 });
+
+// ════════════════════════════════════════════════════════════════
+// EXECUTIVE CHAT — COMPLETE IMPLEMENTATION
+// Gold-themed, full-featured WhatsApp-style group chat
+// Real identity: real name + avatar (no ghost names)
+// ════════════════════════════════════════════════════════════════
+
+// ── State ─────────────────────────────────────────────────────────────
+let execMessages           = [];
+let execActiveChat         = 'ghost';     // 'ghost' | 'executive'
+let execTypingUsers        = new Set();
+let execTypingEmitTimeout  = null;
+let execMediaRecorder      = null;
+let execAudioChunks        = [];
+let execRecording          = false;
+let execRecordTimer        = null;
+let execRecordSeconds      = 0;
+let execReplyTo            = null;        // {id, content, senderName}
+let execEditingId          = null;
+let execIsLoading          = false;
+let execReadObserver       = null;
+let execUnreadCount        = 0;
+let execLastDateLabel      = '';
+let _execSocketListenersRegistered = false;
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function execFormatTime(dateStr) {
+  const d = new Date(dateStr);
+  let h = d.getHours(), m = d.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+}
+
+function execDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function execFormatDuration(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function execReplyPreviewText(msg) {
+  if (!msg) return '';
+  if (msg.message_type === 'voice') return '🎤 Voice message';
+  if (msg.message_type === 'poll') return '📊 Poll';
+  if (msg.media_type === 'image') return '📷 Photo';
+  if (msg.media_type === 'video') return '🎥 Video';
+  if (msg.media_type === 'audio') return '🎵 Audio';
+  if (msg.media_type === 'document' || msg.media_type === 'pdf') return '📎 File';
+  return (msg.content || '').slice(0, 60);
+}
+
+// ── Panel switching ───────────────────────────────────────────────────
+function openExecutiveChat() {
+  const panel = document.getElementById('executiveChatPanel');
+  if (!panel) {
+    // Communities page not loaded yet — navigate there first
+    if (typeof showPage === 'function') showPage('communities');
+    setTimeout(() => openExecutiveChat(), 500);
+    return;
+  }
+
+  // Inject full HTML on first open
+  if (!panel.querySelector('.exec-header')) {
+    panel.innerHTML = execGetPanelHTML();
+    panel.style.flexDirection = 'column';
+  }
+
+  execActiveChat = 'executive';
+
+  // Update sidebar highlight
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('execSidebarItem')?.classList.add('active');
+
+  // Switch panels
+  const ghostPanel = document.getElementById('ghostChatPanel');
+  if (ghostPanel) ghostPanel.style.display = 'none';
+  panel.style.display = 'flex';
+
+  // Clear unread badge
+  const badge = document.getElementById('execUnreadBadge');
+  if (badge) badge.style.display = 'none';
+  execUnreadCount = 0;
+
+  // Join socket room + register listeners
+  if (typeof socket !== 'undefined' && socket && currentUser?.college) {
+    socket.emit('join_executive', currentUser.college);
+  }
+  execRegisterSocketListeners();
+  execLoadMessages();
+}
+
+function openCommunityChat() {
+  execActiveChat = 'ghost';
+
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  const ghostItem = document.getElementById('ghostChatItem');
+  if (ghostItem) ghostItem.classList.add('active');
+
+  const ghostPanel = document.getElementById('ghostChatPanel');
+  const execPanel  = document.getElementById('executiveChatPanel');
+  if (ghostPanel) ghostPanel.style.display = 'flex';
+  if (execPanel)  execPanel.style.display  = 'none';
+}
+
+// ── Socket listeners (registered once) ───────────────────────────────
+function execRegisterSocketListeners() {
+  if (_execSocketListenersRegistered || typeof socket === 'undefined' || !socket) return;
+  _execSocketListenersRegistered = true;
+
+  socket.on('exec_new_message', (msg) => {
+    const visible = execActiveChat === 'executive' &&
+      document.getElementById('executiveChatPanel')?.style.display !== 'none';
+    if (visible) {
+      execAppendMessage(msg, false);
+      execMarkVisibleAsRead();
+    } else {
+      execUnreadCount++;
+      const badge = document.getElementById('execUnreadBadge');
+      if (badge) { badge.textContent = execUnreadCount; badge.style.display = 'flex'; }
+    }
+    if (typeof playMessageSound === 'function') playMessageSound('receive');
+  });
+
+  socket.on('exec_message_edited', ({ id, content }) => {
+    const el = document.getElementById(`exec-msg-${id}`);
+    if (!el) return;
+    const textEl = el.querySelector('.exec-msg-text');
+    if (textEl) textEl.textContent = content;
+    if (!el.querySelector('.exec-edited-label')) {
+      const meta = el.querySelector('.exec-msg-meta');
+      if (meta) meta.insertAdjacentHTML('afterbegin', '<span class="exec-edited-label">edited</span>');
+    }
+  });
+
+  socket.on('exec_message_deleted', ({ id }) => {
+    const el = document.getElementById(`exec-msg-${id}`);
+    if (!el) return;
+    const bubble = el.querySelector('.exec-bubble');
+    if (bubble) bubble.innerHTML = '<em class="exec-deleted-text">🚫 This message was deleted</em>';
+    el.querySelector('.exec-msg-actions-btn')?.remove();
+  });
+
+  socket.on('exec_reaction_update', ({ message_id, reactions }) => {
+    const el = document.getElementById(`exec-msg-${message_id}`);
+    if (!el) return;
+    const rxBar = el.querySelector('.exec-reactions-bar');
+    if (rxBar) rxBar.innerHTML = execBuildReactionsHTML(message_id, reactions);
+  });
+
+  socket.on('exec_messages_seen', ({ messageIds }) => {
+    (messageIds || []).forEach(mid => {
+      const el = document.getElementById(`exec-msg-${mid}`);
+      if (!el) return;
+      const readBadge = el.querySelector('.exec-read-badge');
+      if (readBadge) {
+        const cur = parseInt(readBadge.dataset.count || '0') + 1;
+        readBadge.dataset.count = cur;
+        readBadge.innerHTML = `👁 ${cur}`;
+        readBadge.style.display = 'flex';
+      }
+    });
+  });
+
+  socket.on('exec_user_typing',      ({ username }) => execShowTyping(username));
+  socket.on('exec_user_stop_typing', ({ username }) => execHideTyping(username));
+
+  socket.on('exec_poll_voted', ({ messageId, votes }) => {
+    const el = document.getElementById(`exec-msg-${messageId}`);
+    if (!el) return;
+    const pollEl = el.querySelector('.exec-poll-body');
+    if (pollEl) {
+      const msgData = execMessages.find(m => m.id === messageId);
+      if (msgData?.poll) {
+        msgData.poll.executive_poll_votes = votes;
+        pollEl.innerHTML = execBuildPollResultsHTML(msgData.poll);
+      }
+    }
+  });
+}
+
+// ── Load messages from API ────────────────────────────────────────────
+async function execLoadMessages() {
+  if (execIsLoading) return;
+  execIsLoading = true;
+
+  const container = document.getElementById('execMessages');
+  if (!container) { execIsLoading = false; return; }
+
+  try {
+    const data = await apiCall('/api/executive/messages', 'GET');
+    if (!data?.success) { execIsLoading = false; return; }
+
+    execMessages = data.messages || [];
+    container.innerHTML = '';
+    execLastDateLabel = '';
+
+    if (execMessages.length === 0) {
+      container.innerHTML = `
+        <div class="exec-empty-state">
+          <div style="font-size:64px;margin-bottom:16px;">🎓</div>
+          <h3>Welcome to ${escapeHtml(currentUser?.college || 'Your College')} Executive!</h3>
+          <p>Be the first to start the conversation</p>
+        </div>`;
+    } else {
+      execMessages.forEach(msg => execAppendMessage(msg, true));
+      setTimeout(() => {
+        const msgs = container.querySelectorAll('[id^="exec-msg-"]');
+        if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
+      }, 80);
+    }
+
+    setTimeout(() => execMarkVisibleAsRead(), 500);
+    execSetupReadObserver();
+  } catch (err) {
+    console.error('❌ execLoadMessages error:', err);
+  } finally {
+    execIsLoading = false;
+  }
+}
+
+// ── Date separator ────────────────────────────────────────────────────
+function execInsertDateSeparatorIfNeeded(container, dateStr) {
+  const label = execDateLabel(dateStr);
+  if (label !== execLastDateLabel) {
+    execLastDateLabel = label;
+    const sep = document.createElement('div');
+    sep.className = 'exec-date-separator';
+    sep.innerHTML = `<span>${label}</span>`;
+    container.appendChild(sep);
+  }
+}
+
+// ── Render a single message ───────────────────────────────────────────
+function execAppendMessage(msg, isInitial = false) {
+  const container = document.getElementById('execMessages');
+  if (!container) return;
+  if (document.getElementById(`exec-msg-${msg.id}`)) return; // duplicate guard
+
+  const isOwn    = msg.sender_id === currentUser?.id || msg.users?.id === currentUser?.id;
+  const sender   = msg.users?.username || 'User';
+  const avatar   = msg.users?.profile_pic;
+  const timeStr  = execFormatTime(msg.created_at);
+  const readCount = (msg.read_by || []).length;
+
+  execInsertDateSeparatorIfNeeded(container, msg.created_at);
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `exec-message-wrapper ${isOwn ? 'exec-own' : 'exec-other'}`;
+  wrapper.id = `exec-msg-${msg.id}`;
+  wrapper.dataset.msgId     = msg.id;
+  wrapper.dataset.senderId  = msg.sender_id || msg.users?.id || '';
+  wrapper.dataset.createdAt = msg.created_at;
+
+  // Avatar
+  let avatarHTML = '';
+  if (!isOwn) {
+    avatarHTML = `<div class="exec-avatar-wrap">` +
+      (avatar ? `<img class="exec-avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(sender)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '') +
+      `<div class="exec-avatar-fallback" style="${avatar ? 'display:none' : ''}">${escapeHtml(sender.charAt(0).toUpperCase())}</div>` +
+      `</div>`;
+  }
+
+  // Reply quote
+  let replyHTML = '';
+  if (msg.reply_to) {
+    replyHTML = `<div class="exec-reply-quote" onclick="execScrollToMessage('${msg.reply_to.id}')">
+      <span class="exec-reply-sender">${escapeHtml(msg.reply_to.sender_username || 'User')}</span>
+      <span class="exec-reply-preview">${execReplyPreviewText(msg.reply_to)}</span>
+    </div>`;
+  }
+
+  // Media
+  let mediaHTML = '';
+  if (!msg.is_deleted && msg.media_url) {
+    if (msg.message_type === 'voice') {
+      mediaHTML = `<div class="exec-voice-msg">
+        <button class="exec-voice-play" onclick="execPlayVoice(this,'${msg.media_url}')">▶</button>
+        <div class="exec-voice-waveform"><div class="exec-voice-bar"></div></div>
+        <span class="exec-voice-duration">${execFormatDuration(msg.media_duration || 0)}</span>
+      </div>`;
+    } else if (msg.media_type === 'video') {
+      mediaHTML = `<video class="exec-media-img" src="${proxyMediaUrl(msg.media_url)}" controls playsinline></video>`;
+    } else if (msg.media_type === 'audio') {
+      mediaHTML = `<audio controls src="${proxyMediaUrl(msg.media_url)}" style="width:100%;margin:4px 0;"></audio>`;
+    } else if (msg.media_type === 'pdf' || msg.media_type === 'document') {
+      mediaHTML = `<a class="exec-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${escapeHtml(msg.media_name || 'Document')}</a>`;
+    } else {
+      mediaHTML = `<img class="exec-media-img" src="${proxyMediaUrl(msg.media_url)}" alt="media" onclick="openImageViewer && openImageViewer(this.src)" loading="lazy">`;
+    }
+  }
+
+  // Poll
+  let pollHTML = '';
+  if (msg.message_type === 'poll' && msg.poll) {
+    pollHTML = `<div class="exec-poll-wrap">
+      <div class="exec-poll-question">${escapeHtml(msg.poll.question)}</div>
+      <div class="exec-poll-body">${execBuildPollResultsHTML(msg.poll)}</div>
+    </div>`;
+  }
+
+  // Reactions bar
+  const reactionsHTML = (msg.reactions?.length > 0)
+    ? `<div class="exec-reactions-bar">${execBuildReactionsHTML(msg.id, msg.reactions)}</div>`
+    : `<div class="exec-reactions-bar" style="display:none"></div>`;
+
+  // Text
+  const textContent = msg.is_deleted
+    ? '<em class="exec-deleted-text">🚫 This message was deleted</em>'
+    : escapeHtml(msg.content || '');
+
+  // Read receipt (own messages only)
+  const readReceiptHTML = isOwn ? `
+    <div class="exec-read-receipt" onclick="execShowReadersPopup('${msg.id}',event)"
+         data-count="${readCount}" style="${readCount > 0 ? '' : 'display:none'}">
+      <span class="exec-tick ${readCount > 0 ? 'exec-tick-blue' : ''}">✓✓</span>
+      <span class="exec-read-badge" data-count="${readCount}">👁 ${readCount}</span>
+    </div>` : '';
+
+  // Actions button
+  const actionsBtn = !msg.is_deleted
+    ? `<button class="exec-msg-actions-btn" onclick="execShowMessageMenu(event,'${msg.id}',${isOwn})">⋮</button>`
+    : '';
+
+  wrapper.innerHTML = `
+    ${!isOwn ? avatarHTML : ''}
+    <div class="exec-msg-col">
+      ${!isOwn ? `<div class="exec-sender-name">${escapeHtml(sender)}</div>` : ''}
+      <div class="exec-bubble ${isOwn ? 'exec-bubble-own' : 'exec-bubble-other'} ${msg.is_deleted ? 'exec-deleted' : ''}">
+        ${replyHTML}${mediaHTML}${pollHTML}
+        ${textContent ? `<div class="exec-msg-text">${textContent}</div>` : ''}
+        <div class="exec-msg-meta">
+          ${msg.is_edited ? '<span class="exec-edited-label">edited</span>' : ''}
+          <span class="exec-msg-time">${timeStr}</span>
+          ${readReceiptHTML}
+        </div>
+        ${actionsBtn}
+      </div>
+      ${reactionsHTML}
+    </div>
+    ${isOwn ? avatarHTML : ''}`;
+
+  wrapper.addEventListener('contextmenu', e => { e.preventDefault(); execShowReactionPicker(e, msg.id); });
+  container.appendChild(wrapper);
+
+  if (!isInitial) {
+    const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
+    if (isOwn || atBottom) setTimeout(() => wrapper.scrollIntoView({ behavior:'smooth', block:'end' }), 50);
+  }
+}
+
+// ── Poll helpers ──────────────────────────────────────────────────────
+function execBuildPollResultsHTML(poll) {
+  const votes     = poll.executive_poll_votes || [];
+  const total     = votes.length;
+  const myVote    = votes.find(v => v.user_id === currentUser?.id)?.option_id;
+
+  return (poll.options || []).map(opt => {
+    const count   = votes.filter(v => v.option_id === opt.id).length;
+    const pct     = total > 0 ? Math.round((count / total) * 100) : 0;
+    const isMyVote = myVote === opt.id;
+    return `<div class="exec-poll-option ${isMyVote ? 'exec-poll-voted' : ''}"
+         onclick="execVotePoll('${poll.id}','${opt.id}','${poll.message_id}')">
+      <div class="exec-poll-opt-row">
+        <span class="exec-poll-opt-text">${escapeHtml(opt.text)}</span>
+        <span class="exec-poll-opt-count">${count} vote${count !== 1 ? 's' : ''} · ${pct}%</span>
+      </div>
+      <div class="exec-poll-bar-bg">
+        <div class="exec-poll-bar-fill ${isMyVote ? 'exec-poll-bar-own' : ''}" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('') + `<div class="exec-poll-total">${total} total vote${total !== 1 ? 's' : ''}</div>`;
+}
+
+async function execVotePoll(pollId, optionId, messageId) {
+  try {
+    const response = await apiCall(`/api/executive/polls/${pollId}/vote`, 'POST', { option_id: optionId });
+    if (!response) return;
+    const msg = execMessages.find(m => m.id === messageId);
+    if (msg?.poll) msg.poll.executive_poll_votes = response.votes;
+    const el = document.getElementById(`exec-msg-${messageId}`);
+    const pollBody = el?.querySelector('.exec-poll-body');
+    if (pollBody && msg?.poll) pollBody.innerHTML = execBuildPollResultsHTML(msg.poll);
+    if (socket && currentUser?.college) {
+      socket.emit('exec_poll_voted', { pollId, messageId, votes: response.votes, collegeName: currentUser.college });
+    }
+  } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to vote', 'error'); }
+}
+
+// ── Reactions ─────────────────────────────────────────────────────────
+const EXEC_QUICK_REACTIONS = ['❤️','😂','👍','😮','😢','🔥','🎉','👏','💯','🙌'];
+
+function execBuildReactionsHTML(messageId, reactions) {
+  const counts = {};
+  (reactions || []).forEach(r => {
+    if (!counts[r.emoji]) counts[r.emoji] = { count:0, myReacted:false };
+    counts[r.emoji].count++;
+    if (r.user_id === currentUser?.id) counts[r.emoji].myReacted = true;
+  });
+  return Object.entries(counts).map(([emoji, data]) =>
+    `<button class="exec-reaction-pill ${data.myReacted ? 'exec-reaction-mine' : ''}"
+             onclick="execToggleReaction('${messageId}','${emoji}')">${emoji} ${data.count}</button>`
+  ).join('');
+}
+
+function execShowReactionPicker(event, messageId) {
+  document.querySelector('.exec-reaction-picker')?.remove();
+  const picker = document.createElement('div');
+  picker.className = 'exec-reaction-picker';
+  picker.innerHTML = EXEC_QUICK_REACTIONS.map(e =>
+    `<button onclick="execToggleReaction('${messageId}','${e}');this.closest('.exec-reaction-picker').remove()">${e}</button>`
+  ).join('');
+  const x = Math.min(event.clientX, window.innerWidth - 280);
+  const y = event.clientY - 60;
+  picker.style.cssText = `position:fixed;top:${y}px;left:${x}px;z-index:9999;`;
+  document.body.appendChild(picker);
+  setTimeout(() => document.addEventListener('click', () => picker.remove(), { once:true }), 100);
+}
+
+function execShowReactionPickerById(messageId, event) { execShowReactionPicker(event, messageId); }
+
+async function execToggleReaction(messageId, emoji) {
+  try {
+    const data = await apiCall('/api/executive/reactions', 'POST', { message_id: messageId, emoji });
+    if (!data) return;
+    const msg = execMessages.find(m => m.id === messageId);
+    if (msg) msg.reactions = data.reactions || [];
+    const el = document.getElementById(`exec-msg-${messageId}`);
+    if (!el) return;
+    let bar = el.querySelector('.exec-reactions-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'exec-reactions-bar';
+      el.querySelector('.exec-msg-col')?.appendChild(bar);
+    }
+    if (data.reactions?.length > 0) {
+      bar.innerHTML = execBuildReactionsHTML(messageId, data.reactions);
+      bar.style.display = '';
+    } else {
+      bar.innerHTML = '';
+      bar.style.display = 'none';
+    }
+    if (socket && currentUser?.college) {
+      socket.emit('exec_reaction_update', { message_id: messageId, reactions: data.reactions, collegeName: currentUser.college });
+    }
+  } catch (err) { console.error('Reaction error:', err); }
+}
+
+// ── Message action menu ───────────────────────────────────────────────
+function execShowMessageMenu(event, messageId, isOwn) {
+  event.stopPropagation();
+  document.querySelector('.exec-context-menu')?.remove();
+
+  const menu = document.createElement('div');
+  menu.className = 'exec-context-menu';
+  const items = [
+    { label: '↩️ Reply', fn: `execStartReply('${messageId}')` },
+    { label: '😊 React', fn: `execShowReactionPickerById('${messageId}',event)` },
+  ];
+  if (isOwn) {
+    items.push(
+      { label: '✏️ Edit',   fn: `execStartEdit('${messageId}')` },
+      { label: '🗑️ Delete', fn: `execDeleteMessage('${messageId}')`, danger: true }
+    );
+  }
+  menu.innerHTML = items.map(i =>
+    `<button class="exec-ctx-item ${i.danger ? 'exec-ctx-danger' : ''}"
+             onclick="${i.fn};this.closest('.exec-context-menu').remove()">${i.label}</button>`
+  ).join('');
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  menu.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${Math.min(rect.left, window.innerWidth-180)}px;z-index:9999;`;
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once:true }), 100);
+}
+
+// ── Reply ─────────────────────────────────────────────────────────────
+function execStartReply(messageId) {
+  const msg = execMessages.find(m => m.id === messageId) || { id:messageId, content:'', users:{ username:'User' } };
+  execReplyTo = { id:messageId, content:msg.content||'', senderName:msg.users?.username||'User' };
+  const bar = document.getElementById('execReplyBar');
+  if (document.getElementById('execReplyBarSender')) document.getElementById('execReplyBarSender').textContent = execReplyTo.senderName;
+  if (document.getElementById('execReplyBarText')) document.getElementById('execReplyBarText').textContent = execReplyTo.content.slice(0,80) || '📎 Media';
+  if (bar) bar.style.display = 'flex';
+  document.getElementById('execInput')?.focus();
+}
+
+function execCancelReply() {
+  execReplyTo = null;
+  const bar = document.getElementById('execReplyBar');
+  if (bar) bar.style.display = 'none';
+}
+
+// ── Edit ──────────────────────────────────────────────────────────────
+function execStartEdit(messageId) {
+  const msg = execMessages.find(m => m.id === messageId);
+  if (!msg) return;
+  execEditingId = messageId;
+  const input = document.getElementById('execInput');
+  if (input) { input.value = msg.content; input.focus(); }
+  const bar = document.getElementById('execEditBar');
+  if (bar) bar.style.display = 'flex';
+  if (document.getElementById('execEditBarText')) document.getElementById('execEditBarText').textContent = 'Editing: ' + msg.content.slice(0,50);
+}
+
+function execCancelEdit() {
+  execEditingId = null;
+  const bar = document.getElementById('execEditBar');
+  if (bar) bar.style.display = 'none';
+  const input = document.getElementById('execInput');
+  if (input) input.value = '';
+}
+
+async function execDeleteMessage(messageId) {
+  if (!confirm('Delete this message?')) return;
+  try {
+    await apiCall(`/api/executive/messages/${messageId}`, 'DELETE');
+    const el = document.getElementById(`exec-msg-${messageId}`);
+    if (el) {
+      const bubble = el.querySelector('.exec-bubble');
+      if (bubble) bubble.innerHTML = '<em class="exec-deleted-text">🚫 This message was deleted</em>';
+      el.querySelector('.exec-msg-actions-btn')?.remove();
+    }
+    const msg = execMessages.find(m => m.id === messageId);
+    if (msg) msg.is_deleted = true;
+  } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to delete message', 'error'); }
+}
+
+// ── Send message ──────────────────────────────────────────────────────
+async function execSendMessage() {
+  const input   = document.getElementById('execInput');
+  const content = input?.value?.trim();
+
+  // Edit mode
+  if (execEditingId) {
+    if (!content) return;
+    try {
+      await apiCall(`/api/executive/messages/${execEditingId}`, 'PATCH', { content });
+      const el = document.getElementById(`exec-msg-${execEditingId}`);
+      if (el) {
+        const textEl = el.querySelector('.exec-msg-text');
+        if (textEl) textEl.textContent = content;
+        if (!el.querySelector('.exec-edited-label')) {
+          el.querySelector('.exec-msg-meta')?.insertAdjacentHTML('afterbegin', '<span class="exec-edited-label">edited</span>');
+        }
+      }
+      execCancelEdit();
+    } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to edit message', 'error'); }
+    return;
+  }
+
+  const fileInput = document.getElementById('execFileInput');
+  const file = fileInput?.files?.[0];
+  if (!content && !file) { input?.focus(); return; }
+
+  if (input) { input.value = ''; input.style.height = 'auto'; }
+
+  // Optimistic message
+  const tempId  = `temp-${Date.now()}`;
+  const tempMsg = {
+    id: tempId, sender_id: currentUser?.id, content: content||'',
+    message_type: 'text', created_at: new Date().toISOString(),
+    is_deleted: false, is_edited: false,
+    users: { id:currentUser?.id, username:currentUser?.username, profile_pic:currentUser?.profile_pic },
+    reactions: [], read_by: [],
+    reply_to: execReplyTo ? { ...execReplyTo, sender_username:execReplyTo.senderName } : null,
+    isTemp: true
+  };
+  execMessages.push(tempMsg);
+  execAppendMessage(tempMsg, false);
+
+  const replyId = execReplyTo?.id;
+  execCancelReply();
+  execClearFilePreview();
+
+  try {
+    let response;
+    if (file) {
+      const fd = new FormData();
+      if (content) fd.append('content', content);
+      fd.append('media', file);
+      if (replyId) fd.append('reply_to_id', replyId);
+      response = await apiCall('/api/executive/messages', 'POST', fd);
+    } else {
+      response = await apiCall('/api/executive/messages', 'POST', { content, reply_to_id: replyId || undefined });
+    }
+
+    if (!response?.message) throw new Error('No message returned');
+
+    // Swap temp → real
+    document.getElementById(`exec-msg-${tempId}`)?.remove();
+    const idx = execMessages.findIndex(m => m.id === tempId);
+    if (idx >= 0) execMessages.splice(idx, 1);
+    execMessages.push(response.message);
+    execAppendMessage(response.message, false);
+
+    if (fileInput) fileInput.value = '';
+    execSendStopTyping();
+  } catch (err) {
+    console.error('Exec send error:', err);
+    const tempEl = document.getElementById(`exec-msg-${tempId}`);
+    if (tempEl) {
+      tempEl.querySelector('.exec-bubble')?.classList.add('exec-send-failed');
+      tempEl.querySelector('.exec-msg-meta')?.insertAdjacentHTML('afterbegin', '<span style="color:#ff6b6b;font-size:11px;">⚠ Failed</span>');
+    }
+    if (typeof showMessage === 'function') showMessage('Failed to send', 'error');
+  }
+}
+
+// ── File preview ──────────────────────────────────────────────────────
+function execHandleFileSelect(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const previewBar  = document.getElementById('execFilePreviewBar');
+  const previewImg  = document.getElementById('execFilePreviewImg');
+  const previewVid  = document.getElementById('execFilePreviewVid');
+  const previewName = document.getElementById('execFilePreviewName');
+  if (previewBar)  previewBar.style.display = 'flex';
+  if (previewName) previewName.textContent  = file.name;
+  if (file.type.startsWith('image/')) {
+    const url = URL.createObjectURL(file);
+    if (previewImg) { previewImg.src = url; previewImg.style.display = 'block'; }
+    if (previewVid)   previewVid.style.display = 'none';
+  } else if (file.type.startsWith('video/')) {
+    const url = URL.createObjectURL(file);
+    if (previewVid) { previewVid.src = url; previewVid.style.display = 'block'; }
+    if (previewImg)   previewImg.style.display = 'none';
+  } else {
+    if (previewImg) previewImg.style.display = 'none';
+    if (previewVid) previewVid.style.display = 'none';
+  }
+}
+
+function execClearFilePreview() {
+  const bar = document.getElementById('execFilePreviewBar');
+  if (bar) bar.style.display = 'none';
+  const fi  = document.getElementById('execFileInput');
+  if (fi)  fi.value = '';
+}
+
+// ── Voice recording ───────────────────────────────────────────────────
+async function execStartVoiceRecord() {
+  if (execRecording) { execStopVoiceRecord(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    execAudioChunks   = [];
+    execMediaRecorder = new MediaRecorder(stream);
+    execMediaRecorder.ondataavailable = e => { if (e.data.size > 0) execAudioChunks.push(e.data); };
+    execMediaRecorder.onstop = async () => {
+      const blob = new Blob(execAudioChunks, { type:'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      await execSendVoiceMessage(blob, execRecordSeconds);
+    };
+    execMediaRecorder.start(100);
+    execRecording       = true;
+    execRecordSeconds   = 0;
+
+    const btn   = document.getElementById('execVoiceBtn');
+    const timer = document.getElementById('execRecordTimer');
+    if (btn)   { btn.textContent = '⏹'; btn.classList.add('exec-recording-active'); }
+    if (timer)   timer.style.display = 'flex';
+
+    execRecordTimer = setInterval(() => {
+      execRecordSeconds++;
+      const timerEl = document.getElementById('execRecordTimerText');
+      if (timerEl) timerEl.textContent = execFormatDuration(execRecordSeconds);
+      if (execRecordSeconds >= 120) execStopVoiceRecord();
+    }, 1000);
+  } catch (err) {
+    if (typeof showMessage === 'function') showMessage('Microphone access denied', 'error');
+  }
+}
+
+function execStopVoiceRecord() {
+  if (!execRecording || !execMediaRecorder) return;
+  clearInterval(execRecordTimer);
+  execMediaRecorder.stop();
+  execRecording = false;
+  const btn   = document.getElementById('execVoiceBtn');
+  const timer = document.getElementById('execRecordTimer');
+  if (btn)   { btn.textContent = '🎤'; btn.classList.remove('exec-recording-active'); }
+  if (timer)   timer.style.display = 'none';
+}
+
+async function execSendVoiceMessage(blob, duration) {
+  try {
+    const fd = new FormData();
+    fd.append('media', blob, `voice_${Date.now()}.webm`);
+    fd.append('is_voice', 'true');
+    fd.append('content', '');
+    if (duration) fd.append('media_duration', duration);
+    const response = await apiCall('/api/executive/messages', 'POST', fd);
+    if (response?.message) { execMessages.push(response.message); execAppendMessage(response.message, false); }
+  } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to send voice message', 'error'); }
+}
+
+// ── Voice playback ────────────────────────────────────────────────────
+const execAudioPlayers = new Map();
+
+function execPlayVoice(btn, url) {
+  const id = url;
+  let audio = execAudioPlayers.get(id);
+  if (!audio) {
+    audio = new Audio(proxyMediaUrl(url));
+    execAudioPlayers.set(id, audio);
+    audio.onended = () => { btn.textContent = '▶'; };
+  }
+  if (audio.paused) { audio.play(); btn.textContent = '⏸'; }
+  else              { audio.pause(); btn.textContent = '▶'; }
+}
+
+// ── Poll creation modal ───────────────────────────────────────────────
+function execOpenPollCreator() {
+  const modal = document.getElementById('execPollModal');
+  if (modal) modal.style.display = 'flex';
+  document.getElementById('execPollQuestion')?.focus();
+}
+
+function execClosePollModal() {
+  const modal = document.getElementById('execPollModal');
+  if (modal) modal.style.display = 'none';
+  const q = document.getElementById('execPollQuestion');
+  if (q) q.value = '';
+  document.querySelectorAll('.exec-poll-opt-input').forEach((el, i) => {
+    if (i < 2) el.value = ''; else el.remove();
+  });
+}
+
+function execAddPollOption() {
+  const container = document.getElementById('execPollOptions');
+  if (!container) return;
+  const count = container.querySelectorAll('.exec-poll-opt-input').length;
+  if (count >= 8) { if (typeof showMessage === 'function') showMessage('Max 8 options', 'info'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'exec-poll-opt-input exec-input-field';
+  inp.placeholder = `Option ${count+1}`; inp.maxLength = 80;
+  container.appendChild(inp);
+}
+
+async function execSendPoll() {
+  const question = document.getElementById('execPollQuestion')?.value?.trim();
+  if (!question) { if (typeof showMessage === 'function') showMessage('Enter a question', 'error'); return; }
+  const options = [];
+  document.querySelectorAll('.exec-poll-opt-input').forEach((el, i) => {
+    const t = el.value.trim();
+    if (t) options.push({ id:`opt_${i+1}`, text:t });
+  });
+  if (options.length < 2) { if (typeof showMessage === 'function') showMessage('Add at least 2 options', 'error'); return; }
+  try {
+    const response = await apiCall('/api/executive/messages', 'POST', {
+      poll_question: question, poll_options: JSON.stringify(options), content: question
+    });
+    if (response?.message) { execMessages.push(response.message); execAppendMessage(response.message, false); }
+    execClosePollModal();
+  } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to create poll', 'error'); }
+}
+
+// ── Typing indicator ──────────────────────────────────────────────────
+function execHandleTyping() {
+  if (typeof socket === 'undefined' || !socket || !currentUser?.college) return;
+  socket.emit('exec_typing', { collegeName:currentUser.college, username:currentUser.username, avatar:currentUser.profile_pic });
+  clearTimeout(execTypingEmitTimeout);
+  execTypingEmitTimeout = setTimeout(() => execSendStopTyping(), 2500);
+  const ta = document.getElementById('execInput');
+  if (ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; }
+}
+
+function execSendStopTyping() {
+  if (typeof socket !== 'undefined' && socket && currentUser?.college) {
+    socket.emit('exec_stop_typing', { collegeName:currentUser.college, username:currentUser.username });
+  }
+}
+
+function execShowTyping(username) {
+  if (username === currentUser?.username) return;
+  execTypingUsers.add(username);
+  execUpdateTypingDisplay();
+}
+
+function execHideTyping(username) {
+  execTypingUsers.delete(username);
+  execUpdateTypingDisplay();
+}
+
+function execUpdateTypingDisplay() {
+  const container = document.getElementById('execMessages');
+  if (!container) return;
+  document.getElementById('exec-typing-indicator')?.remove();
+  if (execTypingUsers.size === 0) return;
+  const names = Array.from(execTypingUsers);
+  const text  = names.length === 1 ? `${names[0]} is typing`
+    : names.length === 2 ? `${names[0]} and ${names[1]} are typing`
+    : `${names.length} people are typing`;
+  const el = document.createElement('div');
+  el.id = 'exec-typing-indicator'; el.className = 'exec-typing-indicator';
+  el.innerHTML = `<span>${text}</span><div class="exec-typing-dots"><span></span><span></span><span></span></div>`;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+function execHandleKeypress(event) {
+  if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); execSendMessage(); }
+}
+
+// ── Read receipts ─────────────────────────────────────────────────────
+function execSetupReadObserver() {
+  if (execReadObserver) execReadObserver.disconnect();
+  execReadObserver = new IntersectionObserver((entries) => {
+    const visibleIds = entries.filter(e => e.isIntersecting).map(e => e.target.dataset.msgId).filter(Boolean);
+    if (!visibleIds.length) return;
+    if (socket && currentUser?.college) {
+      socket.emit('exec_mark_seen', { collegeName:currentUser.college, userId:currentUser.id, username:currentUser.username, avatar:currentUser.profile_pic, messageIds:visibleIds });
+    }
+    apiCall('/api/executive/read', 'POST', { message_ids:visibleIds }).catch(() => {});
+  }, { threshold:0.5 });
+  document.querySelectorAll('#execMessages [id^="exec-msg-"]').forEach(el => execReadObserver.observe(el));
+}
+
+function execMarkVisibleAsRead() {
+  const container = document.getElementById('execMessages');
+  if (!container) return;
+  const visibleIds = [];
+  container.querySelectorAll('[id^="exec-msg-"]').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) visibleIds.push(el.dataset.msgId);
+  });
+  if (!visibleIds.length) return;
+  apiCall('/api/executive/read', 'POST', { message_ids:visibleIds }).catch(() => {});
+  if (socket && currentUser?.college) {
+    socket.emit('exec_mark_seen', { collegeName:currentUser.college, userId:currentUser.id, username:currentUser.username, avatar:currentUser.profile_pic, messageIds:visibleIds });
+  }
+}
+
+// ── Readers popup ─────────────────────────────────────────────────────
+async function execShowReadersPopup(messageId, event) {
+  event.stopPropagation();
+  document.querySelector('.exec-readers-popup')?.remove();
+  try {
+    const data    = await apiCall(`/api/executive/reads/${messageId}`, 'GET');
+    const readers = data?.readers || [];
+    const popup   = document.createElement('div');
+    popup.className = 'exec-readers-popup';
+    popup.innerHTML = readers.length === 0
+      ? '<div class="exec-readers-empty">No one has read this yet</div>'
+      : `<div class="exec-readers-header">👁 Seen by ${readers.length}</div>
+         <div class="exec-readers-list">
+           ${readers.map(r => `<div class="exec-reader-row">
+             ${r.profile_pic
+               ? `<img src="${escapeHtml(r.profile_pic)}" class="exec-reader-avatar">`
+               : `<div class="exec-reader-avatar exec-reader-avatar-fb">${escapeHtml((r.username||'U').charAt(0).toUpperCase())}</div>`}
+             <div>
+               <div class="exec-reader-name">${escapeHtml(r.username||'User')}</div>
+               <div class="exec-reader-time">${execFormatTime(r.read_at)}</div>
+             </div>
+           </div>`).join('')}
+         </div>`;
+    const rect = event.currentTarget.getBoundingClientRect();
+    popup.style.cssText = `position:fixed;bottom:${window.innerHeight-rect.top+8}px;right:${window.innerWidth-rect.right}px;z-index:9999;`;
+    document.body.appendChild(popup);
+    setTimeout(() => document.addEventListener('click', () => popup.remove(), { once:true }), 100);
+  } catch (err) { console.error('Readers popup error:', err); }
+}
+
+// ── Scroll to reply ───────────────────────────────────────────────────
+function execScrollToMessage(messageId) {
+  const el = document.getElementById(`exec-msg-${messageId}`);
+  if (!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  el.classList.add('exec-highlight');
+  setTimeout(() => el.classList.remove('exec-highlight'), 1500);
+}
+
+// ── Emoji stub ────────────────────────────────────────────────────────
+function execOpenEmojiForExec() {
+  if (typeof showMessage === 'function') showMessage('Use keyboard emoji 😊', 'info');
+}
+
+// ── Panel HTML (injected on first open) ───────────────────────────────
+function execGetPanelHTML() {
+  const college = escapeHtml(currentUser?.college || 'College');
+  return `
+    <div class="exec-header">
+      <div class="exec-header-left">
+        <div class="exec-header-avatar">🎓</div>
+        <div>
+          <div class="exec-header-title">${college} · Executive</div>
+          <div class="exec-header-status">College official chat · Real identity</div>
+        </div>
+      </div>
+      <div class="exec-header-actions">
+        <button class="exec-hdr-btn" onclick="execOpenPollCreator()" title="Create Poll">📊</button>
+        <button class="exec-hdr-btn" onclick="toggleChatInfo()" title="Chat Info">ℹ️</button>
+      </div>
+    </div>
+
+    <div class="exec-messages-area" id="execMessages">
+      <div class="exec-loading"><div class="exec-spinner"></div><p>Loading messages…</p></div>
+    </div>
+
+    <div id="execFilePreviewBar" class="exec-file-preview-bar" style="display:none;">
+      <div class="exec-preview-inner">
+        <img id="execFilePreviewImg" style="display:none;" alt="preview">
+        <video id="execFilePreviewVid" style="display:none;" muted playsinline></video>
+        <span id="execFilePreviewName" class="exec-preview-name"></span>
+      </div>
+      <button class="exec-preview-clear" onclick="execClearFilePreview()">✕</button>
+    </div>
+
+    <div id="execReplyBar" class="exec-reply-bar" style="display:none;">
+      <div class="exec-reply-bar-inner">
+        <span class="exec-reply-icon">↩️</span>
+        <div>
+          <div class="exec-reply-bar-sender" id="execReplyBarSender"></div>
+          <div class="exec-reply-bar-text"   id="execReplyBarText"></div>
+        </div>
+      </div>
+      <button class="exec-reply-cancel" onclick="execCancelReply()">✕</button>
+    </div>
+
+    <div id="execEditBar" class="exec-edit-bar" style="display:none;">
+      <span class="exec-edit-icon">✏️</span>
+      <span id="execEditBarText" class="exec-edit-bar-text"></span>
+      <button class="exec-edit-cancel" onclick="execCancelEdit()">✕</button>
+    </div>
+
+    <div id="execRecordTimer" class="exec-record-timer" style="display:none;">
+      <span class="exec-rec-dot">●</span>
+      <span id="execRecordTimerText">0:00</span>
+    </div>
+
+    <div class="exec-input-area">
+      <button class="exec-inp-btn" onclick="execOpenEmojiForExec()" title="Emoji">😊</button>
+      <input type="file" id="execFileInput"
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
+        style="display:none" onchange="execHandleFileSelect(event)">
+      <button class="exec-inp-btn" onclick="document.getElementById('execFileInput').click()" title="Attach">📎</button>
+      <div class="exec-input-wrapper">
+        <textarea id="execInput" class="exec-textarea"
+          placeholder="Message ${college} Executive…"
+          rows="1"
+          oninput="execHandleTyping()"
+          onkeydown="execHandleKeypress(event)"></textarea>
+      </div>
+      <button id="execVoiceBtn" class="exec-voice-btn" onclick="execStartVoiceRecord()" title="Voice message">🎤</button>
+      <button class="exec-send-btn" onclick="execSendMessage()" title="Send">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+
+    <div id="execPollModal" class="exec-modal-overlay" style="display:none;" onclick="if(event.target===this)execClosePollModal()">
+      <div class="exec-modal-box">
+        <div class="exec-modal-header">
+          <h3>📊 Create Poll</h3>
+          <button class="exec-modal-close" onclick="execClosePollModal()">✕</button>
+        </div>
+        <div class="exec-modal-body">
+          <input id="execPollQuestion" class="exec-input-field" type="text" placeholder="Ask a question…" maxlength="200">
+          <div class="exec-poll-opts-label">Options (min 2, max 8)</div>
+          <div id="execPollOptions">
+            <input type="text" class="exec-poll-opt-input exec-input-field" placeholder="Option 1" maxlength="80">
+            <input type="text" class="exec-poll-opt-input exec-input-field" placeholder="Option 2" maxlength="80">
+          </div>
+          <button class="exec-add-opt-btn" onclick="execAddPollOption()">+ Add option</button>
+        </div>
+        <div class="exec-modal-footer">
+          <button class="exec-cancel-btn" onclick="execClosePollModal()">Cancel</button>
+          <button class="exec-gold-btn"   onclick="execSendPoll()">Send Poll</button>
+        </div>
+      </div>
+    </div>
+
+    <style id="exec-chat-styles">
+    /* ─── Executive Chat CSS ─────────────────────────────────────── */
+    #executiveChatPanel { background:linear-gradient(180deg,#0d0d0d 0%,#111 100%); }
+
+    .exec-header {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 16px;background:linear-gradient(135deg,#1a1208,#2d1f06);
+      border-bottom:1px solid rgba(212,167,0,0.25);flex-shrink:0;min-height:58px;
+    }
+    .exec-header-left { display:flex;align-items:center;gap:12px; }
+    .exec-header-avatar {
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,#d4a700,#ffd700);
+      display:flex;align-items:center;justify-content:center;font-size:20px;
+      box-shadow:0 0 10px rgba(212,167,0,0.5);
+    }
+    .exec-header-title  { font-weight:700;font-size:15px;color:#ffd700; }
+    .exec-header-status { font-size:11px;color:rgba(212,167,0,0.65);margin-top:2px; }
+    .exec-header-actions { display:flex;gap:8px; }
+    .exec-hdr-btn {
+      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.25);
+      color:#ffd700;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;transition:all 0.15s;
+    }
+    .exec-hdr-btn:hover { background:rgba(212,167,0,0.2); }
+
+    .exec-messages-area {
+      flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px;
+      background:linear-gradient(180deg,#0d0d0d 0%,#111 100%);scroll-behavior:smooth;
+    }
+    .exec-messages-area::-webkit-scrollbar { width:4px; }
+    .exec-messages-area::-webkit-scrollbar-thumb { background:rgba(212,167,0,0.3);border-radius:4px; }
+
+    .exec-date-separator { text-align:center;margin:12px 0;position:relative; }
+    .exec-date-separator::before {
+      content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(212,167,0,0.12);
+    }
+    .exec-date-separator span {
+      background:#111;padding:2px 12px;font-size:11px;color:rgba(212,167,0,0.6);
+      border-radius:10px;position:relative;border:1px solid rgba(212,167,0,0.15);
+    }
+
+    .exec-message-wrapper {
+      display:flex;align-items:flex-end;gap:8px;margin:3px 0;max-width:100%;
+      animation:execFadeIn 0.2s ease-out;
+    }
+    @keyframes execFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    .exec-own   { flex-direction:row-reverse; }
+    .exec-other { flex-direction:row; }
+
+    .exec-avatar-wrap { flex-shrink:0;width:34px;height:34px; }
+    .exec-avatar, .exec-avatar-fallback { width:34px;height:34px;border-radius:50%;object-fit:cover; }
+    .exec-avatar-fallback {
+      background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;
+      font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
+    }
+
+    .exec-msg-col { display:flex;flex-direction:column;max-width:72%;min-width:60px; }
+    .exec-own   .exec-msg-col { align-items:flex-end; }
+    .exec-other .exec-msg-col { align-items:flex-start; }
+
+    .exec-sender-name { font-size:11px;font-weight:600;color:#d4a700;margin-bottom:3px;padding-left:12px; }
+
+    .exec-bubble {
+      padding:8px 12px;border-radius:18px;position:relative;
+      max-width:100%;word-break:break-word;font-size:14px;line-height:1.45;
+      box-shadow:0 1px 2px rgba(0,0,0,0.3);
+    }
+    .exec-bubble-own {
+      background:linear-gradient(135deg,#2d1f06,#3d2b08);
+      border:1px solid rgba(212,167,0,0.3);border-bottom-right-radius:4px;color:#fff5cc;
+    }
+    .exec-bubble-other {
+      background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+      border-bottom-left-radius:4px;color:#e8e8e8;
+    }
+    .exec-bubble.exec-deleted { opacity:0.55; }
+    .exec-deleted-text { font-style:italic;color:#888;font-size:13px; }
+    .exec-msg-text     { margin-top:2px;white-space:pre-wrap; }
+    .exec-msg-meta     { display:flex;align-items:center;gap:6px;margin-top:5px;justify-content:flex-end;flex-wrap:wrap; }
+    .exec-msg-time     { font-size:10px;color:rgba(255,255,255,0.4);flex-shrink:0; }
+    .exec-edited-label { font-size:10px;color:rgba(212,167,0,0.5); }
+
+    .exec-read-receipt {
+      display:flex;align-items:center;gap:3px;cursor:pointer;padding:2px 5px;
+      border-radius:8px;transition:background 0.15s;
+    }
+    .exec-read-receipt:hover { background:rgba(212,167,0,0.1); }
+    .exec-tick      { font-size:11px;color:rgba(255,255,255,0.35); }
+    .exec-tick-blue { color:#6fc3ff; }
+    .exec-read-badge { font-size:10px;color:rgba(212,167,0,0.8); }
+
+    .exec-reply-quote {
+      background:rgba(212,167,0,0.08);border-left:3px solid #d4a700;
+      border-radius:0 8px 8px 0;padding:5px 8px;margin-bottom:6px;
+      cursor:pointer;max-width:100%;overflow:hidden;
+    }
+    .exec-reply-sender  { font-size:11px;font-weight:700;color:#d4a700;display:block; }
+    .exec-reply-preview { font-size:12px;color:#aaa;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+    .exec-media-img {
+      max-width:260px;max-height:220px;border-radius:10px;display:block;
+      margin-bottom:5px;cursor:pointer;object-fit:cover;
+    }
+    .exec-doc-link {
+      display:inline-block;background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.2);
+      color:#d4a700;border-radius:8px;padding:8px 12px;font-size:13px;text-decoration:none;margin-bottom:4px;
+    }
+
+    .exec-voice-msg { display:flex;align-items:center;gap:10px;padding:4px 0;min-width:180px; }
+    .exec-voice-play {
+      width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d4a700,#ffd700);
+      border:none;color:#000;font-size:14px;cursor:pointer;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .exec-voice-waveform {
+      flex:1;height:28px;background:rgba(212,167,0,0.1);border-radius:4px;
+      display:flex;align-items:center;padding:0 4px;overflow:hidden;
+    }
+    .exec-voice-bar {
+      width:100%;height:3px;background:linear-gradient(90deg,#d4a700,#ffd700,#d4a700);
+      border-radius:2px;animation:execVoiceWave 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes execVoiceWave { from{transform:scaleY(1)} to{transform:scaleY(3)} }
+    .exec-voice-duration { font-size:11px;color:rgba(212,167,0,0.7);flex-shrink:0; }
+
+    .exec-poll-wrap {
+      background:rgba(212,167,0,0.05);border:1px solid rgba(212,167,0,0.18);
+      border-radius:12px;padding:10px 12px;margin-bottom:5px;min-width:220px;
+    }
+    .exec-poll-question { font-weight:700;color:#ffd700;font-size:14px;margin-bottom:10px; }
+    .exec-poll-option {
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+      border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;
+    }
+    .exec-poll-option:hover { background:rgba(212,167,0,0.1);border-color:rgba(212,167,0,0.3); }
+    .exec-poll-voted        { background:rgba(212,167,0,0.12);border-color:rgba(212,167,0,0.4); }
+    .exec-poll-opt-row      { display:flex;justify-content:space-between;align-items:center;margin-bottom:5px; }
+    .exec-poll-opt-text     { font-size:13px;color:#e8e8e8; }
+    .exec-poll-opt-count    { font-size:11px;color:rgba(212,167,0,0.65); }
+    .exec-poll-bar-bg       { height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden; }
+    .exec-poll-bar-fill     { height:100%;background:rgba(212,167,0,0.4);border-radius:2px;transition:width 0.4s ease; }
+    .exec-poll-bar-own      { background:linear-gradient(90deg,#d4a700,#ffd700); }
+    .exec-poll-total        { font-size:11px;color:#888;margin-top:8px; }
+
+    .exec-reactions-bar { display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;padding:0 4px; }
+    .exec-reaction-pill {
+      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.2);
+      border-radius:12px;padding:2px 8px;font-size:13px;cursor:pointer;
+      transition:all 0.15s;color:#e8e8e8;
+    }
+    .exec-reaction-pill:hover   { background:rgba(212,167,0,0.2);transform:scale(1.1); }
+    .exec-reaction-mine         { background:rgba(212,167,0,0.2);border-color:rgba(212,167,0,0.5); }
+
+    .exec-msg-actions-btn {
+      position:absolute;top:5px;right:-30px;
+      background:rgba(30,20,5,0.85);border:1px solid rgba(212,167,0,0.2);
+      color:#d4a700;border-radius:6px;padding:2px 7px;cursor:pointer;
+      font-size:16px;opacity:0;transition:opacity 0.15s;
+    }
+    .exec-message-wrapper:hover .exec-msg-actions-btn { opacity:1; }
+    .exec-own .exec-msg-actions-btn { right:auto;left:-30px; }
+
+    .exec-typing-indicator { display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;color:rgba(212,167,0,0.6);font-style:italic; }
+    .exec-typing-dots      { display:flex;gap:3px; }
+    .exec-typing-dots span {
+      width:5px;height:5px;border-radius:50%;background:#d4a700;opacity:0.4;
+      animation:execTypingDot 1.2s infinite;display:inline-block;
+    }
+    .exec-typing-dots span:nth-child(2) { animation-delay:0.2s; }
+    .exec-typing-dots span:nth-child(3) { animation-delay:0.4s; }
+    @keyframes execTypingDot { 0%,60%,100%{transform:none;opacity:0.4} 30%{transform:translateY(-4px);opacity:1} }
+
+    .exec-file-preview-bar {
+      background:rgba(212,167,0,0.08);border-top:1px solid rgba(212,167,0,0.2);
+      padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+    }
+    .exec-preview-inner { display:flex;align-items:center;gap:10px;flex:1;overflow:hidden; }
+    .exec-preview-inner img, .exec-preview-inner video { width:48px;height:48px;object-fit:cover;border-radius:6px; }
+    .exec-preview-name  { font-size:12px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .exec-preview-clear { background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0; }
+
+    .exec-reply-bar, .exec-edit-bar {
+      background:rgba(212,167,0,0.06);border-top:2px solid #d4a700;
+      padding:6px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+    }
+    .exec-reply-bar-inner { flex:1;overflow:hidden;display:flex;align-items:center;gap:8px; }
+    .exec-reply-icon, .exec-edit-icon { font-size:16px;flex-shrink:0; }
+    .exec-reply-bar-sender  { font-size:11px;font-weight:700;color:#d4a700; }
+    .exec-reply-bar-text    { font-size:12px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .exec-edit-bar-text     { font-size:12px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1; }
+    .exec-reply-cancel, .exec-edit-cancel { background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0; }
+
+    .exec-record-timer {
+      background:rgba(255,60,60,0.15);border-top:1px solid rgba(255,60,60,0.3);
+      padding:5px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:13px;color:#ff6b6b;
+    }
+    .exec-rec-dot { font-size:10px;animation:execRecBlink 1s ease-in-out infinite; }
+    @keyframes execRecBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .exec-input-area {
+      display:flex;align-items:flex-end;gap:6px;padding:8px 12px;
+      background:rgba(20,14,2,0.95);border-top:1px solid rgba(212,167,0,0.15);flex-shrink:0;
+    }
+    .exec-inp-btn {
+      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.15);
+      color:#d4a700;border-radius:50%;width:38px;height:38px;font-size:17px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;
+    }
+    .exec-inp-btn:hover { background:rgba(212,167,0,0.2); }
+    .exec-input-wrapper { flex:1; }
+    .exec-textarea {
+      width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(212,167,0,0.2);
+      border-radius:20px;color:#fff;padding:9px 14px;font-size:14px;line-height:1.4;
+      resize:none;outline:none;font-family:inherit;max-height:120px;overflow-y:auto;
+      transition:border-color 0.15s;display:block;box-sizing:border-box;
+    }
+    .exec-textarea:focus { border-color:rgba(212,167,0,0.55); }
+    .exec-textarea::placeholder { color:rgba(255,255,255,0.3); }
+    .exec-voice-btn {
+      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.15);
+      color:#d4a700;border-radius:50%;width:38px;height:38px;font-size:18px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;
+    }
+    .exec-voice-btn:hover { background:rgba(212,167,0,0.2); }
+    .exec-recording-active { background:rgba(255,60,60,0.2)!important;border-color:rgba(255,60,60,0.5)!important;animation:execPulse 1s ease-in-out infinite; }
+    @keyframes execPulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 10px rgba(255,60,60,0.5)} }
+    .exec-send-btn {
+      background:linear-gradient(135deg,#d4a700,#ffd700);border:none;color:#000;
+      border-radius:50%;width:40px;height:40px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      box-shadow:0 2px 8px rgba(212,167,0,0.4);transition:all 0.15s;
+    }
+    .exec-send-btn:hover  { transform:scale(1.08); }
+    .exec-send-btn:active { transform:scale(0.95); }
+
+    .exec-context-menu, .exec-reaction-picker {
+      background:#1e140a;border:1px solid rgba(212,167,0,0.25);
+      border-radius:12px;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,0.6);min-width:150px;
+    }
+    .exec-reaction-picker { display:flex;gap:4px;flex-wrap:wrap;min-width:240px;padding:8px; }
+    .exec-reaction-picker button { background:none;border:none;font-size:22px;cursor:pointer;border-radius:8px;padding:4px;transition:transform 0.1s; }
+    .exec-reaction-picker button:hover { transform:scale(1.3); }
+    .exec-ctx-item {
+      display:block;width:100%;background:none;border:none;color:#e8e8e8;
+      padding:9px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px;transition:background 0.1s;
+    }
+    .exec-ctx-item:hover { background:rgba(212,167,0,0.12); }
+    .exec-ctx-danger     { color:#ff6b6b; }
+    .exec-ctx-danger:hover { background:rgba(255,60,60,0.1); }
+
+    .exec-readers-popup {
+      background:#1e140a;border:1px solid rgba(212,167,0,0.25);border-radius:14px;
+      padding:12px;box-shadow:0 8px 30px rgba(0,0,0,0.7);min-width:220px;max-width:280px;max-height:280px;
+    }
+    .exec-readers-header { font-size:12px;font-weight:700;color:#d4a700;margin-bottom:10px; }
+    .exec-readers-list   { overflow-y:auto;max-height:220px;display:flex;flex-direction:column;gap:8px; }
+    .exec-reader-row     { display:flex;align-items:center;gap:8px; }
+    .exec-reader-avatar  { width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0; }
+    .exec-reader-avatar-fb {
+      background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;font-size:12px;
+      font-weight:700;display:flex;align-items:center;justify-content:center;
+    }
+    .exec-reader-name    { font-size:12px;color:#e8e8e8;font-weight:500; }
+    .exec-reader-time    { font-size:10px;color:#888; }
+    .exec-readers-empty  { font-size:12px;color:#888;text-align:center;padding:8px; }
+
+    .exec-modal-overlay {
+      position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+    .exec-modal-box {
+      background:#1e140a;border:1px solid rgba(212,167,0,0.3);border-radius:18px;
+      width:100%;max-width:420px;overflow:hidden;
+    }
+    .exec-modal-header {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 18px;border-bottom:1px solid rgba(212,167,0,0.15);
+    }
+    .exec-modal-header h3 { margin:0;color:#ffd700;font-size:16px; }
+    .exec-modal-close     { background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:2px 6px; }
+    .exec-modal-body      { padding:16px 18px;display:flex;flex-direction:column;gap:10px; }
+    .exec-modal-footer    { display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid rgba(212,167,0,0.15); }
+    .exec-input-field {
+      width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(212,167,0,0.2);
+      border-radius:10px;color:#fff;padding:9px 13px;font-size:14px;outline:none;
+      font-family:inherit;box-sizing:border-box;
+    }
+    .exec-input-field:focus       { border-color:rgba(212,167,0,0.5); }
+    .exec-input-field::placeholder { color:rgba(255,255,255,0.3); }
+    .exec-poll-opts-label { font-size:12px;color:rgba(212,167,0,0.7); }
+    .exec-add-opt-btn {
+      background:rgba(212,167,0,0.1);border:1px dashed rgba(212,167,0,0.3);
+      color:#d4a700;border-radius:10px;padding:8px;width:100%;cursor:pointer;font-size:13px;transition:all 0.15s;
+    }
+    .exec-add-opt-btn:hover { background:rgba(212,167,0,0.18); }
+    .exec-cancel-btn {
+      background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+      color:#aaa;border-radius:10px;padding:9px 20px;cursor:pointer;font-size:14px;transition:all 0.15s;
+    }
+    .exec-cancel-btn:hover { background:rgba(255,255,255,0.1); }
+    .exec-gold-btn {
+      background:linear-gradient(135deg,#d4a700,#ffd700);border:none;color:#000;
+      border-radius:10px;padding:9px 20px;cursor:pointer;font-size:14px;font-weight:700;transition:all 0.15s;
+    }
+    .exec-gold-btn:hover { opacity:0.9; }
+
+    .exec-empty-state {
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;text-align:center;padding:40px;color:#888;
+    }
+    .exec-empty-state h3 { color:#d4a700;margin-bottom:8px;font-size:16px; }
+    .exec-loading {
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;gap:12px;color:#888;
+    }
+    .exec-spinner {
+      width:32px;height:32px;border:3px solid rgba(212,167,0,0.2);
+      border-top-color:#d4a700;border-radius:50%;animation:spin 0.8s linear infinite;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .exec-send-failed { opacity:0.5;border-color:rgba(255,60,60,0.4)!important; }
+    .exec-highlight   { animation:execHighlight 1.5s ease-out; }
+    @keyframes execHighlight { 0%{background:rgba(212,167,0,0.2)} 100%{background:transparent} }
+    </style>`;
+}
