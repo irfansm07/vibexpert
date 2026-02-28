@@ -22643,3 +22643,263 @@ video.rv-card-media {
     height: calc(100vh - var(--header-h, 60px)) !important;
   }
 }
+/* ═══════════════════════════════════════════════════════════════════
+   POST MESSAGE BUTTON
+═══════════════════════════════════════════════════════════════════ */
+.post-msg-btn {
+  background: linear-gradient(135deg, #6d28d9, #a78bfa) !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease !important;
+}
+.post-msg-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.15s;
+}
+.post-msg-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(109,40,217,0.45) !important;
+}
+.post-msg-btn:hover::after { background: rgba(255,255,255,0.08); }
+.post-msg-btn:active { transform: scale(0.97) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MUTUAL-FOLLOW REQUIRED POPUP
+═══════════════════════════════════════════════════════════════════ */
+.mutual-req-popup {
+  position: absolute;
+  z-index: 99999;
+  width: 258px;
+  animation: mrp-appear 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  filter: drop-shadow(0 16px 40px rgba(0,0,0,0.7));
+}
+@keyframes mrp-appear {
+  from { opacity: 0; transform: translateY(-8px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mrp-inner {
+  background: #16133a;
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 16px;
+  padding: 20px 18px 16px;
+  position: relative;
+  text-align: center;
+}
+.mrp-inner::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px; bottom: -1px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(109,40,217,0.2), rgba(167,139,250,0.05));
+  z-index: -1;
+}
+.mrp-lock {
+  font-size: 28px;
+  margin-bottom: 8px;
+  animation: lock-shake 0.5s ease 0.2s both;
+}
+@keyframes lock-shake {
+  0%,100%{transform:rotate(0)}
+  25%{transform:rotate(-8deg)}
+  75%{transform:rotate(8deg)}
+}
+.mrp-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a78bfa;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.mrp-body {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.mrp-body strong { color: rgba(255,255,255,0.85); }
+.mrp-follow-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  border: none;
+  color: #fff;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  margin-bottom: 6px;
+}
+.mrp-follow-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.mrp-follow-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+.mrp-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255,255,255,0.07);
+  border: none;
+  color: rgba(255,255,255,0.5);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.mrp-close:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DM CONVERSATIONS LIST — UPGRADED UI
+═══════════════════════════════════════════════════════════════════ */
+.dm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  gap: 10px;
+}
+.dm-empty-icon {
+  font-size: 42px;
+  opacity: 0.7;
+  animation: dm-float 3s ease-in-out infinite;
+}
+@keyframes dm-float {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+.dm-empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+}
+.dm-empty-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.6;
+  max-width: 220px;
+}
+
+.dm-conv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.14s, transform 0.12s;
+  position: relative;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+.dm-conv-item:hover {
+  background: rgba(109,40,217,0.1);
+  border-color: rgba(167,139,250,0.12);
+  transform: translateX(2px);
+}
+.dm-conv-item.dm-conv-unread {
+  background: rgba(109,40,217,0.07);
+  border-color: rgba(167,139,250,0.15);
+}
+.dm-conv-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.dm-conv-avatar-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(167,139,250,0.2);
+}
+.dm-conv-avatar-init {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d1b69, #1a1133);
+  border: 2px solid rgba(167,139,250,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: -0.5px;
+}
+.dm-conv-dot {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2px solid #0a0a14;
+}
+.dm-conv-dot.online  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+.dm-conv-dot.offline { background: #4b5563; }
+
+.dm-conv-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dm-conv-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.dm-conv-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f3f0ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dm-conv-unread .dm-conv-name {
+  color: #fff;
+  font-weight: 700;
+}
+.dm-conv-time {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.dm-conv-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.dm-conv-last {
+  font-size: 12px;
+  color: rgba(255,255,255,0.38);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.dm-conv-unread .dm-conv-last {
+  color: rgba(255,255,255,0.6);
+  font-weight: 500;
+}
+.dm-conv-badge {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  flex-shrink: 0;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(109,40,217,0.5);
+}
