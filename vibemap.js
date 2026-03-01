@@ -804,12 +804,73 @@ const vibeshopData = {
 };
 
 const musicLibrary = [
-  { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
-  { id: 2, name: "Upbeat Energy", artist: "Electronic", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
-  { id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
-  { id: 4, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
-  { id: 5, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
-  { id: 6, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" }
+  // ── Chill / LoFi ──
+  { id: 1,  name: "Chill Vibes",            artist: "LoFi Beats",     duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",                  emoji: "🎧" },
+  { id: 2,  name: "Tech House Vibes",       artist: "LoFi House",     duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",             emoji: "🎧" },
+  { id: 3,  name: "Dreamy Piano",           artist: "Classical",      duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",               emoji: "🎹" },
+  { id: 4,  name: "Laid Back Afternoon",    artist: "Chillhop",       duration: "2:41", url: "https://assets.mixkit.co/music/preview/mixkit-laid-back-afternoon-132.mp3",         emoji: "🌅" },
+  { id: 5,  name: "Deep in the Groove",     artist: "LoFi Soul",      duration: "2:43", url: "https://assets.mixkit.co/music/preview/mixkit-deep-in-the-groove-141.mp3",          emoji: "🎵" },
+  // ── Upbeat / Pop ──
+  { id: 6,  name: "Upbeat Energy",          artist: "Electronic Pop", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",               emoji: "⚡" },
+  { id: 7,  name: "Happy Day",              artist: "Pop Rock",       duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",                   emoji: "😊" },
+  { id: 8,  name: "Feel the Good Stuff",    artist: "Pop Vibes",      duration: "2:28", url: "https://assets.mixkit.co/music/preview/mixkit-feel-the-good-stuff-214.mp3",         emoji: "🌟" },
+  { id: 9,  name: "Infectious Bounce",      artist: "Pop Funk",       duration: "2:19", url: "https://assets.mixkit.co/music/preview/mixkit-infectious-bounce-547.mp3",           emoji: "🎉" },
+  { id: 10, name: "Pop Melodic Happy",      artist: "Pop",            duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-pop-melodic-and-happy-567.mp3",       emoji: "🎶" },
+  // ── Summer / Tropical ──
+  { id: 11, name: "Summer Vibes",           artist: "Tropical",       duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",                emoji: "🏖️" },
+  { id: 12, name: "Beach Party",            artist: "Tropical Pop",   duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-beach-party-244.mp3",                 emoji: "🏝️" },
+  { id: 13, name: "Caribbean Steel Pan",    artist: "Caribbean",      duration: "2:14", url: "https://assets.mixkit.co/music/preview/mixkit-caribbean-steel-pan-beats-284.mp3",  emoji: "🥁" },
+  { id: 14, name: "Tropical Fun",           artist: "Tropical",       duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-tropical-fun-and-cute-143.mp3",       emoji: "🌴" },
+  // ── Acoustic / Guitar ──
+  { id: 15, name: "Relaxing Guitar",        artist: "Acoustic",       duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",             emoji: "🎸" },
+  { id: 16, name: "Acoustic Breeze",        artist: "Acoustic Folk",  duration: "2:31", url: "https://assets.mixkit.co/music/preview/mixkit-acoustic-breeze-2182.mp3",            emoji: "🌿" },
+  { id: 17, name: "Light and Cheerful",     artist: "Acoustic Pop",   duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-light-and-cheerful-5063.mp3",         emoji: "☀️" },
+  // ── Cinematic / Emotional ──
+  { id: 18, name: "Cinematic Drama",        artist: "Cinematic",      duration: "3:02", url: "https://assets.mixkit.co/music/preview/mixkit-cinematic-drama-opener-607.mp3",      emoji: "🎬" },
+  { id: 19, name: "Epic Adventure",         artist: "Cinematic",      duration: "2:16", url: "https://assets.mixkit.co/music/preview/mixkit-epic-adventure-436.mp3",              emoji: "⚔️" },
+  { id: 20, name: "Motivational Trailer",   artist: "Trailer",        duration: "1:59", url: "https://assets.mixkit.co/music/preview/mixkit-motivational-epic-trailer-568.mp3",  emoji: "🚀" },
+  { id: 21, name: "Emotional Drive",        artist: "Emotional Pop",  duration: "2:40", url: "https://assets.mixkit.co/music/preview/mixkit-emotional-drive-600.mp3",             emoji: "💫" },
+  { id: 22, name: "Inspirational Journey",  artist: "Orchestral",     duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-inspirational-journey-560.mp3",       emoji: "🌠" },
+  // ── Electronic / Dance ──
+  { id: 23, name: "Electro Camel",          artist: "EDM",            duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-electro-camel-229.mp3",              emoji: "🐪" },
+  { id: 24, name: "Funky Loop",             artist: "Funk EDM",       duration: "2:34", url: "https://assets.mixkit.co/music/preview/mixkit-funky-loop-575.mp3",                  emoji: "🕺" },
+  { id: 25, name: "Dance Party",            artist: "Club",           duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-dance-party-233.mp3",                 emoji: "💃" },
+  { id: 26, name: "Trance Music",           artist: "Trance",         duration: "2:20", url: "https://assets.mixkit.co/music/preview/mixkit-trance-music-121.mp3",                emoji: "🌀" },
+  { id: 27, name: "Fast Bouncing EDM",      artist: "EDM",            duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-fast-bouncing-edm-track-2272.mp3",   emoji: "⚡" },
+  // ── Hip-Hop / Trap ──
+  { id: 28, name: "Hip Hop Vibes",          artist: "Hip-Hop",        duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3",                  emoji: "🎤" },
+  { id: 29, name: "Trap Vibe",              artist: "Trap",           duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-trap-vibe-2228.mp3",                  emoji: "🔥" },
+  { id: 30, name: "Driving Hip Hop",        artist: "Hip-Hop",        duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-driving-hip-hop-track-571.mp3",       emoji: "🚗" },
+  { id: 31, name: "B-Boy Hip Hop",          artist: "Breakbeat",      duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-b-boy-hip-hop-beat-2295.mp3",         emoji: "💥" },
+  // ── Jazz / Soul ──
+  { id: 32, name: "Cool Jazz",              artist: "Jazz",           duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-cool-jazz-2192.mp3",                  emoji: "🎷" },
+  { id: 33, name: "Saxophone Jazz Lounge",  artist: "Jazz Fusion",    duration: "2:44", url: "https://assets.mixkit.co/music/preview/mixkit-saxophone-jazz-lounge-2196.mp3",      emoji: "🎺" },
+  { id: 34, name: "Jazz in Paris",          artist: "French Jazz",    duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-jazz-in-paris-2200.mp3",              emoji: "🗼" },
+  // ── Ambient / Study ──
+  { id: 35, name: "Slow Mellow Groove",     artist: "Ambient",        duration: "2:29", url: "https://assets.mixkit.co/music/preview/mixkit-slow-mellow-groove-2308.mp3",         emoji: "🌙" },
+  { id: 36, name: "Soft Note",              artist: "Ambient Piano",  duration: "2:36", url: "https://assets.mixkit.co/music/preview/mixkit-soft-note-559.mp3",                   emoji: "🌌" },
+  { id: 37, name: "Blissful Memory",        artist: "Ambient",        duration: "2:39", url: "https://assets.mixkit.co/music/preview/mixkit-blissful-memory-557.mp3",             emoji: "✨" },
+  { id: 38, name: "Deep Sea Ambient",       artist: "Ambient",        duration: "2:38", url: "https://assets.mixkit.co/music/preview/mixkit-deep-sea-ambient-2220.mp3",           emoji: "🌊" },
+  { id: 39, name: "Forest Lullaby",         artist: "Nature",         duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-forest-lullaby-4128.mp3",             emoji: "🌲" },
+  // ── Fun / Ukulele ──
+  { id: 40, name: "Funny Ukulele",          artist: "Ukulele",        duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-funny-ukulele-579.mp3",               emoji: "🪗" },
+  { id: 41, name: "Happy Whistling",        artist: "Whistler",       duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-happy-whistling-596.mp3",             emoji: "🎵" },
+  { id: 42, name: "Playful Cat",            artist: "Quirky",         duration: "1:51", url: "https://assets.mixkit.co/music/preview/mixkit-playful-cat-541.mp3",                 emoji: "🐱" },
+  { id: 43, name: "Cheerful Kids Song",     artist: "Kids Pop",       duration: "1:53", url: "https://assets.mixkit.co/music/preview/mixkit-cheerful-kids-song-1029.mp3",         emoji: "🌈" },
+  // ── Rock ──
+  { id: 44, name: "Rock Guitar",            artist: "Rock",           duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-rock-guitar-solo-583.mp3",            emoji: "🤘" },
+  { id: 45, name: "Driving Rock",           artist: "Hard Rock",      duration: "2:11", url: "https://assets.mixkit.co/music/preview/mixkit-driving-rock-584.mp3",                emoji: "🎸" },
+  { id: 46, name: "Loud Engines Rock",      artist: "Punk Rock",      duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-loud-engines-rock-585.mp3",           emoji: "🔊" },
+  // ── Romantic / Soft ──
+  { id: 47, name: "Romantic Piano",         artist: "Romantic",       duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-romantic-piano-554.mp3",              emoji: "💕" },
+  { id: 48, name: "Beautiful Wedding",      artist: "Orchestral",     duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-beautiful-wedding-584.mp3",           emoji: "💒" },
+  // ── India / Fusion ──
+  { id: 49, name: "Tabla Groove",           artist: "Indian Fusion",  duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-tabla-groove-4055.mp3",               emoji: "🪘" },
+  { id: 50, name: "Indian Folk Music",      artist: "Folk",           duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-indian-folk-music-4072.mp3",          emoji: "🎻" },
+  { id: 51, name: "Relaxing Kalimba",       artist: "World Music",    duration: "2:22", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-kalimba-589.mp3",            emoji: "🎶" },
+  // ── Extra Chill ──
+  { id: 52, name: "Midnight Whispers",      artist: "Chill Pop",      duration: "2:33", url: "https://assets.mixkit.co/music/preview/mixkit-midnight-whispers-2181.mp3",          emoji: "🌃" },
+  { id: 53, name: "Life is a Game",         artist: "Indie Pop",      duration: "2:21", url: "https://assets.mixkit.co/music/preview/mixkit-life-is-a-game-579.mp3",              emoji: "🎮" },
 ];
 
 const stickerLibrary = {
@@ -1734,24 +1795,8 @@ function copyMessageText(messageId) {
 }
 
 function handleTypingIndicator() {
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-    lastTypingEmit = now;
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser && currentUser.college) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
-    }
-  }, 3000);
+  // Ghost chat: do not emit real username in typing indicator
+  // (typing events suppressed to protect ghost anonymity)
 }
 
 function showTypingIndicator(username) {
@@ -1765,40 +1810,9 @@ function hideTypingIndicator(username) {
 }
 
 function updateTypingDisplay() {
+  // Ghost chat: typing indicator hidden to protect anonymity
   let container = document.querySelector('.typing-indicators-container');
-  const messagesBox = document.querySelector('.chat-messages');
-
-  if (!container && messagesBox) {
-    container = document.createElement('div');
-    container.className = 'typing-indicators-container';
-    messagesBox.appendChild(container);
-  }
-
-  if (!container) return;
-
-  // Ghost chat: always show anonymous typing text, never real names
-  if (typingUsers.size === 0) {
-    container.innerHTML = '';
-    return;
-  }
-
-  const count = typingUsers.size;
-  const text = count === 1
-    ? '👻 Typing - Have Patience...'
-    : `👻 ${count} Ghosts Typing - Have Patience...`;
-
-  container.innerHTML = `
-   <div class="typing-indicator">
-     <div class="typing-dots">
-       <span></span>
-       <span></span>
-       <span></span>
-     </div>
-     <span class="typing-text">${text}</span>
-   </div>
- `;
-
-  messagesBox.scrollTo({ top: messagesBox.scrollHeight, behavior: 'smooth' });
+  if (container) container.innerHTML = '';
 }
 
 function setupMessageActions() {
@@ -2124,7 +2138,13 @@ async function sendWhatsAppMessage() {
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    sendWhatsAppMessage();
+    // If file preview is active, use the media-aware send function
+    const filePreviewBar = document.getElementById('chatFilePreviewBar');
+    if (filePreviewBar && filePreviewBar.style.display !== 'none') {
+      sendWhatsAppMessageWithMedia();
+    } else {
+      sendWhatsAppMessageWithMedia(); // always use the full send
+    }
   }
 
   // Auto-resize textarea
@@ -2195,570 +2215,14 @@ function loadCommunities() {
     }
   });
 
-  // WhatsApp-style complete layout
-  container.innerHTML = `
-    <div class="whatsapp-container">
-      <!-- Left Sidebar: Chats List -->
-      <div class="whatsapp-sidebar">
-        <div class="whatsapp-sidebar-header">
-          <div>
-            <h3>${currentUser.college}</h3>
-            <p style="font-size:12px;color:#a78bfa;margin-top:3px;">👻 Ghosts' Conceled</p>
-          </div>
-          <div class="sidebar-actions">
-          </div>
-        </div>
-        
-        <div class="whatsapp-search">
-          <input type="text" placeholder="🔍 Search messages..." id="chatSearchBox" onkeyup="searchChatMessages()">
-        </div>
-        
-        <div class="whatsapp-chats-list" id="chatsList">
-          <!-- Executive Chat (DEFAULT) -->
-          <div class="chat-item active exec-chat-item" id="execSidebarItem" data-chat="executive" onclick="openExecutiveChat()">
-            <div class="chat-avatar">
-              <div class="group-avatar exec-avatar">🎓</div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4 class="exec-title">${currentUser.college} · Executive</h4>
-                <span class="chat-time exec-time"></span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text exec-preview">Real identity · Official</span>
-                <span id="execUnreadBadge" class="unread-badge exec-badge" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Community Group Chat -->
-          <!-- Ghost Group Chat -->
-          <div class="chat-item" id="ghostChatItem" data-chat="ghost" onclick="openCommunityChat()" style="position:relative;overflow:hidden;">
-            <!-- ⛔ Realistic 5-tape criss-cross caution barrier -->
-            
-            <div class="chat-avatar">
-              <!-- 🎃 Halloween pumpkin DP -->
-              <div class="group-avatar" style="padding:0;overflow:hidden;background:#100500;border-radius:50%;">
-                <img src="https://www.dhresource.com/webp/m/0x0/f2/albu/g21/M01/3D/B7/rBVaqmDe2UmADG8pAAFL_e_I94Q482.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Ghost">
-                    <radialGradient id="gcSky" cx="50%" cy="30%" r="75%">
-                      <stop offset="0%" stop-color="#2d1200"/>
-                      <stop offset="100%" stop-color="#080200"/>
-                    </radialGradient>
-                    <radialGradient id="gcMoon" cx="38%" cy="38%" r="55%">
-                      <stop offset="0%" stop-color="#fff8d0"/>
-                      <stop offset="60%" stop-color="#ffcc44"/>
-                      <stop offset="100%" stop-color="#aa6600"/>
-                    </radialGradient>
-                    <radialGradient id="gcPump1" cx="42%" cy="32%" r="62%">
-                      <stop offset="0%" stop-color="#ff9900"/>
-                      <stop offset="65%" stop-color="#cc4400"/>
-                      <stop offset="100%" stop-color="#6a1a00"/>
-                    </radialGradient>
-                    <radialGradient id="gcPump2" cx="42%" cy="32%" r="62%">
-                      <stop offset="0%" stop-color="#ee8800"/>
-                      <stop offset="65%" stop-color="#bb3300"/>
-                      <stop offset="100%" stop-color="#5a1400"/>
-                    </radialGradient>
-                    <radialGradient id="gcGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="rgba(255,120,0,0.65)"/>
-                      <stop offset="100%" stop-color="rgba(255,60,0,0)"/>
-                    </radialGradient>
-                  </defs>
-                  <rect width="50" height="50" fill="url(#gcSky)" rx="25"/>
-                  <circle cx="37" cy="11" r="8" fill="rgba(255,190,50,0.12)"/>
-                  <circle cx="37" cy="11" r="5.5" fill="url(#gcMoon)"/>
-                  <circle cx="35.5" cy="9.5" r="0.6" fill="rgba(160,90,0,0.28)"/>
-                  <circle cx="38" cy="13" r="0.45" fill="rgba(160,90,0,0.28)"/>
-                  <!-- Bare trees -->
-                  <line x1="5" y1="50" x2="5" y2="26" stroke="#220a00" stroke-width="1.4"/>
-                  <line x1="5" y1="32" x2="2" y2="25" stroke="#220a00" stroke-width="0.9"/>
-                  <line x1="5" y1="32" x2="8" y2="26" stroke="#220a00" stroke-width="0.9"/>
-                  <line x1="5" y1="26" x2="3" y2="20" stroke="#220a00" stroke-width="0.7"/>
-                  <line x1="5" y1="26" x2="7" y2="19" stroke="#220a00" stroke-width="0.7"/>
-                  <!-- Bat silhouettes -->
-                  <path d="M18,9 C16,7 13,7 13,9 C13,11 15,11 18,9Z M18,9 C20,7 23,7 23,9 C23,11 21,11 18,9Z" fill="#1a0800"/>
-                  <path d="M27,6.5 C25.5,5 23.5,5 23.5,6.5 C23.5,8 25,8 27,6.5Z M27,6.5 C28.5,5 30.5,5 30.5,6.5 C30.5,8 29,8 27,6.5Z" fill="#1a0800"/>
-                  <!-- Ground -->
-                  <rect x="0" y="43" width="50" height="7" fill="#100500" rx="0"/>
-                  <ellipse cx="25" cy="44" rx="12" ry="3.5" fill="url(#gcGlow)" opacity="0.55"/>
-                  <!-- Grass -->
-                  <line x1="9" y1="43" x2="8" y2="39" stroke="#1a3000" stroke-width="0.9"/>
-                  <line x1="13" y1="43" x2="14" y2="38" stroke="#1a3000" stroke-width="0.9"/>
-                  <line x1="37" y1="43" x2="36" y2="39" stroke="#1a3000" stroke-width="0.9"/>
-                  <line x1="41" y1="43" x2="42" y2="38" stroke="#1a3000" stroke-width="0.9"/>
-                  <!-- Center pumpkin (large) -->
-                  <ellipse cx="25" cy="40" rx="8.5" ry="6.5" fill="url(#gcPump1)"/>
-                  <line x1="25" y1="33.5" x2="25" y2="46" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
-                  <path d="M18,37 Q25,35 32,37" stroke="rgba(0,0,0,0.14)" stroke-width="0.5" fill="none"/>
-                  <rect x="23.5" y="32" width="3" height="2.5" rx="0.8" fill="#264d00"/>
-                  <!-- Triangle eyes -->
-                  <polygon points="20.5,38 18.8,41 22.2,41" fill="rgba(255,185,0,0.95)"/>
-                  <polygon points="29.5,38 27.8,41 31.2,41" fill="rgba(255,185,0,0.95)"/>
-                  <!-- Nose -->
-                  <polygon points="25,40.5 24,42 26,42" fill="rgba(255,165,0,0.88)"/>
-                  <!-- Jagged grin -->
-                  <path d="M19.5,43.5 L21,42 L22.5,43.5 L24,42 L25.5,43.5 L27,42 L28.5,43.5 L30.5,42" stroke="rgba(255,175,0,0.92)" stroke-width="0.75" fill="none" stroke-linecap="round"/>
-                  <!-- Left pumpkin -->
-                  <ellipse cx="11" cy="43.5" rx="5.5" ry="4.2" fill="url(#gcPump2)"/>
-                  <rect x="10" y="37.8" width="2.2" height="2" rx="0.5" fill="#264d00"/>
-                  <polygon points="10,41.5 8.5,43.5 11.5,43.5" fill="rgba(255,170,0,0.9)"/>
-                  <polygon points="12,41.5 10.5,43.5 13.5,43.5" fill="rgba(255,170,0,0.9)"/>
-                  <path d="M8.5,45 L10,43.5 L11.5,45 L13,43.5 L14.5,45" stroke="rgba(255,165,0,0.85)" stroke-width="0.65" fill="none"/>
-                  <!-- Right pumpkin -->
-                  <ellipse cx="39" cy="43.5" rx="5.5" ry="4.2" fill="url(#gcPump1)" opacity="0.82"/>
-                  <rect x="38" y="37.8" width="2.2" height="2" rx="0.5" fill="#264d00"/>
-                  <polygon points="38,41.5 36.5,43.5 39.5,43.5" fill="rgba(255,170,0,0.9)"/>
-                  <polygon points="40,41.5 38.5,43.5 41.5,43.5" fill="rgba(255,170,0,0.9)"/>
-                  <path d="M36.5,45 L38,43.5 L39.5,45 L41,43.5 L42.5,45" stroke="rgba(255,165,0,0.85)" stroke-width="0.65" fill="none"/>
-                </svg>
-              </div>
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                <h4>👻 Ghosts' Conceled</h4>
-                <span class="chat-time"></span>
-              </div>
-              <div class="chat-preview">
-                <span class="preview-text">☠️☠️☠️</span>
-                <span class="unread-badge" id="unreadCount" style="display:none;">0</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chat Rules -->
-          <div class="chat-rules-card">
-            <div class="chat-rules-header">
-              <span class="chat-rules-icon">⚠️</span>
-              <span class="chat-rules-title">CHAT RULES</span>
-            </div>
-            <div class="chat-rules-list">
-              <div class="chat-rule-item">
-                <span class="rule-emoji">🚫</span>
-                <span>No hate speech — violators get <strong>permanently banned</strong>.</span>
-              </div>
-              <div class="chat-rule-item">
-                <span class="rule-emoji">🔞</span>
-                <span>No explicit content — account <strong>suspended immediately</strong>.</span>
-              </div>
-              <div class="chat-rule-item">
-                <span class="rule-emoji">🔗</span>
-                <span>No spam or links — messages <strong>deleted, user muted</strong>.</span>
-              </div>
-            </div>
-          </div>
-          <!-- Study Groups -->
-          <div class="chat-item" onclick="showMessage('Study groups coming soon!', 'success')">
-            <div class="chat-avatar">
-            </div>
-            <div class="chat-info">
-              <div class="chat-header-row">
-                 </div>
-              <div class="chat-preview">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Main Chat Area -->
-      <div class="whatsapp-main" id="whatsappMain">
-        <!-- Ghost Chat Panel -->
-        <div id="ghostChatPanel" style="display:none;flex-direction:column;width:100%;height:100%;overflow:hidden;position:relative;">
-        <div class="whatsapp-chat-header">
-          <div class="chat-header-info">
-            <div class="chat-avatar-large">🎓</div>
-            <div>
-              <h3>👻 Ghosts' Conceled</h3>
-              <p class="chat-status">Anonymous College Chat · Live</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- ═══ GHOST WALLPAPER ═══ -->
-        <div id="ghostWallpaper" style="position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(175deg,#060412 0%,#0b0820 35%,#09071c 65%,#040310 100%);">
-          <!-- Stars -->
-          <div class="gw-stars"></div>
-          <!-- Moon -->
-          <div class="gw-moon"></div>
-          <div class="gw-moon-glow"></div>
-          <!-- 6 realistic bats -->
-          <svg class="gw-bat gw-bat-1" id="gwb1" viewBox="0 0 100 44" xmlns="http://www.w3.org/2000/svg" width="70" height="30">
-            <g class="gw-bat-body">
-              <!-- Body -->
-              <ellipse cx="50" cy="24" rx="7" ry="9" fill="#1a1028"/>
-              <!-- Head -->
-              <ellipse cx="50" cy="14" rx="5.5" ry="5" fill="#1a1028"/>
-              <!-- Ears -->
-              <polygon points="45,10 43,4 48,9" fill="#1a1028"/>
-              <polygon points="55,10 57,4 52,9" fill="#1a1028"/>
-              <!-- Eyes -->
-              <circle cx="47.5" cy="13" r="1.4" fill="rgba(200,100,255,0.9)"/>
-              <circle cx="52.5" cy="13" r="1.4" fill="rgba(200,100,255,0.9)"/>
-              <!-- Left wing -->
-              <path d="M43,20 C35,14 18,10 5,18 C12,22 22,21 30,22 C36,23 40,25 43,28Z" fill="#1a1028"/>
-              <path d="M43,20 C38,16 28,12 18,15 C24,18 31,18 37,20Z" fill="#231535" opacity="0.6"/>
-              <!-- Wing membrane lines left -->
-              <path d="M43,22 C35,18 20,15 8,20" stroke="#2a1a45" stroke-width="0.6" fill="none" opacity="0.7"/>
-              <path d="M43,24 C36,21 25,18 14,21" stroke="#2a1a45" stroke-width="0.5" fill="none" opacity="0.6"/>
-              <!-- Right wing -->
-              <path d="M57,20 C65,14 82,10 95,18 C88,22 78,21 70,22 C64,23 60,25 57,28Z" fill="#1a1028"/>
-              <path d="M57,20 C62,16 72,12 82,15 C76,18 69,18 63,20Z" fill="#231535" opacity="0.6"/>
-              <!-- Wing membrane lines right -->
-              <path d="M57,22 C65,18 80,15 92,20" stroke="#2a1a45" stroke-width="0.6" fill="none" opacity="0.7"/>
-              <path d="M57,24 C64,21 75,18 86,21" stroke="#2a1a45" stroke-width="0.5" fill="none" opacity="0.6"/>
-              <!-- Legs -->
-              <path d="M47,32 L44,38 L46,38 L47,35 L48,38 L49,38 L48,32Z" fill="#1a1028"/>
-              <path d="M53,32 L50,38 L52,38 L53,35 L54,38 L55,38 L54,32Z" fill="#1a1028"/>
-            </g>
-          </svg>
-          <svg class="gw-bat gw-bat-2" id="gwb2" viewBox="0 0 80 36" xmlns="http://www.w3.org/2000/svg" width="54" height="24">
-            <g class="gw-bat-body">
-              <ellipse cx="40" cy="19" rx="5.5" ry="7" fill="#160e22"/>
-              <ellipse cx="40" cy="11" rx="4.5" ry="4" fill="#160e22"/>
-              <polygon points="36,8 34,3 39,8" fill="#160e22"/>
-              <polygon points="44,8 46,3 41,8" fill="#160e22"/>
-              <circle cx="37.8" cy="10.5" r="1.1" fill="rgba(180,80,240,0.85)"/>
-              <circle cx="42.2" cy="10.5" r="1.1" fill="rgba(180,80,240,0.85)"/>
-              <path d="M34.5,16 C27,11 14,8 3,14 C9,18 18,17 25,18 C30,19 33,21 34.5,23Z" fill="#160e22"/>
-              <path d="M45.5,16 C53,11 66,8 77,14 C71,18 62,17 55,18 C50,19 47,21 45.5,23Z" fill="#160e22"/>
-              <path d="M34.5,18 C27,15 16,12 6,16" stroke="#22103a" stroke-width="0.5" fill="none" opacity="0.65"/>
-              <path d="M45.5,18 C53,15 64,12 74,16" stroke="#22103a" stroke-width="0.5" fill="none" opacity="0.65"/>
-              <path d="M38,26 L36,31 L37.5,31 L38,28.5 L38.5,31 L40,31Z" fill="#160e22"/>
-              <path d="M42,26 L40,31 L41.5,31 L42,28.5 L42.5,31 L44,31Z" fill="#160e22"/>
-            </g>
-          </svg>
-          <svg class="gw-bat gw-bat-3" id="gwb3" viewBox="0 0 60 26" xmlns="http://www.w3.org/2000/svg" width="42" height="18">
-            <g class="gw-bat-body">
-              <ellipse cx="30" cy="15" rx="4" ry="5.5" fill="#1c1230"/>
-              <ellipse cx="30" cy="8" rx="3.5" ry="3.2" fill="#1c1230"/>
-              <polygon points="27,6 25,2 29,5.5" fill="#1c1230"/>
-              <polygon points="33,6 35,2 31,5.5" fill="#1c1230"/>
-              <circle cx="28.2" cy="7.5" r="0.9" fill="rgba(190,90,255,0.80)"/>
-              <circle cx="31.8" cy="7.5" r="0.9" fill="rgba(190,90,255,0.80)"/>
-              <path d="M26,12 C19,8 9,6 2,10 C7,13 14,13 20,14 C23,14.5 25,16 26,18Z" fill="#1c1230"/>
-              <path d="M34,12 C41,8 51,6 58,10 C53,13 46,13 40,14 C37,14.5 35,16 34,18Z" fill="#1c1230"/>
-              <path d="M29,20 L28,24 L30,24 L30,21.5 L30,24 L32,24 L31,20Z" fill="#1c1230"/>
-            </g>
-          </svg>
-          <svg class="gw-bat gw-bat-4" id="gwb4" viewBox="0 0 110 48" xmlns="http://www.w3.org/2000/svg" width="78" height="34">
-            <g class="gw-bat-body">
-              <ellipse cx="55" cy="26" rx="8" ry="10" fill="#130d1e"/>
-              <ellipse cx="55" cy="15" rx="6.5" ry="5.8" fill="#130d1e"/>
-              <polygon points="49,11 46,4 52,10" fill="#130d1e"/>
-              <polygon points="61,11 64,4 58,10" fill="#130d1e"/>
-              <circle cx="51.5" cy="14" r="1.6" fill="rgba(210,110,255,0.92)"/>
-              <circle cx="58.5" cy="14" r="1.6" fill="rgba(210,110,255,0.92)"/>
-              <path d="M47,22 C37,15 20,11 5,20 C13,25 25,23 34,24 C40,25 44,28 47,31Z" fill="#130d1e"/>
-              <path d="M47,22 C40,17 28,13 16,17 C23,21 33,21 40,23Z" fill="#1c1530" opacity="0.55"/>
-              <path d="M47,24 C38,20 24,17 10,22" stroke="#201540" stroke-width="0.65" fill="none" opacity="0.7"/>
-              <path d="M47,27 C39,23 27,20 14,25" stroke="#201540" stroke-width="0.5" fill="none" opacity="0.6"/>
-              <path d="M63,22 C73,15 90,11 105,20 C97,25 85,23 76,24 C70,25 66,28 63,31Z" fill="#130d1e"/>
-              <path d="M63,22 C70,17 82,13 94,17 C87,21 77,21 70,23Z" fill="#1c1530" opacity="0.55"/>
-              <path d="M63,24 C72,20 86,17 100,22" stroke="#201540" stroke-width="0.65" fill="none" opacity="0.7"/>
-              <path d="M63,27 C71,23 83,20 96,25" stroke="#201540" stroke-width="0.5" fill="none" opacity="0.6"/>
-              <path d="M52,36 L49,43 L51.5,43 L52.5,39 L53.5,43 L55,43 L53.5,36Z" fill="#130d1e"/>
-              <path d="M58,36 L55,43 L57.5,43 L58.5,39 L59.5,43 L61,43 L59,36Z" fill="#130d1e"/>
-            </g>
-          </svg>
-          <svg class="gw-bat gw-bat-5" id="gwb5" viewBox="0 0 68 30" xmlns="http://www.w3.org/2000/svg" width="46" height="20">
-            <g class="gw-bat-body">
-              <ellipse cx="34" cy="17" rx="5" ry="6.5" fill="#18102a"/>
-              <ellipse cx="34" cy="9.5" rx="4" ry="3.8" fill="#18102a"/>
-              <polygon points="30,7 28,2.5 33,7" fill="#18102a"/>
-              <polygon points="38,7 40,2.5 35,7" fill="#18102a"/>
-              <circle cx="31.5" cy="9" r="1.15" fill="rgba(195,95,255,0.82)"/>
-              <circle cx="36.5" cy="9" r="1.15" fill="rgba(195,95,255,0.82)"/>
-              <path d="M29,14 C22,10 11,7 2,12 C7,16 16,15 22,16 C26,17 28,19 29,21Z" fill="#18102a"/>
-              <path d="M39,14 C46,10 57,7 66,12 C61,16 52,15 46,16 C42,17 40,19 39,21Z" fill="#18102a"/>
-              <path d="M29,16 C23,13 13,11 4,14" stroke="#24143e" stroke-width="0.5" fill="none" opacity="0.7"/>
-              <path d="M39,16 C45,13 55,11 64,14" stroke="#24143e" stroke-width="0.5" fill="none" opacity="0.7"/>
-              <path d="M32,23 L30.5,28 L32,28 L32.5,25.5 L33,28 L34.5,28 L33.5,23Z" fill="#18102a"/>
-              <path d="M36,23 L34.5,28 L36,28 L36.5,25.5 L37,28 L38.5,28 L37.5,23Z" fill="#18102a"/>
-            </g>
-          </svg>
-          <svg class="gw-bat gw-bat-6" id="gwb6" viewBox="0 0 88 38" xmlns="http://www.w3.org/2000/svg" width="60" height="26">
-            <g class="gw-bat-body">
-              <ellipse cx="44" cy="21" rx="6" ry="7.5" fill="#151020"/>
-              <ellipse cx="44" cy="12" rx="5" ry="4.5" fill="#15102a"/>
-              <polygon points="39.5,9 37,3.5 43,8.5" fill="#15102a"/>
-              <polygon points="48.5,9 51,3.5 45,8.5" fill="#15102a"/>
-              <circle cx="41" cy="11.5" r="1.3" fill="rgba(205,105,255,0.88)"/>
-              <circle cx="47" cy="11.5" r="1.3" fill="rgba(205,105,255,0.88)"/>
-              <path d="M38,18 C30,12 16,9 3,16 C10,20 21,19 29,20 C34,21 37,23 38,26Z" fill="#15102a"/>
-              <path d="M38,20 C31,17 19,14 8,18" stroke="#201540" stroke-width="0.55" fill="none" opacity="0.65"/>
-              <path d="M50,18 C58,12 72,9 85,16 C78,20 67,19 59,20 C54,21 51,23 50,26Z" fill="#15102a"/>
-              <path d="M50,20 C57,17 69,14 80,18" stroke="#201540" stroke-width="0.55" fill="none" opacity="0.65"/>
-              <path d="M42,29 L40,35 L42,35 L43,32 L43,35 L45,35 L44,29Z" fill="#15102a"/>
-              <path d="M46,29 L44,35 L46,35 L47,32 L47,35 L49,35 L48,29Z" fill="#15102a"/>
-            </g>
-          </svg>
-          <!-- Ghosts -->
-          <div class="gw-ghost gw-ghost-1">
-            <svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg" width="60" height="80">
-              <defs><radialGradient id="gh1g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(255,255,255,0.96)"/><stop offset="100%" stop-color="rgba(220,220,255,0.38)"/></radialGradient></defs>
-              <path d="M10,55 C8,55 5,52 5,48 L5,25 C5,12 15,4 30,4 C45,4 55,12 55,25 L55,48 C55,52 52,55 50,55 L46,50 L42,55 L38,50 L34,55 L30,50 L26,55 L22,50 L18,55 L14,50 Z" fill="url(#gh1g)"/>
-              <ellipse cx="22" cy="28" rx="5.5" ry="7" fill="rgba(60,40,100,0.75)"/>
-              <ellipse cx="38" cy="28" rx="5.5" ry="7" fill="rgba(60,40,100,0.75)"/>
-              <ellipse cx="21" cy="27" rx="2" ry="2.5" fill="rgba(130,80,200,0.9)"/>
-              <ellipse cx="37" cy="27" rx="2" ry="2.5" fill="rgba(130,80,200,0.9)"/>
-              <path d="M23,40 Q30,46 37,40" stroke="rgba(80,50,140,0.45)" stroke-width="1.5" fill="none"/>
-            </svg>
-          </div>
-          <div class="gw-ghost gw-ghost-2">
-            <svg viewBox="0 0 44 58" xmlns="http://www.w3.org/2000/svg" width="44" height="58">
-              <defs><radialGradient id="gh2g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(240,240,255,0.90)"/><stop offset="100%" stop-color="rgba(200,200,255,0.28)"/></radialGradient></defs>
-              <path d="M7,40 C5,40 3,38 3,35 L3,18 C3,8 11,3 22,3 C33,3 41,8 41,18 L41,35 C41,38 39,40 37,40 L34,37 L31,40 L28,37 L25,40 L22,37 L19,40 L16,37 L13,40 L10,37 Z" fill="url(#gh2g)"/>
-              <ellipse cx="15.5" cy="20" rx="4" ry="5.5" fill="rgba(50,30,90,0.70)"/>
-              <ellipse cx="28.5" cy="20" rx="4" ry="5.5" fill="rgba(50,30,90,0.70)"/>
-              <ellipse cx="15" cy="19" rx="1.5" ry="2" fill="rgba(110,65,185,0.85)"/>
-              <ellipse cx="28" cy="19" rx="1.5" ry="2" fill="rgba(110,65,185,0.85)"/>
-            </svg>
-          </div>
-          <div class="gw-ghost gw-ghost-3">
-            <svg viewBox="0 0 36 48" xmlns="http://www.w3.org/2000/svg" width="36" height="48">
-              <defs><radialGradient id="gh3g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(255,255,255,0.88)"/><stop offset="100%" stop-color="rgba(210,210,255,0.22)"/></radialGradient></defs>
-              <path d="M5,33 C4,33 2,31 2,29 L2,15 C2,7 9,2 18,2 C27,2 34,7 34,15 L34,29 C34,31 32,33 31,33 L28.5,30 L26,33 L23.5,30 L21,33 L18,30 L15,33 L12.5,30 L10,33 L7.5,30 Z" fill="url(#gh3g)"/>
-              <ellipse cx="12" cy="16" rx="3" ry="4" fill="rgba(40,25,80,0.65)"/>
-              <ellipse cx="24" cy="16" rx="3" ry="4" fill="rgba(40,25,80,0.65)"/>
-              <ellipse cx="11.5" cy="15.5" rx="1.1" ry="1.4" fill="rgba(100,60,175,0.82)"/>
-              <ellipse cx="23.5" cy="15.5" rx="1.1" ry="1.4" fill="rgba(100,60,175,0.82)"/>
-            </svg>
-          </div>
-          <div class="gw-ghost gw-ghost-4">
-            <svg viewBox="0 0 50 66" xmlns="http://www.w3.org/2000/svg" width="50" height="66">
-              <defs><radialGradient id="gh4g" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="rgba(245,245,255,0.92)"/><stop offset="100%" stop-color="rgba(215,215,255,0.32)"/></radialGradient></defs>
-              <path d="M8,46 C6,46 4,44 4,41 L4,22 C4,10 13,3 25,3 C37,3 46,10 46,22 L46,41 C46,44 44,46 42,46 L39,42 L36,46 L33,42 L30,46 L27,42 L24,46 L21,42 L18,46 L15,42 L12,46 Z" fill="url(#gh4g)"/>
-              <ellipse cx="18" cy="24" rx="4.5" ry="6" fill="rgba(55,35,95,0.72)"/>
-              <ellipse cx="32" cy="24" rx="4.5" ry="6" fill="rgba(55,35,95,0.72)"/>
-              <ellipse cx="17.5" cy="23" rx="1.8" ry="2.2" fill="rgba(120,75,200,0.88)"/>
-              <ellipse cx="31.5" cy="23" rx="1.8" ry="2.2" fill="rgba(120,75,200,0.88)"/>
-              <path d="M19,35 Q25,41 31,35" stroke="rgba(80,50,140,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <!-- Scarecrows -->
-          <div class="gw-scarecrow gw-sc-1">
-            <svg viewBox="0 0 36 80" xmlns="http://www.w3.org/2000/svg" width="36" height="80">
-              <!-- Hat -->
-              <rect x="9" y="2" width="18" height="3" rx="1" fill="#2a1800"/>
-              <rect x="12" y="4" width="12" height="10" rx="1.5" fill="#331e00"/>
-              <!-- Head (sack) -->
-              <ellipse cx="18" cy="19" rx="8" ry="9" fill="#8b7040"/>
-              <!-- Stitched eyes -->
-              <path d="M13,17 L15,19 M15,17 L13,19" stroke="#2a1800" stroke-width="1.2" stroke-linecap="round"/>
-              <path d="M21,17 L23,19 M23,17 L21,19" stroke="#2a1800" stroke-width="1.2" stroke-linecap="round"/>
-              <!-- Stitched mouth -->
-              <path d="M14,23 L15.5,24 L17,23 L18.5,24 L20,23 L21.5,24 L23,23" stroke="#2a1800" stroke-width="0.8" fill="none" stroke-linecap="round"/>
-              <!-- Neck -->
-              <rect x="16.5" y="27" width="3" height="4" fill="#6b5530"/>
-              <!-- Body (shirt) -->
-              <rect x="8" y="30" width="20" height="22" rx="2" fill="#4a3020"/>
-              <!-- Tattered shirt edges -->
-              <path d="M8,50 L10,55 L12,50 L14,56 L16,50 L18,55 L20,50 L22,56 L24,50 L26,55 L28,50" stroke="#4a3020" stroke-width="1.5" fill="none"/>
-              <!-- Arm post (horizontal stick) -->
-              <rect x="0" y="31" width="36" height="2.5" rx="1" fill="#2a1800"/>
-              <!-- Left sleeve -->
-              <rect x="0" y="33" width="9" height="12" rx="2" fill="#5a3828"/>
-              <!-- Left hand (straw) -->
-              <path d="M2,45 L0,50 M4,45 L3,51 M6,45 L6,50 M8,45 L9,50" stroke="#8b7040" stroke-width="1.1" stroke-linecap="round"/>
-              <!-- Right sleeve -->
-              <rect x="27" y="33" width="9" height="12" rx="2" fill="#5a3828"/>
-              <!-- Right hand (straw) -->
-              <path d="M28,45 L27,50 M30,45 L30,51 M32,45 L32,50 M34,45 L35,50" stroke="#8b7040" stroke-width="1.1" stroke-linecap="round"/>
-              <!-- Stake/post (vertical) -->
-              <rect x="16.5" y="28" width="3" height="52" rx="1" fill="#2a1800"/>
-              <!-- Legs (pants) -->
-              <rect x="10" y="51" width="7" height="22" rx="2" fill="#2a3020"/>
-              <rect x="19" y="51" width="7" height="22" rx="2" fill="#2a3020"/>
-              <!-- Straw feet -->
-              <path d="M10,73 L8,78 M12,73 L11,79 M14,73 L14,78 M16,73 L17,78" stroke="#8b7040" stroke-width="1" stroke-linecap="round"/>
-              <path d="M19,73 L18,78 M21,73 L20,79 M23,73 L24,78 M25,73 L26,78" stroke="#8b7040" stroke-width="1" stroke-linecap="round"/>
-              <!-- Patches -->
-              <rect x="10" y="35" width="5" height="4" rx="0.5" fill="#3a2515" opacity="0.7"/>
-              <rect x="20" y="40" width="4" height="4" rx="0.5" fill="#3a2515" opacity="0.7"/>
-              <!-- Crow on shoulder -->
-              <ellipse cx="30" cy="30.5" rx="3" ry="2" fill="#111"/>
-              <ellipse cx="32" cy="30" rx="1.8" ry="1.5" fill="#111"/>
-              <path d="M33.5,29.5 L36,28.5" stroke="#111" stroke-width="0.5"/>
-              <circle cx="33" cy="29" r="0.4" fill="rgba(255,220,0,0.9)"/>
-            </svg>
-          </div>
-          <div class="gw-scarecrow gw-sc-2">
-            <svg viewBox="0 0 30 66" xmlns="http://www.w3.org/2000/svg" width="28" height="62">
-              <!-- Hat -->
-              <rect x="7" y="1" width="16" height="2.5" rx="0.8" fill="#1e1200"/>
-              <rect x="10" y="3" width="10" height="8" rx="1.2" fill="#261800"/>
-              <!-- Head -->
-              <ellipse cx="15" cy="16" rx="7" ry="7.5" fill="#7a6035"/>
-              <!-- X eyes -->
-              <path d="M10.5,13.5 L12.5,15.5 M12.5,13.5 L10.5,15.5" stroke="#1e1200" stroke-width="1" stroke-linecap="round"/>
-              <path d="M17.5,13.5 L19.5,15.5 M19.5,13.5 L17.5,15.5" stroke="#1e1200" stroke-width="1" stroke-linecap="round"/>
-              <!-- Smile -->
-              <path d="M11,20 L12.5,21 L14,20 L15.5,21 L17,20 L18.5,21 L20,20" stroke="#1e1200" stroke-width="0.7" fill="none"/>
-              <!-- Body -->
-              <rect x="7" y="23" width="16" height="18" rx="1.5" fill="#3a2515"/>
-              <!-- Arms -->
-              <rect x="0" y="25" width="30" height="2" rx="1" fill="#1e1200"/>
-              <rect x="0" y="27" width="7" height="10" rx="1.5" fill="#4a3020"/>
-              <path d="M1,37 L0,41 M3,37 L2,42 M5,37 L5,41 M7,37 L8,42" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
-              <rect x="23" y="27" width="7" height="10" rx="1.5" fill="#4a3020"/>
-              <path d="M23,37 L22,41 M25,37 L25,42 M27,37 L27,41 M29,37 L30,42" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
-              <!-- Stake -->
-              <rect x="13.5" y="24" width="3" height="42" rx="1" fill="#1e1200"/>
-              <!-- Legs -->
-              <rect x="8" y="40" width="5.5" height="18" rx="1.5" fill="#202818"/>
-              <rect x="16.5" y="40" width="5.5" height="18" rx="1.5" fill="#202818"/>
-              <path d="M8,58 L7,62 M10,58 L9,63 M12,58 L13,62" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
-              <path d="M16.5,58 L15.5,62 M18.5,58 L18,63 M21,58 L22,62" stroke="#7a6035" stroke-width="0.9" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="gw-scarecrow gw-sc-3">
-            <svg viewBox="0 0 32 70" xmlns="http://www.w3.org/2000/svg" width="30" height="64">
-              <!-- Hat (wide brim) -->
-              <ellipse cx="16" cy="4" rx="12" ry="2.5" fill="#1a1000"/>
-              <rect x="11" y="1" width="10" height="7" rx="1.5" fill="#221400"/>
-              <!-- Head -->
-              <ellipse cx="16" cy="16" rx="7.5" ry="8" fill="#8a6a38"/>
-              <!-- Triangle eyes (eerie) -->
-              <polygon points="11,13 12.5,16.5 9.5,16.5" fill="#1a1000" opacity="0.85"/>
-              <polygon points="21,13 22.5,16.5 19.5,16.5" fill="#1a1000" opacity="0.85"/>
-              <!-- Mouth -->
-              <path d="M11.5,21 Q16,24 20.5,21" stroke="#1a1000" stroke-width="0.9" fill="none"/>
-              <!-- Body -->
-              <rect x="8" y="24" width="16" height="20" rx="2" fill="#2d3820"/>
-              <!-- Arms post -->
-              <rect x="0" y="26" width="32" height="2.5" rx="1" fill="#1a1000"/>
-              <rect x="0" y="28.5" width="8" height="11" rx="2" fill="#3a4828"/>
-              <path d="M1,39.5 L0,44 M3,39.5 L2.5,45 M5,39.5 L5.5,44 M7,39.5 L7.5,44" stroke="#8a6a38" stroke-width="1" stroke-linecap="round"/>
-              <rect x="24" y="28.5" width="8" height="11" rx="2" fill="#3a4828"/>
-              <path d="M25,39.5 L24,44 M27,39.5 L26.5,45 M29,39.5 L29.5,44 M31,39.5 L31.5,44" stroke="#8a6a38" stroke-width="1" stroke-linecap="round"/>
-              <!-- Stake -->
-              <rect x="14.5" y="24" width="3" height="46" rx="1" fill="#1a1000"/>
-              <!-- Legs -->
-              <rect x="9" y="43" width="5.5" height="20" rx="1.5" fill="#1a2815"/>
-              <rect x="17.5" y="43" width="5.5" height="20" rx="1.5" fill="#1a2815"/>
-              <path d="M9,63 L7.5,68 M11,63 L11,69 M13.5,63 L14,68" stroke="#8a6a38" stroke-width="0.9" stroke-linecap="round"/>
-              <path d="M17.5,63 L16.5,68 M19.5,63 L19.5,69 M22,63 L22.5,68" stroke="#8a6a38" stroke-width="0.9" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <!-- Fog wisps -->
-          <div class="gw-fog gw-fog-1"></div>
-          <div class="gw-fog gw-fog-2"></div>
-          <div class="gw-fog gw-fog-3"></div>
-        </div>
-        <!-- ═══ END GHOST WALLPAPER ═══ -->
-        <div class="whatsapp-messages" id="whatsappMessages" style="position:relative;z-index:1;background:transparent;">
-          <div class="date-separator">
-            <span>Today</span>
-          </div>
-          <div style="text-align:center;padding:40px;color:#888;">
-          </div>
-        </div>
-
-        <!-- Media confirmation box — shown above typing area when a photo/video is selected -->
-        <div id="chatFilePreviewBar" class="chat-file-preview-bar" style="display:none;">
-          <div class="preview-bar-inner">
-            <img id="chatFilePreviewImg" style="display:none;" alt="Preview">
-            <video id="chatFilePreviewVideo" style="display:none;" playsinline muted></video>
-            <span class="preview-filename" id="chatFilePreviewName"></span>
-          </div>
-          <button class="preview-clear-btn" onclick="clearChatFilePreview()" title="Remove">✕</button>
-        </div>
-
-        <!-- Reply preview strip — shown above typing area when replying -->
-        <div id="chatReplyPreview" class="chat-reply-preview" style="display:none;">
-          <div class="reply-preview-bar">
-            <span class="reply-preview-icon">↩️</span>
-            <div class="reply-preview-body">
-              <span class="reply-preview-sender" id="replyPreviewSender"></span>
-              <span class="reply-preview-text" id="replyPreviewText"></span>
-            </div>
-            <button class="reply-cancel-btn" onclick="cancelReply()">✕</button>
-          </div>
-        </div>
-
-        <div class="whatsapp-input-area">
-          <button class="icon-btn emoji-open-btn" onclick="openEmojiPicker()" title="Emoji">😊</button>
-          <!-- FILE BUTTON replaces sticker -->
-          <input type="file" id="chatFileInput" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z" style="display:none" onchange="handleChatFileSelect(event)">
-          <button class="icon-btn file-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Send Photo/Video">📎</button>
-          <div class="input-wrapper">
-            <textarea id="whatsappInput" placeholder="Type a message..." rows="1" 
-              onkeydown="handleWhatsAppKeypress(event)" 
-              oninput="handleTypingIndicator()"></textarea>
-          </div>
-          <button class="send-btn-whatsapp" onclick="sendWhatsAppMessageWithMedia()" title="Send">
-            <span class="send-icon">➤</span>
-          </button>
-        </div>
-        </div>
-        <!-- Executive Chat Panel (injected on first open) -->
-        <div id="executiveChatPanel" style="display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;"></div>
-      </div>
-
-      <!-- Twitter-style Feed (Initially Hidden) -->
-      <div class="twitter-feed-panel" id="twitterFeedPanel" style="display:none;">
-        <div class="twitter-header">
-          <button class="icon-btn" onclick="toggleTwitterFeed()">←</button>
-          <h3>Community Posts</h3>
-        </div>
-        <div class="twitter-feed" id="twitterFeed">
-          <div style="text-align:center;padding:40px;color:#888;">
-            <div style="font-size:48px;margin-bottom:15px;">📰</div>
-            <p>Loading posts...</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat Info Panel (Hidden) -->
-      <div class="chat-info-panel" id="chatInfoPanel" style="display:none;">
-        <div class="info-panel-header">
-          <button class="icon-btn" onclick="toggleChatInfo()">←</button>
-          <h3>Chat Info</h3>
-        </div>
-        <div class="info-panel-content">
-          <div class="info-section">
-            <div class="info-avatar">🎓</div>
-            <h2>${currentUser.college}</h2>
-            <p>College Community Group</p>
-          </div>
-          
-          <div class="info-section">
-            <h4>📊 Statistics</h4>
-            <div class="info-stats">
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMembers">0</span>
-                <span class="stat-label">Members</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="totalMessages">0</span>
-                <span class="stat-label">Messages</span>
-              </div>
-              <div class="info-stat-item">
-                <span class="stat-value" id="activeToday">0</span>
-                <span class="stat-label">Active Today</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <h4>⚙️ Settings</h4>
-            <div class="info-option" onclick="toggleNotifications()">
-              <span>🔔 Notifications</span>
-              <span id="notifStatus">On</span>
-            </div>
-            <div class="info-option" onclick="muteChat()">
-              <span>🔇 Mute Chat</span>
-              <span>Off</span>
-            </div>
-          </div>
-          
-          <div class="info-section">
-            <button class="danger-btn" onclick="leaveGroup()">🚪 Leave Group</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  // WhatsApp-style complete layout — HTML lives in index.html #vx-tpl-whatsapp
+  const _waTpl = document.getElementById('vx-tpl-whatsapp');
+  if (!_waTpl) {
+    console.error('[VX] Missing <template id=vx-tpl-whatsapp> in index.html');
+    return;
+  }
+  container.innerHTML = _waTpl.innerHTML
+    .replace(/__VX_COLLEGE__/g, escapeHtml(currentUser.college));
 
   // Initialize chat
   setTimeout(() => {
@@ -2925,24 +2389,7 @@ function handleWhatsAppKeypress(e) {
 }
 
 function handleTypingIndicator() {
-  const now = Date.now();
-  if (now - lastTypingEmit > 2000 && socket && currentUser && currentUser.college) {
-    socket.emit('typing', {
-      collegeName: currentUser.college,
-      username: currentUser.username
-    });
-    lastTypingEmit = now;
-  }
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    if (socket && currentUser && currentUser.college) {
-      socket.emit('stop_typing', {
-        collegeName: currentUser.college,
-        username: currentUser.username
-      });
-    }
-  }, 3000);
+  // Ghost chat: do not emit typing events to protect anonymity
 }
 
 function showMessageActions(messageId) {
@@ -3820,6 +3267,12 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   const dmBtn = document.getElementById('dmBtn');
   if (dmBtn) {
     dmBtn.style.display = isOwn ? 'none' : 'block';
+  }
+
+  // Messages tab — owner-only inbox, hidden when viewing someone else's profile
+  const messagesTabBtn = document.getElementById('messagesTabBtn');
+  if (messagesTabBtn) {
+    messagesTabBtn.style.display = isOwn ? '' : 'none';
   }
 
   // Only re-fetch stats if data wasn't already fresh from showUserProfile
@@ -5021,7 +4474,7 @@ function showVibePostSuccessAndReload() {
     </div>
     <div class="vsp-text">
       <strong>Successfully Posted!</strong>
-      <span>Your vibe is now live on Vibes 🚀</span>
+      <span>Your vibe is now live on Vibers 🚀</span>
     </div>
     <div class="vsp-timer-bar"><div class="vsp-timer-fill"></div></div>
   `;
@@ -5071,6 +4524,14 @@ function resetPostForm() {
     assetsContainer.innerHTML = '';
     assetsContainer.style.display = 'none';
   }
+}
+
+// ── CHAT NOW: Navigate to user's profile then auto-open DM drawer ─────
+async function chatNowWithUser(userId) {
+  if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }
+  if (userId === currentUser.id) return;
+  await showUserProfile(userId);
+  setTimeout(() => { openDmDrawer(userId); }, 380);
 }
 
 // ── POST MESSAGE BUTTON: check mutual follow then open DM ─────────────────
@@ -5809,43 +5270,205 @@ function removeMedia(index) {
   showMessage('✅ Media removed', 'success');
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MUSIC SELECTOR  — reliable play/pause preview + mini-player bar
+// ─────────────────────────────────────────────────────────────────────────────
+let _musicPreviewAudio = null;
+let _musicPreviewId    = null;
+let _musicProgressRAF  = null;   // requestAnimationFrame handle for progress bar
+
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
   if (!modal) return;
 
-  let html = '<div class="music-library">';
+  // Build the full modal content fresh each time it opens
+  const box = modal.querySelector('.modal-box');
+  if (box) {
+    box.innerHTML = `
+      <span class="close" onclick="closeMusicModal()" style="position:absolute;top:14px;right:18px;font-size:22px;cursor:pointer;color:rgba(255,255,255,0.5);">✕</span>
+      <h2 style="margin:0 0 14px;font-size:17px;font-weight:700;color:#fff;">🎵 Add Music to Your Vibe</h2>
+      <input id="musicSearchInput" type="text" placeholder="🔍 Search tracks…"
+        oninput="_filterMusicList(this.value)"
+        style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);
+               color:#fff;border-radius:10px;padding:9px 14px;font-size:14px;box-sizing:border-box;
+               outline:none;margin-bottom:12px;">
+      <!-- mini-player shown while previewing -->
+      <div id="musicMiniPlayer" style="display:none;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);
+           border-radius:10px;padding:10px 14px;margin-bottom:10px;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span id="mmpTitle" style="font-size:13px;font-weight:600;color:#22c55e;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+          <button onclick="_stopMusicPreview()" style="background:none;border:none;color:#22c55e;cursor:pointer;font-size:18px;margin-left:8px;flex-shrink:0;">⏹</button>
+        </div>
+        <div id="mmpProgressBg" style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+          <div id="mmpProgressBar" style="height:100%;width:0%;background:#22c55e;border-radius:2px;transition:width 0.3s linear;"></div>
+        </div>
+      </div>
+      <div id="musicListContainer" style="max-height:340px;overflow-y:auto;padding-right:2px;"></div>`;
+  }
 
-  musicLibrary.forEach(music => {
-    const isSelected = selectedMusic && selectedMusic.id === music.id;
-    html += `
-     <div class="music-item ${isSelected ? 'selected' : ''}" onclick="selectMusic(${music.id})">
-       <div class="music-item-icon">${music.emoji}</div>
-       <div class="music-item-info">
-         <div class="music-item-name">${music.name}</div>
-         <div class="music-item-artist">${music.artist}</div>
-         <div class="music-item-duration">${music.duration}</div>
-       </div>
-       ${isSelected ? '<div class="music-selected-badge">✓</div>' : ''}
-     </div>
-   `;
-  });
-
-  html += '</div>';
-
-  const selector = document.getElementById('musicSelector');
-  if (selector) selector.innerHTML = html;
-
+  _filterMusicList('');
   showModal('musicSelectorModal');
+}
+
+function closeMusicModal() {
+  _stopMusicPreview();
+  closeModal('musicSelectorModal');
+}
+
+function _filterMusicList(query) {
+  const container = document.getElementById('musicListContainer');
+  if (!container) return;
+  const q = (query || '').trim().toLowerCase();
+  const filtered = q
+    ? musicLibrary.filter(m => m.name.toLowerCase().includes(q) || m.artist.toLowerCase().includes(q))
+    : musicLibrary;
+
+  if (!filtered.length) {
+    container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.35);padding:24px 0;font-size:13px;">No tracks found</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(m => {
+    const isSel  = selectedMusic && selectedMusic.id === m.id;
+    const isPrev = _musicPreviewId === m.id;
+    return `
+      <div id="mtrack_${m.id}" class="music-track-row" style="
+          display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+          margin-bottom:4px;cursor:pointer;
+          background:${isSel ? 'rgba(79,116,163,0.22)' : 'rgba(255,255,255,0.04)'};
+          border:1px solid ${isSel ? 'rgba(79,116,163,0.5)' : 'transparent'};
+          transition:background 0.2s;">
+        <!-- Play/Pause button -->
+        <button id="mplay_${m.id}" onclick="event.stopPropagation();_toggleMusicPreview(${m.id})"
+          style="width:38px;height:38px;border-radius:50%;border:none;flex-shrink:0;cursor:pointer;
+                 background:${isPrev ? 'rgba(34,197,94,0.25)' : 'rgba(167,139,250,0.15)'};
+                 color:${isPrev ? '#22c55e' : '#a78bfa'};font-size:17px;
+                 display:flex;align-items:center;justify-content:center;">
+          ${isPrev ? '⏸' : m.emoji}
+        </button>
+        <!-- Track info -->
+        <div onclick="selectMusic(${m.id})" style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.name}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.42);">${m.artist} · ${m.duration}</div>
+        </div>
+        <!-- Select checkmark -->
+        <button onclick="selectMusic(${m.id})" style="
+            padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;
+            background:${isSel ? 'rgba(79,116,163,0.5)' : 'rgba(255,255,255,0.08)'};
+            color:${isSel ? '#fff' : 'rgba(255,255,255,0.5)'};">
+          ${isSel ? '✓ Added' : 'Add'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+// Toggle preview play/pause WITHOUT re-rendering the whole list
+function _toggleMusicPreview(musicId) {
+  const music = musicLibrary.find(m => m.id === musicId);
+  if (!music) return;
+
+  // Same track → toggle pause/resume
+  if (_musicPreviewId === musicId && _musicPreviewAudio) {
+    if (_musicPreviewAudio.paused) {
+      _musicPreviewAudio.play().catch(() => {});
+      _updatePlayBtnState(musicId, true);
+      _startProgressTick();
+    } else {
+      _musicPreviewAudio.pause();
+      _updatePlayBtnState(musicId, false);
+      cancelAnimationFrame(_musicProgressRAF);
+    }
+    return;
+  }
+
+  // Different track → stop old, start new
+  _stopMusicPreview();
+  _musicPreviewAudio = new Audio(music.url);
+  _musicPreviewAudio.volume = 0.7;
+  _musicPreviewId = musicId;
+
+  _musicPreviewAudio.play()
+    .then(() => {
+      _updatePlayBtnState(musicId, true);
+      _showMiniPlayer(music);
+      _startProgressTick();
+    })
+    .catch(err => {
+      console.warn('Music preview error:', err);
+      _musicPreviewAudio = null;
+      _musicPreviewId    = null;
+    });
+
+  _musicPreviewAudio.onended = () => {
+    _musicPreviewId = null;
+    _updatePlayBtnState(musicId, false);
+    _hideMiniPlayer();
+    cancelAnimationFrame(_musicProgressRAF);
+  };
+}
+
+function _stopMusicPreview() {
+  if (_musicPreviewAudio) {
+    _musicPreviewAudio.pause();
+    _musicPreviewAudio = null;
+  }
+  if (_musicPreviewId) {
+    _updatePlayBtnState(_musicPreviewId, false);
+    _musicPreviewId = null;
+  }
+  cancelAnimationFrame(_musicProgressRAF);
+  _hideMiniPlayer();
+}
+
+function _updatePlayBtnState(musicId, isPlaying) {
+  const btn = document.getElementById(`mplay_${musicId}`);
+  if (!btn) return;
+  const music = musicLibrary.find(m => m.id === musicId);
+  btn.textContent    = isPlaying ? '⏸' : (music?.emoji || '▶');
+  btn.style.background = isPlaying ? 'rgba(34,197,94,0.25)' : 'rgba(167,139,250,0.15)';
+  btn.style.color      = isPlaying ? '#22c55e'               : '#a78bfa';
+}
+
+function _showMiniPlayer(music) {
+  const player = document.getElementById('musicMiniPlayer');
+  const title  = document.getElementById('mmpTitle');
+  const bar    = document.getElementById('mmpProgressBar');
+  if (!player) return;
+  if (title) title.textContent = `${music.emoji} ${music.name} — ${music.artist}`;
+  if (bar)   bar.style.width   = '0%';
+  player.style.display = 'block';
+}
+
+function _hideMiniPlayer() {
+  const player = document.getElementById('musicMiniPlayer');
+  if (player) player.style.display = 'none';
+}
+
+function _startProgressTick() {
+  cancelAnimationFrame(_musicProgressRAF);
+  const bar = document.getElementById('mmpProgressBar');
+  function tick() {
+    if (!_musicPreviewAudio || _musicPreviewAudio.paused) return;
+    const pct = _musicPreviewAudio.duration
+      ? (_musicPreviewAudio.currentTime / _musicPreviewAudio.duration) * 100
+      : 0;
+    if (bar) bar.style.width = pct + '%';
+    _musicProgressRAF = requestAnimationFrame(tick);
+  }
+  _musicProgressRAF = requestAnimationFrame(tick);
 }
 
 function selectMusic(musicId) {
   const music = musicLibrary.find(m => m.id === musicId);
   if (!music) return;
-
+  _stopMusicPreview();
   selectedMusic = music;
   closeModal('musicSelectorModal');
-  updateSelectedAssets();
+  if (typeof updateSelectedAssets === 'function') updateSelectedAssets();
   showMessage(`🎵 Added: ${music.name}`, 'success');
+  // Update label in vibe upload toolbar
+  const vibeLabel = document.getElementById('vibeMusicLabel');
+  if (vibeLabel) vibeLabel.textContent = music.name.length > 10 ? music.name.slice(0, 10) + '…' : music.name;
 }
 
 function openStickerSelector() {
@@ -6873,6 +6496,17 @@ function renderRvFeed(vibes) {
   const feed = document.getElementById('rvFeed');
   if (!feed) return;
 
+  // Update post count badge
+  const badge = document.getElementById('rvPostCountBadge');
+  if (badge) {
+    if (vibes.length > 0) {
+      badge.textContent = vibes.length + ' post' + (vibes.length !== 1 ? 's' : '');
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   if (!vibes.length) {
     feed.innerHTML = `<div class="rv-empty">
       <div class="rv-empty-icon">✦</div>
@@ -6889,58 +6523,131 @@ function renderRvFeed(vibes) {
 }
 
 function buildRvCard(vibe) {
-  const author = vibe.users || {};
-  const name = author.username || 'Unknown';
-  const avatar = author.profile_pic
-    ? `<img src="${author.profile_pic}" alt="">`
+  const author   = vibe.users || {};
+  const name     = author.username || 'Unknown';
+  const college  = author.college  || '';
+  const isRoyal  = vibe.plan_type === 'royal';
+  const isOwn    = currentUser && vibe.user_id === currentUser.id;
+  const isLiked  = vibe.is_liked;
+  const timeStr  = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
+  const expHrs   = vibe.hours_left || 0;
+  const expStr   = expHrs > 24 ? `${Math.ceil(expHrs / 24)}d left` : `${expHrs}h left`;
+  const isExpiring = expHrs <= 12;
+
+  // Visibility chip
+  const visChip = vibe.visibility === 'community'
+    ? `<span class="rv-vis-chip college">\uD83C\uDF93 College</span>`
+    : `<span class="rv-vis-chip public">\uD83C\uDF10 Public</span>`;
+
+  // Plan badge
+  const planBadge = isRoyal
+    ? `<span class="rv-card-plan-badge royal">\uD83D\uDC51 Royal</span>`
+    : `<span class="rv-card-plan-badge noble">\uD83E\uDD48 Noble</span>`;
+
+  // Avatar
+  const avatarInner = author.profile_pic
+    ? `<img src="${author.profile_pic}" alt="${escapeHtml(name)}">`
     : `<span>${name.charAt(0).toUpperCase()}</span>`;
-  const planLabel = vibe.plan_type === 'royal'
-    ? '<span class="rv-card-plan-badge royal">👑 Royal</span>'
-    : '<span class="rv-card-plan-badge noble">🥈 Noble</span>';
-  const timeStr = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
-  const expStr = vibe.hours_left > 24
-    ? `${Math.ceil(vibe.hours_left / 24)}d left`
-    : `${vibe.hours_left}h left`;
-  const isOwn = currentUser && vibe.user_id === currentUser.id;
-  const isLiked = vibe.is_liked;
 
+  // Media
+  const mediaSrc = proxyMediaUrl(vibe.media_url);
   const media = vibe.media_type === 'video'
-    ? `<video class="rv-card-media" src="${proxyMediaUrl(vibe.media_url)}" controls playsinline preload="metadata"></video>`
-    : `<img class="rv-card-media" src="${proxyMediaUrl(vibe.media_url)}" alt="" loading="lazy" onclick="openRvMediaViewer(proxyMediaUrl(vibe.media_url))">`;
+    ? `<video class="rv-card-media" src="${mediaSrc}" controls playsinline preload="metadata"></video>`
+    : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g,"\\'")}')">`;
 
-  return `<article class="rv-card" data-vibe-id="${vibe.id}">
-    <div class="rv-card-header">
-      <div class="rv-card-author">
-        <div class="rv-card-avatar" onclick="showProfile('${author.id || ''}')">${avatar}</div>
-        <div class="rv-card-meta">
-          <span class="rv-card-name" onclick="showProfile('${author.id || ''}')">${escapeHtml(name)}</span>
-          <span class="rv-card-time">${timeStr} · <span class="rv-expiry-badge">⏳ ${expStr}</span></span>
+  // Caption block
+  const captionHtml = vibe.caption
+    ? `<div class="rv-card-caption-wrap"><p class="rv-card-caption">${escapeHtml(vibe.caption)}</p></div>`
+    : '';
+
+  // Expiry progress
+  const totalHrs = isRoyal ? 600 : 360;
+  const pctLeft  = Math.min(100, Math.round((expHrs / totalHrs) * 100));
+  const barColor = isExpiring ? '#ff4444' : isRoyal ? '#FFD700' : '#a0a0c0';
+
+  return `
+<article class="rv-card ${isRoyal ? 'rv-card-royal' : 'rv-card-noble'}" data-vibe-id="${vibe.id}">
+
+  ${isRoyal ? '<div class="rv-card-crown-stripe"></div>' : ''}
+
+  <div class="rv-card-header">
+    <div class="rv-card-author" onclick="showProfile('${author.id || ''}')">
+      <div class="rv-card-avatar ${isRoyal ? 'rv-avatar-royal' : ''}">${avatarInner}</div>
+      <div class="rv-card-meta">
+        <div class="rv-card-name-row">
+          <span class="rv-card-name">${escapeHtml(name)}</span>
+          ${planBadge}
+        </div>
+        <div class="rv-card-sub-row">
+          ${college ? `<span class="rv-card-college">\uD83C\uDFDB\uFE0F ${escapeHtml(college)}</span>` : ''}
+          <span class="rv-card-time">${timeStr}</span>
+          ${visChip}
         </div>
       </div>
-      <div class="rv-card-header-right">
-        ${planLabel}
-        ${isOwn ? `<button class="rv-card-delete" onclick="deleteRvPost('${vibe.id}', this)" title="Delete">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/></svg>
-        </button>` : ''}
-      </div>
     </div>
+    <div class="rv-card-header-right">
+      ${isOwn ? `<button class="rv-card-delete" onclick="event.stopPropagation();deleteRvPost('${vibe.id}',this)" title="Delete post">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6m4-6v6"/>
+        </svg>
+      </button>` : ''}
+    </div>
+  </div>
 
-    <div class="rv-card-media-wrap">${media}</div>
+  <div class="rv-card-media-wrap">${media}</div>
 
-    ${vibe.caption ? `<p class="rv-card-caption">${escapeHtml(vibe.caption)}</p>` : ''}
+  ${captionHtml}
 
+  <div class="rv-card-footer">
     <div class="rv-card-actions">
-      <button class="rv-action-btn rv-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleRvLike('${vibe.id}', this)">
-        <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="${isLiked ? '#ff3040' : 'none'}" style="stroke:${isLiked ? '#ff3040' : 'currentColor'}"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.84-7.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <button class="rv-action-btn rv-like-btn ${isLiked ? 'liked' : ''}" onclick="toggleRvLike('${vibe.id}',this)">
+        <svg width="17" height="17" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="${isLiked ? '#ff3040' : 'none'}" style="stroke:${isLiked ? '#ff3040' : 'currentColor'}">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.84-7.84a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
         <span class="rv-like-count">${vibe.like_count || 0}</span>
       </button>
       <button class="rv-action-btn" onclick="openRvComments('${vibe.id}')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
         <span>${vibe.comment_count || 0}</span>
       </button>
+      <button class="rv-action-btn rv-share-btn" onclick="rvSharePost('${vibe.id}','${escapeHtml(name)}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        <span>Share</span>
+      </button>
     </div>
-  </article>`;
+    ${isOwn ? `<div class="rv-expiry-row">
+      <span class="rv-expiry-label ${isExpiring ? 'rv-expiry-urgent' : ''}">
+        ${isExpiring ? '\uD83D\uDD34' : '\u23F3'} ${expStr}
+      </span>
+      <div class="rv-expiry-bar-track">
+        <div class="rv-expiry-bar-fill" style="width:${pctLeft}%;background:${barColor};"></div>
+      </div>
+    </div>` : ''}
+  </div>
+
+</article>`;
 }
+
+// Share helper
+function rvSharePost(vibeId, authorName) {
+  const text = `Check out ${authorName}'s RealVibe on VibeXpert!`;
+  if (navigator.share) {
+    navigator.share({ title: 'RealVibe', text, url: window.location.href }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(window.location.href)
+      .then(() => showMessage('\uD83D\uDD17 Link copied!', 'success'))
+      .catch(() => showMessage('Share not supported on this browser', 'info'));
+  }
+}
+
 
 // ── Like ───────────────────────────────────────────────────────
 async function toggleRvLike(vibeId, btn) {
@@ -7757,7 +7464,7 @@ function showTypingIndicator(username) {
   // Ghost mode — never reveal real identity, always show anonymous message
   indicator.innerHTML = `
     <div class="typing-bubble">
-      <span>👻 Typing - Have Patience...</span>
+      <span>👻Have Patience</span>
       <div class="typing-dots">
         <span></span><span></span><span></span>
       </div>
@@ -8589,8 +8296,9 @@ function appendWhatsAppMessageFixed(msg) {
   // If we received someone else's message and we're at the bottom → mark as seen
   if (!isOwn && !isTemp && wasAtBottom) { emitMarkSeen(messageId); }
 
-  // ✅ Smart scroll: only if user was already at bottom OR it's own message
-  if (isOwn || wasAtBottom) {
+  // ✅ Smart scroll: skip during initial bulk load (_ghostChatInitialLoad flag)
+  // so loadCommunityMessages can handle the final scroll position itself.
+  if (!_ghostChatInitialLoad && (isOwn || wasAtBottom)) {
     if (messagesEl.scrollTo) {
       messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
     } else {
@@ -8895,6 +8603,9 @@ function initCommunityChat() {
   });
 }
 
+// Flag: suppresses per-message auto-scroll during bulk initial load
+let _ghostChatInitialLoad = false;
+
 async function loadCommunityMessages() {
   try {
     const messagesArea = document.getElementById('chatMessages');
@@ -8908,26 +8619,30 @@ async function loadCommunityMessages() {
     const data = await apiCall('/api/community/messages');
 
     if (data.success && data.messages) {
-      // Mark where unread starts (last seen timestamp from localStorage)
       const lastSeen = localStorage.getItem('lastSeenTime_' + currentUser.college) || 0;
       let firstUnreadEl = null;
+
+      // Suppress per-message auto-scroll while we bulk-append
+      _ghostChatInitialLoad = true;
 
       data.messages.forEach(msg => {
         appendWhatsAppMessageFixed(msg);
         const msgTime = new Date(msg.created_at || 0).getTime();
         const isUnread = msgTime > Number(lastSeen) && msg.sender_id !== currentUser.id;
         if (isUnread && !firstUnreadEl) {
-          // Insert unread divider before this message
+          // Insert unread divider BEFORE the last-appended message
           const el = document.getElementById('whatsappMessages');
           const divider = document.createElement('div');
           divider.className = 'unread-divider';
-          divider.innerHTML = '↑ Unread messages';
+          divider.textContent = '\u2191 Unread messages';
           if (el && el.lastChild) {
             el.insertBefore(divider, el.lastChild);
             firstUnreadEl = divider;
           }
         }
       });
+
+      _ghostChatInitialLoad = false;
 
       // Save current time as "last seen"
       localStorage.setItem('lastSeenTime_' + currentUser.college, Date.now());
@@ -8936,15 +8651,26 @@ async function loadCommunityMessages() {
       _initSeenLifetime();
       setTimeout(() => _refreshAllSeenByRows(), 150);
 
-      // Scroll to first unread, otherwise scroll to bottom
-      if (firstUnreadEl) {
-        firstUnreadEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
+      // ── Scroll to unread OR bottom ─────────────────────────────────
+      // We retry multiple times because images inflate scrollHeight after paint.
+      function _doScroll() {
         const el = document.getElementById('whatsappMessages');
-        if (el) el.scrollTop = el.scrollHeight;
+        if (!el) return;
+        if (firstUnreadEl) {
+          // Position divider ~60px from top of the scroll container
+          el.scrollTop = Math.max(0, firstUnreadEl.offsetTop - 60);
+        } else {
+          el.scrollTop = el.scrollHeight;
+        }
       }
 
-      // Emit mark_seen for the last OTHER message (user has now viewed the chat)
+      requestAnimationFrame(() => {
+        _doScroll();
+        setTimeout(_doScroll, 250);   // after first images load
+        setTimeout(_doScroll, 800);   // after slow network images
+      });
+
+      // Emit mark_seen for the last OTHER message
       const allOtherMsgs = document.querySelectorAll('.whatsapp-message.other');
       if (allOtherMsgs.length) {
         const lastOther = allOtherMsgs[allOtherMsgs.length - 1];
@@ -9862,7 +9588,7 @@ function showSeenBy(msgId) {
     <div class="sbp-header">
       <div class="sbp-title">
         <div class="sbp-title-icon">👁️</div>
-        <span class="sbp-title-text">Seen by</span>
+        <span class="sbp-title-text">👁️</span>
         ${seenUsers.length > 0 ? `<span class="sbp-title-count">${seenUsers.length}</span>` : ''}
       </div>
       <button class="sbp-close-btn" title="Close">✕</button>
@@ -10103,7 +9829,12 @@ async function initVibeFeed() {
 
     const data = await apiCall(endpoint, 'GET');
 
-    const posts = data.posts || [];
+    const allPosts = data.posts || [];
+    // ── Issue 3 fix: Vibers feed should NOT show user's own posts ──
+    const posts = allPosts.filter(p => {
+      const postOwnerId = p.users?.id || p.user_id;
+      return !currentUser || postOwnerId !== currentUser.id;
+    });
 
     if (!posts.length) {
       feed.innerHTML = `<div class="vibe-empty">
@@ -10185,10 +9916,12 @@ function buildVibeCard(post, idx) {
   const firstMedia = media[0];
   let bgLayer = '';
   if (firstMedia?.type === 'video') {
-    bgLayer = `<video class="vibe-card-bg-video" src="${firstMedia.url}"
+    const proxiedUrl = proxyMediaUrl(firstMedia.url);
+    bgLayer = `<video class="vibe-card-bg-video" src="${proxiedUrl}"
       playsinline muted loop preload="metadata"></video>`;
   } else if (firstMedia?.type === 'image' || (firstMedia?.url && !firstMedia?.type)) {
-    bgLayer = `<img class="vibe-card-bg-img" src="${firstMedia.url || firstMedia}" alt="">`;
+    const proxiedUrl = proxyMediaUrl(firstMedia.url || firstMedia);
+    bgLayer = `<img class="vibe-card-bg-img" src="${proxiedUrl}" alt="">`;
   } else if (media.length === 0 || firstMedia?.type === 'audio') {
     bgLayer = `<div class="vibe-card-bg-text" style="background:${vibeGradient(post.id)};"></div>
       <div class="vibe-text-content">
@@ -10204,9 +9937,10 @@ function buildVibeCard(post, idx) {
          +${media.length - 1} more</div>` : '';
 
   // ── Avatar HTML ──
-  const avHtml = avatar
+  const proxiedAvatar = proxyMediaUrl(avatar);
+  const avHtml = proxiedAvatar
     ? `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
-         <img src="${avatar}" alt="${username}" loading="lazy">
+         <img src="${proxiedAvatar}" alt="${username}" loading="lazy">
        </div>`
     : `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
          ${username.charAt(0).toUpperCase() || '😊'}
@@ -10889,40 +10623,70 @@ function openVibeLocationPicker() {
   toggleVibePanel('vibeLocPanel');
   setTimeout(() => document.getElementById('vibeLocSearch')?.focus(), 150);
 }
+let _locSearchTimer = null;
 function searchVibeLocation(query) {
+  clearTimeout(_locSearchTimer);
   const results = document.getElementById('vibeLocResults');
   const q = query.trim();
 
   // Always show "current location" option
-  let html = `<button class="vlp-result" onclick="vibeGetCurrentLocation()">
+  let baseHtml = `<button class="vlp-result" onclick="vibeGetCurrentLocation()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
-    Use my current location
+    📍 Use my current location
   </button>`;
 
-  if (q.length >= 2) {
-    // Static popular suggestions (no API key needed)
-    const suggestions = [
-      `📍 ${q} Campus`,
-      `📍 ${q} Library`,
-      `📍 ${q} Canteen`,
-      `📍 ${q} Hostel`,
-      `📍 ${q} City Centre`,
-    ];
-    suggestions.forEach(s => {
-      html += `<button class="vlp-result" onclick="setVibeLocation('${s.replace(/'/g, "\\'")}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${s}
-      </button>`;
-    });
-  }
-  results.innerHTML = html;
+  if (q.length < 2) { results.innerHTML = baseHtml; return; }
+
+  // Show quick typed suggestions immediately
+  const quickSuggestions = [`📍 ${q} Campus`, `📍 ${q} Canteen`, `📍 ${q} Library`, `📍 ${q} Hostel`];
+  let quickHtml = baseHtml + quickSuggestions.map(s =>
+    `<button class="vlp-result" onclick="setVibeLocation('${s.replace(/'/g, "\\'")}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      ${s}
+    </button>`
+  ).join('');
+  results.innerHTML = quickHtml;
+
+  // Debounced Nominatim search for real places
+  _locSearchTimer = setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=in&accept-language=en`, {
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'VibeXpert/1.0' }
+    })
+      .then(r => r.json())
+      .then(places => {
+        if (!places?.length) return; // keep quick suggestions
+        const realHtml = places.map(p => {
+          const name = p.display_name?.split(',').slice(0, 2).join(', ') || p.name || q;
+          const label = `📍 ${name}`;
+          return `<button class="vlp-result" onclick="setVibeLocation('${label.replace(/'/g, "\\'")}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${label}
+          </button>`;
+        }).join('');
+        results.innerHTML = baseHtml + realHtml;
+      })
+      .catch(() => {}); // keep quick suggestions on error
+  }, 500);
 }
 function vibeGetCurrentLocation() {
   if (!navigator.geolocation) return setVibeLocation('📍 Current Location');
+  const resultsEl = document.getElementById('vibeLocResults');
+  if (resultsEl) resultsEl.innerHTML += `<div style="padding:8px 12px;font-size:12px;color:rgba(255,255,255,0.4);">⏳ Getting location…</div>`;
   navigator.geolocation.getCurrentPosition(
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
-      setVibeLocation(`📍 ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E`);
+      // Try reverse geocoding
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&accept-language=en`, {
+        headers: { 'User-Agent': 'VibeXpert/1.0' }
+      })
+        .then(r => r.json())
+        .then(d => {
+          const city = d.address?.city || d.address?.town || d.address?.village || d.address?.county || '';
+          const state = d.address?.state || '';
+          const label = city ? `📍 ${city}${state ? ', ' + state : ''}` : `📍 ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E`;
+          setVibeLocation(label);
+        })
+        .catch(() => setVibeLocation(`📍 ${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E`));
     },
     () => setVibeLocation('📍 Current Location')
   );
@@ -10968,60 +10732,101 @@ function getVibePollData() {
 }
 
 // ── GIF picker ────────────────────────────────────────────────
+// Curated GIFs that always load (direct Giphy CDN links — no API key required)
+const _curatedGifs = [
+  { url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif',   label: '🔥 Trending' },
+  { url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',   label: '😂 Funny' },
+  { url: 'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif',       label: '😎 Cool' },
+  { url: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',   label: '🎉 Party' },
+  { url: 'https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif',   label: '💯 Agree' },
+  { url: 'https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif',  label: '🌟 Amazing' },
+  { url: 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',  label: '👀 Wow' },
+  { url: 'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',   label: '😍 Love' },
+  { url: 'https://media.giphy.com/media/26xBwdIuRJiAIqHIA/giphy.gif',   label: '🤣 LOL' },
+  { url: 'https://media.giphy.com/media/3oKIPnbKgN3bXeVpvy/giphy.gif',  label: '✨ Magic' },
+  { url: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif',   label: '🎵 Music' },
+  { url: 'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif',   label: '🙏 Thanks' },
+];
+
 function openVibeGifPicker() {
   toggleVibePanel('vibeGifPanel');
+  // Show curated GIFs immediately on open
+  const grid = document.getElementById('vibeGifGrid');
+  if (grid && grid.innerHTML.includes('Type to search')) {
+    _renderCuratedGifs(grid);
+  }
   setTimeout(() => document.getElementById('vibeGifSearch')?.focus(), 150);
+}
+
+function _renderCuratedGifs(grid) {
+  grid.innerHTML = `
+    <div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:center;padding:4px 0 6px;letter-spacing:0.5px;">TRENDING — tap to add, or search above</div>
+    ${_curatedGifs.map(g =>
+      `<div class="vgp-item" onclick="selectVibeGif('${g.url}','${g.url}')" style="position:relative;">
+         <img src="${g.url}" alt="${g.label}" loading="lazy"
+              style="width:100%;height:80px;object-fit:cover;border-radius:6px;display:block;"
+              onerror="this.parentElement.style.display='none'">
+       </div>`
+    ).join('')}`;
 }
 
 let _gifTimer = null;
 function searchVibeGif(query) {
   clearTimeout(_gifTimer);
-  _gifTimer = setTimeout(() => _doGifSearch(query), 400);
+  const grid = document.getElementById('vibeGifGrid');
+  if (!query.trim()) {
+    _renderCuratedGifs(grid);
+    return;
+  }
+  _gifTimer = setTimeout(() => _doGifSearch(query), 450);
 }
 
 function _doGifSearch(query) {
   const grid = document.getElementById('vibeGifGrid');
-  if (!query.trim()) {
-    grid.innerHTML = '<div class="vgp-empty">Type to search for GIFs ✨</div>';
-    return;
-  }
-  grid.innerHTML = '<div class="vgp-empty">Searching…</div>';
+  if (!grid || !query.trim()) return;
 
-  // Use Tenor's open endpoint (no key required for basic use)
-  const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&limit=12&key=AIzaSyAyimkuYQYF_FXVALexPzFsE9dmD2X&client_key=vibexpert`;
-  fetch(url)
-    .then(r => r.json())
+  grid.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;color:rgba(255,255,255,0.4);font-size:12px;">
+    <div style="width:14px;height:14px;border:2px solid #a78bfa;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    Searching GIFs…
+  </div>`;
+
+  // Use Tenor's anonymous search endpoint — works without any API key
+  const tenorUrl = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&limit=12&key=AIzaSyAyimkuYQYF_FXVALexPzFsE9dmD2X&media_filter=tinygif,gif&contentfilter=medium`;
+
+  fetch(tenorUrl)
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(data => {
-      if (!data.results?.length) {
-        grid.innerHTML = '<div class="vgp-empty">No GIFs found — try another keyword</div>';
-        return;
-      }
-      grid.innerHTML = data.results.map(r => {
-        const gif = r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || '';
-        const preview = r.media_formats?.tinygif?.url || gif;
-        return `<div class="vgp-item" onclick="selectVibeGif('${gif}')">
-          <img src="${preview}" alt="${r.title}" loading="lazy">
+      const results = (data.results || []);
+      if (!results.length) throw new Error('empty');
+      grid.innerHTML = results.map(r => {
+        const preview = r.media_formats?.tinygif?.url || r.media_formats?.nanogif?.url || '';
+        const full    = r.media_formats?.gif?.url || preview;
+        if (!preview) return '';
+        return `<div class="vgp-item" onclick="selectVibeGif('${full.replace(/'/g,"\\'")}','${preview.replace(/'/g,"\\'")}')">
+          <img src="${preview}" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;border-radius:6px;"
+               onerror="this.parentElement.style.display='none'">
         </div>`;
-      }).join('');
+      }).filter(Boolean).join('');
+      if (!grid.innerHTML.trim()) throw new Error('empty after filter');
     })
     .catch(() => {
-      // Fallback: show placeholder tiles so UI isn't broken
-      const fallbacks = ['😂', '🔥', '👀', '💯', '🎉', '😍', '🤣', '💀', '✨', '🙏', '😭', '🤔'];
-      grid.innerHTML = fallbacks.map(e =>
-        `<div class="vgp-item" style="display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(255,255,255,0.05);" onclick="setVibeGifEmoji('${e}')">${e}</div>`
-      ).join('');
+      // Always fall back to curated — never show a broken state
+      _renderCuratedGifs(grid);
+      // Also show a toast so user knows search didn't work
+      showMessage('GIF search unavailable — showing trending instead', 'info');
     });
 }
 
-function selectVibeGif(gifUrl) {
+function selectVibeGif(gifUrl, previewUrl) {
   vibeGifUrl = gifUrl;
+  const displayUrl = previewUrl || gifUrl;
   document.getElementById('vibeGifPanel').style.display = 'none';
   // Show gif in preview
   const preview = document.getElementById('vibeMediaPreview');
   const zone = document.getElementById('vibeMediaZone');
   preview.innerHTML = `<div class="vibe-preview-grid count-1">
     <div class="vibe-prev-item" style="max-height:160px;">
-      <img src="${gifUrl}" alt="GIF">
+      <img src="${displayUrl}" alt="GIF">
       <button class="vibe-prev-remove" onclick="clearVibeGif()">✕</button>
     </div>
   </div>`;
@@ -11310,11 +11115,50 @@ async function openDmDrawer(userId) {
     return;
   }
 
-  // ── Open the drawer immediately so the user sees something ───────
-  drawer.style.right = (window.innerWidth <= 768) ? '0' : '0';
+  // ── Open the floating panel immediately so the user sees something ───────
+  // Calculate header height to position panel below it
+  const headerEl = document.querySelector('header, #mainHeader, nav, .main-header, [class*="header"]');
+  const headerH = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
+  const vpH = window.innerHeight;
+  const panelH = Math.min(560, vpH - headerH - 32);
+
+  // Restore any saved position or use default (bottom-right)
+  const saved = window._dmPanelPos;
+  if (saved) {
+    drawer.style.left   = saved.left   || '';
+    drawer.style.right  = saved.right  || '24px';
+    drawer.style.top    = saved.top    || '';
+    drawer.style.bottom = saved.bottom || '24px';
+  } else {
+    drawer.style.right  = '24px';
+    drawer.style.bottom = '24px';
+    drawer.style.left   = '';
+    drawer.style.top    = '';
+  }
+
+  // Clamp so panel never overlaps header
+  const maxTop = vpH - panelH - 16;
+  if (saved && saved.top) {
+    const topVal = parseInt(saved.top);
+    if (topVal < headerH + 8) {
+      drawer.style.top = (headerH + 8) + 'px';
+      drawer.style.bottom = '';
+    } else if (topVal > maxTop) {
+      drawer.style.top = maxTop + 'px';
+      drawer.style.bottom = '';
+    }
+  }
+
+  drawer.style.height = panelH + 'px';
+  drawer.style.opacity = '1';
+  drawer.style.transform = 'translateY(0) scale(1)';
+  drawer.style.pointerEvents = 'auto';
   drawer.classList.add('dm-open');
-  backdrop.style.display = 'block';
-  document.body.style.overflow = 'hidden';
+  drawer.classList.remove('dm-minimized');
+  // Re-ensure drag listeners are attached (panel now in body root)
+  if (typeof window._attachDmDrag === 'function') window._attachDmDrag();
+  // No backdrop, no body overflow lock — app stays fully interactive
+
 
   // ── Show loading state ────────────────────────────────────────────
   area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:32px;text-align:center;color:rgba(255,255,255,0.4);">
@@ -11341,8 +11185,12 @@ async function openDmDrawer(userId) {
     nameEl.textContent = profile.username || 'User';
     const online = !profile.last_seen;
     if (statusEl) {
-      statusEl.textContent = online ? '● Online' : '● ' + (profile.status_text || 'Offline');
+      const statusSpan = statusEl.querySelector('span:last-child');
+      if (statusSpan) statusSpan.textContent = online ? 'Online' : (profile.status_text || 'Offline');
+      else statusEl.textContent = online ? '● Online' : '● ' + (profile.status_text || 'Offline');
       statusEl.style.color = online ? '#22c55e' : '#a78bfa';
+      const ring = document.getElementById('dmOnlineRing');
+      if (ring) ring.style.background = online ? '#22c55e' : '#a78bfa';
     }
     if (profile.profile_pic && avatarImg) {
       avatarImg.src = profile.profile_pic;
@@ -11366,7 +11214,7 @@ async function openDmDrawer(userId) {
     const msgs = data.messages || [];
     if (msgs.length === 0) {
       const name = profile?.username || 'them';
-      area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;">
+      area.innerHTML = `<div class="dm-empty-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;">
         <div style="font-size:48px;">💬</div>
         <div style="color:rgba(255,255,255,0.8);font-size:15px;font-weight:600;">Start chatting with ${escapeHtml(name)}</div>
         <div style="color:rgba(255,255,255,0.35);font-size:13px;">Your messages are private and secure</div>
@@ -11415,15 +11263,191 @@ async function openDmDrawer(userId) {
 function closeDmDrawer() {
   const drawer = document.getElementById('dmDrawer');
   if (drawer) {
-    drawer.style.right = '-440px';
-    drawer.classList.remove('dm-open');
-    // On mobile the drawer is full width; slide it fully off
-    if (window.innerWidth <= 768) drawer.style.right = '-100%';
+    drawer.style.opacity = '0';
+    drawer.style.transform = 'translateY(16px) scale(0.96)';
+    drawer.style.pointerEvents = 'none';
+    setTimeout(() => {
+      drawer.style.height = '0';
+      drawer.classList.remove('dm-open', 'dm-minimized');
+    }, 280);
   }
-  const backdrop = document.getElementById('dmDrawerBackdrop');
-  if (backdrop) backdrop.style.display = 'none';
-  document.body.style.overflow = '';
+  // No backdrop to hide, no overflow to reset
   _dmCurrentReceiverId = null;
+}
+
+function minimizeDmPanel(event) {
+  event && event.stopPropagation();
+  const drawer = document.getElementById('dmDrawer');
+  const btn    = document.getElementById('dmMinimizeBtn');
+  if (!drawer) return;
+  const isMin = drawer.classList.contains('dm-minimized');
+  if (isMin) {
+    // Restore
+    const headerEl = document.querySelector('header, #mainHeader, nav, .main-header, [class*="header"]');
+    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
+    const panelH   = Math.min(560, window.innerHeight - headerH - 32);
+    drawer.style.height = panelH + 'px';
+    drawer.classList.remove('dm-minimized');
+    if (btn) btn.textContent = '—';
+  } else {
+    drawer.style.height = '54px';
+    drawer.classList.add('dm-minimized');
+    if (btn) btn.textContent = '▲';
+  }
+}
+
+// ── DM Panel drag-to-reposition ──────────────────────────────────────
+(function initDmDrag() {
+  let dragging = false, startX, startY, origLeft, origTop;
+
+  function onMouseDown(e) {
+    // Only drag from header, not from buttons
+    if (e.target.closest('button')) return;
+    const drawer = document.getElementById('dmDrawer');
+    if (!drawer || !drawer.classList.contains('dm-open')) return;
+
+    dragging = true;
+    const rect = drawer.getBoundingClientRect();
+    startX   = e.clientX;
+    startY   = e.clientY;
+    origLeft = rect.left;
+    origTop  = rect.top;
+
+    // Switch to top/left positioning for free dragging
+    drawer.style.left   = rect.left + 'px';
+    drawer.style.top    = rect.top  + 'px';
+    drawer.style.right  = 'auto';
+    drawer.style.bottom = 'auto';
+    drawer.style.transition = 'none';
+    drawer.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+
+  function onMouseMove(e) {
+    if (!dragging) return;
+    const drawer = document.getElementById('dmDrawer');
+    if (!drawer) return;
+
+    const dx  = e.clientX - startX;
+    const dy  = e.clientY - startY;
+    const headerEl = document.querySelector('header, #mainHeader, nav, .main-header, [class*="header"]');
+    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
+
+    let newLeft = origLeft + dx;
+    let newTop  = origTop  + dy;
+
+    // Clamp within viewport, always below header
+    const w = drawer.offsetWidth;
+    const h = drawer.offsetHeight;
+    newLeft = Math.max(8, Math.min(window.innerWidth  - w - 8, newLeft));
+    newTop  = Math.max(headerH + 8, Math.min(window.innerHeight - h - 8, newTop));
+
+    drawer.style.left = newLeft + 'px';
+    drawer.style.top  = newTop  + 'px';
+  }
+
+  function onMouseUp() {
+    if (!dragging) return;
+    dragging = false;
+    const drawer = document.getElementById('dmDrawer');
+    if (!drawer) return;
+    drawer.style.transition = '';
+    drawer.style.cursor = '';
+    // Save position
+    window._dmPanelPos = { left: drawer.style.left, top: drawer.style.top, right: 'auto', bottom: 'auto' };
+  }
+
+  // Touch support
+  function onTouchStart(e) {
+    if (e.touches.length !== 1) return;
+    onMouseDown({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY, target: e.target, preventDefault: () => e.preventDefault() });
+  }
+  function onTouchMove(e) {
+    if (e.touches.length !== 1) return;
+    onMouseMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+  }
+
+  function attachDmDragListeners() {
+    const header = document.getElementById('dmDrawerHeader');
+    if (header && !header._dmDragAttached) {
+      header._dmDragAttached = true;
+      header.addEventListener('mousedown',  onMouseDown);
+      header.addEventListener('touchstart', onTouchStart, { passive: false });
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+    document.addEventListener('touchmove', onTouchMove);
+    document.addEventListener('touchend',  onMouseUp);
+  }
+  // Expose so openDmDrawer can call it
+  window._attachDmDrag = attachDmDragListeners;
+
+  // Attach now if DOM ready, else wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDmDragListeners);
+  } else {
+    attachDmDragListeners();
+  }
+})();
+
+function _buildDmBubble(m, isOptimistic) {
+  const own = m.sender_id === currentUser?.id;
+  const time = isOptimistic ? 'Sending…' : formatDmTime(m.created_at);
+  const reactions = m.reactions || {};
+  const hasReactions = Object.keys(reactions).length > 0;
+  const msgId = m.id || '';
+
+  // Tick indicator for own messages
+  let tickHtml = '';
+  if (own && !isOptimistic) {
+    if (m.is_read) {
+      tickHtml = `<span class="dm-tick dm-tick-read" title="Seen">✓✓</span>`;
+    } else {
+      tickHtml = `<span class="dm-tick dm-tick-sent" title="Sent">✓✓</span>`;
+    }
+  }
+
+  // Reply preview
+  let replyHtml = '';
+  if (m.reply_to) {
+    const rt = m.reply_to;
+    const rtContent = rt.media_type ? `[${rt.media_type}]` : escapeHtml((rt.content || '').slice(0, 60));
+    replyHtml = `<div class="dm-reply-preview" onclick="dmScrollToMessage('${rt.id}')">
+      <div class="dm-reply-line"></div>
+      <div class="dm-reply-content">${rtContent}</div>
+    </div>`;
+  }
+
+  // Reactions display
+  let reactionsHtml = '';
+  if (hasReactions) {
+    reactionsHtml = `<div class="dm-reactions" data-msgid="${msgId}">` +
+      Object.entries(reactions).map(([emoji, users]) => {
+        const iMine = users.includes(currentUser?.id);
+        return `<button class="dm-react-chip ${iMine ? 'dm-react-mine' : ''}" onclick="dmToggleReact('${msgId}','${emoji}')">${emoji}<span>${users.length}</span></button>`;
+      }).join('') + `</div>`;
+  }
+
+  // Quick action buttons (reply + react)
+  const actionsHtml = isOptimistic ? '' : `<div class="dm-msg-actions ${own ? 'dm-actions-left' : 'dm-actions-right'}">
+    <button class="dm-action-btn" title="Reply" onclick="dmSetReply('${msgId}','${escapeHtml((m.content||'').replace(/'/g,"&#39;"))}')">↩</button>
+    <button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker('${msgId}',this)">😊</button>
+  </div>`;
+
+  return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="'+msgId+'"' : ''}>
+    ${actionsHtml}
+    <div class="dm-msg-wrap">
+      ${replyHtml}
+      <div class="dm-bubble ${own ? 'dm-bubble-own' : 'dm-bubble-other'}">
+        ${m.media_url ? renderDmMedia(m) : escapeHtml(m.content || '')}
+      </div>
+      <div class="dm-msg-meta ${own ? 'dm-meta-own' : 'dm-meta-other'}">
+        <span class="dm-msg-time">${time}</span>
+        ${tickHtml}
+      </div>
+    </div>
+    ${reactionsHtml}
+  </div>`;
 }
 
 function renderDmMessages(messages, container) {
@@ -11431,17 +11455,13 @@ function renderDmMessages(messages, container) {
     container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;"><div style="font-size:48px;">💬</div><div style="color:rgba(255,255,255,0.7);font-size:15px;font-weight:600;">No messages yet</div><div style="color:rgba(255,255,255,0.35);font-size:13px;">Be the first to say hi!</div></div>';
     return;
   }
-  container.innerHTML = messages.map(m => {
-    const own = m.sender_id === currentUser?.id;
-    return `<div style="display:flex;flex-direction:column;align-items:${own ? 'flex-end' : 'flex-start'};">
-      <div style="max-width:75%;background:${own ? 'linear-gradient(135deg,#4f74a3,#7aa3d4)' : 'rgba(255,255,255,0.08)'};color:#fff;border-radius:${own ? '14px 14px 2px 14px' : '14px 14px 14px 2px'};padding:10px 14px;font-size:14px;word-break:break-word;">
-        ${m.media_url ? renderDmMedia(m) : escapeHtml(m.content || '')}
-      </div>
-      <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">${formatDmTime(m.created_at)}</span>
-    </div>`;
-  }).join('');
+  container.innerHTML = messages.map(m => _buildDmBubble(m, false)).join('');
   // Scroll to bottom after paint
-  requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+    const last = container.lastElementChild;
+    if (last) last.scrollIntoView({ block: 'end' });
+  });
 }
 
 function renderDmMedia(m) {
@@ -11454,7 +11474,7 @@ function renderDmMedia(m) {
 function formatDmTime(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 // ── Header height CSS variable — keeps chat/messages below the sticky header ──
@@ -11470,17 +11490,100 @@ function appendDmMessage(msg) {
   const area = document.getElementById('dmMessagesArea');
   if (!area) return;
   // Clear empty/loading/error state if present
-  const isEmpty = area.querySelector('[style*="48px"]') || area.querySelector('[style*="Loading"]') || area.querySelector('[style*="⏳"]');
+  const isEmpty = area.querySelector('.dm-empty-placeholder');
   if (isEmpty) area.innerHTML = '';
 
-  const own = msg.sender_id === currentUser?.id;
   const isOptimistic = msg.id && msg.id.startsWith('opt_');
   const el = document.createElement('div');
-  if (isOptimistic) el.setAttribute('data-opt', msg.id);
-  el.style.cssText = `display:flex;flex-direction:column;align-items:${own ? 'flex-end' : 'flex-start'};${isOptimistic ? 'opacity:0.7;' : ''}`;
-  el.innerHTML = `<div style="max-width:75%;background:${own ? 'linear-gradient(135deg,#4f74a3,#7aa3d4)' : 'rgba(255,255,255,0.08)'};color:#fff;border-radius:${own ? '14px 14px 2px 14px' : '14px 14px 14px 2px'};padding:10px 14px;font-size:14px;word-break:break-word;">${msg.media_url ? renderDmMedia(msg) : escapeHtml(msg.content || '')}</div><span style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">${isOptimistic ? 'Sending…' : formatDmTime(msg.created_at)}</span>`;
-  area.appendChild(el);
-  requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+  el.innerHTML = _buildDmBubble(msg, isOptimistic);
+  const inner = el.firstElementChild;
+  if (isOptimistic) inner.style.opacity = '0.65';
+  area.appendChild(inner);
+
+  // Scroll new message into view
+  requestAnimationFrame(() => {
+    inner.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    area.scrollTop = area.scrollHeight;
+  });
+}
+
+// ── Reply state ────────────────────────────────────────────────────────
+let _dmReplyToId = null;
+let _dmReplyToText = '';
+
+function dmSetReply(msgId, text) {
+  _dmReplyToId = msgId;
+  _dmReplyToText = text;
+  const bar = document.getElementById('dmReplyBar');
+  const preview = document.getElementById('dmReplyPreviewText');
+  if (bar) bar.style.display = 'flex';
+  if (preview) preview.textContent = text || '[media]';
+  document.getElementById('dmInput')?.focus();
+}
+
+function cancelDmReply() {
+  _dmReplyToId = null;
+  _dmReplyToText = '';
+  const bar = document.getElementById('dmReplyBar');
+  if (bar) bar.style.display = 'none';
+}
+
+function dmScrollToMessage(msgId) {
+  const el = document.getElementById('dm-msg-' + msgId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('dm-msg-highlight');
+    setTimeout(() => el.classList.remove('dm-msg-highlight'), 1500);
+  }
+}
+
+// ── Emoji picker for reactions ──────────────────────────────────────────────
+const DM_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+
+function dmShowEmojiPicker(msgId, btn) {
+  // Remove any existing picker
+  document.querySelectorAll('.dm-emoji-picker').forEach(p => p.remove());
+  const picker = document.createElement('div');
+  picker.className = 'dm-emoji-picker';
+  picker.innerHTML = DM_EMOJIS.map(e =>
+    `<button onclick="dmToggleReact('${msgId}','${e}');this.closest('.dm-emoji-picker').remove()">${e}</button>`
+  ).join('');
+  document.body.appendChild(picker);
+  const r = btn.getBoundingClientRect();
+  picker.style.top = (r.top - picker.offsetHeight - 8 + window.scrollY) + 'px';
+  picker.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 220) + 'px';
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function close(e) {
+      if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', close); }
+    });
+  }, 10);
+}
+
+async function dmToggleReact(msgId, emoji) {
+  try {
+    const data = await apiCall(`/api/dm/react/${msgId}`, 'POST', { emoji });
+    if (!data?.success) return;
+    // Update reaction display in DOM
+    const row = document.getElementById('dm-msg-' + msgId);
+    if (!row) return;
+    let reactDiv = row.querySelector('.dm-reactions');
+    if (!reactDiv) {
+      reactDiv = document.createElement('div');
+      reactDiv.className = 'dm-reactions';
+      row.appendChild(reactDiv);
+    }
+    reactDiv.dataset.msgid = msgId;
+    const reactions = data.reactions || {};
+    if (Object.keys(reactions).length === 0) {
+      reactDiv.remove();
+      return;
+    }
+    reactDiv.innerHTML = Object.entries(reactions).map(([e, users]) => {
+      const mine = users.includes(currentUser?.id);
+      return `<button class="dm-react-chip ${mine ? 'dm-react-mine' : ''}" onclick="dmToggleReact('${msgId}','${e}')">${e}<span>${users.length}</span></button>`;
+    }).join('');
+  } catch (e) { console.error('React error:', e); }
 }
 
 async function sendDm() {
@@ -11488,47 +11591,104 @@ async function sendDm() {
   const text = input?.value.trim();
   if (!text) return;
   if (!_dmCurrentReceiverId) {
-    showMessage('⚠️ No conversation open', 'error');
+    showMessage('\u26a0\ufe0f No conversation open', 'error');
     return;
   }
 
-  // Optimistically clear input and show message immediately
+  const replyToId   = _dmReplyToId;
+  const replyToText = _dmReplyToText;
+
+  // Clear input + reply bar immediately for snappy UX
   input.value = '';
+  cancelDmReply();
+
+  // Step 1: Show optimistic bubble right away
+  const optId = 'opt_' + Date.now();
   const optimistic = {
-    id: 'opt_' + Date.now(),
+    id: optId,
     sender_id: currentUser?.id,
     receiver_id: _dmCurrentReceiverId,
     content: text,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    is_read: false,
+    reply_to: null
   };
-  appendDmMessage(optimistic);
 
+  const area = document.getElementById('dmMessagesArea');
+  if (!area) return;
+
+  // Clear empty/loading placeholder if present
+  const placeholder = area.querySelector('.dm-empty-placeholder');
+  if (placeholder) area.innerHTML = '';
+
+  // Build and insert optimistic bubble
+  const tempEl = document.createElement('div');
+  tempEl.innerHTML = _buildDmBubble(optimistic, true);
+  const optBubble = tempEl.firstElementChild;
+  if (optBubble) {
+    optBubble.style.opacity = '0.6';
+    optBubble.setAttribute('data-opt', optId);
+    area.appendChild(optBubble);
+    requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+  }
+
+  // Step 2: Send to server
   try {
-    const data = await apiCall('/api/dm/send', 'POST', {
-      receiverId: _dmCurrentReceiverId,
-      content: text
-    });
+    const body = { receiverId: _dmCurrentReceiverId, content: text };
+    if (replyToId) body.replyToId = replyToId;
+
+    const data = await apiCall('/api/dm/send', 'POST', body);
     if (!data || !data.success) throw new Error(data?.error || 'Send failed');
 
-    // Confirm the optimistic message: replace faded "Sending..." with real confirmed message
-    const area = document.getElementById('dmMessagesArea');
-    const optEl = area?.querySelector(`[data-opt="${optimistic.id}"]`);
-    if (optEl && data.dm) {
-      // Replace with confirmed version at full opacity with real timestamp
-      const confirmed = data.dm;
-      optEl.style.opacity = '1';
-      optEl.removeAttribute('data-opt');
-      const timeEl = optEl.querySelector('span');
-      if (timeEl) timeEl.textContent = formatDmTime(confirmed.created_at);
-    } else if (optEl) {
-      // No dm in response but call succeeded - just confirm it visually
-      optEl.style.opacity = '1';
-      optEl.removeAttribute('data-opt');
-      const timeEl = optEl.querySelector('span');
-      if (timeEl) timeEl.textContent = formatDmTime(new Date().toISOString());
+    // Step 3: Upgrade optimistic bubble to confirmed (in-place, no replaceWith)
+    const existing = area.querySelector('[data-opt="' + optId + '"]');
+
+    if (existing) {
+      existing.removeAttribute('data-opt');
+      existing.style.opacity = '1';
+
+      // Set real message ID
+      if (data.dm && data.dm.id) existing.id = 'dm-msg-' + data.dm.id;
+
+      // Update "Sending..." time to real timestamp
+      const timeEl = existing.querySelector('.dm-msg-time');
+      if (timeEl && data.dm && data.dm.created_at) timeEl.textContent = formatDmTime(data.dm.created_at);
+
+      // Add sent tick (own messages only)
+      const metaEl = existing.querySelector('.dm-msg-meta');
+      if (metaEl && !metaEl.querySelector('.dm-tick')) {
+        const tick = document.createElement('span');
+        tick.className = 'dm-tick dm-tick-sent';
+        tick.title = 'Sent';
+        tick.textContent = '\u2713\u2713';
+        metaEl.appendChild(tick);
+      }
+
+      // Add reply/react action buttons
+      if (data.dm && data.dm.id && !existing.querySelector('.dm-msg-actions')) {
+        const own = String(data.dm.sender_id) === String(currentUser?.id);
+        const msgId = data.dm.id;
+        const safeContent = escapeHtml((data.dm.content || '').replace(/'/g, "&#39;"));
+        const actDiv = document.createElement('div');
+        actDiv.className = 'dm-msg-actions ' + (own ? 'dm-actions-left' : 'dm-actions-right');
+        actDiv.innerHTML =
+          '<button class="dm-action-btn" title="Reply" onclick="dmSetReply(\'' + msgId + '\',\'' + safeContent + '\')">&#8617;</button>' +
+          '<button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker(\'' + msgId + '\',this)">\ud83d\ude0a</button>';
+        const wrap = existing.querySelector('.dm-msg-wrap');
+        if (wrap) existing.insertBefore(actDiv, wrap);
+      }
+    } else if (data.dm) {
+      // Fallback: optimistic gone somehow, append confirmed bubble fresh
+      const fresh = document.createElement('div');
+      fresh.innerHTML = _buildDmBubble(data.dm, false);
+      const freshEl = fresh.firstElementChild;
+      if (freshEl) {
+        area.appendChild(freshEl);
+        requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+      }
     }
 
-    // Refresh conversations list so last_message updates
+    // Refresh conversations sidebar if open
     const msgsTab = document.getElementById('profileTabMessages');
     if (msgsTab && msgsTab.classList.contains('active')) {
       setTimeout(loadDmConversations, 400);
@@ -11536,20 +11696,27 @@ async function sendDm() {
 
   } catch (e) {
     console.error('DM send error:', e);
+
+    // Mark optimistic bubble as failed
+    const failEl = area.querySelector('[data-opt="' + optId + '"]');
+    if (failEl) {
+      failEl.style.opacity = '0.3';
+      const timeEl = failEl.querySelector('.dm-msg-time');
+      if (timeEl) timeEl.innerHTML = '<span style="color:#ef4444;">Failed \u2715</span>';
+    }
+
+    // Restore input so user can retry
+    if (input) input.value = text;
+    if (replyToId) { _dmReplyToId = replyToId; _dmReplyToText = replyToText; dmSetReply(replyToId, replyToText); }
+
     const msg = (e.message || '').toLowerCase();
     if (msg.includes('migration') || msg.includes('tables') || e.status === 503) {
-      showMessage('❌ DM tables not set up — run database.sql in Supabase', 'error', 6000);
+      showMessage('\u274c DM tables not set up \u2014 run database.sql in Supabase', 'error', 6000);
     } else if (e.status === 401 || e.status === 403) {
-      showMessage('❌ Session expired — please log in again', 'error');
+      showMessage('\u274c Session expired \u2014 please log in again', 'error');
     } else {
-      showMessage('❌ Message failed to send', 'error');
+      showMessage('\u274c Message failed to send. Please retry.', 'error');
     }
-    // Put text back in input so user doesn't lose it
-    if (input) input.value = text;
-    // Remove the optimistic message
-    const area = document.getElementById('dmMessagesArea');
-    const optEl = area?.querySelector(`[data-opt="${optimistic.id}"]`);
-    if (optEl) optEl.remove();
   }
 }
 
@@ -11600,53 +11767,158 @@ function updateDmBadge(delta, reset) {
 async function loadDmConversations() {
   const container = document.getElementById('dmConversationsList');
   if (!container) return;
+
+  // Show loading skeleton
+  container.innerHTML = `<div style="padding:24px;text-align:center;color:rgba(255,255,255,0.35);font-size:13px;">Loading…</div>`;
+
   try {
-    const data = await apiCall('/api/dm/conversations');
-    const convs = data?.conversations || [];
-    if (!convs.length) {
-      container.innerHTML = `
-        <div class="dm-empty-state">
-          <div class="dm-empty-icon">💬</div>
-          <div class="dm-empty-title">No messages yet</div>
-          <div class="dm-empty-sub">Follow someone and have them follow you back — then tap ✉️ Message on their post to start chatting!</div>
-        </div>`;
+    // Run both calls; surface real errors instead of silently returning empty
+    let convData = { conversations: [] };
+    let mutualData = { mutualFollows: [] };
+    let apiError = null;
+
+    try { convData = await apiCall('/api/dm/conversations'); }
+    catch (e) {
+      console.error('DM conversations API error:', e);
+      // Only treat as fatal if NOT a 404 (404 means endpoint not deployed yet — degrade gracefully)
+      if (e.status !== 404) apiError = apiError || e.message;
+    }
+
+    try { mutualData = await apiCall('/api/dm/mutual-follows'); }
+    catch (e) {
+      console.error('DM mutual-follows API error:', e);
+      // 404 = endpoint not on server yet — silently skip, show conversations-only view
+      if (e.status !== 404) apiError = apiError || e.message;
+      // else: degrade gracefully, mutual-follows just won't show
+    }
+
+    // If we got a debug hint from server, log it
+    if (mutualData?.debug) console.log('mutual-follows debug:', mutualData.debug);
+
+    const convs = convData?.conversations || [];
+    const mutuals = mutualData?.mutualFollows || [];
+
+    // Users already in conversations
+    const convUserIds = new Set(convs.map(c => c.otherUser?.id).filter(Boolean));
+
+    // Mutual follows with no conversation yet
+    const newContacts = mutuals.filter(u => !convUserIds.has(u.id));
+
+    // All mutual follow IDs (for enriching conversation cards with "Chat Now")
+    const mutualIds = new Set(mutuals.map(u => u.id));
+
+    if (!convs.length && !newContacts.length) {
+      if (apiError) {
+        // Real error (not a 404) — show error with retry
+        container.innerHTML = `
+          <div class="dm-empty-state">
+            <div class="dm-empty-icon">⚠️</div>
+            <div class="dm-empty-title">Could not load contacts</div>
+            <div class="dm-empty-sub" style="color:rgba(248,113,113,0.7);">${escapeHtml(apiError)}</div>
+            <button onclick="loadDmConversations()" style="margin-top:12px;background:rgba(109,40,217,0.3);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:13px;">↻ Retry</button>
+          </div>`;
+      } else {
+        container.innerHTML = `
+          <div class="dm-empty-state">
+            <div class="dm-empty-icon">💬</div>
+            <div class="dm-empty-title">No contacts yet</div>
+            <div class="dm-empty-sub">Follow someone and have them follow you back to unlock chat!</div>
+          </div>`;
+      }
       return;
     }
+
+    let html = '';
     let total = 0;
-    container.innerHTML = convs.map(c => {
-      const other = c.otherUser || {};
-      total += (c.unreadCount || 0);
-      const online = !other.last_seen;
-      const unread = c.unreadCount || 0;
-      const initials = (other.username || '?')[0].toUpperCase();
-      const avatarHtml = other.profile_pic
-        ? `<img src="${other.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(other.username||'')}">`
-        : `<div class="dm-conv-avatar-init">${initials}</div>`;
-      const lastMsg = c.last_message ? escapeHtml(c.last_message).slice(0, 50) + (c.last_message.length > 50 ? '…' : '') : 'Tap to chat';
-      const timeAgo = c.last_message_at ? _dmTimeAgo(c.last_message_at) : '';
-      return `
-        <div class="dm-conv-item ${unread > 0 ? 'dm-conv-unread' : ''}" onclick="openDmDrawer('${other.id}')">
-          <div class="dm-conv-avatar-wrap">
-            ${avatarHtml}
-            <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
-          </div>
-          <div class="dm-conv-info">
-            <div class="dm-conv-row1">
-              <span class="dm-conv-name">${escapeHtml(other.username || 'User')}</span>
-              ${timeAgo ? `<span class="dm-conv-time">${timeAgo}</span>` : ''}
+
+    // ── Section: Active Conversations ─────────────────────────────
+    if (convs.length) {
+      if (newContacts.length) {
+        html += `<div class="dm-section-label">💬 Conversations</div>`;
+      }
+      html += convs.map(c => {
+        const other = c.otherUser || {};
+        total += (c.unreadCount || 0);
+        const online = !other.last_seen;
+        const unread = c.unreadCount || 0;
+        const initials = (other.username || '?')[0].toUpperCase();
+        const avatarHtml = other.profile_pic
+          ? `<img src="${other.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(other.username||'')}">`
+          : `<div class="dm-conv-avatar-init">${initials}</div>`;
+        const lastMsg = c.last_message
+          ? escapeHtml(c.last_message).slice(0, 45) + (c.last_message.length > 45 ? '…' : '')
+          : '';
+        const timeAgo = c.last_message_at ? _dmTimeAgo(c.last_message_at) : '';
+        return `
+          <div class="dm-contact-card ${unread > 0 ? 'dm-contact-unread' : ''}">
+            <div class="dm-contact-left" onclick="chatNowWithUser('${other.id}')">
+              <div class="dm-conv-avatar-wrap">
+                ${avatarHtml}
+                <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
+              </div>
+              <div class="dm-contact-info">
+                <div class="dm-contact-name">
+                  ${escapeHtml(other.username || 'User')}
+                  ${unread > 0 ? `<span class="dm-conv-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
+                </div>
+                <div class="dm-contact-preview">
+                  ${lastMsg ? lastMsg : '<span style="color:rgba(167,139,250,0.6);font-style:italic;">Tap Chat Now to open</span>'}
+                  ${timeAgo ? `<span class="dm-contact-time">${timeAgo}</span>` : ''}
+                </div>
+              </div>
             </div>
-            <div class="dm-conv-row2">
-              <span class="dm-conv-last">${lastMsg}</span>
-              ${unread > 0 ? `<span class="dm-conv-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
+            <button class="dm-chat-now-btn" onclick="chatNowWithUser('${other.id}')">
+              💬 Chat Now
+            </button>
+          </div>`;
+      }).join('');
+
+      updateDmBadge(total, true);
+      _dmTotalUnread = total;
+      updateDmBadge(0, false);
+    }
+
+    // ── Section: Mutual Follows — not yet messaged ─────────────────
+    if (newContacts.length) {
+      html += `<div class="dm-section-label" style="margin-top:${convs.length ? '18px' : '0'}">👥 People you can chat with</div>`;
+      html += newContacts.map(u => {
+        const online = !u.last_seen;
+        const initials = (u.username || '?')[0].toUpperCase();
+        const avatarHtml = u.profile_pic
+          ? `<img src="${u.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(u.username||'')}">`
+          : `<div class="dm-conv-avatar-init">${initials}</div>`;
+        return `
+          <div class="dm-contact-card dm-contact-new">
+            <div class="dm-contact-left" onclick="chatNowWithUser('${u.id}')">
+              <div class="dm-conv-avatar-wrap">
+                ${avatarHtml}
+                <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
+              </div>
+              <div class="dm-contact-info">
+                <div class="dm-contact-name">
+                  ${escapeHtml(u.username || 'User')}
+                  <span class="dm-mutual-tag">Mutual</span>
+                </div>
+                <div class="dm-contact-preview" style="color:rgba(167,139,250,0.55);font-style:italic;">
+                  You follow each other ✓
+                </div>
+              </div>
             </div>
-          </div>
-        </div>`;
-    }).join('');
-    updateDmBadge(total, true);
-    _dmTotalUnread = total;
-    updateDmBadge(0, false);
-  } catch (e) { /* ignore */ }
+            <button class="dm-chat-now-btn dm-chat-now-new" onclick="chatNowWithUser('${u.id}')">
+              💬 Chat Now
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    container.innerHTML = html;
+
+  } catch (e) {
+    container.innerHTML = `<div style="padding:20px;text-align:center;color:rgba(255,100,100,0.7);font-size:13px;">Failed to load messages</div>`;
+    console.error('loadDmConversations error:', e);
+  }
 }
+
 
 function _dmTimeAgo(ts) {
   if (!ts) return '';
@@ -11664,116 +11936,21 @@ function _dmTimeAgo(ts) {
 // ── Mini Profile Card ──────────────────────────────────────────────
 // currentProfileUserId is declared near the top of the DM state block
 
+// ── Profile clicks always redirect to full profile — popup removed ────────
 async function showMiniProfileCard(userId, event) {
-  if (!userId || userId === currentUser?.id) {
-    showUserProfile(userId);
-    return;
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
   }
-  _mpcCurrentUserId = userId;
-  const card = document.getElementById('miniProfileCard');
-  if (!card) return;
-
-  // Position with boundary detection
-  const padding = 12;
-  const cw = 280, ch = 260;
-  let x = event.clientX + 10, y = event.clientY + 10;
-  if (x + cw > window.innerWidth - padding) x = event.clientX - cw - 10;
-  if (y + ch > window.innerHeight - padding) y = event.clientY - ch - 10;
-  card.style.left = Math.max(padding, x) + 'px';
-  card.style.top = Math.max(padding, y) + 'px';
-  card.style.display = 'block';
-
-  // Show loading state
-  document.getElementById('mpcName').textContent = '…';
-  document.getElementById('mpcUsername').textContent = '';
-  document.getElementById('mpcBio').textContent = '';
-  document.getElementById('mpcFollowers').textContent = '—';
-  document.getElementById('mpcFollowing').textContent = '—';
-  document.getElementById('mpcPosts').textContent = '—';
-
-  // Load from cache (with TTL) or API
-  let profile = _getMpcCache(userId);
-  if (!profile) {
-    try {
-      const data = await apiCall(`/api/profile/${userId}`);
-      if (data?.user) { profile = data.user; _setMpcCache(userId, data.user); }
-    } catch (e) { closeMiniProfileCard(); return; }
-  }
-  if (!profile) { closeMiniProfileCard(); return; }
-
-  document.getElementById('mpcName').textContent = profile.username || 'User';
-  document.getElementById('mpcUsername').textContent = '@' + (profile.username || '');
-  document.getElementById('mpcBio').textContent = profile.bio || '';
-  document.getElementById('mpcFollowers').textContent = profile.followersCount ?? 0;
-  document.getElementById('mpcFollowing').textContent = profile.followingCount ?? 0;
-  // Seed central follow state
-  _seedFollowState(userId, profile.isFollowing, profile.followersCount || 0);
-  document.getElementById('mpcPosts').textContent = profile.postCount ?? 0;
-
-  const online = !profile.last_seen;
-  const presenceEl = document.getElementById('mpcPresence');
-  presenceEl.textContent = online ? '● Online' : '● Offline';
-  presenceEl.style.color = online ? '#22c55e' : '#a78bfa';
-
-  const avatarImg = document.getElementById('mpcAvatarImg');
-  const avatarInitial = document.getElementById('mpcAvatarInitial');
-  if (profile.profile_pic) {
-    avatarImg.src = profile.profile_pic;
-    avatarImg.style.display = 'block';
-    avatarInitial.style.display = 'none';
-  } else {
-    avatarImg.style.display = 'none';
-    avatarInitial.style.display = 'flex';
-    avatarInitial.textContent = (profile.username || '?')[0].toUpperCase();
-  }
-
-  const followBtn = document.getElementById('mpcFollowBtn');
-  if (profile.isFollowing) {
-    followBtn.textContent = 'Unfollow';
-    followBtn.style.background = 'rgba(255,255,255,0.1)';
-  } else {
-    followBtn.textContent = 'Follow';
-    followBtn.style.background = 'linear-gradient(135deg,#4f74a3,#7aa3d4)';
-  }
-
-  // Close card when clicking outside
-  setTimeout(() => {
-    document.addEventListener('click', _closeMpcOnOutsideClick, { once: true, capture: true });
-  }, 50);
+  if (!userId) return;
+  showUserProfile(userId);
 }
 
-function _closeMpcOnOutsideClick(e) {
-  const card = document.getElementById('miniProfileCard');
-  if (card && !card.contains(e.target)) closeMiniProfileCard();
-}
 
-function closeMiniProfileCard() {
-  const card = document.getElementById('miniProfileCard');
-  if (card) card.style.display = 'none';
-  _mpcCurrentUserId = null;
-}
-
-async function mpcToggleFollow() {
-  if (!_mpcCurrentUserId) return;
-  const profile = _mpcCache[_mpcCurrentUserId] || {};
-  const btn = document.getElementById('mpcFollowBtn');
-  if (btn) btn.disabled = true;
-  // Prefer _followState (most up-to-date) over stale cache
-  const currentIsFollowing = (_followState[_mpcCurrentUserId]?.isFollowing !== undefined)
-    ? _followState[_mpcCurrentUserId].isFollowing
-    : (profile.isFollowing || false);
-  await centralToggleFollow(_mpcCurrentUserId, profile.username, { isFollowing: currentIsFollowing });
-  if (btn) btn.disabled = false;
-}
-
-function mpcOpenDm() {
-  const uid = _mpcCurrentUserId;
-  closeMiniProfileCard();
-  openDmDrawer(uid);
-}
-
-// Replace showUserProfile calls in feed with mini card (patch buildVibeCard avatar clicks)
-const _origBuildVibeCard = typeof buildVibeCard === 'function' ? buildVibeCard : null;
+// Stubs kept for backward compat — popup removed, profile always redirects via showMiniProfileCard
+function closeMiniProfileCard() {}
+function mpcToggleFollow() {}
+function mpcOpenDm() { if (typeof _mpcCurrentUserId !== 'undefined' && _mpcCurrentUserId) openDmDrawer(_mpcCurrentUserId); }
 
 // ── Ghost Mode ─────────────────────────────────────────────────────
 function openGhostModal() {
@@ -11994,6 +12171,39 @@ function wireNewSocketEvents() {
 
   sock.on('new_dm', (msg) => handleIncomingDm(msg));
 
+  // Blue ticks: mark all visible sent messages as read when other person opens the chat
+  sock.on('dm_read', ({ readBy, conversationWith }) => {
+    if (_dmCurrentReceiverId === readBy || _dmCurrentReceiverId === conversationWith) {
+      const area = document.getElementById('dmMessagesArea');
+      if (!area) return;
+      area.querySelectorAll('.dm-tick-sent').forEach(tick => {
+        tick.classList.remove('dm-tick-sent');
+        tick.classList.add('dm-tick-read');
+        tick.title = 'Seen';
+      });
+    }
+  });
+
+  // Live reaction updates from the other person
+  sock.on('dm_reaction', ({ messageId, reactions }) => {
+    const row = document.getElementById('dm-msg-' + messageId);
+    if (!row) return;
+    let reactDiv = row.querySelector('.dm-reactions');
+    if (Object.keys(reactions || {}).length === 0) {
+      if (reactDiv) reactDiv.remove();
+      return;
+    }
+    if (!reactDiv) {
+      reactDiv = document.createElement('div');
+      reactDiv.className = 'dm-reactions';
+      row.appendChild(reactDiv);
+    }
+    reactDiv.innerHTML = Object.entries(reactions).map(([e, users]) => {
+      const mine = users.includes(currentUser?.id);
+      return `<button class="dm-react-chip ${mine ? 'dm-react-mine' : ''}" onclick="dmToggleReact('${messageId}','${e}')">${e}<span>${users.length}</span></button>`;
+    }).join('');
+  });
+
   sock.on('dm_typing', ({ senderId }) => {
     if (senderId === _dmCurrentReceiverId) {
       const el = document.getElementById('dmTypingIndicator');
@@ -12015,7 +12225,13 @@ function wireNewSocketEvents() {
   sock.on('user_offline', ({ userId }) => {
     if (userId === _dmCurrentReceiverId) {
       const status = document.getElementById('dmDrawerStatus');
-      if (status) { status.textContent = '● Offline'; status.style.color = '#a78bfa'; }
+      if (status) {
+        const sp = status.querySelector('span:last-child');
+        if (sp) sp.textContent = 'Offline'; else status.textContent = '● Offline';
+        status.style.color = '#a78bfa';
+        const ring = document.getElementById('dmOnlineRing');
+        if (ring) ring.style.background = '#a78bfa';
+      }
     }
     // Invalidate cache so presence updates next load
     if (_mpcCache[userId]) _mpcCache[userId].last_seen = new Date().toISOString();
@@ -12024,7 +12240,13 @@ function wireNewSocketEvents() {
   sock.on('user_online_broadcast', ({ userId }) => {
     if (userId === _dmCurrentReceiverId) {
       const status = document.getElementById('dmDrawerStatus');
-      if (status) { status.textContent = '● Online'; status.style.color = '#22c55e'; }
+      if (status) {
+        const sp = status.querySelector('span:last-child');
+        if (sp) sp.textContent = 'Online'; else status.textContent = '● Online';
+        status.style.color = '#22c55e';
+        const ring = document.getElementById('dmOnlineRing');
+        if (ring) ring.style.background = '#22c55e';
+      }
     }
     if (_mpcCache[userId]) _mpcCache[userId].last_seen = null;
   });
@@ -12181,6 +12403,33 @@ function openCommunityChat() {
   const execPanel  = document.getElementById('executiveChatPanel');
   if (ghostPanel) ghostPanel.style.display = 'flex';
   if (execPanel)  execPanel.style.display  = 'none';
+
+  // ── Scroll to correct position every time ghost chat is opened ────
+  // Must run AFTER display:flex so offsetTop / scrollHeight are valid.
+  requestAnimationFrame(() => {
+    const el = document.getElementById('whatsappMessages');
+    if (!el) return;
+
+    // Find unread divider if present
+    const unreadDivider = el.querySelector('.unread-divider');
+    if (unreadDivider) {
+      // Show divider near top of visible area
+      el.scrollTop = Math.max(0, unreadDivider.offsetTop - 60);
+    } else {
+      // No unreads — jump to very bottom
+      el.scrollTop = el.scrollHeight;
+    }
+
+    // Retry once after images may have loaded and inflated scrollHeight
+    setTimeout(() => {
+      const unread = el.querySelector('.unread-divider');
+      if (unread) {
+        el.scrollTop = Math.max(0, unread.offsetTop - 60);
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+    }, 300);
+  });
 }
 
 // ── Socket listeners (registered once) ───────────────────────────────
@@ -12228,16 +12477,27 @@ function execRegisterSocketListeners() {
     if (rxBar) rxBar.innerHTML = execBuildReactionsHTML(message_id, reactions);
   });
 
-  socket.on('exec_messages_seen', ({ messageIds }) => {
+  socket.on('exec_messages_seen', ({ messageIds, readerName }) => {
     (messageIds || []).forEach(mid => {
       const el = document.getElementById(`exec-msg-${mid}`);
       if (!el) return;
-      const readBadge = el.querySelector('.exec-read-badge');
-      if (readBadge) {
-        const cur = parseInt(readBadge.dataset.count || '0') + 1;
-        readBadge.dataset.count = cur;
-        readBadge.innerHTML = `👁 ${cur}`;
-        readBadge.style.display = 'flex';
+      // Update seen-names span
+      const namesEl = el.querySelector('.exec-seen-names');
+      if (namesEl) {
+        namesEl.classList.remove('exec-seen-pending');
+        const cur = parseInt(namesEl.dataset.count || '0') + 1;
+        namesEl.dataset.count = cur;
+        // Append new reader name if we have it
+        if (readerName) {
+          const existing = namesEl.textContent.replace('👁', '').trim();
+          const names = existing && existing !== 'Delivered' ? existing.split(', ') : [];
+          names.push(readerName);
+          const visible = names.slice(0, 3);
+          const more    = names.length - 3;
+          namesEl.textContent = '👁' + visible.join(', ') + (more > 0 ? ` +${more}` : '');
+        } else {
+          namesEl.textContent = `👁 ${cur}`;
+        }
       }
     });
   });
@@ -12283,11 +12543,44 @@ async function execLoadMessages() {
           <p>Be the first to start the conversation</p>
         </div>`;
     } else {
-      execMessages.forEach(msg => execAppendMessage(msg, true));
+      const lastSeenExec = localStorage.getItem('exec_lastSeen_' + (currentUser?.college || '')) || 0;
+      let firstUnreadMsgId = null;
+
+      execMessages.forEach(msg => {
+        execAppendMessage(msg, true);
+        // Track first unread message from someone else
+        if (!firstUnreadMsgId && (msg.sender_id || msg.users?.id) !== currentUser?.id) {
+          const msgTime = new Date(msg.created_at || 0).getTime();
+          if (msgTime > Number(lastSeenExec)) {
+            firstUnreadMsgId = msg.id;
+          }
+        }
+      });
+
+      // Update last seen AFTER we've identified unread messages
+      localStorage.setItem('exec_lastSeen_' + (currentUser?.college || ''), Date.now());
+
       setTimeout(() => {
-        const msgs = container.querySelectorAll('[id^="exec-msg-"]');
-        if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
-      }, 80);
+        if (firstUnreadMsgId) {
+          const firstUnreadEl = document.getElementById('exec-msg-' + firstUnreadMsgId);
+          if (firstUnreadEl) {
+            // Insert unread divider just before the first unread message
+            const divider = document.createElement('div');
+            divider.className = 'exec-unread-divider';
+            divider.innerHTML = '<span>↑ Unread messages</span>';
+            firstUnreadEl.parentNode.insertBefore(divider, firstUnreadEl);
+            divider.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            // Fallback
+            const msgs = container.querySelectorAll('[id^="exec-msg-"]');
+            if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
+          }
+        } else {
+          // No unread — go to bottom
+          const msgs = container.querySelectorAll('[id^="exec-msg-"]');
+          if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     }
 
     setTimeout(() => execMarkVisibleAsRead(), 500);
@@ -12335,7 +12628,8 @@ function execAppendMessage(msg, isInitial = false) {
   // Avatar
   let avatarHTML = '';
   if (!isOwn) {
-    avatarHTML = `<div class="exec-avatar-wrap">` +
+    const profileSenderId = msg.sender_id || msg.users?.id || '';
+    avatarHTML = `<div class="exec-avatar-wrap" onclick="if('${escapeHtml(profileSenderId)}')showUserProfile('${escapeHtml(profileSenderId)}')" style="cursor:pointer" title="View profile">` +
       (avatar ? `<img class="exec-avatar" src="${escapeHtml(avatar)}" alt="${escapeHtml(sender)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '') +
       `<div class="exec-avatar-fallback" style="${avatar ? 'display:none' : ''}">${escapeHtml(sender.charAt(0).toUpperCase())}</div>` +
       `</div>`;
@@ -12379,22 +12673,33 @@ function execAppendMessage(msg, isInitial = false) {
     </div>`;
   }
 
-  // Reactions bar
-  const reactionsHTML = (msg.reactions?.length > 0)
-    ? `<div class="exec-reactions-bar">${execBuildReactionsHTML(msg.id, msg.reactions)}</div>`
-    : `<div class="exec-reactions-bar" style="display:none"></div>`;
+  // React button is now inside 3-dots menu (execShowMessageMenu)
+  // Existing reactions bar is shown below bubble for both own and other
+  const existingReactions = (msg.reactions || []);
+  const reactBtnHTML = '';
+  const reactionsHTML = existingReactions.length > 0
+    ? `<div class="exec-reactions-bar">${execBuildReactionsHTML(msg.id, existingReactions)}</div>`
+    : '';
 
   // Text
   const textContent = msg.is_deleted
     ? '<em class="exec-deleted-text">🚫 This message was deleted</em>'
     : escapeHtml(msg.content || '');
 
-  // Read receipt (own messages only)
+  // Seen-by (own messages only) — show names inline, click for full popup
+  const readers = msg.read_by || [];
+  const readerNames = readers.slice(0, 3).map(r => r.username || 'User');
+  const moreCount  = Math.max(0, readers.length - 3);
+  const namesStr   = readerNames.length > 0
+    ? readerNames.join(', ') + (moreCount > 0 ? ` +${moreCount}` : '')
+    : '';
   const readReceiptHTML = isOwn ? `
     <div class="exec-read-receipt" onclick="execShowReadersPopup('${msg.id}',event)"
-         data-count="${readCount}" style="${readCount > 0 ? '' : 'display:none'}">
+         title="Click to see who read this" data-count="${readCount}">
       <span class="exec-tick ${readCount > 0 ? 'exec-tick-blue' : ''}">✓✓</span>
-      <span class="exec-read-badge" data-count="${readCount}">👁 ${readCount}</span>
+      ${readCount > 0
+        ? `<span class="exec-seen-names" data-count="${readCount}">👁 ${namesStr}</span>`
+        : '<span class="exec-seen-names exec-seen-pending">Delivered</span>'}
     </div>` : '';
 
   // Actions button
@@ -12405,22 +12710,26 @@ function execAppendMessage(msg, isInitial = false) {
   wrapper.innerHTML = `
     ${!isOwn ? avatarHTML : ''}
     <div class="exec-msg-col">
-      ${!isOwn ? `<div class="exec-sender-name">${escapeHtml(sender)}</div>` : ''}
-      <div class="exec-bubble ${isOwn ? 'exec-bubble-own' : 'exec-bubble-other'} ${msg.is_deleted ? 'exec-deleted' : ''}">
-        ${replyHTML}${mediaHTML}${pollHTML}
-        ${textContent ? `<div class="exec-msg-text">${textContent}</div>` : ''}
-        <div class="exec-msg-meta">
-          ${msg.is_edited ? '<span class="exec-edited-label">edited</span>' : ''}
-          <span class="exec-msg-time">${timeStr}</span>
-          ${readReceiptHTML}
+      ${!isOwn ? `<div class="exec-sender-name" onclick="if('${escapeHtml(msg.sender_id || msg.users?.id || '')}')showUserProfile('${escapeHtml(msg.sender_id || msg.users?.id || '')}')" style="cursor:pointer" title="View profile">@${escapeHtml(sender)}</div>` : ''}
+      <div class="exec-bubble-wrap">
+        <div class="exec-bubble ${isOwn ? 'exec-bubble-own' : 'exec-bubble-other'} ${msg.is_deleted ? 'exec-deleted' : ''}">
+          ${replyHTML}${mediaHTML}${pollHTML}
+          ${textContent ? `<div class="exec-msg-text">${textContent}</div>` : ''}
+          <div class="exec-msg-meta">
+            ${msg.is_edited ? '<span class="exec-edited-label">edited</span>' : ''}
+            <span class="exec-msg-time">${timeStr}</span>
+            ${readReceiptHTML}
+          </div>
+          ${actionsBtn}
         </div>
-        ${actionsBtn}
+        ${reactBtnHTML}
       </div>
       ${reactionsHTML}
     </div>
     ${isOwn ? avatarHTML : ''}`;
 
-  wrapper.addEventListener('contextmenu', e => { e.preventDefault(); execShowReactionPicker(e, msg.id); });
+  // Right-click: show message menu
+  wrapper.addEventListener('contextmenu', e => { e.preventDefault(); execShowMessageMenu(e, msg.id, isOwn); });
   container.appendChild(wrapper);
 
   if (!isInitial) {
@@ -12722,18 +13031,38 @@ function execClearFilePreview() {
 async function execStartVoiceRecord() {
   if (execRecording) { execStopVoiceRecord(); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    execAudioChunks   = [];
-    execMediaRecorder = new MediaRecorder(stream);
-    execMediaRecorder.ondataavailable = e => { if (e.data.size > 0) execAudioChunks.push(e.data); };
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    execAudioChunks = [];
+
+    // Pick a MIME type the browser and server both accept
+    const preferredMimes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg', 'audio/mp4'];
+    const supportedMime  = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || '';
+    execMediaRecorder = supportedMime
+      ? new MediaRecorder(stream, { mimeType: supportedMime })
+      : new MediaRecorder(stream);
+
+    execMediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) execAudioChunks.push(e.data); };
     execMediaRecorder.onstop = async () => {
-      const blob = new Blob(execAudioChunks, { type:'audio/webm' });
       stream.getTracks().forEach(t => t.stop());
-      await execSendVoiceMessage(blob, execRecordSeconds);
+      if (execAudioChunks.length === 0) {
+        if (typeof showMessage === 'function') showMessage('No audio captured — try again', 'error');
+        return;
+      }
+      const mimeType = execMediaRecorder.mimeType || supportedMime || 'audio/webm';
+      const ext      = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') ? 'mp4' : 'webm';
+      const blob     = new Blob(execAudioChunks, { type: mimeType });
+      await execSendVoiceMessage(blob, execRecordSeconds, ext);
     };
-    execMediaRecorder.start(100);
-    execRecording       = true;
-    execRecordSeconds   = 0;
+    execMediaRecorder.onerror = (e) => {
+      console.error('MediaRecorder error:', e.error);
+      if (typeof showMessage === 'function') showMessage('Recording error: ' + (e.error?.message || 'unknown'), 'error');
+      execRecording = false;
+      stream.getTracks().forEach(t => t.stop());
+    };
+
+    execMediaRecorder.start(250);   // collect chunks every 250ms
+    execRecording     = true;
+    execRecordSeconds = 0;
 
     const btn   = document.getElementById('execVoiceBtn');
     const timer = document.getElementById('execRecordTimer');
@@ -12747,7 +13076,13 @@ async function execStartVoiceRecord() {
       if (execRecordSeconds >= 120) execStopVoiceRecord();
     }, 1000);
   } catch (err) {
-    if (typeof showMessage === 'function') showMessage('Microphone access denied', 'error');
+    console.error('execStartVoiceRecord error:', err);
+    const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
+      ? 'Microphone access denied — please allow mic in browser settings'
+      : err.name === 'NotFoundError'
+      ? 'No microphone found on this device'
+      : 'Could not start recording: ' + (err.message || err.name);
+    if (typeof showMessage === 'function') showMessage(msg, 'error');
   }
 }
 
@@ -12762,16 +13097,36 @@ function execStopVoiceRecord() {
   if (timer)   timer.style.display = 'none';
 }
 
-async function execSendVoiceMessage(blob, duration) {
+async function execSendVoiceMessage(blob, duration, ext = 'webm') {
   try {
+    if (!blob || blob.size === 0) {
+      if (typeof showMessage === 'function') showMessage('Recording is empty — try again', 'error');
+      return;
+    }
     const fd = new FormData();
-    fd.append('media', blob, `voice_${Date.now()}.webm`);
+    fd.append('media', blob, `voice_${Date.now()}.${ext}`);
     fd.append('is_voice', 'true');
     fd.append('content', '');
-    if (duration) fd.append('media_duration', duration);
+    fd.append('media_duration', String(duration || 0));
+
+    // Show optimistic sending indicator
+    if (typeof showMessage === 'function') showMessage('🎤 Sending voice message…', 'info', 2000);
+
     const response = await apiCall('/api/executive/messages', 'POST', fd);
-    if (response?.message) { execMessages.push(response.message); execAppendMessage(response.message, false); }
-  } catch (err) { if (typeof showMessage === 'function') showMessage('Failed to send voice message', 'error'); }
+    if (response?.message) {
+      execMessages.push(response.message);
+      execAppendMessage(response.message, false);
+      if (typeof showMessage === 'function') showMessage('🎤 Voice message sent', 'success', 1500);
+    } else if (response) {
+      console.warn('Unexpected voice response:', response);
+    }
+  } catch (err) {
+    console.error('execSendVoiceMessage error:', err);
+    const msg = err.status === 413 ? 'Voice message too large (max ~50MB)'
+              : err.status === 400 ? 'Upload rejected: ' + (err.message || 'invalid file')
+              : 'Failed to send voice message — check your connection';
+    if (typeof showMessage === 'function') showMessage(msg, 'error');
+  }
 }
 
 // ── Voice playback ────────────────────────────────────────────────────
@@ -12962,427 +13317,86 @@ function execScrollToMessage(messageId) {
   setTimeout(() => el.classList.remove('exec-highlight'), 1500);
 }
 
-// ── Emoji stub ────────────────────────────────────────────────────────
-function execOpenEmojiForExec() {
-  if (typeof showMessage === 'function') showMessage('Use keyboard emoji 😊', 'info');
+// ── Emoji picker for executive chat ───────────────────────────────────
+function execOpenEmojiPicker(event){
+  event.stopPropagation();
+  document.querySelector('.exec-emoji-popup')?.remove();
+
+  const EMOJIS = [
+    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰',
+    '😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳',
+    '😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤',
+    '😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🫣','🤗','🫡','🤔',
+    '🫢','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴',
+    '🤤','😪','😵','🫠','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿',
+    '👋','🤚','🖐️','✋','🖖','🤙','💪','🦾','🖕','✌️','🤞','🤟','🤘','👌','🤌','🤏',
+    '👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','🤝','🙏','✍️','🤲',
+    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓',
+    '🔥','✨','🎉','🎊','🎈','🎁','🏆','🥇','⭐','🌟','💫','🌈','🌸','🌺','🌻','🌹',
+    '👑','💎','🚀','💯','🆗','💬','💭','🗯️','📢','📣','🔔','🔕','💤','💥','💦','💨',
+    '😺','😸','😹','😻','😼','😽','🙀','😿','😾','🐶','🐱','🐭','🐹','🐰','🦊','🐻',
+    '🍕','🍔','🍟','🌮','🌯','🍣','🍜','🍦','🍩','🍪','🎂','🍰','🧁','🍫','🍬','🍭',
+  ];
+
+  const popup = document.createElement('div');
+  popup.className = 'exec-emoji-popup';
+  popup.innerHTML = `
+    <div class="exec-ep-header">
+      <span>Pick an Emoji</span>
+      <button onclick="this.closest('.exec-emoji-popup').remove()" class="exec-ep-close">✕</button>
+    </div>
+    <div class="exec-ep-search">
+      <input type="text" placeholder="🔍 Search…" oninput="execEmojiSearch(this.value)" class="exec-ep-input">
+    </div>
+    <div class="exec-ep-grid" id="execEpGrid">
+      ${EMOJIS.map(e => `<button class="exec-ep-btn" onclick="execInsertEmoji('${e}')">${e}</button>`).join('')}
+    </div>
+  `;
+  popup._all = EMOJIS;
+
+  const btn = document.getElementById('execEmojiBtn');
+  const rect = btn ? btn.getBoundingClientRect() : { bottom: 200, left: 200 };
+  const spaceAbove = rect.top;
+  const topPos = spaceAbove > 320 ? (rect.top - 320) : (rect.bottom + 6);
+
+  popup.style.cssText = `position:fixed;bottom:${window.innerHeight - rect.top + 8}px;left:${Math.max(4, rect.left - 60)}px;z-index:10000;`;
+  document.body.appendChild(popup);
+
+  setTimeout(() => document.addEventListener('click', function handler(e) {
+    if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('click', handler); }
+  }), 100);
 }
+
+window.execEmojiSearch = function(query) {
+  const grid = document.getElementById('execEpGrid');
+  const popup = document.querySelector('.exec-emoji-popup');
+  if (!grid || !popup) return;
+  const all = popup._all || [];
+  const q = query.toLowerCase().trim();
+  const filtered = q ? all.filter(e => e.includes(q)) : all;
+  grid.innerHTML = filtered.map(e => `<button class="exec-ep-btn" onclick="execInsertEmoji('${e}')">${e}</button>`).join('');
+};
+
+window.execInsertEmoji = function(emoji) {
+  const ta = document.getElementById('execInput');
+  if (!ta) return;
+  const s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
+  ta.value = ta.value.slice(0, s) + emoji + ta.value.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + emoji.length;
+  ta.focus();
+};
+
+// Keep legacy name working
+function execOpenEmojiForExec() { document.getElementById('execEmojiBtn')?.click(); }
 
 // ── Panel HTML (injected on first open) ───────────────────────────────
 function execGetPanelHTML() {
+  // HTML lives in index.html #vx-tpl-exec-panel
   const college = escapeHtml(currentUser?.college || 'College');
-  return `
-    <div class="exec-header">
-      <div class="exec-header-left">
-        <div class="exec-header-avatar">🎓</div>
-        <div>
-          <div class="exec-header-title">${college} · Executive</div>
-          <div class="exec-header-status">College official chat · Real identity</div>
-        </div>
-      </div>
-      <div class="exec-header-actions">
-        <button class="exec-hdr-btn" onclick="execOpenPollCreator()" title="Create Poll">📊</button>
-        <button class="exec-hdr-btn" onclick="toggleChatInfo()" title="Chat Info">ℹ️</button>
-      </div>
-    </div>
-
-    <div class="exec-messages-area" id="execMessages">
-      <div class="exec-loading"><div class="exec-spinner"></div><p>Loading messages…</p></div>
-    </div>
-
-    <div id="execFilePreviewBar" class="exec-file-preview-bar" style="display:none;">
-      <div class="exec-preview-inner">
-        <img id="execFilePreviewImg" style="display:none;" alt="preview">
-        <video id="execFilePreviewVid" style="display:none;" muted playsinline></video>
-        <span id="execFilePreviewName" class="exec-preview-name"></span>
-      </div>
-      <button class="exec-preview-clear" onclick="execClearFilePreview()">✕</button>
-    </div>
-
-    <div id="execReplyBar" class="exec-reply-bar" style="display:none;">
-      <div class="exec-reply-bar-inner">
-        <span class="exec-reply-icon">↩️</span>
-        <div>
-          <div class="exec-reply-bar-sender" id="execReplyBarSender"></div>
-          <div class="exec-reply-bar-text"   id="execReplyBarText"></div>
-        </div>
-      </div>
-      <button class="exec-reply-cancel" onclick="execCancelReply()">✕</button>
-    </div>
-
-    <div id="execEditBar" class="exec-edit-bar" style="display:none;">
-      <span class="exec-edit-icon">✏️</span>
-      <span id="execEditBarText" class="exec-edit-bar-text"></span>
-      <button class="exec-edit-cancel" onclick="execCancelEdit()">✕</button>
-    </div>
-
-    <div id="execRecordTimer" class="exec-record-timer" style="display:none;">
-      <span class="exec-rec-dot">●</span>
-      <span id="execRecordTimerText">0:00</span>
-    </div>
-
-    <div class="exec-input-area">
-      <button class="exec-inp-btn" onclick="execOpenEmojiForExec()" title="Emoji">😊</button>
-      <input type="file" id="execFileInput"
-        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
-        style="display:none" onchange="execHandleFileSelect(event)">
-      <button class="exec-inp-btn" onclick="document.getElementById('execFileInput').click()" title="Attach">📎</button>
-      <div class="exec-input-wrapper">
-        <textarea id="execInput" class="exec-textarea"
-          placeholder="Message ${college} Executive…"
-          rows="1"
-          oninput="execHandleTyping()"
-          onkeydown="execHandleKeypress(event)"></textarea>
-      </div>
-      <button id="execVoiceBtn" class="exec-voice-btn" onclick="execStartVoiceRecord()" title="Voice message">🎤</button>
-      <button class="exec-send-btn" onclick="execSendMessage()" title="Send">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-      </button>
-    </div>
-
-    <div id="execPollModal" class="exec-modal-overlay" style="display:none;" onclick="if(event.target===this)execClosePollModal()">
-      <div class="exec-modal-box">
-        <div class="exec-modal-header">
-          <h3>📊 Create Poll</h3>
-          <button class="exec-modal-close" onclick="execClosePollModal()">✕</button>
-        </div>
-        <div class="exec-modal-body">
-          <input id="execPollQuestion" class="exec-input-field" type="text" placeholder="Ask a question…" maxlength="200">
-          <div class="exec-poll-opts-label">Options (min 2, max 8)</div>
-          <div id="execPollOptions">
-            <input type="text" class="exec-poll-opt-input exec-input-field" placeholder="Option 1" maxlength="80">
-            <input type="text" class="exec-poll-opt-input exec-input-field" placeholder="Option 2" maxlength="80">
-          </div>
-          <button class="exec-add-opt-btn" onclick="execAddPollOption()">+ Add option</button>
-        </div>
-        <div class="exec-modal-footer">
-          <button class="exec-cancel-btn" onclick="execClosePollModal()">Cancel</button>
-          <button class="exec-gold-btn"   onclick="execSendPoll()">Send Poll</button>
-        </div>
-      </div>
-    </div>
-
-    <style id="exec-chat-styles">
-    /* ─── Executive Chat CSS ─────────────────────────────────────── */
-    #executiveChatPanel { background:linear-gradient(180deg,#0d0d0d 0%,#111 100%); }
-
-    .exec-header {
-      display:flex;align-items:center;justify-content:space-between;
-      padding:10px 16px;background:linear-gradient(135deg,#1a1208,#2d1f06);
-      border-bottom:1px solid rgba(212,167,0,0.25);flex-shrink:0;min-height:58px;
-    }
-    .exec-header-left { display:flex;align-items:center;gap:12px; }
-    .exec-header-avatar {
-      width:40px;height:40px;border-radius:50%;
-      background:linear-gradient(135deg,#d4a700,#ffd700);
-      display:flex;align-items:center;justify-content:center;font-size:20px;
-      box-shadow:0 0 10px rgba(212,167,0,0.5);
-    }
-    .exec-header-title  { font-weight:700;font-size:15px;color:#ffd700; }
-    .exec-header-status { font-size:11px;color:rgba(212,167,0,0.65);margin-top:2px; }
-    .exec-header-actions { display:flex;gap:8px; }
-    .exec-hdr-btn {
-      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.25);
-      color:#ffd700;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;transition:all 0.15s;
-    }
-    .exec-hdr-btn:hover { background:rgba(212,167,0,0.2); }
-
-    .exec-messages-area {
-      flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px;
-      background:linear-gradient(180deg,#0d0d0d 0%,#111 100%);scroll-behavior:smooth;
-    }
-    .exec-messages-area::-webkit-scrollbar { width:4px; }
-    .exec-messages-area::-webkit-scrollbar-thumb { background:rgba(212,167,0,0.3);border-radius:4px; }
-
-    .exec-date-separator { text-align:center;margin:12px 0;position:relative; }
-    .exec-date-separator::before {
-      content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(212,167,0,0.12);
-    }
-    .exec-date-separator span {
-      background:#111;padding:2px 12px;font-size:11px;color:rgba(212,167,0,0.6);
-      border-radius:10px;position:relative;border:1px solid rgba(212,167,0,0.15);
-    }
-
-    .exec-message-wrapper {
-      display:flex;align-items:flex-end;gap:8px;margin:3px 0;max-width:100%;
-      animation:execFadeIn 0.2s ease-out;
-    }
-    @keyframes execFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-    .exec-own   { flex-direction:row-reverse; }
-    .exec-other { flex-direction:row; }
-
-    .exec-avatar-wrap { flex-shrink:0;width:34px;height:34px; }
-    .exec-avatar, .exec-avatar-fallback { width:34px;height:34px;border-radius:50%;object-fit:cover; }
-    .exec-avatar-fallback {
-      background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;
-      font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
-    }
-
-    .exec-msg-col { display:flex;flex-direction:column;max-width:72%;min-width:60px; }
-    .exec-own   .exec-msg-col { align-items:flex-end; }
-    .exec-other .exec-msg-col { align-items:flex-start; }
-
-    .exec-sender-name { font-size:11px;font-weight:600;color:#d4a700;margin-bottom:3px;padding-left:12px; }
-
-    .exec-bubble {
-      padding:8px 12px;border-radius:18px;position:relative;
-      max-width:100%;word-break:break-word;font-size:14px;line-height:1.45;
-      box-shadow:0 1px 2px rgba(0,0,0,0.3);
-    }
-    .exec-bubble-own {
-      background:linear-gradient(135deg,#2d1f06,#3d2b08);
-      border:1px solid rgba(212,167,0,0.3);border-bottom-right-radius:4px;color:#fff5cc;
-    }
-    .exec-bubble-other {
-      background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-      border-bottom-left-radius:4px;color:#e8e8e8;
-    }
-    .exec-bubble.exec-deleted { opacity:0.55; }
-    .exec-deleted-text { font-style:italic;color:#888;font-size:13px; }
-    .exec-msg-text     { margin-top:2px;white-space:pre-wrap; }
-    .exec-msg-meta     { display:flex;align-items:center;gap:6px;margin-top:5px;justify-content:flex-end;flex-wrap:wrap; }
-    .exec-msg-time     { font-size:10px;color:rgba(255,255,255,0.4);flex-shrink:0; }
-    .exec-edited-label { font-size:10px;color:rgba(212,167,0,0.5); }
-
-    .exec-read-receipt {
-      display:flex;align-items:center;gap:3px;cursor:pointer;padding:2px 5px;
-      border-radius:8px;transition:background 0.15s;
-    }
-    .exec-read-receipt:hover { background:rgba(212,167,0,0.1); }
-    .exec-tick      { font-size:11px;color:rgba(255,255,255,0.35); }
-    .exec-tick-blue { color:#6fc3ff; }
-    .exec-read-badge { font-size:10px;color:rgba(212,167,0,0.8); }
-
-    .exec-reply-quote {
-      background:rgba(212,167,0,0.08);border-left:3px solid #d4a700;
-      border-radius:0 8px 8px 0;padding:5px 8px;margin-bottom:6px;
-      cursor:pointer;max-width:100%;overflow:hidden;
-    }
-    .exec-reply-sender  { font-size:11px;font-weight:700;color:#d4a700;display:block; }
-    .exec-reply-preview { font-size:12px;color:#aaa;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-
-    .exec-media-img {
-      max-width:260px;max-height:220px;border-radius:10px;display:block;
-      margin-bottom:5px;cursor:pointer;object-fit:cover;
-    }
-    .exec-doc-link {
-      display:inline-block;background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.2);
-      color:#d4a700;border-radius:8px;padding:8px 12px;font-size:13px;text-decoration:none;margin-bottom:4px;
-    }
-
-    .exec-voice-msg { display:flex;align-items:center;gap:10px;padding:4px 0;min-width:180px; }
-    .exec-voice-play {
-      width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d4a700,#ffd700);
-      border:none;color:#000;font-size:14px;cursor:pointer;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-    }
-    .exec-voice-waveform {
-      flex:1;height:28px;background:rgba(212,167,0,0.1);border-radius:4px;
-      display:flex;align-items:center;padding:0 4px;overflow:hidden;
-    }
-    .exec-voice-bar {
-      width:100%;height:3px;background:linear-gradient(90deg,#d4a700,#ffd700,#d4a700);
-      border-radius:2px;animation:execVoiceWave 1.5s ease-in-out infinite alternate;
-    }
-    @keyframes execVoiceWave { from{transform:scaleY(1)} to{transform:scaleY(3)} }
-    .exec-voice-duration { font-size:11px;color:rgba(212,167,0,0.7);flex-shrink:0; }
-
-    .exec-poll-wrap {
-      background:rgba(212,167,0,0.05);border:1px solid rgba(212,167,0,0.18);
-      border-radius:12px;padding:10px 12px;margin-bottom:5px;min-width:220px;
-    }
-    .exec-poll-question { font-weight:700;color:#ffd700;font-size:14px;margin-bottom:10px; }
-    .exec-poll-option {
-      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-      border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;
-    }
-    .exec-poll-option:hover { background:rgba(212,167,0,0.1);border-color:rgba(212,167,0,0.3); }
-    .exec-poll-voted        { background:rgba(212,167,0,0.12);border-color:rgba(212,167,0,0.4); }
-    .exec-poll-opt-row      { display:flex;justify-content:space-between;align-items:center;margin-bottom:5px; }
-    .exec-poll-opt-text     { font-size:13px;color:#e8e8e8; }
-    .exec-poll-opt-count    { font-size:11px;color:rgba(212,167,0,0.65); }
-    .exec-poll-bar-bg       { height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden; }
-    .exec-poll-bar-fill     { height:100%;background:rgba(212,167,0,0.4);border-radius:2px;transition:width 0.4s ease; }
-    .exec-poll-bar-own      { background:linear-gradient(90deg,#d4a700,#ffd700); }
-    .exec-poll-total        { font-size:11px;color:#888;margin-top:8px; }
-
-    .exec-reactions-bar { display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;padding:0 4px; }
-    .exec-reaction-pill {
-      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.2);
-      border-radius:12px;padding:2px 8px;font-size:13px;cursor:pointer;
-      transition:all 0.15s;color:#e8e8e8;
-    }
-    .exec-reaction-pill:hover   { background:rgba(212,167,0,0.2);transform:scale(1.1); }
-    .exec-reaction-mine         { background:rgba(212,167,0,0.2);border-color:rgba(212,167,0,0.5); }
-
-    .exec-msg-actions-btn {
-      position:absolute;top:5px;right:-30px;
-      background:rgba(30,20,5,0.85);border:1px solid rgba(212,167,0,0.2);
-      color:#d4a700;border-radius:6px;padding:2px 7px;cursor:pointer;
-      font-size:16px;opacity:0;transition:opacity 0.15s;
-    }
-    .exec-message-wrapper:hover .exec-msg-actions-btn { opacity:1; }
-    .exec-own .exec-msg-actions-btn { right:auto;left:-30px; }
-
-    .exec-typing-indicator { display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;color:rgba(212,167,0,0.6);font-style:italic; }
-    .exec-typing-dots      { display:flex;gap:3px; }
-    .exec-typing-dots span {
-      width:5px;height:5px;border-radius:50%;background:#d4a700;opacity:0.4;
-      animation:execTypingDot 1.2s infinite;display:inline-block;
-    }
-    .exec-typing-dots span:nth-child(2) { animation-delay:0.2s; }
-    .exec-typing-dots span:nth-child(3) { animation-delay:0.4s; }
-    @keyframes execTypingDot { 0%,60%,100%{transform:none;opacity:0.4} 30%{transform:translateY(-4px);opacity:1} }
-
-    .exec-file-preview-bar {
-      background:rgba(212,167,0,0.08);border-top:1px solid rgba(212,167,0,0.2);
-      padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;
-    }
-    .exec-preview-inner { display:flex;align-items:center;gap:10px;flex:1;overflow:hidden; }
-    .exec-preview-inner img, .exec-preview-inner video { width:48px;height:48px;object-fit:cover;border-radius:6px; }
-    .exec-preview-name  { font-size:12px;color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .exec-preview-clear { background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0; }
-
-    .exec-reply-bar, .exec-edit-bar {
-      background:rgba(212,167,0,0.06);border-top:2px solid #d4a700;
-      padding:6px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
-    }
-    .exec-reply-bar-inner { flex:1;overflow:hidden;display:flex;align-items:center;gap:8px; }
-    .exec-reply-icon, .exec-edit-icon { font-size:16px;flex-shrink:0; }
-    .exec-reply-bar-sender  { font-size:11px;font-weight:700;color:#d4a700; }
-    .exec-reply-bar-text    { font-size:12px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .exec-edit-bar-text     { font-size:12px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1; }
-    .exec-reply-cancel, .exec-edit-cancel { background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0; }
-
-    .exec-record-timer {
-      background:rgba(255,60,60,0.15);border-top:1px solid rgba(255,60,60,0.3);
-      padding:5px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:13px;color:#ff6b6b;
-    }
-    .exec-rec-dot { font-size:10px;animation:execRecBlink 1s ease-in-out infinite; }
-    @keyframes execRecBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-    .exec-input-area {
-      display:flex;align-items:flex-end;gap:6px;padding:8px 12px;
-      background:rgba(20,14,2,0.95);border-top:1px solid rgba(212,167,0,0.15);flex-shrink:0;
-    }
-    .exec-inp-btn {
-      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.15);
-      color:#d4a700;border-radius:50%;width:38px;height:38px;font-size:17px;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;
-    }
-    .exec-inp-btn:hover { background:rgba(212,167,0,0.2); }
-    .exec-input-wrapper { flex:1; }
-    .exec-textarea {
-      width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(212,167,0,0.2);
-      border-radius:20px;color:#fff;padding:9px 14px;font-size:14px;line-height:1.4;
-      resize:none;outline:none;font-family:inherit;max-height:120px;overflow-y:auto;
-      transition:border-color 0.15s;display:block;box-sizing:border-box;
-    }
-    .exec-textarea:focus { border-color:rgba(212,167,0,0.55); }
-    .exec-textarea::placeholder { color:rgba(255,255,255,0.3); }
-    .exec-voice-btn {
-      background:rgba(212,167,0,0.1);border:1px solid rgba(212,167,0,0.15);
-      color:#d4a700;border-radius:50%;width:38px;height:38px;font-size:18px;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;
-    }
-    .exec-voice-btn:hover { background:rgba(212,167,0,0.2); }
-    .exec-recording-active { background:rgba(255,60,60,0.2)!important;border-color:rgba(255,60,60,0.5)!important;animation:execPulse 1s ease-in-out infinite; }
-    @keyframes execPulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 10px rgba(255,60,60,0.5)} }
-    .exec-send-btn {
-      background:linear-gradient(135deg,#d4a700,#ffd700);border:none;color:#000;
-      border-radius:50%;width:40px;height:40px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      box-shadow:0 2px 8px rgba(212,167,0,0.4);transition:all 0.15s;
-    }
-    .exec-send-btn:hover  { transform:scale(1.08); }
-    .exec-send-btn:active { transform:scale(0.95); }
-
-    .exec-context-menu, .exec-reaction-picker {
-      background:#1e140a;border:1px solid rgba(212,167,0,0.25);
-      border-radius:12px;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,0.6);min-width:150px;
-    }
-    .exec-reaction-picker { display:flex;gap:4px;flex-wrap:wrap;min-width:240px;padding:8px; }
-    .exec-reaction-picker button { background:none;border:none;font-size:22px;cursor:pointer;border-radius:8px;padding:4px;transition:transform 0.1s; }
-    .exec-reaction-picker button:hover { transform:scale(1.3); }
-    .exec-ctx-item {
-      display:block;width:100%;background:none;border:none;color:#e8e8e8;
-      padding:9px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px;transition:background 0.1s;
-    }
-    .exec-ctx-item:hover { background:rgba(212,167,0,0.12); }
-    .exec-ctx-danger     { color:#ff6b6b; }
-    .exec-ctx-danger:hover { background:rgba(255,60,60,0.1); }
-
-    .exec-readers-popup {
-      background:#1e140a;border:1px solid rgba(212,167,0,0.25);border-radius:14px;
-      padding:12px;box-shadow:0 8px 30px rgba(0,0,0,0.7);min-width:220px;max-width:280px;max-height:280px;
-    }
-    .exec-readers-header { font-size:12px;font-weight:700;color:#d4a700;margin-bottom:10px; }
-    .exec-readers-list   { overflow-y:auto;max-height:220px;display:flex;flex-direction:column;gap:8px; }
-    .exec-reader-row     { display:flex;align-items:center;gap:8px; }
-    .exec-reader-avatar  { width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0; }
-    .exec-reader-avatar-fb {
-      background:linear-gradient(135deg,#d4a700,#ffd700);color:#000;font-size:12px;
-      font-weight:700;display:flex;align-items:center;justify-content:center;
-    }
-    .exec-reader-name    { font-size:12px;color:#e8e8e8;font-weight:500; }
-    .exec-reader-time    { font-size:10px;color:#888; }
-    .exec-readers-empty  { font-size:12px;color:#888;text-align:center;padding:8px; }
-
-    .exec-modal-overlay {
-      position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;
-      display:flex;align-items:center;justify-content:center;padding:20px;
-    }
-    .exec-modal-box {
-      background:#1e140a;border:1px solid rgba(212,167,0,0.3);border-radius:18px;
-      width:100%;max-width:420px;overflow:hidden;
-    }
-    .exec-modal-header {
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 18px;border-bottom:1px solid rgba(212,167,0,0.15);
-    }
-    .exec-modal-header h3 { margin:0;color:#ffd700;font-size:16px; }
-    .exec-modal-close     { background:none;border:none;color:#888;font-size:20px;cursor:pointer;padding:2px 6px; }
-    .exec-modal-body      { padding:16px 18px;display:flex;flex-direction:column;gap:10px; }
-    .exec-modal-footer    { display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid rgba(212,167,0,0.15); }
-    .exec-input-field {
-      width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(212,167,0,0.2);
-      border-radius:10px;color:#fff;padding:9px 13px;font-size:14px;outline:none;
-      font-family:inherit;box-sizing:border-box;
-    }
-    .exec-input-field:focus       { border-color:rgba(212,167,0,0.5); }
-    .exec-input-field::placeholder { color:rgba(255,255,255,0.3); }
-    .exec-poll-opts-label { font-size:12px;color:rgba(212,167,0,0.7); }
-    .exec-add-opt-btn {
-      background:rgba(212,167,0,0.1);border:1px dashed rgba(212,167,0,0.3);
-      color:#d4a700;border-radius:10px;padding:8px;width:100%;cursor:pointer;font-size:13px;transition:all 0.15s;
-    }
-    .exec-add-opt-btn:hover { background:rgba(212,167,0,0.18); }
-    .exec-cancel-btn {
-      background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
-      color:#aaa;border-radius:10px;padding:9px 20px;cursor:pointer;font-size:14px;transition:all 0.15s;
-    }
-    .exec-cancel-btn:hover { background:rgba(255,255,255,0.1); }
-    .exec-gold-btn {
-      background:linear-gradient(135deg,#d4a700,#ffd700);border:none;color:#000;
-      border-radius:10px;padding:9px 20px;cursor:pointer;font-size:14px;font-weight:700;transition:all 0.15s;
-    }
-    .exec-gold-btn:hover { opacity:0.9; }
-
-    .exec-empty-state {
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      height:100%;text-align:center;padding:40px;color:#888;
-    }
-    .exec-empty-state h3 { color:#d4a700;margin-bottom:8px;font-size:16px; }
-    .exec-loading {
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      height:100%;gap:12px;color:#888;
-    }
-    .exec-spinner {
-      width:32px;height:32px;border:3px solid rgba(212,167,0,0.2);
-      border-top-color:#d4a700;border-radius:50%;animation:spin 0.8s linear infinite;
-    }
-    @keyframes spin { to{transform:rotate(360deg)} }
-    .exec-send-failed { opacity:0.5;border-color:rgba(255,60,60,0.4)!important; }
-    .exec-highlight   { animation:execHighlight 1.5s ease-out; }
-    @keyframes execHighlight { 0%{background:rgba(212,167,0,0.2)} 100%{background:transparent} }
-    </style>`;
+  const _tpl = document.getElementById('vx-tpl-exec-panel');
+  if (!_tpl) {
+    console.error('[VX] Missing <template id=vx-tpl-exec-panel> in index.html');
+    return '';
+  }
+  return _tpl.innerHTML.replace(/__VX_COLLEGE__/g, college);
 }
