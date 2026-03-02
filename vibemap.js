@@ -95,8 +95,8 @@ function requireGhostName(onSuccess) {
 function confirmGhostName() {
   const modal = document.getElementById('ghostNameRequiredModal');
   const input = document.getElementById('ghostNameReqInput');
-  const err   = document.getElementById('ghostNameReqErr');
-  const val   = (input?.value || '').trim();
+  const err = document.getElementById('ghostNameReqErr');
+  const val = (input?.value || '').trim();
 
   if (!val || val.length < 2) {
     if (err) err.textContent = '⚠️ Please enter at least 2 characters.';
@@ -179,9 +179,9 @@ function changeGhostName() {
 // ── 2. Bad-word filter + 3-strike mute system ─────────────────────────
 
 // Strike state persisted in localStorage
-const CHAT_STRIKE_KEY  = 'vx_chat_strikes';
-const CHAT_MUTE_KEY    = 'vx_chat_muted_until';
-const MAX_STRIKES      = 3;
+const CHAT_STRIKE_KEY = 'vx_chat_strikes';
+const CHAT_MUTE_KEY = 'vx_chat_muted_until';
+const MAX_STRIKES = 3;
 const MUTE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function getChatStrikes() {
@@ -224,70 +224,70 @@ function muteTimeLeft() {
 //         Malayalam, Bengali, Marathi + universal family slurs
 const BANNED_WORDS = [
   // ── English profanity ──
-  'fuck','f u c k','fucker','fucking','fucked','fucks','motherfucker','motherfucking',
-  'shit','shits','shitty','bullshit','horseshit','apeshit',
-  'bitch','bitches','bitching','son of a bitch',
-  'asshole','ass hole','arsehole','arse',
-  'cunt','cunts','crap','crappy',
-  'dick','dicks','dickhead','cock','cocks','cocksucker',
-  'pussy','pussies','whore','slut','slutty',
-  'bastard','bastards','nigger','nigga','faggot','fag','dyke',
-  'retard','retarded','spastic','twat','wanker','jerk off','jackass',
-  'piss','pissed','pissing','damn','damnit','goddamn','hell yeah',
-  'nude','naked','nudes','sex','sexy','porn','porno','hentai','xxx',
-  'boobs','boob','tits','tit','penis','vagina','erotic','orgasm',
+  'fuck', 'f u c k', 'fucker', 'fucking', 'fucked', 'fucks', 'motherfucker', 'motherfucking',
+  'shit', 'shits', 'shitty', 'bullshit', 'horseshit', 'apeshit',
+  'bitch', 'bitches', 'bitching', 'son of a bitch',
+  'asshole', 'ass hole', 'arsehole', 'arse',
+  'cunt', 'cunts', 'crap', 'crappy',
+  'dick', 'dicks', 'dickhead', 'cock', 'cocks', 'cocksucker',
+  'pussy', 'pussies', 'whore', 'slut', 'slutty',
+  'bastard', 'bastards', 'nigger', 'nigga', 'faggot', 'fag', 'dyke',
+  'retard', 'retarded', 'spastic', 'twat', 'wanker', 'jerk off', 'jackass',
+  'piss', 'pissed', 'pissing', 'damn', 'damnit', 'goddamn', 'hell yeah',
+  'nude', 'naked', 'nudes', 'sex', 'sexy', 'porn', 'porno', 'hentai', 'xxx',
+  'boobs', 'boob', 'tits', 'tit', 'penis', 'vagina', 'erotic', 'orgasm',
   // ── Family slurs (EN) ──
-  'your mother','ur mother','yo mama','your mama','your mom','ur mom',
-  'your father','ur father','your dad','ur dad',
-  'your sister','ur sister','your sis',
+  'your mother', 'ur mother', 'yo mama', 'your mama', 'your mom', 'ur mom',
+  'your father', 'ur father', 'your dad', 'ur dad',
+  'your sister', 'ur sister', 'your sis',
 
   // ── Hindi / Urdu (roman) ──
-  'madarchod','madar chod','maa ki aankh','maa ka','teri maa','teri ma',
-  'teri maa ki','bhen chod','bhen ki aankh','behenchod','behen chod',
-  'bhosdi','bhosda','bhosdike','chutiya','chut','chut ki',
-  'gaand','gaandu','gandu','lund','loda','lauda','lawda','lundbaaz',
-  'randi','raand','rand','harami','haraami','suwar','suar','kutte',
-  'kamine','kamina','kaminey','saala','saali','haramzada','haramzadi',
-  'maa chod','baap chod','bap chod','teri maa ko','teri behan ko',
+  'madarchod', 'madar chod', 'maa ki aankh', 'maa ka', 'teri maa', 'teri ma',
+  'teri maa ki', 'bhen chod', 'bhen ki aankh', 'behenchod', 'behen chod',
+  'bhosdi', 'bhosda', 'bhosdike', 'chutiya', 'chut', 'chut ki',
+  'gaand', 'gaandu', 'gandu', 'lund', 'loda', 'lauda', 'lawda', 'lundbaaz',
+  'randi', 'raand', 'rand', 'harami', 'haraami', 'suwar', 'suar', 'kutte',
+  'kamine', 'kamina', 'kaminey', 'saala', 'saali', 'haramzada', 'haramzadi',
+  'maa chod', 'baap chod', 'bap chod', 'teri maa ko', 'teri behan ko',
   // Family slurs (HI roman)
-  'teri maa','tera baap','teri behen','teri behan','tera bap',
-  'maa','mata','maa ko','behen ko','behan ko','baap ko','bap ko',
+  'teri maa', 'tera baap', 'teri behen', 'teri behan', 'tera bap',
+  'maa', 'mata', 'maa ko', 'behen ko', 'behan ko', 'baap ko', 'bap ko',
 
   // ── Punjabi (roman) ──
-  'teri maa di','teri pen di','pen di lun','maa di','penchod',
-  'pen chod','teri pen','tera pyo','tere pyo','tenu','kutta',
+  'teri maa di', 'teri pen di', 'pen di lun', 'maa di', 'penchod',
+  'pen chod', 'teri pen', 'tera pyo', 'tere pyo', 'tenu', 'kutta',
 
   // ── Tamil (roman transliteration) ──
-  'ommala','omala','punda','otha','thevidiya','mayiru','sunni','poolu',
-  'thevdiya','koothi','puluthi','naaye','naai','loosu',
+  'ommala', 'omala', 'punda', 'otha', 'thevidiya', 'mayiru', 'sunni', 'poolu',
+  'thevdiya', 'koothi', 'puluthi', 'naaye', 'naai', 'loosu',
   // Family (Tamil)
-  'amma','appan','akka','thangachi','anni',
+  'amma', 'appan', 'akka', 'thangachi', 'anni',
 
   // ── Telugu (roman) ──
-  'dengu','dengey','lanja','pooku','modda','gudda','naayala','sala',
-  'baadu','nee amma','nee amma ki','nee amma tho',
+  'dengu', 'dengey', 'lanja', 'pooku', 'modda', 'gudda', 'naayala', 'sala',
+  'baadu', 'nee amma', 'nee amma ki', 'nee amma tho',
   // Family (Telugu)
-  'amma','nana','akka','atta',
+  'amma', 'nana', 'akka', 'atta',
 
   // ── Kannada (roman) ──
-  'sule','sulemagane','holemagane','tika','ninna amma','nin taayi',
-  'taayi','thaayi','akka','tangi',
+  'sule', 'sulemagane', 'holemagane', 'tika', 'ninna amma', 'nin taayi',
+  'taayi', 'thaayi', 'akka', 'tangi',
 
   // ── Malayalam (roman) ──
-  'myru','myiru','poorr','pooru','kunna','kunni','patti',
-  'ammayude','ammaye','achan','chechi','ammachi',
+  'myru', 'myiru', 'poorr', 'pooru', 'kunna', 'kunni', 'patti',
+  'ammayude', 'ammaye', 'achan', 'chechi', 'ammachi',
 
   // ── Bengali (roman) ──
-  'magi','boga','khanki','shala','khankir chele','chele','maa ke',
-  'tor ma','tor baap','tor bon','tor didi',
+  'magi', 'boga', 'khanki', 'shala', 'khankir chele', 'chele', 'maa ke',
+  'tor ma', 'tor baap', 'tor bon', 'tor didi',
 
   // ── Marathi (roman) ──
-  'aai zava','aai zhav','bhadwa','bhadwi','rand','raand','haram',
-  'aai ga','aai chi','bai cha','bai chi',
+  'aai zava', 'aai zhav', 'bhadwa', 'bhadwi', 'rand', 'raand', 'haram',
+  'aai ga', 'aai chi', 'bai cha', 'bai chi',
 
   // ── Universal ──
-  'nude send','send nudes','send pic','naughty pic','dirty pic',
-  '18+','adult content','explicit','nsfw',
+  'nude send', 'send nudes', 'send pic', 'naughty pic', 'dirty pic',
+  '18+', 'adult content', 'explicit', 'nsfw',
 ];
 
 // Pre-process list: sort longest first, normalize
@@ -345,7 +345,7 @@ function communitySafetyCheck(text) {
       showCommunityMutedBanner(muteTimeLeft());
     } else {
       // 1st or 2nd strike warning
-      const icon  = strikes === 1 ? '⚠️' : '🔴';
+      const icon = strikes === 1 ? '⚠️' : '🔴';
       const label = strikes === 1 ? 'Warning' : 'Final Warning';
       showMessage(
         `${icon} ${label} (Strike ${strikes}/${MAX_STRIKES}): Message contains banned language. ` +
@@ -805,72 +805,72 @@ const vibeshopData = {
 
 const musicLibrary = [
   // ── Chill / LoFi ──
-  { id: 1,  name: "Chill Vibes",            artist: "LoFi Beats",     duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3",                  emoji: "🎧" },
-  { id: 2,  name: "Tech House Vibes",       artist: "LoFi House",     duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3",             emoji: "🎧" },
-  { id: 3,  name: "Dreamy Piano",           artist: "Classical",      duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3",               emoji: "🎹" },
-  { id: 4,  name: "Laid Back Afternoon",    artist: "Chillhop",       duration: "2:41", url: "https://assets.mixkit.co/music/preview/mixkit-laid-back-afternoon-132.mp3",         emoji: "🌅" },
-  { id: 5,  name: "Deep in the Groove",     artist: "LoFi Soul",      duration: "2:43", url: "https://assets.mixkit.co/music/preview/mixkit-deep-in-the-groove-141.mp3",          emoji: "🎵" },
+  { id: 1, name: "Chill Vibes", artist: "LoFi Beats", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-chill-vibes-239.mp3", emoji: "🎧" },
+  { id: 2, name: "Tech House Vibes", artist: "LoFi House", duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3", emoji: "🎧" },
+  { id: 3, name: "Dreamy Piano", artist: "Classical", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-dreamy-piano-1171.mp3", emoji: "🎹" },
+  { id: 4, name: "Laid Back Afternoon", artist: "Chillhop", duration: "2:41", url: "https://assets.mixkit.co/music/preview/mixkit-laid-back-afternoon-132.mp3", emoji: "🌅" },
+  { id: 5, name: "Deep in the Groove", artist: "LoFi Soul", duration: "2:43", url: "https://assets.mixkit.co/music/preview/mixkit-deep-in-the-groove-141.mp3", emoji: "🎵" },
   // ── Upbeat / Pop ──
-  { id: 6,  name: "Upbeat Energy",          artist: "Electronic Pop", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3",               emoji: "⚡" },
-  { id: 7,  name: "Happy Day",              artist: "Pop Rock",       duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3",                   emoji: "😊" },
-  { id: 8,  name: "Feel the Good Stuff",    artist: "Pop Vibes",      duration: "2:28", url: "https://assets.mixkit.co/music/preview/mixkit-feel-the-good-stuff-214.mp3",         emoji: "🌟" },
-  { id: 9,  name: "Infectious Bounce",      artist: "Pop Funk",       duration: "2:19", url: "https://assets.mixkit.co/music/preview/mixkit-infectious-bounce-547.mp3",           emoji: "🎉" },
-  { id: 10, name: "Pop Melodic Happy",      artist: "Pop",            duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-pop-melodic-and-happy-567.mp3",       emoji: "🎶" },
+  { id: 6, name: "Upbeat Energy", artist: "Electronic Pop", duration: "3:15", url: "https://assets.mixkit.co/music/preview/mixkit-upbeat-energy-225.mp3", emoji: "⚡" },
+  { id: 7, name: "Happy Day", artist: "Pop Rock", duration: "2:50", url: "https://assets.mixkit.co/music/preview/mixkit-happy-day-583.mp3", emoji: "😊" },
+  { id: 8, name: "Feel the Good Stuff", artist: "Pop Vibes", duration: "2:28", url: "https://assets.mixkit.co/music/preview/mixkit-feel-the-good-stuff-214.mp3", emoji: "🌟" },
+  { id: 9, name: "Infectious Bounce", artist: "Pop Funk", duration: "2:19", url: "https://assets.mixkit.co/music/preview/mixkit-infectious-bounce-547.mp3", emoji: "🎉" },
+  { id: 10, name: "Pop Melodic Happy", artist: "Pop", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-pop-melodic-and-happy-567.mp3", emoji: "🎶" },
   // ── Summer / Tropical ──
-  { id: 11, name: "Summer Vibes",           artist: "Tropical",       duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3",                emoji: "🏖️" },
-  { id: 12, name: "Beach Party",            artist: "Tropical Pop",   duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-beach-party-244.mp3",                 emoji: "🏝️" },
-  { id: 13, name: "Caribbean Steel Pan",    artist: "Caribbean",      duration: "2:14", url: "https://assets.mixkit.co/music/preview/mixkit-caribbean-steel-pan-beats-284.mp3",  emoji: "🥁" },
-  { id: 14, name: "Tropical Fun",           artist: "Tropical",       duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-tropical-fun-and-cute-143.mp3",       emoji: "🌴" },
+  { id: 11, name: "Summer Vibes", artist: "Tropical", duration: "3:30", url: "https://assets.mixkit.co/music/preview/mixkit-summer-vibes-129.mp3", emoji: "🏖️" },
+  { id: 12, name: "Beach Party", artist: "Tropical Pop", duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-beach-party-244.mp3", emoji: "🏝️" },
+  { id: 13, name: "Caribbean Steel Pan", artist: "Caribbean", duration: "2:14", url: "https://assets.mixkit.co/music/preview/mixkit-caribbean-steel-pan-beats-284.mp3", emoji: "🥁" },
+  { id: 14, name: "Tropical Fun", artist: "Tropical", duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-tropical-fun-and-cute-143.mp3", emoji: "🌴" },
   // ── Acoustic / Guitar ──
-  { id: 15, name: "Relaxing Guitar",        artist: "Acoustic",       duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3",             emoji: "🎸" },
-  { id: 16, name: "Acoustic Breeze",        artist: "Acoustic Folk",  duration: "2:31", url: "https://assets.mixkit.co/music/preview/mixkit-acoustic-breeze-2182.mp3",            emoji: "🌿" },
-  { id: 17, name: "Light and Cheerful",     artist: "Acoustic Pop",   duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-light-and-cheerful-5063.mp3",         emoji: "☀️" },
+  { id: 15, name: "Relaxing Guitar", artist: "Acoustic", duration: "3:10", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-guitar-243.mp3", emoji: "🎸" },
+  { id: 16, name: "Acoustic Breeze", artist: "Acoustic Folk", duration: "2:31", url: "https://assets.mixkit.co/music/preview/mixkit-acoustic-breeze-2182.mp3", emoji: "🌿" },
+  { id: 17, name: "Light and Cheerful", artist: "Acoustic Pop", duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-light-and-cheerful-5063.mp3", emoji: "☀️" },
   // ── Cinematic / Emotional ──
-  { id: 18, name: "Cinematic Drama",        artist: "Cinematic",      duration: "3:02", url: "https://assets.mixkit.co/music/preview/mixkit-cinematic-drama-opener-607.mp3",      emoji: "🎬" },
-  { id: 19, name: "Epic Adventure",         artist: "Cinematic",      duration: "2:16", url: "https://assets.mixkit.co/music/preview/mixkit-epic-adventure-436.mp3",              emoji: "⚔️" },
-  { id: 20, name: "Motivational Trailer",   artist: "Trailer",        duration: "1:59", url: "https://assets.mixkit.co/music/preview/mixkit-motivational-epic-trailer-568.mp3",  emoji: "🚀" },
-  { id: 21, name: "Emotional Drive",        artist: "Emotional Pop",  duration: "2:40", url: "https://assets.mixkit.co/music/preview/mixkit-emotional-drive-600.mp3",             emoji: "💫" },
-  { id: 22, name: "Inspirational Journey",  artist: "Orchestral",     duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-inspirational-journey-560.mp3",       emoji: "🌠" },
+  { id: 18, name: "Cinematic Drama", artist: "Cinematic", duration: "3:02", url: "https://assets.mixkit.co/music/preview/mixkit-cinematic-drama-opener-607.mp3", emoji: "🎬" },
+  { id: 19, name: "Epic Adventure", artist: "Cinematic", duration: "2:16", url: "https://assets.mixkit.co/music/preview/mixkit-epic-adventure-436.mp3", emoji: "⚔️" },
+  { id: 20, name: "Motivational Trailer", artist: "Trailer", duration: "1:59", url: "https://assets.mixkit.co/music/preview/mixkit-motivational-epic-trailer-568.mp3", emoji: "🚀" },
+  { id: 21, name: "Emotional Drive", artist: "Emotional Pop", duration: "2:40", url: "https://assets.mixkit.co/music/preview/mixkit-emotional-drive-600.mp3", emoji: "💫" },
+  { id: 22, name: "Inspirational Journey", artist: "Orchestral", duration: "2:52", url: "https://assets.mixkit.co/music/preview/mixkit-inspirational-journey-560.mp3", emoji: "🌠" },
   // ── Electronic / Dance ──
-  { id: 23, name: "Electro Camel",          artist: "EDM",            duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-electro-camel-229.mp3",              emoji: "🐪" },
-  { id: 24, name: "Funky Loop",             artist: "Funk EDM",       duration: "2:34", url: "https://assets.mixkit.co/music/preview/mixkit-funky-loop-575.mp3",                  emoji: "🕺" },
-  { id: 25, name: "Dance Party",            artist: "Club",           duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-dance-party-233.mp3",                 emoji: "💃" },
-  { id: 26, name: "Trance Music",           artist: "Trance",         duration: "2:20", url: "https://assets.mixkit.co/music/preview/mixkit-trance-music-121.mp3",                emoji: "🌀" },
-  { id: 27, name: "Fast Bouncing EDM",      artist: "EDM",            duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-fast-bouncing-edm-track-2272.mp3",   emoji: "⚡" },
+  { id: 23, name: "Electro Camel", artist: "EDM", duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-electro-camel-229.mp3", emoji: "🐪" },
+  { id: 24, name: "Funky Loop", artist: "Funk EDM", duration: "2:34", url: "https://assets.mixkit.co/music/preview/mixkit-funky-loop-575.mp3", emoji: "🕺" },
+  { id: 25, name: "Dance Party", artist: "Club", duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-dance-party-233.mp3", emoji: "💃" },
+  { id: 26, name: "Trance Music", artist: "Trance", duration: "2:20", url: "https://assets.mixkit.co/music/preview/mixkit-trance-music-121.mp3", emoji: "🌀" },
+  { id: 27, name: "Fast Bouncing EDM", artist: "EDM", duration: "2:02", url: "https://assets.mixkit.co/music/preview/mixkit-fast-bouncing-edm-track-2272.mp3", emoji: "⚡" },
   // ── Hip-Hop / Trap ──
-  { id: 28, name: "Hip Hop Vibes",          artist: "Hip-Hop",        duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3",                  emoji: "🎤" },
-  { id: 29, name: "Trap Vibe",              artist: "Trap",           duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-trap-vibe-2228.mp3",                  emoji: "🔥" },
-  { id: 30, name: "Driving Hip Hop",        artist: "Hip-Hop",        duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-driving-hip-hop-track-571.mp3",       emoji: "🚗" },
-  { id: 31, name: "B-Boy Hip Hop",          artist: "Breakbeat",      duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-b-boy-hip-hop-beat-2295.mp3",         emoji: "💥" },
+  { id: 28, name: "Hip Hop Vibes", artist: "Hip-Hop", duration: "2:45", url: "https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3", emoji: "🎤" },
+  { id: 29, name: "Trap Vibe", artist: "Trap", duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-trap-vibe-2228.mp3", emoji: "🔥" },
+  { id: 30, name: "Driving Hip Hop", artist: "Hip-Hop", duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-driving-hip-hop-track-571.mp3", emoji: "🚗" },
+  { id: 31, name: "B-Boy Hip Hop", artist: "Breakbeat", duration: "2:08", url: "https://assets.mixkit.co/music/preview/mixkit-b-boy-hip-hop-beat-2295.mp3", emoji: "💥" },
   // ── Jazz / Soul ──
-  { id: 32, name: "Cool Jazz",              artist: "Jazz",           duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-cool-jazz-2192.mp3",                  emoji: "🎷" },
-  { id: 33, name: "Saxophone Jazz Lounge",  artist: "Jazz Fusion",    duration: "2:44", url: "https://assets.mixkit.co/music/preview/mixkit-saxophone-jazz-lounge-2196.mp3",      emoji: "🎺" },
-  { id: 34, name: "Jazz in Paris",          artist: "French Jazz",    duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-jazz-in-paris-2200.mp3",              emoji: "🗼" },
+  { id: 32, name: "Cool Jazz", artist: "Jazz", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-cool-jazz-2192.mp3", emoji: "🎷" },
+  { id: 33, name: "Saxophone Jazz Lounge", artist: "Jazz Fusion", duration: "2:44", url: "https://assets.mixkit.co/music/preview/mixkit-saxophone-jazz-lounge-2196.mp3", emoji: "🎺" },
+  { id: 34, name: "Jazz in Paris", artist: "French Jazz", duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-jazz-in-paris-2200.mp3", emoji: "🗼" },
   // ── Ambient / Study ──
-  { id: 35, name: "Slow Mellow Groove",     artist: "Ambient",        duration: "2:29", url: "https://assets.mixkit.co/music/preview/mixkit-slow-mellow-groove-2308.mp3",         emoji: "🌙" },
-  { id: 36, name: "Soft Note",              artist: "Ambient Piano",  duration: "2:36", url: "https://assets.mixkit.co/music/preview/mixkit-soft-note-559.mp3",                   emoji: "🌌" },
-  { id: 37, name: "Blissful Memory",        artist: "Ambient",        duration: "2:39", url: "https://assets.mixkit.co/music/preview/mixkit-blissful-memory-557.mp3",             emoji: "✨" },
-  { id: 38, name: "Deep Sea Ambient",       artist: "Ambient",        duration: "2:38", url: "https://assets.mixkit.co/music/preview/mixkit-deep-sea-ambient-2220.mp3",           emoji: "🌊" },
-  { id: 39, name: "Forest Lullaby",         artist: "Nature",         duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-forest-lullaby-4128.mp3",             emoji: "🌲" },
+  { id: 35, name: "Slow Mellow Groove", artist: "Ambient", duration: "2:29", url: "https://assets.mixkit.co/music/preview/mixkit-slow-mellow-groove-2308.mp3", emoji: "🌙" },
+  { id: 36, name: "Soft Note", artist: "Ambient Piano", duration: "2:36", url: "https://assets.mixkit.co/music/preview/mixkit-soft-note-559.mp3", emoji: "🌌" },
+  { id: 37, name: "Blissful Memory", artist: "Ambient", duration: "2:39", url: "https://assets.mixkit.co/music/preview/mixkit-blissful-memory-557.mp3", emoji: "✨" },
+  { id: 38, name: "Deep Sea Ambient", artist: "Ambient", duration: "2:38", url: "https://assets.mixkit.co/music/preview/mixkit-deep-sea-ambient-2220.mp3", emoji: "🌊" },
+  { id: 39, name: "Forest Lullaby", artist: "Nature", duration: "2:30", url: "https://assets.mixkit.co/music/preview/mixkit-forest-lullaby-4128.mp3", emoji: "🌲" },
   // ── Fun / Ukulele ──
-  { id: 40, name: "Funny Ukulele",          artist: "Ukulele",        duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-funny-ukulele-579.mp3",               emoji: "🪗" },
-  { id: 41, name: "Happy Whistling",        artist: "Whistler",       duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-happy-whistling-596.mp3",             emoji: "🎵" },
-  { id: 42, name: "Playful Cat",            artist: "Quirky",         duration: "1:51", url: "https://assets.mixkit.co/music/preview/mixkit-playful-cat-541.mp3",                 emoji: "🐱" },
-  { id: 43, name: "Cheerful Kids Song",     artist: "Kids Pop",       duration: "1:53", url: "https://assets.mixkit.co/music/preview/mixkit-cheerful-kids-song-1029.mp3",         emoji: "🌈" },
+  { id: 40, name: "Funny Ukulele", artist: "Ukulele", duration: "2:01", url: "https://assets.mixkit.co/music/preview/mixkit-funny-ukulele-579.mp3", emoji: "🪗" },
+  { id: 41, name: "Happy Whistling", artist: "Whistler", duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-happy-whistling-596.mp3", emoji: "🎵" },
+  { id: 42, name: "Playful Cat", artist: "Quirky", duration: "1:51", url: "https://assets.mixkit.co/music/preview/mixkit-playful-cat-541.mp3", emoji: "🐱" },
+  { id: 43, name: "Cheerful Kids Song", artist: "Kids Pop", duration: "1:53", url: "https://assets.mixkit.co/music/preview/mixkit-cheerful-kids-song-1029.mp3", emoji: "🌈" },
   // ── Rock ──
-  { id: 44, name: "Rock Guitar",            artist: "Rock",           duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-rock-guitar-solo-583.mp3",            emoji: "🤘" },
-  { id: 45, name: "Driving Rock",           artist: "Hard Rock",      duration: "2:11", url: "https://assets.mixkit.co/music/preview/mixkit-driving-rock-584.mp3",                emoji: "🎸" },
-  { id: 46, name: "Loud Engines Rock",      artist: "Punk Rock",      duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-loud-engines-rock-585.mp3",           emoji: "🔊" },
+  { id: 44, name: "Rock Guitar", artist: "Rock", duration: "2:10", url: "https://assets.mixkit.co/music/preview/mixkit-rock-guitar-solo-583.mp3", emoji: "🤘" },
+  { id: 45, name: "Driving Rock", artist: "Hard Rock", duration: "2:11", url: "https://assets.mixkit.co/music/preview/mixkit-driving-rock-584.mp3", emoji: "🎸" },
+  { id: 46, name: "Loud Engines Rock", artist: "Punk Rock", duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-loud-engines-rock-585.mp3", emoji: "🔊" },
   // ── Romantic / Soft ──
-  { id: 47, name: "Romantic Piano",         artist: "Romantic",       duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-romantic-piano-554.mp3",              emoji: "💕" },
-  { id: 48, name: "Beautiful Wedding",      artist: "Orchestral",     duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-beautiful-wedding-584.mp3",           emoji: "💒" },
+  { id: 47, name: "Romantic Piano", artist: "Romantic", duration: "2:23", url: "https://assets.mixkit.co/music/preview/mixkit-romantic-piano-554.mp3", emoji: "💕" },
+  { id: 48, name: "Beautiful Wedding", artist: "Orchestral", duration: "2:27", url: "https://assets.mixkit.co/music/preview/mixkit-beautiful-wedding-584.mp3", emoji: "💒" },
   // ── India / Fusion ──
-  { id: 49, name: "Tabla Groove",           artist: "Indian Fusion",  duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-tabla-groove-4055.mp3",               emoji: "🪘" },
-  { id: 50, name: "Indian Folk Music",      artist: "Folk",           duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-indian-folk-music-4072.mp3",          emoji: "🎻" },
-  { id: 51, name: "Relaxing Kalimba",       artist: "World Music",    duration: "2:22", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-kalimba-589.mp3",            emoji: "🎶" },
+  { id: 49, name: "Tabla Groove", artist: "Indian Fusion", duration: "2:18", url: "https://assets.mixkit.co/music/preview/mixkit-tabla-groove-4055.mp3", emoji: "🪘" },
+  { id: 50, name: "Indian Folk Music", artist: "Folk", duration: "2:09", url: "https://assets.mixkit.co/music/preview/mixkit-indian-folk-music-4072.mp3", emoji: "🎻" },
+  { id: 51, name: "Relaxing Kalimba", artist: "World Music", duration: "2:22", url: "https://assets.mixkit.co/music/preview/mixkit-relaxing-kalimba-589.mp3", emoji: "🎶" },
   // ── Extra Chill ──
-  { id: 52, name: "Midnight Whispers",      artist: "Chill Pop",      duration: "2:33", url: "https://assets.mixkit.co/music/preview/mixkit-midnight-whispers-2181.mp3",          emoji: "🌃" },
-  { id: 53, name: "Life is a Game",         artist: "Indie Pop",      duration: "2:21", url: "https://assets.mixkit.co/music/preview/mixkit-life-is-a-game-579.mp3",              emoji: "🎮" },
+  { id: 52, name: "Midnight Whispers", artist: "Chill Pop", duration: "2:33", url: "https://assets.mixkit.co/music/preview/mixkit-midnight-whispers-2181.mp3", emoji: "🌃" },
+  { id: 53, name: "Life is a Game", artist: "Indie Pop", duration: "2:21", url: "https://assets.mixkit.co/music/preview/mixkit-life-is-a-game-579.mp3", emoji: "🎮" },
 ];
 
 const stickerLibrary = {
@@ -4553,7 +4553,7 @@ async function handlePostMessageClick(userId, username, event) {
       }
     }
     isMutual = profile && profile.isMutualFollow;
-  } catch(e) { console.warn('handlePostMessageClick:', e); }
+  } catch (e) { console.warn('handlePostMessageClick:', e); }
 
   if (isMutual) {
     openDmDrawer(userId);
@@ -5274,8 +5274,8 @@ function removeMedia(index) {
 // MUSIC SELECTOR  — reliable play/pause preview + mini-player bar
 // ─────────────────────────────────────────────────────────────────────────────
 let _musicPreviewAudio = null;
-let _musicPreviewId    = null;
-let _musicProgressRAF  = null;   // requestAnimationFrame handle for progress bar
+let _musicPreviewId = null;
+let _musicProgressRAF = null;   // requestAnimationFrame handle for progress bar
 
 function openMusicSelector() {
   const modal = document.getElementById('musicSelectorModal');
@@ -5329,7 +5329,7 @@ function _filterMusicList(query) {
   }
 
   container.innerHTML = filtered.map(m => {
-    const isSel  = selectedMusic && selectedMusic.id === m.id;
+    const isSel = selectedMusic && selectedMusic.id === m.id;
     const isPrev = _musicPreviewId === m.id;
     return `
       <div id="mtrack_${m.id}" class="music-track-row" style="
@@ -5370,7 +5370,7 @@ function _toggleMusicPreview(musicId) {
   // Same track → toggle pause/resume
   if (_musicPreviewId === musicId && _musicPreviewAudio) {
     if (_musicPreviewAudio.paused) {
-      _musicPreviewAudio.play().catch(() => {});
+      _musicPreviewAudio.play().catch(() => { });
       _updatePlayBtnState(musicId, true);
       _startProgressTick();
     } else {
@@ -5396,7 +5396,7 @@ function _toggleMusicPreview(musicId) {
     .catch(err => {
       console.warn('Music preview error:', err);
       _musicPreviewAudio = null;
-      _musicPreviewId    = null;
+      _musicPreviewId = null;
     });
 
   _musicPreviewAudio.onended = () => {
@@ -5424,18 +5424,18 @@ function _updatePlayBtnState(musicId, isPlaying) {
   const btn = document.getElementById(`mplay_${musicId}`);
   if (!btn) return;
   const music = musicLibrary.find(m => m.id === musicId);
-  btn.textContent    = isPlaying ? '⏸' : (music?.emoji || '▶');
+  btn.textContent = isPlaying ? '⏸' : (music?.emoji || '▶');
   btn.style.background = isPlaying ? 'rgba(34,197,94,0.25)' : 'rgba(167,139,250,0.15)';
-  btn.style.color      = isPlaying ? '#22c55e'               : '#a78bfa';
+  btn.style.color = isPlaying ? '#22c55e' : '#a78bfa';
 }
 
 function _showMiniPlayer(music) {
   const player = document.getElementById('musicMiniPlayer');
-  const title  = document.getElementById('mmpTitle');
-  const bar    = document.getElementById('mmpProgressBar');
+  const title = document.getElementById('mmpTitle');
+  const bar = document.getElementById('mmpProgressBar');
   if (!player) return;
   if (title) title.textContent = `${music.emoji} ${music.name} — ${music.artist}`;
-  if (bar)   bar.style.width   = '0%';
+  if (bar) bar.style.width = '0%';
   player.style.display = 'block';
 }
 
@@ -5943,8 +5943,32 @@ function loadTrending() {
   container.innerHTML = html;
 }
 
-function loadVibeshopPage() {
-  console.log('🛍️ Loading VibeShop Page');
+async function loadVibeshopPage() {
+  console.log('🛍️ Redirecting to VibeShop with SSO...');
+
+  if (!currentUser) {
+    showMessage('⚠️ Please log in first to access VibeShop', 'error');
+    return;
+  }
+
+  try {
+    showMessage('🔐 Preparing secure redirect to VibeShop...', 'success');
+
+    // Generate SSO token from backend
+    const data = await apiCall('/api/sso/generate-token', 'POST');
+
+    if (data.success && data.ssoToken) {
+      // Redirect to vibexpert.shop with SSO token
+      window.open(`https://www.vibexpert.shop?sso_token=${data.ssoToken}`, '_blank');
+    } else {
+      showMessage('❌ Failed to generate SSO token', 'error');
+    }
+  } catch (error) {
+    console.error('SSO redirect error:', error);
+    showMessage('❌ Failed to redirect: ' + error.message, 'error');
+    // Fallback: open shop without SSO
+    window.open('https://www.vibexpert.shop', '_blank');
+  }
 }
 
 
@@ -6523,15 +6547,15 @@ function renderRvFeed(vibes) {
 }
 
 function buildRvCard(vibe) {
-  const author   = vibe.users || {};
-  const name     = author.username || 'Unknown';
-  const college  = author.college  || '';
-  const isRoyal  = vibe.plan_type === 'royal';
-  const isOwn    = currentUser && vibe.user_id === currentUser.id;
-  const isLiked  = vibe.is_liked;
-  const timeStr  = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
-  const expHrs   = vibe.hours_left || 0;
-  const expStr   = expHrs > 24 ? `${Math.ceil(expHrs / 24)}d left` : `${expHrs}h left`;
+  const author = vibe.users || {};
+  const name = author.username || 'Unknown';
+  const college = author.college || '';
+  const isRoyal = vibe.plan_type === 'royal';
+  const isOwn = currentUser && vibe.user_id === currentUser.id;
+  const isLiked = vibe.is_liked;
+  const timeStr = vibeTimeAgo ? vibeTimeAgo(vibe.created_at) : '';
+  const expHrs = vibe.hours_left || 0;
+  const expStr = expHrs > 24 ? `${Math.ceil(expHrs / 24)}d left` : `${expHrs}h left`;
   const isExpiring = expHrs <= 12;
 
   // Visibility chip
@@ -6553,7 +6577,7 @@ function buildRvCard(vibe) {
   const mediaSrc = proxyMediaUrl(vibe.media_url);
   const media = vibe.media_type === 'video'
     ? `<video class="rv-card-media" src="${mediaSrc}" controls playsinline preload="metadata"></video>`
-    : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g,"\\'")}')">`;
+    : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g, "\\'")}')">`;
 
   // Caption block
   const captionHtml = vibe.caption
@@ -6562,7 +6586,7 @@ function buildRvCard(vibe) {
 
   // Expiry progress
   const totalHrs = isRoyal ? 600 : 360;
-  const pctLeft  = Math.min(100, Math.round((expHrs / totalHrs) * 100));
+  const pctLeft = Math.min(100, Math.round((expHrs / totalHrs) * 100));
   const barColor = isExpiring ? '#ff4444' : isRoyal ? '#FFD700' : '#a0a0c0';
 
   return `
@@ -6640,7 +6664,7 @@ function buildRvCard(vibe) {
 function rvSharePost(vibeId, authorName) {
   const text = `Check out ${authorName}'s RealVibe on VibeXpert!`;
   if (navigator.share) {
-    navigator.share({ title: 'RealVibe', text, url: window.location.href }).catch(() => {});
+    navigator.share({ title: 'RealVibe', text, url: window.location.href }).catch(() => { });
   } else {
     navigator.clipboard?.writeText(window.location.href)
       .then(() => showMessage('\uD83D\uDD17 Link copied!', 'success'))
@@ -8365,7 +8389,7 @@ async function sendWhatsAppMessageFixed() {
       // Force ghost name re-selection
       _ghostName = '';
       localStorage.removeItem('vx_ghost_name');
-      setTimeout(() => requireGhostName(() => {}), 500);
+      setTimeout(() => requireGhostName(() => { }), 500);
     }
 
   } catch (error) {
@@ -10665,7 +10689,7 @@ function searchVibeLocation(query) {
         }).join('');
         results.innerHTML = baseHtml + realHtml;
       })
-      .catch(() => {}); // keep quick suggestions on error
+      .catch(() => { }); // keep quick suggestions on error
   }, 500);
 }
 function vibeGetCurrentLocation() {
@@ -10734,18 +10758,18 @@ function getVibePollData() {
 // ── GIF picker ────────────────────────────────────────────────
 // Curated GIFs that always load (direct Giphy CDN links — no API key required)
 const _curatedGifs = [
-  { url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif',   label: '🔥 Trending' },
-  { url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',   label: '😂 Funny' },
-  { url: 'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif',       label: '😎 Cool' },
-  { url: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',   label: '🎉 Party' },
-  { url: 'https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif',   label: '💯 Agree' },
-  { url: 'https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif',  label: '🌟 Amazing' },
-  { url: 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',  label: '👀 Wow' },
-  { url: 'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif',   label: '😍 Love' },
-  { url: 'https://media.giphy.com/media/26xBwdIuRJiAIqHIA/giphy.gif',   label: '🤣 LOL' },
-  { url: 'https://media.giphy.com/media/3oKIPnbKgN3bXeVpvy/giphy.gif',  label: '✨ Magic' },
-  { url: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif',   label: '🎵 Music' },
-  { url: 'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif',   label: '🙏 Thanks' },
+  { url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif', label: '🔥 Trending' },
+  { url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif', label: '😂 Funny' },
+  { url: 'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif', label: '😎 Cool' },
+  { url: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif', label: '🎉 Party' },
+  { url: 'https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif', label: '💯 Agree' },
+  { url: 'https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif', label: '🌟 Amazing' },
+  { url: 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif', label: '👀 Wow' },
+  { url: 'https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif', label: '😍 Love' },
+  { url: 'https://media.giphy.com/media/26xBwdIuRJiAIqHIA/giphy.gif', label: '🤣 LOL' },
+  { url: 'https://media.giphy.com/media/3oKIPnbKgN3bXeVpvy/giphy.gif', label: '✨ Magic' },
+  { url: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif', label: '🎵 Music' },
+  { url: 'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif', label: '🙏 Thanks' },
 ];
 
 function openVibeGifPicker() {
@@ -10762,12 +10786,12 @@ function _renderCuratedGifs(grid) {
   grid.innerHTML = `
     <div style="font-size:10px;color:rgba(255,255,255,0.35);text-align:center;padding:4px 0 6px;letter-spacing:0.5px;">TRENDING — tap to add, or search above</div>
     ${_curatedGifs.map(g =>
-      `<div class="vgp-item" onclick="selectVibeGif('${g.url}','${g.url}')" style="position:relative;">
+    `<div class="vgp-item" onclick="selectVibeGif('${g.url}','${g.url}')" style="position:relative;">
          <img src="${g.url}" alt="${g.label}" loading="lazy"
               style="width:100%;height:80px;object-fit:cover;border-radius:6px;display:block;"
               onerror="this.parentElement.style.display='none'">
        </div>`
-    ).join('')}`;
+  ).join('')}`;
 }
 
 let _gifTimer = null;
@@ -10800,9 +10824,9 @@ function _doGifSearch(query) {
       if (!results.length) throw new Error('empty');
       grid.innerHTML = results.map(r => {
         const preview = r.media_formats?.tinygif?.url || r.media_formats?.nanogif?.url || '';
-        const full    = r.media_formats?.gif?.url || preview;
+        const full = r.media_formats?.gif?.url || preview;
         if (!preview) return '';
-        return `<div class="vgp-item" onclick="selectVibeGif('${full.replace(/'/g,"\\'")}','${preview.replace(/'/g,"\\'")}')">
+        return `<div class="vgp-item" onclick="selectVibeGif('${full.replace(/'/g, "\\'")}','${preview.replace(/'/g, "\\'")}')">
           <img src="${preview}" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;border-radius:6px;"
                onerror="this.parentElement.style.display='none'">
         </div>`;
@@ -11101,12 +11125,12 @@ async function openDmDrawer(userId) {
 
   _dmCurrentReceiverId = userId;
 
-  const drawer   = document.getElementById('dmDrawer');
+  const drawer = document.getElementById('dmDrawer');
   const backdrop = document.getElementById('dmDrawerBackdrop');
-  const area     = document.getElementById('dmMessagesArea');
-  const nameEl   = document.getElementById('dmDrawerName');
+  const area = document.getElementById('dmMessagesArea');
+  const nameEl = document.getElementById('dmDrawerName');
   const statusEl = document.getElementById('dmDrawerStatus');
-  const avatarImg    = document.getElementById('dmDrawerAvatarImg');
+  const avatarImg = document.getElementById('dmDrawerAvatarImg');
   const avatarInitial = document.getElementById('dmDrawerAvatarInitial');
 
   if (!drawer || !area) {
@@ -11125,15 +11149,15 @@ async function openDmDrawer(userId) {
   // Restore any saved position or use default (bottom-right)
   const saved = window._dmPanelPos;
   if (saved) {
-    drawer.style.left   = saved.left   || '';
-    drawer.style.right  = saved.right  || '24px';
-    drawer.style.top    = saved.top    || '';
+    drawer.style.left = saved.left || '';
+    drawer.style.right = saved.right || '24px';
+    drawer.style.top = saved.top || '';
     drawer.style.bottom = saved.bottom || '24px';
   } else {
-    drawer.style.right  = '24px';
+    drawer.style.right = '24px';
     drawer.style.bottom = '24px';
-    drawer.style.left   = '';
-    drawer.style.top    = '';
+    drawer.style.left = '';
+    drawer.style.top = '';
   }
 
   // Clamp so panel never overlaps header
@@ -11278,14 +11302,14 @@ function closeDmDrawer() {
 function minimizeDmPanel(event) {
   event && event.stopPropagation();
   const drawer = document.getElementById('dmDrawer');
-  const btn    = document.getElementById('dmMinimizeBtn');
+  const btn = document.getElementById('dmMinimizeBtn');
   if (!drawer) return;
   const isMin = drawer.classList.contains('dm-minimized');
   if (isMin) {
     // Restore
     const headerEl = document.querySelector('header, #mainHeader, nav, .main-header, [class*="header"]');
-    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
-    const panelH   = Math.min(560, window.innerHeight - headerH - 32);
+    const headerH = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
+    const panelH = Math.min(560, window.innerHeight - headerH - 32);
     drawer.style.height = panelH + 'px';
     drawer.classList.remove('dm-minimized');
     if (btn) btn.textContent = '—';
@@ -11308,15 +11332,15 @@ function minimizeDmPanel(event) {
 
     dragging = true;
     const rect = drawer.getBoundingClientRect();
-    startX   = e.clientX;
-    startY   = e.clientY;
+    startX = e.clientX;
+    startY = e.clientY;
     origLeft = rect.left;
-    origTop  = rect.top;
+    origTop = rect.top;
 
     // Switch to top/left positioning for free dragging
-    drawer.style.left   = rect.left + 'px';
-    drawer.style.top    = rect.top  + 'px';
-    drawer.style.right  = 'auto';
+    drawer.style.left = rect.left + 'px';
+    drawer.style.top = rect.top + 'px';
+    drawer.style.right = 'auto';
     drawer.style.bottom = 'auto';
     drawer.style.transition = 'none';
     drawer.style.cursor = 'grabbing';
@@ -11328,22 +11352,22 @@ function minimizeDmPanel(event) {
     const drawer = document.getElementById('dmDrawer');
     if (!drawer) return;
 
-    const dx  = e.clientX - startX;
-    const dy  = e.clientY - startY;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
     const headerEl = document.querySelector('header, #mainHeader, nav, .main-header, [class*="header"]');
-    const headerH  = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
+    const headerH = headerEl ? headerEl.getBoundingClientRect().bottom : 64;
 
     let newLeft = origLeft + dx;
-    let newTop  = origTop  + dy;
+    let newTop = origTop + dy;
 
     // Clamp within viewport, always below header
     const w = drawer.offsetWidth;
     const h = drawer.offsetHeight;
-    newLeft = Math.max(8, Math.min(window.innerWidth  - w - 8, newLeft));
-    newTop  = Math.max(headerH + 8, Math.min(window.innerHeight - h - 8, newTop));
+    newLeft = Math.max(8, Math.min(window.innerWidth - w - 8, newLeft));
+    newTop = Math.max(headerH + 8, Math.min(window.innerHeight - h - 8, newTop));
 
     drawer.style.left = newLeft + 'px';
-    drawer.style.top  = newTop  + 'px';
+    drawer.style.top = newTop + 'px';
   }
 
   function onMouseUp() {
@@ -11371,13 +11395,13 @@ function minimizeDmPanel(event) {
     const header = document.getElementById('dmDrawerHeader');
     if (header && !header._dmDragAttached) {
       header._dmDragAttached = true;
-      header.addEventListener('mousedown',  onMouseDown);
+      header.addEventListener('mousedown', onMouseDown);
       header.addEventListener('touchstart', onTouchStart, { passive: false });
     }
     document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup',   onMouseUp);
+    document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('touchmove', onTouchMove);
-    document.addEventListener('touchend',  onMouseUp);
+    document.addEventListener('touchend', onMouseUp);
   }
   // Expose so openDmDrawer can call it
   window._attachDmDrag = attachDmDragListeners;
@@ -11430,11 +11454,11 @@ function _buildDmBubble(m, isOptimistic) {
 
   // Quick action buttons (reply + react)
   const actionsHtml = isOptimistic ? '' : `<div class="dm-msg-actions ${own ? 'dm-actions-left' : 'dm-actions-right'}">
-    <button class="dm-action-btn" title="Reply" onclick="dmSetReply('${msgId}','${escapeHtml((m.content||'').replace(/'/g,"&#39;"))}')">↩</button>
+    <button class="dm-action-btn" title="Reply" onclick="dmSetReply('${msgId}','${escapeHtml((m.content || '').replace(/'/g, "&#39;"))}')">↩</button>
     <button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker('${msgId}',this)">😊</button>
   </div>`;
 
-  return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="'+msgId+'"' : ''}>
+  return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="' + msgId + '"' : ''}>
     ${actionsHtml}
     <div class="dm-msg-wrap">
       ${replyHtml}
@@ -11595,7 +11619,7 @@ async function sendDm() {
     return;
   }
 
-  const replyToId   = _dmReplyToId;
+  const replyToId = _dmReplyToId;
   const replyToText = _dmReplyToText;
 
   // Clear input + reply bar immediately for snappy UX
@@ -11843,7 +11867,7 @@ async function loadDmConversations() {
         const unread = c.unreadCount || 0;
         const initials = (other.username || '?')[0].toUpperCase();
         const avatarHtml = other.profile_pic
-          ? `<img src="${other.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(other.username||'')}">`
+          ? `<img src="${other.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(other.username || '')}">`
           : `<div class="dm-conv-avatar-init">${initials}</div>`;
         const lastMsg = c.last_message
           ? escapeHtml(c.last_message).slice(0, 45) + (c.last_message.length > 45 ? '…' : '')
@@ -11885,7 +11909,7 @@ async function loadDmConversations() {
         const online = !u.last_seen;
         const initials = (u.username || '?')[0].toUpperCase();
         const avatarHtml = u.profile_pic
-          ? `<img src="${u.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(u.username||'')}">`
+          ? `<img src="${u.profile_pic}" class="dm-conv-avatar-img" alt="${escapeHtml(u.username || '')}">`
           : `<div class="dm-conv-avatar-init">${initials}</div>`;
         return `
           <div class="dm-contact-card dm-contact-new">
@@ -11948,8 +11972,8 @@ async function showMiniProfileCard(userId, event) {
 
 
 // Stubs kept for backward compat — popup removed, profile always redirects via showMiniProfileCard
-function closeMiniProfileCard() {}
-function mpcToggleFollow() {}
+function closeMiniProfileCard() { }
+function mpcToggleFollow() { }
 function mpcOpenDm() { if (typeof _mpcCurrentUserId !== 'undefined' && _mpcCurrentUserId) openDmDrawer(_mpcCurrentUserId); }
 
 // ── Ghost Mode ─────────────────────────────────────────────────────
@@ -12302,21 +12326,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // ════════════════════════════════════════════════════════════════
 
 // ── State ─────────────────────────────────────────────────────────────
-let execMessages           = [];
-let execActiveChat         = 'executive'; // 'ghost' | 'executive'
-let execTypingUsers        = new Set();
-let execTypingEmitTimeout  = null;
-let execMediaRecorder      = null;
-let execAudioChunks        = [];
-let execRecording          = false;
-let execRecordTimer        = null;
-let execRecordSeconds      = 0;
-let execReplyTo            = null;        // {id, content, senderName}
-let execEditingId          = null;
-let execIsLoading          = false;
-let execReadObserver       = null;
-let execUnreadCount        = 0;
-let execLastDateLabel      = '';
+let execMessages = [];
+let execActiveChat = 'executive'; // 'ghost' | 'executive'
+let execTypingUsers = new Set();
+let execTypingEmitTimeout = null;
+let execMediaRecorder = null;
+let execAudioChunks = [];
+let execRecording = false;
+let execRecordTimer = null;
+let execRecordSeconds = 0;
+let execReplyTo = null;        // {id, content, senderName}
+let execEditingId = null;
+let execIsLoading = false;
+let execReadObserver = null;
+let execUnreadCount = 0;
+let execLastDateLabel = '';
 let _execSocketListenersRegistered = false;
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -12324,21 +12348,21 @@ function execFormatTime(dateStr) {
   const d = new Date(dateStr);
   let h = d.getHours(), m = d.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
-  return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+  return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
 }
 
 function execDateLabel(dateStr) {
   const d = new Date(dateStr);
   const now = new Date();
-  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
   if (d.toDateString() === now.toDateString()) return 'Today';
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function execFormatDuration(sec) {
   const m = Math.floor(sec / 60), s = sec % 60;
-  return `${m}:${s.toString().padStart(2,'0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function execReplyPreviewText(msg) {
@@ -12400,9 +12424,9 @@ function openCommunityChat() {
   if (ghostItem) ghostItem.classList.add('active');
 
   const ghostPanel = document.getElementById('ghostChatPanel');
-  const execPanel  = document.getElementById('executiveChatPanel');
+  const execPanel = document.getElementById('executiveChatPanel');
   if (ghostPanel) ghostPanel.style.display = 'flex';
-  if (execPanel)  execPanel.style.display  = 'none';
+  if (execPanel) execPanel.style.display = 'none';
 
   // ── Scroll to correct position every time ghost chat is opened ────
   // Must run AFTER display:flex so offsetTop / scrollHeight are valid.
@@ -12493,7 +12517,7 @@ function execRegisterSocketListeners() {
           const names = existing && existing !== 'Delivered' ? existing.split(', ') : [];
           names.push(readerName);
           const visible = names.slice(0, 3);
-          const more    = names.length - 3;
+          const more = names.length - 3;
           namesEl.textContent = '👁' + visible.join(', ') + (more > 0 ? ` +${more}` : '');
         } else {
           namesEl.textContent = `👁 ${cur}`;
@@ -12502,7 +12526,7 @@ function execRegisterSocketListeners() {
     });
   });
 
-  socket.on('exec_user_typing',      ({ username }) => execShowTyping(username));
+  socket.on('exec_user_typing', ({ username }) => execShowTyping(username));
   socket.on('exec_user_stop_typing', ({ username }) => execHideTyping(username));
 
   socket.on('exec_poll_voted', ({ messageId, votes }) => {
@@ -12573,12 +12597,12 @@ async function execLoadMessages() {
           } else {
             // Fallback
             const msgs = container.querySelectorAll('[id^="exec-msg-"]');
-            if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
+            if (msgs.length) msgs[msgs.length - 1].scrollIntoView({ behavior: 'smooth' });
           }
         } else {
           // No unread — go to bottom
           const msgs = container.querySelectorAll('[id^="exec-msg-"]');
-          if (msgs.length) msgs[msgs.length-1].scrollIntoView({ behavior: 'smooth' });
+          if (msgs.length) msgs[msgs.length - 1].scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
     }
@@ -12610,10 +12634,10 @@ function execAppendMessage(msg, isInitial = false) {
   if (!container) return;
   if (document.getElementById(`exec-msg-${msg.id}`)) return; // duplicate guard
 
-  const isOwn    = msg.sender_id === currentUser?.id || msg.users?.id === currentUser?.id;
-  const sender   = msg.users?.username || 'User';
-  const avatar   = msg.users?.profile_pic;
-  const timeStr  = execFormatTime(msg.created_at);
+  const isOwn = msg.sender_id === currentUser?.id || msg.users?.id === currentUser?.id;
+  const sender = msg.users?.username || 'User';
+  const avatar = msg.users?.profile_pic;
+  const timeStr = execFormatTime(msg.created_at);
   const readCount = (msg.read_by || []).length;
 
   execInsertDateSeparatorIfNeeded(container, msg.created_at);
@@ -12621,8 +12645,8 @@ function execAppendMessage(msg, isInitial = false) {
   const wrapper = document.createElement('div');
   wrapper.className = `exec-message-wrapper ${isOwn ? 'exec-own' : 'exec-other'}`;
   wrapper.id = `exec-msg-${msg.id}`;
-  wrapper.dataset.msgId     = msg.id;
-  wrapper.dataset.senderId  = msg.sender_id || msg.users?.id || '';
+  wrapper.dataset.msgId = msg.id;
+  wrapper.dataset.senderId = msg.sender_id || msg.users?.id || '';
   wrapper.dataset.createdAt = msg.created_at;
 
   // Avatar
@@ -12689,8 +12713,8 @@ function execAppendMessage(msg, isInitial = false) {
   // Seen-by (own messages only) — show names inline, click for full popup
   const readers = msg.read_by || [];
   const readerNames = readers.slice(0, 3).map(r => r.username || 'User');
-  const moreCount  = Math.max(0, readers.length - 3);
-  const namesStr   = readerNames.length > 0
+  const moreCount = Math.max(0, readers.length - 3);
+  const namesStr = readerNames.length > 0
     ? readerNames.join(', ') + (moreCount > 0 ? ` +${moreCount}` : '')
     : '';
   const readReceiptHTML = isOwn ? `
@@ -12698,8 +12722,8 @@ function execAppendMessage(msg, isInitial = false) {
          title="Click to see who read this" data-count="${readCount}">
       <span class="exec-tick ${readCount > 0 ? 'exec-tick-blue' : ''}">✓✓</span>
       ${readCount > 0
-        ? `<span class="exec-seen-names" data-count="${readCount}">👁 ${namesStr}</span>`
-        : '<span class="exec-seen-names exec-seen-pending">Delivered</span>'}
+      ? `<span class="exec-seen-names" data-count="${readCount}">👁 ${namesStr}</span>`
+      : '<span class="exec-seen-names exec-seen-pending">Delivered</span>'}
     </div>` : '';
 
   // Actions button
@@ -12734,19 +12758,19 @@ function execAppendMessage(msg, isInitial = false) {
 
   if (!isInitial) {
     const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
-    if (isOwn || atBottom) setTimeout(() => wrapper.scrollIntoView({ behavior:'smooth', block:'end' }), 50);
+    if (isOwn || atBottom) setTimeout(() => wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
   }
 }
 
 // ── Poll helpers ──────────────────────────────────────────────────────
 function execBuildPollResultsHTML(poll) {
-  const votes     = poll.executive_poll_votes || [];
-  const total     = votes.length;
-  const myVote    = votes.find(v => v.user_id === currentUser?.id)?.option_id;
+  const votes = poll.executive_poll_votes || [];
+  const total = votes.length;
+  const myVote = votes.find(v => v.user_id === currentUser?.id)?.option_id;
 
   return (poll.options || []).map(opt => {
-    const count   = votes.filter(v => v.option_id === opt.id).length;
-    const pct     = total > 0 ? Math.round((count / total) * 100) : 0;
+    const count = votes.filter(v => v.option_id === opt.id).length;
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
     const isMyVote = myVote === opt.id;
     return `<div class="exec-poll-option ${isMyVote ? 'exec-poll-voted' : ''}"
          onclick="execVotePoll('${poll.id}','${opt.id}','${poll.message_id}')">
@@ -12777,12 +12801,12 @@ async function execVotePoll(pollId, optionId, messageId) {
 }
 
 // ── Reactions ─────────────────────────────────────────────────────────
-const EXEC_QUICK_REACTIONS = ['❤️','😂','👍','😮','😢','🔥','🎉','👏','💯','🙌'];
+const EXEC_QUICK_REACTIONS = ['❤️', '😂', '👍', '😮', '😢', '🔥', '🎉', '👏', '💯', '🙌'];
 
 function execBuildReactionsHTML(messageId, reactions) {
   const counts = {};
   (reactions || []).forEach(r => {
-    if (!counts[r.emoji]) counts[r.emoji] = { count:0, myReacted:false };
+    if (!counts[r.emoji]) counts[r.emoji] = { count: 0, myReacted: false };
     counts[r.emoji].count++;
     if (r.user_id === currentUser?.id) counts[r.emoji].myReacted = true;
   });
@@ -12803,7 +12827,7 @@ function execShowReactionPicker(event, messageId) {
   const y = event.clientY - 60;
   picker.style.cssText = `position:fixed;top:${y}px;left:${x}px;z-index:9999;`;
   document.body.appendChild(picker);
-  setTimeout(() => document.addEventListener('click', () => picker.remove(), { once:true }), 100);
+  setTimeout(() => document.addEventListener('click', () => picker.remove(), { once: true }), 100);
 }
 
 function execShowReactionPickerById(messageId, event) { execShowReactionPicker(event, messageId); }
@@ -12848,7 +12872,7 @@ function execShowMessageMenu(event, messageId, isOwn) {
   ];
   if (isOwn) {
     items.push(
-      { label: '✏️ Edit',   fn: `execStartEdit('${messageId}')` },
+      { label: '✏️ Edit', fn: `execStartEdit('${messageId}')` },
       { label: '🗑️ Delete', fn: `execDeleteMessage('${messageId}')`, danger: true }
     );
   }
@@ -12858,18 +12882,18 @@ function execShowMessageMenu(event, messageId, isOwn) {
   ).join('');
 
   const rect = event.currentTarget.getBoundingClientRect();
-  menu.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${Math.min(rect.left, window.innerWidth-180)}px;z-index:9999;`;
+  menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:9999;`;
   document.body.appendChild(menu);
-  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once:true }), 100);
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 100);
 }
 
 // ── Reply ─────────────────────────────────────────────────────────────
 function execStartReply(messageId) {
-  const msg = execMessages.find(m => m.id === messageId) || { id:messageId, content:'', users:{ username:'User' } };
-  execReplyTo = { id:messageId, content:msg.content||'', senderName:msg.users?.username||'User' };
+  const msg = execMessages.find(m => m.id === messageId) || { id: messageId, content: '', users: { username: 'User' } };
+  execReplyTo = { id: messageId, content: msg.content || '', senderName: msg.users?.username || 'User' };
   const bar = document.getElementById('execReplyBar');
   if (document.getElementById('execReplyBarSender')) document.getElementById('execReplyBarSender').textContent = execReplyTo.senderName;
-  if (document.getElementById('execReplyBarText')) document.getElementById('execReplyBarText').textContent = execReplyTo.content.slice(0,80) || '📎 Media';
+  if (document.getElementById('execReplyBarText')) document.getElementById('execReplyBarText').textContent = execReplyTo.content.slice(0, 80) || '📎 Media';
   if (bar) bar.style.display = 'flex';
   document.getElementById('execInput')?.focus();
 }
@@ -12889,7 +12913,7 @@ function execStartEdit(messageId) {
   if (input) { input.value = msg.content; input.focus(); }
   const bar = document.getElementById('execEditBar');
   if (bar) bar.style.display = 'flex';
-  if (document.getElementById('execEditBarText')) document.getElementById('execEditBarText').textContent = 'Editing: ' + msg.content.slice(0,50);
+  if (document.getElementById('execEditBarText')) document.getElementById('execEditBarText').textContent = 'Editing: ' + msg.content.slice(0, 50);
 }
 
 function execCancelEdit() {
@@ -12917,7 +12941,7 @@ async function execDeleteMessage(messageId) {
 
 // ── Send message ──────────────────────────────────────────────────────
 async function execSendMessage() {
-  const input   = document.getElementById('execInput');
+  const input = document.getElementById('execInput');
   const content = input?.value?.trim();
 
   // Edit mode
@@ -12945,14 +12969,14 @@ async function execSendMessage() {
   if (input) { input.value = ''; input.style.height = 'auto'; }
 
   // Optimistic message
-  const tempId  = `temp-${Date.now()}`;
+  const tempId = `temp-${Date.now()}`;
   const tempMsg = {
-    id: tempId, sender_id: currentUser?.id, content: content||'',
+    id: tempId, sender_id: currentUser?.id, content: content || '',
     message_type: 'text', created_at: new Date().toISOString(),
     is_deleted: false, is_edited: false,
-    users: { id:currentUser?.id, username:currentUser?.username, profile_pic:currentUser?.profile_pic },
+    users: { id: currentUser?.id, username: currentUser?.username, profile_pic: currentUser?.profile_pic },
     reactions: [], read_by: [],
-    reply_to: execReplyTo ? { ...execReplyTo, sender_username:execReplyTo.senderName } : null,
+    reply_to: execReplyTo ? { ...execReplyTo, sender_username: execReplyTo.senderName } : null,
     isTemp: true
   };
   execMessages.push(tempMsg);
@@ -13000,20 +13024,20 @@ async function execSendMessage() {
 function execHandleFileSelect(event) {
   const file = event.target.files?.[0];
   if (!file) return;
-  const previewBar  = document.getElementById('execFilePreviewBar');
-  const previewImg  = document.getElementById('execFilePreviewImg');
-  const previewVid  = document.getElementById('execFilePreviewVid');
+  const previewBar = document.getElementById('execFilePreviewBar');
+  const previewImg = document.getElementById('execFilePreviewImg');
+  const previewVid = document.getElementById('execFilePreviewVid');
   const previewName = document.getElementById('execFilePreviewName');
-  if (previewBar)  previewBar.style.display = 'flex';
-  if (previewName) previewName.textContent  = file.name;
+  if (previewBar) previewBar.style.display = 'flex';
+  if (previewName) previewName.textContent = file.name;
   if (file.type.startsWith('image/')) {
     const url = URL.createObjectURL(file);
     if (previewImg) { previewImg.src = url; previewImg.style.display = 'block'; }
-    if (previewVid)   previewVid.style.display = 'none';
+    if (previewVid) previewVid.style.display = 'none';
   } else if (file.type.startsWith('video/')) {
     const url = URL.createObjectURL(file);
     if (previewVid) { previewVid.src = url; previewVid.style.display = 'block'; }
-    if (previewImg)   previewImg.style.display = 'none';
+    if (previewImg) previewImg.style.display = 'none';
   } else {
     if (previewImg) previewImg.style.display = 'none';
     if (previewVid) previewVid.style.display = 'none';
@@ -13023,8 +13047,8 @@ function execHandleFileSelect(event) {
 function execClearFilePreview() {
   const bar = document.getElementById('execFilePreviewBar');
   if (bar) bar.style.display = 'none';
-  const fi  = document.getElementById('execFileInput');
-  if (fi)  fi.value = '';
+  const fi = document.getElementById('execFileInput');
+  if (fi) fi.value = '';
 }
 
 // ── Voice recording ───────────────────────────────────────────────────
@@ -13036,7 +13060,7 @@ async function execStartVoiceRecord() {
 
     // Pick a MIME type the browser and server both accept
     const preferredMimes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg', 'audio/mp4'];
-    const supportedMime  = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || '';
+    const supportedMime = preferredMimes.find(m => MediaRecorder.isTypeSupported(m)) || '';
     execMediaRecorder = supportedMime
       ? new MediaRecorder(stream, { mimeType: supportedMime })
       : new MediaRecorder(stream);
@@ -13049,8 +13073,8 @@ async function execStartVoiceRecord() {
         return;
       }
       const mimeType = execMediaRecorder.mimeType || supportedMime || 'audio/webm';
-      const ext      = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') ? 'mp4' : 'webm';
-      const blob     = new Blob(execAudioChunks, { type: mimeType });
+      const ext = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(execAudioChunks, { type: mimeType });
       await execSendVoiceMessage(blob, execRecordSeconds, ext);
     };
     execMediaRecorder.onerror = (e) => {
@@ -13061,13 +13085,13 @@ async function execStartVoiceRecord() {
     };
 
     execMediaRecorder.start(250);   // collect chunks every 250ms
-    execRecording     = true;
+    execRecording = true;
     execRecordSeconds = 0;
 
-    const btn   = document.getElementById('execVoiceBtn');
+    const btn = document.getElementById('execVoiceBtn');
     const timer = document.getElementById('execRecordTimer');
-    if (btn)   { btn.textContent = '⏹'; btn.classList.add('exec-recording-active'); }
-    if (timer)   timer.style.display = 'flex';
+    if (btn) { btn.textContent = '⏹'; btn.classList.add('exec-recording-active'); }
+    if (timer) timer.style.display = 'flex';
 
     execRecordTimer = setInterval(() => {
       execRecordSeconds++;
@@ -13080,8 +13104,8 @@ async function execStartVoiceRecord() {
     const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
       ? 'Microphone access denied — please allow mic in browser settings'
       : err.name === 'NotFoundError'
-      ? 'No microphone found on this device'
-      : 'Could not start recording: ' + (err.message || err.name);
+        ? 'No microphone found on this device'
+        : 'Could not start recording: ' + (err.message || err.name);
     if (typeof showMessage === 'function') showMessage(msg, 'error');
   }
 }
@@ -13091,10 +13115,10 @@ function execStopVoiceRecord() {
   clearInterval(execRecordTimer);
   execMediaRecorder.stop();
   execRecording = false;
-  const btn   = document.getElementById('execVoiceBtn');
+  const btn = document.getElementById('execVoiceBtn');
   const timer = document.getElementById('execRecordTimer');
-  if (btn)   { btn.textContent = '🎤'; btn.classList.remove('exec-recording-active'); }
-  if (timer)   timer.style.display = 'none';
+  if (btn) { btn.textContent = '🎤'; btn.classList.remove('exec-recording-active'); }
+  if (timer) timer.style.display = 'none';
 }
 
 async function execSendVoiceMessage(blob, duration, ext = 'webm') {
@@ -13123,8 +13147,8 @@ async function execSendVoiceMessage(blob, duration, ext = 'webm') {
   } catch (err) {
     console.error('execSendVoiceMessage error:', err);
     const msg = err.status === 413 ? 'Voice message too large (max ~50MB)'
-              : err.status === 400 ? 'Upload rejected: ' + (err.message || 'invalid file')
-              : 'Failed to send voice message — check your connection';
+      : err.status === 400 ? 'Upload rejected: ' + (err.message || 'invalid file')
+        : 'Failed to send voice message — check your connection';
     if (typeof showMessage === 'function') showMessage(msg, 'error');
   }
 }
@@ -13141,7 +13165,7 @@ function execPlayVoice(btn, url) {
     audio.onended = () => { btn.textContent = '▶'; };
   }
   if (audio.paused) { audio.play(); btn.textContent = '⏸'; }
-  else              { audio.pause(); btn.textContent = '▶'; }
+  else { audio.pause(); btn.textContent = '▶'; }
 }
 
 // ── Poll creation modal ───────────────────────────────────────────────
@@ -13168,7 +13192,7 @@ function execAddPollOption() {
   if (count >= 8) { if (typeof showMessage === 'function') showMessage('Max 8 options', 'info'); return; }
   const inp = document.createElement('input');
   inp.type = 'text'; inp.className = 'exec-poll-opt-input exec-input-field';
-  inp.placeholder = `Option ${count+1}`; inp.maxLength = 80;
+  inp.placeholder = `Option ${count + 1}`; inp.maxLength = 80;
   container.appendChild(inp);
 }
 
@@ -13178,7 +13202,7 @@ async function execSendPoll() {
   const options = [];
   document.querySelectorAll('.exec-poll-opt-input').forEach((el, i) => {
     const t = el.value.trim();
-    if (t) options.push({ id:`opt_${i+1}`, text:t });
+    if (t) options.push({ id: `opt_${i + 1}`, text: t });
   });
   if (options.length < 2) { if (typeof showMessage === 'function') showMessage('Add at least 2 options', 'error'); return; }
   try {
@@ -13193,7 +13217,7 @@ async function execSendPoll() {
 // ── Typing indicator ──────────────────────────────────────────────────
 function execHandleTyping() {
   if (typeof socket === 'undefined' || !socket || !currentUser?.college) return;
-  socket.emit('exec_typing', { collegeName:currentUser.college, username:currentUser.username, avatar:currentUser.profile_pic });
+  socket.emit('exec_typing', { collegeName: currentUser.college, username: currentUser.username, avatar: currentUser.profile_pic });
   clearTimeout(execTypingEmitTimeout);
   execTypingEmitTimeout = setTimeout(() => execSendStopTyping(), 2500);
   const ta = document.getElementById('execInput');
@@ -13202,7 +13226,7 @@ function execHandleTyping() {
 
 function execSendStopTyping() {
   if (typeof socket !== 'undefined' && socket && currentUser?.college) {
-    socket.emit('exec_stop_typing', { collegeName:currentUser.college, username:currentUser.username });
+    socket.emit('exec_stop_typing', { collegeName: currentUser.college, username: currentUser.username });
   }
 }
 
@@ -13223,9 +13247,9 @@ function execUpdateTypingDisplay() {
   document.getElementById('exec-typing-indicator')?.remove();
   if (execTypingUsers.size === 0) return;
   const names = Array.from(execTypingUsers);
-  const text  = names.length === 1 ? `${names[0]} is typing`
+  const text = names.length === 1 ? `${names[0]} is typing`
     : names.length === 2 ? `${names[0]} and ${names[1]} are typing`
-    : `${names.length} people are typing`;
+      : `${names.length} people are typing`;
   const el = document.createElement('div');
   el.id = 'exec-typing-indicator'; el.className = 'exec-typing-indicator';
   el.innerHTML = `<span>${text}</span><div class="exec-typing-dots"><span></span><span></span><span></span></div>`;
@@ -13244,10 +13268,10 @@ function execSetupReadObserver() {
     const visibleIds = entries.filter(e => e.isIntersecting).map(e => e.target.dataset.msgId).filter(Boolean);
     if (!visibleIds.length) return;
     if (socket && currentUser?.college) {
-      socket.emit('exec_mark_seen', { collegeName:currentUser.college, userId:currentUser.id, username:currentUser.username, avatar:currentUser.profile_pic, messageIds:visibleIds });
+      socket.emit('exec_mark_seen', { collegeName: currentUser.college, userId: currentUser.id, username: currentUser.username, avatar: currentUser.profile_pic, messageIds: visibleIds });
     }
-    apiCall('/api/executive/read', 'POST', { message_ids:visibleIds }).catch(() => {});
-  }, { threshold:0.5 });
+    apiCall('/api/executive/read', 'POST', { message_ids: visibleIds }).catch(() => { });
+  }, { threshold: 0.5 });
   document.querySelectorAll('#execMessages [id^="exec-msg-"]').forEach(el => execReadObserver.observe(el));
 }
 
@@ -13260,9 +13284,9 @@ function execMarkVisibleAsRead() {
     if (rect.top < window.innerHeight && rect.bottom > 0) visibleIds.push(el.dataset.msgId);
   });
   if (!visibleIds.length) return;
-  apiCall('/api/executive/read', 'POST', { message_ids:visibleIds }).catch(() => {});
+  apiCall('/api/executive/read', 'POST', { message_ids: visibleIds }).catch(() => { });
   if (socket && currentUser?.college) {
-    socket.emit('exec_mark_seen', { collegeName:currentUser.college, userId:currentUser.id, username:currentUser.username, avatar:currentUser.profile_pic, messageIds:visibleIds });
+    socket.emit('exec_mark_seen', { collegeName: currentUser.college, userId: currentUser.id, username: currentUser.username, avatar: currentUser.profile_pic, messageIds: visibleIds });
   }
 }
 
@@ -13271,29 +13295,29 @@ async function execShowReadersPopup(messageId, event) {
   event.stopPropagation();
   document.querySelector('.exec-readers-popup')?.remove();
   try {
-    const data    = await apiCall(`/api/executive/reads/${messageId}`, 'GET');
+    const data = await apiCall(`/api/executive/reads/${messageId}`, 'GET');
     const readers = data?.readers || [];
-    const popup   = document.createElement('div');
+    const popup = document.createElement('div');
     popup.className = 'exec-readers-popup';
     popup.innerHTML = readers.length === 0
       ? '<div class="exec-readers-empty">No one has read this yet</div>'
       : `<div class="exec-readers-header">👁 Seen by ${readers.length}</div>
          <div class="exec-readers-list">
-           ${readers.map(r => `<div class="exec-reader-row" onclick="execOpenReaderProfile('${escapeHtml(r.id||'')}', event)" title="View ${escapeHtml(r.username||'User')}'s profile">
+           ${readers.map(r => `<div class="exec-reader-row" onclick="execOpenReaderProfile('${escapeHtml(r.id || '')}', event)" title="View ${escapeHtml(r.username || 'User')}'s profile">
              ${r.profile_pic
-               ? `<img src="${escapeHtml(r.profile_pic)}" class="exec-reader-avatar exec-reader-clickable">`
-               : `<div class="exec-reader-avatar exec-reader-avatar-fb exec-reader-clickable">${escapeHtml((r.username||'U').charAt(0).toUpperCase())}</div>`}
+          ? `<img src="${escapeHtml(r.profile_pic)}" class="exec-reader-avatar exec-reader-clickable">`
+          : `<div class="exec-reader-avatar exec-reader-avatar-fb exec-reader-clickable">${escapeHtml((r.username || 'U').charAt(0).toUpperCase())}</div>`}
              <div>
-               <div class="exec-reader-name exec-reader-clickable">@${escapeHtml(r.username||'User')}</div>
+               <div class="exec-reader-name exec-reader-clickable">@${escapeHtml(r.username || 'User')}</div>
                <div class="exec-reader-time">${execFormatTime(r.read_at)}</div>
              </div>
              <span class="exec-reader-profile-arrow">→</span>
            </div>`).join('')}
          </div>`;
     const rect = event.currentTarget.getBoundingClientRect();
-    popup.style.cssText = `position:fixed;bottom:${window.innerHeight-rect.top+8}px;right:${window.innerWidth-rect.right}px;z-index:9999;`;
+    popup.style.cssText = `position:fixed;bottom:${window.innerHeight - rect.top + 8}px;right:${window.innerWidth - rect.right}px;z-index:9999;`;
     document.body.appendChild(popup);
-    setTimeout(() => document.addEventListener('click', () => popup.remove(), { once:true }), 100);
+    setTimeout(() => document.addEventListener('click', () => popup.remove(), { once: true }), 100);
   } catch (err) { console.error('Readers popup error:', err); }
 }
 
@@ -13312,30 +13336,30 @@ function execOpenReaderProfile(userId, event) {
 function execScrollToMessage(messageId) {
   const el = document.getElementById(`exec-msg-${messageId}`);
   if (!el) return;
-  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.classList.add('exec-highlight');
   setTimeout(() => el.classList.remove('exec-highlight'), 1500);
 }
 
 // ── Emoji picker for executive chat ───────────────────────────────────
-function execOpenEmojiPicker(event){
+function execOpenEmojiPicker(event) {
   event.stopPropagation();
   document.querySelector('.exec-emoji-popup')?.remove();
 
   const EMOJIS = [
-    '😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰',
-    '😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳',
-    '😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤',
-    '😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🫣','🤗','🫡','🤔',
-    '🫢','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴',
-    '🤤','😪','😵','🫠','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿',
-    '👋','🤚','🖐️','✋','🖖','🤙','💪','🦾','🖕','✌️','🤞','🤟','🤘','👌','🤌','🤏',
-    '👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','🤝','🙏','✍️','🤲',
-    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓',
-    '🔥','✨','🎉','🎊','🎈','🎁','🏆','🥇','⭐','🌟','💫','🌈','🌸','🌺','🌻','🌹',
-    '👑','💎','🚀','💯','🆗','💬','💭','🗯️','📢','📣','🔔','🔕','💤','💥','💦','💨',
-    '😺','😸','😹','😻','😼','😽','🙀','😿','😾','🐶','🐱','🐭','🐹','🐰','🦊','🐻',
-    '🍕','🍔','🍟','🌮','🌯','🍣','🍜','🍦','🍩','🍪','🎂','🍰','🧁','🍫','🍬','🍭',
+    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰',
+    '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳',
+    '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤',
+    '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🫣', '🤗', '🫡', '🤔',
+    '🫢', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴',
+    '🤤', '😪', '😵', '🫠', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿',
+    '👋', '🤚', '🖐️', '✋', '🖖', '🤙', '💪', '🦾', '🖕', '✌️', '🤞', '🤟', '🤘', '👌', '🤌', '🤏',
+    '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '✊', '👊', '🤛', '🤜', '🤝', '🙏', '✍️', '🤲',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '💕', '💞', '💓',
+    '🔥', '✨', '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '⭐', '🌟', '💫', '🌈', '🌸', '🌺', '🌻', '🌹',
+    '👑', '💎', '🚀', '💯', '🆗', '💬', '💭', '🗯️', '📢', '📣', '🔔', '🔕', '💤', '💥', '💦', '💨',
+    '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻',
+    '🍕', '🍔', '🍟', '🌮', '🌯', '🍣', '🍜', '🍦', '🍩', '🍪', '🎂', '🍰', '🧁', '🍫', '🍬', '🍭',
   ];
 
   const popup = document.createElement('div');
@@ -13367,7 +13391,7 @@ function execOpenEmojiPicker(event){
   }), 100);
 }
 
-window.execEmojiSearch = function(query) {
+window.execEmojiSearch = function (query) {
   const grid = document.getElementById('execEpGrid');
   const popup = document.querySelector('.exec-emoji-popup');
   if (!grid || !popup) return;
@@ -13377,7 +13401,7 @@ window.execEmojiSearch = function(query) {
   grid.innerHTML = filtered.map(e => `<button class="exec-ep-btn" onclick="execInsertEmoji('${e}')">${e}</button>`).join('');
 };
 
-window.execInsertEmoji = function(emoji) {
+window.execInsertEmoji = function (emoji) {
   const ta = document.getElementById('execInput');
   if (!ta) return;
   const s = ta.selectionStart || 0, e = ta.selectionEnd || 0;
