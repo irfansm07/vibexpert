@@ -3591,7 +3591,7 @@ function _buildMvCell(post, idx) {
                <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="5 3 19 12 5 21 5 3" fill="white"/></svg>
              </div>`;
   } else if (first) {
-    thumb = `<img class="mv-cell-media" src="${proxyMediaUrl(first.url || first)}" alt="" loading="lazy">`;
+    thumb = `<img class="mv-cell-media" src="${proxyMediaUrl(first.url || first)}" alt="" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${first.url || first}'}">`;
   } else {
     const grad = (vibeGradient || (() => '#1a1a2e'))(post.id);
     const preview = (post.content || '').slice(0, 40) || '✨';
@@ -3713,7 +3713,7 @@ function _buildMvDetailSlide(media, idx) {
   if (item.type === 'video') {
     return `<video class="mv-detail-slide-video" src="${item.url}" controls playsinline autoplay></video>`;
   }
-  return `<img class="mv-detail-slide-img" src="${proxyMediaUrl(item.url || item)}" alt="">
+  return `<img class="mv-detail-slide-img" src="${proxyMediaUrl(item.url || item)}" alt="" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${item.url || item}'}">
           <div class="mv-detail-nav">
             ${idx > 0 ? `<button class="mv-nav-btn mv-nav-prev" onclick="mvSlide(${idx - 1})">‹</button>` : ''}
             ${idx < media.length - 1 ? `<button class="mv-nav-btn mv-nav-next" onclick="mvSlide(${idx + 1})">›</button>` : ''}
@@ -4797,10 +4797,10 @@ function renderPosts(posts) {
         `<div class="enhanced-post-media">
              ${media.map(m =>
           m.type === 'image' ?
-            `<div class="enhanced-media-item"><img src="${proxyMediaUrl(m.url)}"></div>` :
+            `<div class="enhanced-media-item"><img src="${proxyMediaUrl(m.url)}" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${m.url}'}"></div>` :
             m.type === 'video' ?
-              `<div class="enhanced-media-item"><video src="${proxyMediaUrl(m.url)}" controls></video></div>` :
-              `<div class="enhanced-media-item"><audio src="${proxyMediaUrl(m.url)}" controls></audio></div>`
+              `<div class="enhanced-media-item"><video src="${proxyMediaUrl(m.url)}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${m.url}'}"></video></div>` :
+              `<div class="enhanced-media-item"><audio src="${proxyMediaUrl(m.url)}" controls preload="metadata"></audio></div>`
         ).join('')}
            </div>` : ''
       }
@@ -6575,9 +6575,10 @@ function buildRvCard(vibe) {
 
   // Media
   const mediaSrc = proxyMediaUrl(vibe.media_url);
+  const directSrc = vibe.media_url || '';
   const media = vibe.media_type === 'video'
-    ? `<video class="rv-card-media" src="${mediaSrc}" controls playsinline preload="metadata"></video>`
-    : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g, "\\'")}')">`;
+    ? `<video class="rv-card-media" src="${mediaSrc}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${directSrc}'}"></video>`
+    : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g, "\\\\'")}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${directSrc}'}">`;
 
   // Caption block
   const captionHtml = vibe.caption
@@ -7214,9 +7215,10 @@ function renderTwitterPosts(posts) {
             <div class="twitter-media ${media.length === 1 ? 'single' : 'grid'}">
               ${media.slice(0, 4).map((m, idx) => {
         if (m.type === 'image') {
-          return `<img src="${proxyMediaUrl(m.url)}" onclick="openMediaViewer('${post.id}', ${idx})">`;
+          return `<img src="${proxyMediaUrl(m.url)}" loading="lazy" onclick="openMediaViewer('${post.id}', ${idx})" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${m.url}'}">`;
+
         } else if (m.type === 'video') {
-          return `<video src="${proxyMediaUrl(m.url)}" controls></video>`;
+          return `<video src="${proxyMediaUrl(m.url)}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${m.url}'}"></video>`;
         }
         return '';
       }).join('')}
