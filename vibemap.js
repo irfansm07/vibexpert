@@ -3240,6 +3240,23 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   const bioEl = document.getElementById('profileBio');
   if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
 
+  // Instagram-style Note bubble
+  const noteBubble = document.getElementById('profileNoteBubble');
+  const noteText = document.getElementById('profileNoteText');
+  if (noteBubble && noteText) {
+    const isOwn = currentUser && (targetUser.id === currentUser.id);
+    const userNote = targetUser.note || (isOwn ? localStorage.getItem('vibeNote_' + currentUser.id) : null);
+    if (userNote) {
+      noteText.textContent = userNote;
+      noteBubble.style.display = 'block';
+    } else if (isOwn) {
+      noteText.textContent = '💭 Tap to add a note';
+      noteBubble.style.display = 'block';
+    } else {
+      noteBubble.style.display = 'none';
+    }
+  }
+
   // Dynamic Badges - based on REAL data
   const badgesEl = document.getElementById('profilePageBadges');
   if (badgesEl) {
@@ -3405,6 +3422,78 @@ async function toggleFollow() {
       : `👋 You unfollowed @${target.username}`;
     showMessage(msg, 'success');
   }
+}
+
+// ── Instagram-style Note editing ──
+function editProfileNote() {
+  if (!currentUser || !window.currentProfileUser || window.currentProfileUser.id !== currentUser.id) return;
+
+  const currentNote = localStorage.getItem('vibeNote_' + currentUser.id) || '';
+
+  // Create a beautiful note editor modal
+  let existing = document.getElementById('noteEditModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'noteEditModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  modal.innerHTML = `
+    <div style="background:rgba(26,25,51,0.97);border:1px solid rgba(167,139,250,0.25);border-radius:20px;padding:28px;width:320px;max-width:90vw;box-shadow:0 24px 64px rgba(0,0,0,0.8);">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:32px;margin-bottom:8px;">💭</div>
+        <h3 style="margin:0;color:#fff;font-size:18px;font-weight:700;">Your Note</h3>
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;margin:4px 0 0;">Like Instagram — others see this on your profile</p>
+      </div>
+      <input id="noteEditInput" type="text" value="${currentNote.replace(/"/g, '&quot;')}" maxlength="30" placeholder="What's on your mind?"
+        style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(167,139,250,0.3);color:#fff;border-radius:12px;padding:12px 16px;font-size:15px;box-sizing:border-box;outline:none;text-align:center;">
+      <div style="text-align:right;margin-top:4px;font-size:11px;color:rgba(255,255,255,0.3);" id="noteCharCount">${currentNote.length}/30</div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="document.getElementById('noteEditModal').remove()"
+          style="flex:1;background:rgba(255,255,255,0.07);border:none;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button onclick="saveProfileNote()"
+          style="flex:1;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-weight:600;font-size:13px;">Save Note</button>
+      </div>
+      ${currentNote ? '<button onclick="clearProfileNote()" style="width:100%;background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;margin-top:8px;padding:6px;">Remove Note</button>' : ''}
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const inp = document.getElementById('noteEditInput');
+  inp.focus();
+  inp.addEventListener('input', () => {
+    document.getElementById('noteCharCount').textContent = `${inp.value.length}/30`;
+  });
+
+  // Close on backdrop click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+function saveProfileNote() {
+  const inp = document.getElementById('noteEditInput');
+  if (!inp || !currentUser) return;
+  const note = inp.value.trim().slice(0, 30);
+  localStorage.setItem('vibeNote_' + currentUser.id, note);
+
+  // Update the bubble
+  const noteText = document.getElementById('profileNoteText');
+  if (noteText) noteText.textContent = note || '💭 Tap to add a note';
+
+  // Save to backend if we have an endpoint
+  apiCall('/api/profile/note', 'POST', { note }).catch(() => { });
+
+  document.getElementById('noteEditModal')?.remove();
+  showMessage(note ? '💭 Note saved!' : '💭 Note cleared', 'success');
+}
+
+function clearProfileNote() {
+  localStorage.removeItem('vibeNote_' + currentUser?.id);
+  const noteText = document.getElementById('profileNoteText');
+  if (noteText) noteText.textContent = '💭 Tap to add a note';
+  document.getElementById('noteEditModal')?.remove();
+  apiCall('/api/profile/note', 'POST', { note: '' }).catch(() => { });
+  showMessage('💭 Note removed', 'success');
 }
 
 function switchProfileTab(tabName, event) {
