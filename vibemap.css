@@ -24452,3 +24452,424 @@ video.rv-card-media {
   line-height: 1.3;
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   FOLLOW BUTTON — INSTANT FEEDBACK ANIMATIONS
+   ========================================================================== */
+
+/* Pulse animation on click */
+@keyframes followBtnPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.12);
+  }
+
+  60% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.follow-btn-pulse {
+  animation: followBtnPulse 0.5s cubic-bezier(.34, 1.56, .64, 1) !important;
+}
+
+/* Check mark animation */
+@keyframes followCheckIn {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.3) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.follow-check-anim {
+  display: inline-block;
+  animation: followCheckIn 0.4s cubic-bezier(.34, 1.56, .64, 1);
+  margin-right: 2px;
+  font-weight: 700;
+}
+
+/* Following state button */
+.follow-btn-following {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08)) !important;
+  border: 1px solid rgba(34, 197, 94, 0.35) !important;
+  color: #22c55e !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  opacity: 1 !important;
+}
+
+.follow-btn-following:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #ef4444 !important;
+}
+
+/* Not-following button (enhanced) */
+.follow-btn-not-following {
+  background: linear-gradient(135deg, #4f74a3, #7aa3d4) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 16px rgba(79, 116, 163, 0.3);
+}
+
+.follow-btn-not-following:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(79, 116, 163, 0.45);
+}
+
+/* Stat pop animation (when follower count changes) */
+@keyframes statPop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.25);
+    color: #22c55e;
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.stat-pop {
+  animation: statPop 0.4s ease !important;
+}
+
+/* Make stat values show clickable indicator */
+#profileStatFollowers,
+#profileStatFollowing {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#profileStatFollowers:hover,
+#profileStatFollowing:hover {
+  color: #a78bfa !important;
+}
+
+/* ==========================================================================
+   FOLLOWERS / FOLLOWING LIST MODAL
+   ========================================================================== */
+.follow-list-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.follow-list-modal.flm-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.flm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.flm-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: linear-gradient(170deg, #0e0f1e 0%, #161828 60%, #1a1230 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 60px rgba(0, 0, 0, 0.6);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.flm-open .flm-sheet {
+  transform: translateY(0);
+}
+
+/* Header with tabs */
+.flm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.flm-tabs {
+  display: flex;
+  gap: 0;
+  flex: 1;
+}
+
+.flm-tab {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px 14px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.flm-tab.active {
+  color: #fff;
+}
+
+.flm-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: linear-gradient(135deg, #4f74a3, #a78bfa);
+  border-radius: 3px 3px 0 0;
+}
+
+.flm-tab:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.flm-close {
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.flm-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* Body */
+.flm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  min-height: 200px;
+}
+
+.flm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+.flm-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(79, 116, 163, 0.2);
+  border-top-color: #4f74a3;
+  border-radius: 50%;
+  animation: flmSpin 0.8s linear infinite;
+}
+
+@keyframes flmSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.flm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+}
+
+.flm-empty-icon {
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+/* User list */
+.flm-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.flm-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.flm-user-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.flm-user-row:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.flm-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flm-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.flm-avatar-placeholder {
+  font-size: 20px;
+}
+
+.flm-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.flm-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flm-college {
+  font-size: 11px;
+  color: rgba(167, 139, 250, 0.7);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flm-bio {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Follow button in the list */
+.flm-follow-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  border: none;
+  background: linear-gradient(135deg, #4f74a3, #7aa3d4);
+  color: #fff;
+}
+
+.flm-follow-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 14px rgba(79, 116, 163, 0.4);
+}
+
+.flm-follow-btn.flm-following {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.flm-follow-btn.flm-following:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.flm-follow-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.flm-you-badge {
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .flm-sheet {
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .flm-user-row {
+    padding: 10px 14px;
+  }
+
+  .flm-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
