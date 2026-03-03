@@ -3139,21 +3139,45 @@ async function showUserProfile(userId) {
   const searchBox = document.getElementById('searchBox');
   if (searchBox) searchBox.value = '';
 
+  // Show cached data INSTANTLY if available (no waiting for network)
+  const cached = window._mpcCache && window._mpcCache[userId];
+  if (cached) {
+    _seedFollowState(userId, cached.isFollowing, cached.followersCount || 0);
+    showProfilePage(cached, true);
+  }
+
   try {
     const data = await apiCall(`/api/profile/${userId}`, 'GET');
     if (data.success && data.user) {
       // Seed follow state immediately from this authoritative fetch
       _seedFollowState(userId, data.user.isFollowing, data.user.followersCount || 0);
-      // Also update mpcCache
+      // Update cache
       if (!window._mpcCache) window._mpcCache = {};
       window._mpcCache[userId] = data.user;
-      showProfilePage(data.user, true); // true = data already fresh, skip re-fetch
-    } else {
+      // If we already showed cached data, just update counts silently
+      if (cached) {
+        // Update stats in place without full re-render
+        const followersStat = document.getElementById('profileStatFollowers');
+        const followingStat = document.getElementById('profileStatFollowing');
+        const postsStat = document.getElementById('profileStatPosts');
+        if (followersStat) followersStat.textContent = data.user.followersCount || 0;
+        if (followingStat) followingStat.textContent = data.user.followingCount || 0;
+        if (postsStat) postsStat.textContent = data.user.postCount || 0;
+        // Update target user object
+        if (window.currentProfileUser) {
+          Object.assign(window.currentProfileUser, data.user);
+        }
+      } else {
+        showProfilePage(data.user, true);
+      }
+    } else if (!cached) {
       showMessage('User not found', 'error');
     }
   } catch (error) {
     console.error('Show profile error:', error);
-    showMessage('Failed to load profile', 'error');
+    if (!cached) {
+      showMessage('Failed to load profile', 'error');
+    }
   }
 }
 
@@ -4448,10 +4472,7 @@ async function createPost() {
         }
       }
 
-      // 4. Full feed reload so new post appears at top with all correct data
-      setTimeout(() => initVibeFeed(), 400);
-
-      // 5. Show "Your Vibe is now online" toast
+      // 4. Show "Your Vibe is now online" toast (this will also navigate to vibers and refresh feed)
       showVibeOnlineToast();
 
       // 6. Celebration modal + badge notification
@@ -4477,7 +4498,7 @@ async function createPost() {
   }
 }
 
-// ── Post Success: show popup then hard-reload via VibeXpert logo ──
+// ── Post Success: show popup then refresh feed in-place (no hard reload) ──
 function showVibePostSuccessAndReload() {
   // Remove any stale copies
   ['vibeOnlineToast', 'vibeSuccessPopup'].forEach(id => {
@@ -4506,16 +4527,20 @@ function showVibePostSuccessAndReload() {
   // Animate in
   requestAnimationFrame(() => requestAnimationFrame(() => popup.classList.add('vsp-show')));
 
-  // After 1.5s — animate out, then hard-reload (VibeXpert logo top-left)
+  // After 1.5s — animate out, then navigate to vibers tab and refresh feed
   setTimeout(() => {
     popup.classList.add('vsp-hide');
     setTimeout(() => {
-      // Try SPA logo click first; fall back to hard reload
-      const vibeLogo = document.querySelector('.vibe-logo-pill');
-      const mainLogo = document.querySelector('.logo');
-      if (vibeLogo) { vibeLogo.click(); }
-      else if (mainLogo) { mainLogo.click(); }
-      else { window.location.reload(); }
+      popup.remove();
+      // Navigate to the vibers/posts page and refresh the feed in-place
+      showPage('posts');
+      const postsLink = document.querySelector('.nav-link[onclick*="posts"]');
+      if (postsLink) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        postsLink.classList.add('active');
+      }
+      // Refresh the vibe feed
+      if (typeof initVibeFeed === 'function') initVibeFeed();
     }, 300);
   }, 1500);
 }
@@ -10116,7 +10141,8 @@ function buildVibeCard(post, idx) {
       playsinline muted loop preload="metadata"></video>`;
   } else if (firstMedia?.type === 'image' || (firstMedia?.url && !firstMedia?.type)) {
     const proxiedUrl = proxyMediaUrl(firstMedia.url || firstMedia);
-    bgLayer = `<img class="vibe-card-bg-img" src="${proxiedUrl}" alt="">`;
+    bgLayer = `<img class="vibe-card-bg-blur" src="${proxiedUrl}" alt="" aria-hidden="true">
+      <img class="vibe-card-bg-img" src="${proxiedUrl}" alt="">`;
   } else if (media.length === 0 || firstMedia?.type === 'audio') {
     bgLayer = `<div class="vibe-card-bg-text" style="background:${vibeGradient(post.id)};"></div>
       <div class="vibe-text-content">
