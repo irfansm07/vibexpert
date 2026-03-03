@@ -1734,22 +1734,23 @@
         <input type="file" id="coverPhotoInput" style="display:none" accept="image/*"
           onchange="handleCoverPhotoUpload(event)">
 
-        <!-- Cover photo hero -->
-        <div style="position:relative;">
-          <div id="profileCoverPhoto"
-            style="height:200px;background:linear-gradient(135deg,#4f74a3,#7aa3d4);position:relative;cursor:pointer;overflow:hidden;"
+        <!-- Cover photo hero + floating avatar -->
+        <div class="profile-hero-wrap">
+          <div class="profile-cover" id="profileCoverPhoto"
             onclick="document.getElementById('coverPhotoInput').click()">
-            <img id="profileCoverImg" src="" alt=""
-              style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;">
-            <div
-              style="position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,0.5);color:#fff;font-size:11px;padding:3px 8px;border-radius:99px;pointer-events:none;">
-              ✏️ Edit cover</div>
+            <img id="profileCoverImg" src="" alt="" class="profile-cover-img">
+            <div class="profile-cover-overlay"></div>
+            <div class="profile-cover-edit">✏️ Edit cover</div>
           </div>
-          <!-- Overlapping avatar -->
-          <div style="position:absolute;left:20px;bottom:-40px;z-index:5;">
-            <div style="position:relative;width:88px;height:88px;">
-              <div class="profile-avatar-large"
-                style="width:88px;height:88px;border-radius:50%;border:3px solid #0a0a14;overflow:hidden;">
+          <!-- Floating avatar that overlaps banner -->
+          <div class="profile-floating-avatar">
+            <!-- Instagram-style Note bubble -->
+            <div class="profile-note-bubble" id="profileNoteBubble" onclick="editProfileNote()">
+              <span class="profile-note-text" id="profileNoteText">👋 Hey there!</span>
+              <div class="profile-note-pointer"></div>
+            </div>
+            <div class="profile-avatar-ring">
+              <div class="profile-avatar-large" style="width:92px;height:92px;border-radius:50%;overflow:hidden;">
                 <img id="profilePageAvatarImg" src="" alt="Avatar"
                   style="width:100%;height:100%;object-fit:cover;display:none;">
                 <span id="profilePageAvatarInitial"
@@ -1757,14 +1758,12 @@
                 <button class="avatar-edit-overlay" onclick="uploadProfilePic()"
                   style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:12px;cursor:pointer;padding:4px 0;">📷</button>
               </div>
-              <div id="profilePresenceDot"
-                style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #0a0a14;">
-              </div>
             </div>
+            <div id="profilePresenceDot" class="profile-presence-dot"></div>
           </div>
         </div>
 
-        <div class="profile-page-container" style="padding-top:52px;">
+        <div class="profile-page-container" style="padding-top:12px;">
           <!-- Name + actions row -->
           <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;">
             <div>
