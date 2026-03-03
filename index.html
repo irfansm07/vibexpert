@@ -1795,12 +1795,15 @@
                 style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
               <span style="font-size:11px;color:rgba(255,255,255,0.45);">Vibes</span>
             </div>
-            <div style="padding:14px 8px;text-align:center;border-right:1px solid rgba(255,255,255,0.06);">
+            <div
+              style="padding:14px 8px;text-align:center;border-right:1px solid rgba(255,255,255,0.06);cursor:pointer;"
+              onclick="showFollowListModal('followers')" title="View followers">
               <span class="stat-value" id="profileStatFollowers"
                 style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
               <span style="font-size:11px;color:rgba(255,255,255,0.45);">Followers</span>
             </div>
-            <div style="padding:14px 8px;text-align:center;">
+            <div style="padding:14px 8px;text-align:center;cursor:pointer;" onclick="showFollowListModal('following')"
+              title="View following">
               <span class="stat-value" id="profileStatFollowing"
                 style="display:block;font-size:20px;font-weight:700;color:#fff;">0</span>
               <span style="font-size:11px;color:rgba(255,255,255,0.45);">Following</span>
