@@ -3108,6 +3108,16 @@ function displaySearchResults(users) {
     return;
   }
 
+  // Pre-seed the profile cache with search result data so clicking is instant
+  if (!window._mpcCache) window._mpcCache = {};
+  if (!window._mpcCacheTime) window._mpcCacheTime = {};
+  users.forEach(u => {
+    if (u && u.id && !window._mpcCache[u.id]) {
+      window._mpcCache[u.id] = u;
+      window._mpcCacheTime[u.id] = Date.now();
+    }
+  });
+
   let html = '';
   users.forEach(user => {
     const avatarContent = user.profile_pic ?
@@ -6879,7 +6889,7 @@ function buildRvCard(vibe) {
   ${isRoyal ? '<div class="rv-card-crown-stripe"></div>' : ''}
 
   <div class="rv-card-header">
-    <div class="rv-card-author" onclick="showProfile('${author.id || ''}')">
+    <div class="rv-card-author" onclick="event.stopPropagation();showUserProfile('${author.id || ''}')" style="cursor:pointer;">
       <div class="rv-card-avatar ${isRoyal ? 'rv-avatar-royal' : ''}">${avatarInner}</div>
       <div class="rv-card-meta">
         <div class="rv-card-name-row">
