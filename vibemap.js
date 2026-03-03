@@ -11493,6 +11493,7 @@ async function openDmDrawer(userId) {
 
   if (profile && nameEl) {
     nameEl.textContent = profile.username || 'User';
+    window._dmReceiverName = profile.username || 'User'; // Store for bubble avatar initials
     const online = !profile.last_seen;
     if (statusEl) {
       const statusSpan = statusEl.querySelector('span:last-child');
@@ -11568,6 +11569,8 @@ async function openDmDrawer(userId) {
   }
 
   document.getElementById('dmInput')?.focus();
+  // Attach scroll-to-bottom button listener
+  if (typeof window._dmScrollAttach === 'function') setTimeout(window._dmScrollAttach, 300);
 }
 
 function closeDmDrawer() {
@@ -11734,9 +11737,18 @@ function _buildDmBubble(m, isOptimistic) {
     reactionsHtml = `<div class="dm-reactions" data-msgid="${msgId}">` +
       Object.entries(reactions).map(([emoji, users]) => {
         const iMine = users.includes(currentUser?.id);
-        return `<button class="dm-react-chip ${iMine ? 'dm-react-mine' : ''}" onclick="dmToggleReact('${msgId}','${emoji}')">${emoji}<span>${users.length}</span></button>`;
+        return `<button class="dm-react-chip ${iMine ? 'dm-react-mine' : ''}" data-emoji="${emoji}" onclick="dmToggleReact('${msgId}','${emoji}')">${emoji}<span>${users.length}</span></button>`;
       }).join('') + `</div>`;
   }
+
+  // Hover reaction bar (quick-react on hover)
+  const hoverReactHtml = isOptimistic ? '' : `<div class="dm-hover-react-bar">
+    <button onclick="dmToggleReact('${msgId}','👍')">👍</button>
+    <button onclick="dmToggleReact('${msgId}','❤️')">❤️</button>
+    <button onclick="dmToggleReact('${msgId}','😂')">😂</button>
+    <button onclick="dmToggleReact('${msgId}','😮')">😮</button>
+    <button onclick="dmToggleReact('${msgId}','🔥')">🔥</button>
+  </div>`;
 
   // Quick action buttons (reply + react)
   const actionsHtml = isOptimistic ? '' : `<div class="dm-msg-actions ${own ? 'dm-actions-left' : 'dm-actions-right'}">
@@ -11744,7 +11756,16 @@ function _buildDmBubble(m, isOptimistic) {
     <button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker('${msgId}',this)">😊</button>
   </div>`;
 
+  // Avatar indicator for received messages (initials + online dot)
+  let avatarHtml = '';
+  if (!own) {
+    const initial = (window._dmReceiverName || '?')[0].toUpperCase();
+    avatarHtml = `<div class="dm-avatar-indicator">${initial}</div>`;
+  }
+
   return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="' + msgId + '"' : ''}>
+    ${hoverReactHtml}
+    ${avatarHtml}
     ${actionsHtml}
     <div class="dm-msg-wrap">
       ${replyHtml}
@@ -11853,37 +11874,92 @@ const DM_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
 function dmShowEmojiPicker(msgId, btn) {
   // Remove any existing picker
   document.querySelectorAll('.dm-emoji-picker').forEach(p => p.remove());
+
   const picker = document.createElement('div');
   picker.className = 'dm-emoji-picker';
   picker.innerHTML = DM_EMOJIS.map(e =>
     `<button onclick="dmToggleReact('${msgId}','${e}');this.closest('.dm-emoji-picker').remove()">${e}</button>`
   ).join('');
-  document.body.appendChild(picker);
-  const r = btn.getBoundingClientRect();
-  picker.style.top = (r.top - picker.offsetHeight - 8 + window.scrollY) + 'px';
-  picker.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 220) + 'px';
+
+  // Append inside the DM drawer so positioning works correctly
+  const drawer = document.getElementById('dmDrawer');
+  (drawer || document.body).appendChild(picker);
+
+  // Position relative to the button inside the fixed panel
+  const btnRect = btn.getBoundingClientRect();
+  const drawerRect = drawer ? drawer.getBoundingClientRect() : { left: 0, top: 0 };
+
+  // Place above the button, centered
+  const pickerW = 260; // approx width of picker
+  let left = btnRect.left - drawerRect.left - pickerW / 2 + 14;
+  let top = btnRect.top - drawerRect.top - 52; // 52px = picker height + gap
+
+  // Keep within panel bounds
+  left = Math.max(8, Math.min(left, (drawer ? drawer.offsetWidth : window.innerWidth) - pickerW - 8));
+  if (top < 8) top = btnRect.bottom - drawerRect.top + 8; // flip below if no room above
+
+  picker.style.position = 'absolute';
+  picker.style.left = left + 'px';
+  picker.style.top = top + 'px';
+
+  // Animate in
+  picker.style.opacity = '0';
+  picker.style.transform = 'scale(0.8) translateY(8px)';
+  requestAnimationFrame(() => {
+    picker.style.transition = 'opacity 0.15s, transform 0.15s';
+    picker.style.opacity = '1';
+    picker.style.transform = 'scale(1) translateY(0)';
+  });
+
   // Close on outside click
   setTimeout(() => {
     document.addEventListener('click', function close(e) {
-      if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', close); }
+      if (!picker.contains(e.target) && e.target !== btn) {
+        picker.remove();
+        document.removeEventListener('click', close);
+      }
     });
   }, 10);
 }
 
 async function dmToggleReact(msgId, emoji) {
+  const row = document.getElementById('dm-msg-' + msgId);
+  if (!row) return;
+
+  // Optimistic UI — toggle locally immediately
+  let reactDiv = row.querySelector('.dm-reactions');
+  if (!reactDiv) {
+    reactDiv = document.createElement('div');
+    reactDiv.className = 'dm-reactions';
+    reactDiv.dataset.msgid = msgId;
+    row.appendChild(reactDiv);
+  }
+
+  // Check if we already reacted with this emoji
+  const existingChip = reactDiv.querySelector(`[data-emoji="${emoji}"]`);
+  if (existingChip) {
+    existingChip.style.transform = 'scale(0)';
+    setTimeout(() => existingChip.remove(), 150);
+    if (reactDiv.children.length <= 1) setTimeout(() => {
+      if (reactDiv.children.length === 0) reactDiv.remove();
+    }, 200);
+  } else {
+    const chip = document.createElement('button');
+    chip.className = 'dm-react-chip dm-react-mine';
+    chip.dataset.emoji = emoji;
+    chip.onclick = () => dmToggleReact(msgId, emoji);
+    chip.innerHTML = `${emoji}<span>1</span>`;
+    reactDiv.appendChild(chip);
+  }
+
+  // Send to server
   try {
     const data = await apiCall(`/api/dm/react/${msgId}`, 'POST', { emoji });
-    if (!data?.success) return;
-    // Update reaction display in DOM
-    const row = document.getElementById('dm-msg-' + msgId);
-    if (!row) return;
-    let reactDiv = row.querySelector('.dm-reactions');
-    if (!reactDiv) {
-      reactDiv = document.createElement('div');
-      reactDiv.className = 'dm-reactions';
-      row.appendChild(reactDiv);
+    if (!data?.success) {
+      showMessage('😅 Could not save reaction', 'error');
+      return;
     }
-    reactDiv.dataset.msgid = msgId;
+    // Re-render reactions from server truth
     const reactions = data.reactions || {};
     if (Object.keys(reactions).length === 0) {
       reactDiv.remove();
@@ -11891,9 +11967,14 @@ async function dmToggleReact(msgId, emoji) {
     }
     reactDiv.innerHTML = Object.entries(reactions).map(([e, users]) => {
       const mine = users.includes(currentUser?.id);
-      return `<button class="dm-react-chip ${mine ? 'dm-react-mine' : ''}" onclick="dmToggleReact('${msgId}','${e}')">${e}<span>${users.length}</span></button>`;
+      return `<button class="dm-react-chip ${mine ? 'dm-react-mine' : ''}" data-emoji="${e}" onclick="dmToggleReact('${msgId}','${e}')">${e}<span>${users.length}</span></button>`;
     }).join('');
-  } catch (e) { console.error('React error:', e); }
+  } catch (e) {
+    console.error('React error:', e);
+    if (e.message && e.message.includes('column')) {
+      showMessage('⚠️ Reactions need a database column — check server logs', 'error', 5000);
+    }
+  }
 }
 
 async function sendDm() {
@@ -12037,6 +12118,89 @@ function handleDmTyping() {
   _dmTypingTimeout = setTimeout(() => {
     window.socket.emit('dm_stop_typing', { receiverId: _dmCurrentReceiverId });
   }, 2000);
+}
+
+// ── Scroll-to-bottom button visibility ───────────────────────────────
+(function initDmScrollBtn() {
+  function attach() {
+    const area = document.getElementById('dmMessagesArea');
+    const btn = document.getElementById('dmScrollBottomBtn');
+    if (!area || !btn) return;
+    if (area._dmScrollAttached) return;
+    area._dmScrollAttached = true;
+    area.addEventListener('scroll', function () {
+      const distFromBottom = area.scrollHeight - area.scrollTop - area.clientHeight;
+      if (distFromBottom > 120) {
+        btn.classList.add('dm-scroll-visible');
+      } else {
+        btn.classList.remove('dm-scroll-visible');
+      }
+    });
+  }
+  // Keep trying to attach until the element exists (DOM may load later)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+  // Also attach when drawer opens
+  const origOpen = window.openDmDrawer;
+  if (origOpen) {
+    // Defer re-attachment after drawer opens
+    const _waitAttach = () => setTimeout(attach, 200);
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('[onclick*="openDmDrawer"]')) _waitAttach();
+    });
+  }
+  // Re-attach on any drawer open
+  window._dmScrollAttach = attach;
+})();
+
+// ── Emoji input helper (reuses existing picker logic for input bar emoji button) ──
+function dmShowInputEmoji(btn) {
+  // Reuse same emoji picker approach as reactions
+  document.querySelectorAll('.dm-emoji-picker').forEach(p => p.remove());
+  const EMOJIS = ['😊', '😂', '❤️', '😍', '👍', '🔥', '🎉', '💯', '😎', '🥺', '✨', '🙏'];
+  const picker = document.createElement('div');
+  picker.className = 'dm-emoji-picker';
+  picker.style.flexWrap = 'wrap';
+  picker.style.maxWidth = '200px';
+  picker.innerHTML = EMOJIS.map(e =>
+    `<button onclick="document.getElementById('dmInput').value+='${e}';document.getElementById('dmInput').focus();this.closest('.dm-emoji-picker').remove()">${e}</button>`
+  ).join('');
+
+  const drawer = document.getElementById('dmDrawer');
+  (drawer || document.body).appendChild(picker);
+
+  const btnRect = btn.getBoundingClientRect();
+  const drawerRect = drawer ? drawer.getBoundingClientRect() : { left: 0, top: 0 };
+  picker.style.position = 'absolute';
+  picker.style.left = Math.max(8, btnRect.left - drawerRect.left - 80) + 'px';
+  picker.style.top = (btnRect.top - drawerRect.top - 90) + 'px';
+  picker.style.opacity = '0';
+  picker.style.transform = 'scale(0.8) translateY(8px)';
+  requestAnimationFrame(() => {
+    picker.style.transition = 'opacity 0.15s, transform 0.15s';
+    picker.style.opacity = '1';
+    picker.style.transform = 'scale(1) translateY(0)';
+  });
+  setTimeout(() => {
+    document.addEventListener('click', function close(e) {
+      if (!picker.contains(e.target) && e.target !== btn) { picker.remove(); document.removeEventListener('click', close); }
+    });
+  }, 10);
+}
+
+// ── Media attachment handler (for 📎 button) ────────────────────────
+function handleDmMediaSelect(event) {
+  const file = event.target?.files?.[0];
+  if (!file) return;
+  // For now, show the filename in the input as a preview
+  const input = document.getElementById('dmInput');
+  if (input) input.placeholder = '📎 ' + file.name;
+  // Store file for sending (future: integrate with sendDm for media upload)
+  window._dmPendingFile = file;
+  showMessage('📎 File attached: ' + file.name, 'success');
 }
 
 function handleIncomingDm(msg) {
