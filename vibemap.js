@@ -3257,9 +3257,15 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     } else {
       followBtn.style.display = 'block';
       const isFollowing = targetUser.isFollowing;
-      followBtn.textContent = isFollowing ? 'Following' : 'Follow';
-      followBtn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
-      followBtn.style.opacity = isFollowing ? '0.7' : '1';
+      if (isFollowing) {
+        followBtn.innerHTML = '<span class="follow-check-anim">✓</span> Following';
+        followBtn.className = 'btn-secondary follow-btn-following';
+        followBtn.style.opacity = '1';
+      } else {
+        followBtn.innerHTML = 'Follow';
+        followBtn.className = 'btn-primary follow-btn-not-following';
+        followBtn.style.opacity = '1';
+      }
     }
   }
 
@@ -3330,9 +3336,15 @@ async function fetchProfileStats(targetUser) {
           const followBtn = document.getElementById('followBtn');
           const isOwnProfile = currentUser && (targetUser.id === currentUser.id);
           if (followBtn && !isOwnProfile && followBtn.style.display !== 'none') {
-            followBtn.textContent = u.isFollowing ? 'Following' : 'Follow';
-            followBtn.className = u.isFollowing ? 'btn-secondary' : 'btn-primary';
-            followBtn.style.opacity = u.isFollowing ? '0.7' : '1';
+            if (u.isFollowing) {
+              followBtn.innerHTML = '<span class="follow-check-anim">✓</span> Following';
+              followBtn.className = 'btn-secondary follow-btn-following';
+              followBtn.style.opacity = '1';
+            } else {
+              followBtn.innerHTML = 'Follow';
+              followBtn.className = 'btn-primary follow-btn-not-following';
+              followBtn.style.opacity = '1';
+            }
             followBtn.disabled = false;
           }
         }
@@ -3353,11 +3365,22 @@ async function fetchProfileStats(targetUser) {
 async function toggleFollow() {
   if (!currentUser || !window.currentProfileUser) return;
   const target = window.currentProfileUser;
-  // Disable button while in-flight
   const btn = document.getElementById('followBtn');
-  if (btn) btn.disabled = true;
-  await centralToggleFollow(target.id, target.username, { isFollowing: target.isFollowing });
+  if (btn) {
+    btn.disabled = true;
+    // Instant visual feedback — pulse animation
+    btn.classList.add('follow-btn-pulse');
+    setTimeout(() => btn.classList.remove('follow-btn-pulse'), 600);
+  }
+  const result = await centralToggleFollow(target.id, target.username, { isFollowing: target.isFollowing });
   if (btn) btn.disabled = false;
+  // Show a clear toast so user knows something happened
+  if (result) {
+    const msg = result.isFollowing
+      ? `✅ You are now following @${target.username}`
+      : `👋 You unfollowed @${target.username}`;
+    showMessage(msg, 'success');
+  }
 }
 
 function switchProfileTab(tabName, event) {
@@ -4699,13 +4722,23 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
   if (window.currentProfileUser && window.currentProfileUser.id === userId) {
     const btn = document.getElementById('followBtn');
     if (btn && btn.style.display !== 'none') {
-      btn.textContent = isFollowing ? 'Following' : 'Follow';
-      btn.className = isFollowing ? 'btn-secondary' : 'btn-primary';
-      btn.style.opacity = isFollowing ? '0.7' : '1';
+      if (isFollowing) {
+        btn.innerHTML = '<span class="follow-check-anim">✓</span> Following';
+        btn.className = 'btn-secondary follow-btn-following';
+        btn.style.opacity = '1';
+      } else {
+        btn.innerHTML = 'Follow';
+        btn.className = 'btn-primary follow-btn-not-following';
+        btn.style.opacity = '1';
+      }
       btn.disabled = false;
     }
     const stat = document.getElementById('profileStatFollowers');
-    if (stat) stat.textContent = followersCount;
+    if (stat) {
+      stat.textContent = followersCount;
+      stat.classList.add('stat-pop');
+      setTimeout(() => stat.classList.remove('stat-pop'), 400);
+    }
   }
 
   // 2. Vibe feed cards — all buttons for this user
@@ -4731,6 +4764,136 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
 function _seedFollowState(userId, isFollowing, followersCount) {
   if (!userId) return;
   _followState[userId] = { isFollowing, followersCount };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FOLLOWERS / FOLLOWING LIST MODAL
+// ═══════════════════════════════════════════════════════════════
+async function showFollowListModal(type) {
+  // type = 'followers' or 'following'
+  const targetUser = window.currentProfileUser || currentUser;
+  if (!targetUser || !targetUser.id) return;
+
+  // Remove any existing modal
+  document.getElementById('followListModal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'followListModal';
+  modal.className = 'follow-list-modal';
+  modal.innerHTML = `
+    <div class="flm-backdrop" onclick="closeFollowListModal()"></div>
+    <div class="flm-sheet">
+      <div class="flm-header">
+        <div class="flm-tabs">
+          <button class="flm-tab ${type === 'followers' ? 'active' : ''}" onclick="switchFollowListTab('followers')">
+            Followers
+          </button>
+          <button class="flm-tab ${type === 'following' ? 'active' : ''}" onclick="switchFollowListTab('following')">
+            Following
+          </button>
+        </div>
+        <button class="flm-close" onclick="closeFollowListModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="flm-body" id="flmBody">
+        <div class="flm-loading">
+          <div class="flm-spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('flm-open')));
+
+  // Load the list
+  await loadFollowList(type);
+}
+
+async function loadFollowList(type) {
+  const targetUser = window.currentProfileUser || currentUser;
+  if (!targetUser) return;
+
+  const body = document.getElementById('flmBody');
+  if (!body) return;
+
+  body.innerHTML = '<div class="flm-loading"><div class="flm-spinner"></div><p>Loading...</p></div>';
+
+  try {
+    const endpoint = type === 'followers'
+      ? `/api/followers/${targetUser.id}`
+      : `/api/following/${targetUser.id}`;
+    const data = await apiCall(endpoint, 'GET');
+
+    if (!data.success || !data.users || data.users.length === 0) {
+      body.innerHTML = `
+        <div class="flm-empty">
+          <div class="flm-empty-icon">${type === 'followers' ? '👥' : '🔍'}</div>
+          <p>${type === 'followers' ? 'No followers yet' : 'Not following anyone yet'}</p>
+        </div>`;
+      return;
+    }
+
+    let html = '<div class="flm-list">';
+    data.users.forEach(user => {
+      const isMe = currentUser && user.id === currentUser.id;
+      const avatarHtml = user.profile_pic
+        ? `<img src="${user.profile_pic}" alt="${user.username}" class="flm-avatar-img">`
+        : '<span class="flm-avatar-placeholder">👤</span>';
+
+      html += `
+        <div class="flm-user-row" onclick="closeFollowListModal();showUserProfile('${user.id}')">
+          <div class="flm-avatar">${avatarHtml}</div>
+          <div class="flm-user-info">
+            <div class="flm-username">@${user.username}</div>
+            ${user.college ? `<div class="flm-college">🎓 ${user.college}</div>` : ''}
+            ${user.bio ? `<div class="flm-bio">${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}</div>` : ''}
+          </div>
+          ${!isMe ? `
+            <button class="flm-follow-btn ${user.isFollowedByMe ? 'flm-following' : ''}" 
+              onclick="event.stopPropagation();flmToggleFollow(this, '${user.id}', '${user.username}', ${user.isFollowedByMe})">
+              ${user.isFollowedByMe ? '✓ Following' : 'Follow'}
+            </button>` : '<span class="flm-you-badge">You</span>'}
+        </div>`;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  } catch (error) {
+    console.error('Failed to load follow list:', error);
+    body.innerHTML = '<div class="flm-empty"><p>❌ Failed to load</p></div>';
+  }
+}
+
+function switchFollowListTab(type) {
+  document.querySelectorAll('.flm-tab').forEach(tab => tab.classList.remove('active'));
+  const tabs = document.querySelectorAll('.flm-tab');
+  if (type === 'followers' && tabs[0]) tabs[0].classList.add('active');
+  if (type === 'following' && tabs[1]) tabs[1].classList.add('active');
+  loadFollowList(type);
+}
+
+function closeFollowListModal() {
+  const modal = document.getElementById('followListModal');
+  if (modal) {
+    modal.classList.remove('flm-open');
+    setTimeout(() => modal.remove(), 300);
+  }
+}
+
+async function flmToggleFollow(btn, userId, username, wasFollowing) {
+  btn.disabled = true;
+  btn.classList.add('follow-btn-pulse');
+  const result = await centralToggleFollow(userId, username, { isFollowing: wasFollowing });
+  btn.classList.remove('follow-btn-pulse');
+  if (result) {
+    btn.textContent = result.isFollowing ? '✓ Following' : 'Follow';
+    btn.classList.toggle('flm-following', result.isFollowing);
+    btn.onclick = function (e) { e.stopPropagation(); flmToggleFollow(btn, userId, username, result.isFollowing); };
+  }
+  btn.disabled = false;
 }
 
 function renderPosts(posts) {
