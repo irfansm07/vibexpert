@@ -4028,7 +4028,7 @@ function handleProfilePicUpload(event) {
     if (mainAvatarInitial) mainAvatarInitial.style.display = 'none';
 
     saveUserToLocal();
-    showLiveActivity('✨ Profile picture updated!', 'success');
+    showMessage('✨ Profile picture updated!', 'success');
   };
   reader.readAsDataURL(file);
 }
@@ -4082,7 +4082,7 @@ async function saveProfileChanges() {
       if (userNameDisplay) userNameDisplay.textContent = currentUser.username;
 
       showProfilePage(currentUser);
-      showLiveActivity('🚀 Profile updated! VIBE HARD.', 'success');
+      showMessage('🚀 Profile updated! VIBE HARD.', 'success');
     }
   } catch (error) {
     console.error('Save profile error:', error);
@@ -4143,7 +4143,7 @@ function saveBioFromModal() {
     if (changed) {
       saveUserToLocal();
       showProfilePage(currentUser);
-      showLiveActivity('🚀 Profile updated! Looking fresh.', 'success');
+      showMessage('🚀 Profile updated! Looking fresh.', 'success');
     }
 
     closeModal('bioEditModal');
@@ -4156,7 +4156,7 @@ function editShippingAddress() {
   if (modal) {
     const container = document.getElementById('shippingAddressContent');
     if (container) container.innerHTML = `<p>${modal}</p>`;
-    showLiveActivity('🚚 Shipping info updated!', 'success');
+    showMessage('🚚 Shipping info updated!', 'success');
   }
 }
 
@@ -4701,7 +4701,13 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
 
     // Clear in-flight marker after successful action
     delete _followInFlight[targetUserId];
-    showLiveActivity(`${nowFollowing ? '✨ Following' : '👋 Unfollowed'} @${targetUsername || ''}`, 'success');
+
+    // Update the "Following" count on the current user's own profile if visible
+    const myFollowingStat = document.getElementById('profileStatFollowing');
+    if (myFollowingStat && window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+      myFollowingStat.textContent = currentUser.followingCount || 0;
+    }
+
     return { isFollowing: nowFollowing, followersCount: realFollowersCount };
 
   } catch (error) {
