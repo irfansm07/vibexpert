@@ -22838,6 +22838,8 @@ video.rv-card-media {
   min-height: 0 !important;
   /* prevents flex overflow on Safari */
   overflow-y: auto !important;
+  padding: 12px 14px 6px !important;
+  gap: 2px !important;
 }
 
 /* Drawer header and input bar never shrink */
@@ -23100,7 +23102,7 @@ video.rv-card-media {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 10px;
+  padding: 10px 12px;
   border-radius: 12px;
   cursor: pointer;
   transition: background 0.14s, transform 0.12s;
@@ -23278,12 +23280,12 @@ video.rv-card-media {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 12px 12px;
+  gap: 12px;
+  padding: 11px 14px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.025);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   transition: background 0.15s, border-color 0.15s, transform 0.12s;
 }
 
@@ -23408,31 +23410,116 @@ video.rv-card-media {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   DM CHAT — BUBBLES, REPLY, TICKS, REACTIONS, ACTIONS
+   DM CHAT — PREMIUM GLASSMORPHISM UI v2
+   Pill bubbles · Hover reactions · Slide-in · Scroll-to-bottom
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Row wrapper */
+/* ── Slide-in animation for new messages ───────────────────────────── */
+@keyframes dmSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes dmSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ── Row wrapper ───────────────────────────────────────────────────── */
 .dm-msg-row {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   position: relative;
+  padding: 2px 0;
 }
 
 .dm-msg-row.dm-own {
   flex-direction: row-reverse;
+  animation: dmSlideInRight 0.35s cubic-bezier(.22, .68, .32, 1.1) both;
 }
 
 .dm-msg-row.dm-other {
   flex-direction: row;
+  animation: dmSlideInLeft 0.35s cubic-bezier(.22, .68, .32, 1.1) both;
 }
 
-/* Bubble column */
+/* ── Consecutive same-sender: collapse avatar, tighten spacing ─────── */
+.dm-msg-row.dm-other+.dm-msg-row.dm-other .dm-avatar-indicator {
+  visibility: hidden;
+  width: 24px;
+  height: 0;
+}
+
+.dm-msg-row.dm-other+.dm-msg-row.dm-other {
+  margin-top: 1px;
+}
+
+/* ── New / unread message left-border glow ──────────────────────────── */
+.dm-msg-row.dm-unread {
+  border-left: 3px solid rgba(130, 90, 255, 0.6);
+  border-radius: 3px 0 0 3px;
+  padding-left: 6px;
+  box-shadow: -4px 0 18px rgba(130, 90, 255, 0.12);
+}
+
+/* ── Avatar indicator (for received messages) ──────────────────────── */
+.dm-avatar-indicator {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d1b69, #1a1133);
+  border: 1.5px solid rgba(130, 90, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c4b5fd;
+  letter-spacing: -0.3px;
+  position: relative;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.dm-avatar-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1.5px solid rgba(12, 8, 32, 0.95);
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
+}
+
+.dm-own .dm-avatar-indicator {
+  display: none;
+}
+
+/* ── Bubble column ─────────────────────────────────────────────────── */
 .dm-msg-wrap {
   display: flex;
   flex-direction: column;
   max-width: 72%;
+  min-width: 0;
 }
 
 .dm-own .dm-msg-wrap {
@@ -23443,103 +23530,167 @@ video.rv-card-media {
   align-items: flex-start;
 }
 
-/* Bubbles */
+/* ── Glassmorphism Pill Bubbles ─────────────────────────────────────── */
 .dm-bubble {
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 14px;
-  line-height: 1.5;
+  padding: 9px 14px 9px 14px;
+  border-radius: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
   word-break: break-word;
   color: #fff;
   position: relative;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  max-width: 100%;
 }
 
+/* ── Own message — gradient purple pill with glassmorphism ──────────── */
 .dm-bubble-own {
-  background: linear-gradient(135deg, #4f74a3, #7aa3d4);
-  border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(135deg,
+      rgba(91, 79, 207, 0.88) 0%,
+      rgba(99, 102, 241, 0.82) 50%,
+      rgba(79, 91, 213, 0.85) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 18px 18px 5px 18px;
+  box-shadow:
+    0 4px 16px rgba(91, 79, 207, 0.35),
+    0 0 24px rgba(91, 79, 207, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
+.dm-bubble-own:hover {
+  box-shadow:
+    0 6px 24px rgba(91, 79, 207, 0.45),
+    0 0 32px rgba(91, 79, 207, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ── Other message — frosted dark glass pill ───────────────────────── */
 .dm-bubble-other {
-  background: rgba(255, 255, 255, 0.09);
-  border-radius: 16px 16px 16px 4px;
+  background: rgba(30, 36, 51, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(130, 90, 255, 0.12);
+  border-radius: 18px 18px 18px 5px;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.25),
+    0 0 1px rgba(130, 90, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Meta row (time + ticks) */
+.dm-bubble-other:hover {
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.35),
+    0 0 1px rgba(130, 90, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(130, 90, 255, 0.2);
+}
+
+/* ── Meta row (time + ticks) — hidden by default, shown on hover ──── */
 .dm-msg-meta {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 4px;
-  margin-top: 3px;
+  margin-top: 2px;
+  padding: 0 4px;
 }
 
+.dm-msg-row:hover .dm-msg-meta {
+  display: flex;
+}
+
+/* Always show ticks on own messages, time only on hover */
 .dm-meta-own {
+  display: flex !important;
   flex-direction: row-reverse;
-  padding-right: 2px;
+}
+
+.dm-meta-own .dm-tick {
+  opacity: 1;
+}
+
+.dm-meta-own .dm-msg-time {
+  display: none;
+}
+
+.dm-msg-row:hover .dm-meta-own .dm-msg-time {
+  display: inline;
 }
 
 .dm-meta-other {
-  padding-left: 2px;
+  padding-left: 4px;
 }
 
 .dm-msg-time {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(180, 160, 255, 0.4);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
-/* Tick marks */
+/* ── Read receipt ticks — styled cleanly ───────────────────────────── */
 .dm-tick {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -2px;
   line-height: 1;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .dm-tick-sent {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(180, 160, 255, 0.35);
 }
 
 .dm-tick-read {
-  color: #60a5fa;
+  color: #818cf8;
+  text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
 }
 
-/* Reply preview inside bubble */
+/* ── Reply preview — neon accent ───────────────────────────────────── */
 .dm-reply-preview {
   display: flex;
   align-items: stretch;
-  gap: 7px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  padding: 6px 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  background: rgba(130, 90, 255, 0.08);
+  border-radius: 12px;
+  padding: 7px 11px;
+  margin-bottom: 4px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(6px);
 }
 
 .dm-reply-preview:hover {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(130, 90, 255, 0.14);
 }
 
 .dm-reply-line {
   width: 3px;
   border-radius: 4px;
-  background: #7aa3d4;
+  background: linear-gradient(to bottom, #7c4dff, #6366f1);
   flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(124, 77, 255, 0.35);
 }
 
 .dm-reply-content {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 11.5px;
+  color: rgba(200, 180, 255, 0.5);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Reactions row */
+/* ── Reactions — glassmorphism chips ───────────────────────────────── */
 .dm-reactions {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 3px;
+  padding: 0 4px;
 }
 
 .dm-own .dm-reactions {
@@ -23547,81 +23698,163 @@ video.rv-card-media {
 }
 
 .dm-react-chip {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(130, 90, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(130, 90, 255, 0.18);
   border-radius: 99px;
-  padding: 3px 8px;
-  font-size: 13px;
+  padding: 2px 8px 2px 6px;
+  font-size: 14px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  transition: background 0.14s, transform 0.1s;
+  transition: all 0.2s ease;
   color: #fff;
+  animation: dmReactPop 0.3s cubic-bezier(.2, .8, .3, 1.4);
+}
+
+@keyframes dmReactPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .dm-react-chip span {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(180, 160, 255, 0.6);
+  font-weight: 600;
 }
 
 .dm-react-chip:hover {
-  background: rgba(255, 255, 255, 0.14);
-  transform: scale(1.08);
+  background: rgba(130, 90, 255, 0.22);
+  transform: scale(1.12);
+  box-shadow: 0 0 10px rgba(130, 90, 255, 0.18);
 }
 
 .dm-react-chip.dm-react-mine {
-  background: rgba(79, 116, 163, 0.35);
-  border-color: rgba(122, 163, 212, 0.5);
+  background: rgba(124, 77, 255, 0.28);
+  border-color: rgba(124, 77, 255, 0.45);
+  box-shadow: 0 0 10px rgba(124, 77, 255, 0.12);
 }
 
-/* Quick action buttons (reply + react) */
-.dm-msg-actions {
+/* ── Hover reaction bar (quick-react) ──────────────────────────────── */
+.dm-hover-react-bar {
+  position: absolute;
+  top: -32px;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  background: rgba(12, 8, 32, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(130, 90, 255, 0.2);
+  border-radius: 20px;
+  padding: 3px 6px;
   opacity: 0;
-  transition: opacity 0.15s;
-  align-self: flex-end;
-  margin-bottom: 22px;
+  transform: translateY(6px) scale(0.9);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(.22, .68, .32, 1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(130, 90, 255, 0.08);
+  z-index: 10;
+}
+
+.dm-own .dm-hover-react-bar {
+  right: 0;
+}
+
+.dm-other .dm-hover-react-bar {
+  left: 30px;
+}
+
+.dm-msg-row:hover .dm-hover-react-bar {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.dm-hover-react-bar button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: transform 0.15s ease, background 0.15s ease;
+  line-height: 1;
+}
+
+.dm-hover-react-bar button:hover {
+  transform: scale(1.35);
+  background: rgba(130, 90, 255, 0.18);
+}
+
+/* ── Action buttons — absolutely positioned, zero layout impact ──── */
+.dm-msg-actions {
+  display: none;
+  flex-direction: row;
+  gap: 3px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.dm-actions-left {
+  left: -56px;
+}
+
+.dm-actions-right {
+  right: -56px;
 }
 
 .dm-msg-row:hover .dm-msg-actions {
-  opacity: 1;
+  display: flex;
 }
 
 .dm-action-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.65);
+  background: rgba(130, 90, 255, 0.06);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(130, 90, 255, 0.12);
+  color: rgba(180, 160, 255, 0.5);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.14s, color 0.14s;
+  transition: all 0.25s ease;
 }
 
 .dm-action-btn:hover {
-  background: rgba(79, 116, 163, 0.3);
-  color: #fff;
+  background: rgba(130, 90, 255, 0.22);
+  border-color: rgba(130, 90, 255, 0.4);
+  color: rgba(200, 180, 255, 0.95);
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(130, 90, 255, 0.18);
 }
 
-/* Emoji quick-picker popup */
+/* ── Emoji picker — glassmorphism pill ─────────────────────────────── */
 .dm-emoji-picker {
-  position: fixed;
+  position: absolute;
   z-index: 99999;
-  background: rgba(20, 20, 40, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 8, 32, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(130, 90, 255, 0.22);
   border-radius: 28px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   display: flex;
-  gap: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(20px);
+  gap: 2px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.65),
+    0 0 24px rgba(130, 90, 255, 0.1),
+    0 0 0 1px rgba(130, 90, 255, 0.08);
 }
 
 .dm-emoji-picker button {
@@ -23629,18 +23862,18 @@ video.rv-card-media {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: transform 0.12s, background 0.12s;
+  padding: 4px 5px;
+  border-radius: 8px;
+  transition: transform 0.15s ease, background 0.15s ease;
   line-height: 1;
 }
 
 .dm-emoji-picker button:hover {
-  transform: scale(1.3);
-  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.35);
+  background: rgba(130, 90, 255, 0.18);
 }
 
-/* Highlight flash when scrolled to a message */
+/* ── Highlight flash — neon pulse ──────────────────────────────────── */
 .dm-msg-highlight .dm-bubble {
   animation: dm-highlight-flash 1.5s ease;
 }
@@ -23650,19 +23883,195 @@ video.rv-card-media {
   0%,
   100% {
     filter: brightness(1);
+    box-shadow: none;
   }
 
   30% {
-    filter: brightness(1.6);
+    filter: brightness(1.4);
+    box-shadow: 0 0 24px rgba(130, 90, 255, 0.35);
   }
 }
 
-/* Touch devices: always show actions (no hover) */
-@media (pointer: coarse) {
-  .dm-msg-actions {
-    opacity: 1;
+/* ── Scroll-to-bottom floating button ──────────────────────────────── */
+.dm-scroll-bottom-btn {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(.22, .68, .32, 1.1);
+  z-index: 20;
+  background: rgba(91, 79, 207, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  color: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 20px rgba(91, 79, 207, 0.4), 0 0 12px rgba(91, 79, 207, 0.15);
+}
+
+.dm-scroll-bottom-btn.dm-scroll-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dm-scroll-bottom-btn:hover {
+  background: rgba(91, 79, 207, 1);
+  box-shadow: 0 6px 28px rgba(91, 79, 207, 0.55), 0 0 20px rgba(91, 79, 207, 0.25);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+/* ── Typing indicator — bouncing dots ──────────────────────────────── */
+@keyframes dmBounceDot {
+
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-6px);
   }
 }
+
+.dm-typing-bounce {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 0;
+}
+
+.dm-typing-bounce span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(130, 90, 255, 0.7);
+  animation: dmBounceDot 1.4s ease-in-out infinite;
+}
+
+.dm-typing-bounce span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.dm-typing-bounce span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+/* ── Refined pill-shaped input bar ─────────────────────────────────── */
+.dm-input-refined {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(130, 90, 255, 0.04);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(130, 90, 255, 0.12);
+  border-radius: 28px;
+  padding: 4px 6px 4px 6px;
+  transition: all 0.3s ease;
+}
+
+.dm-input-refined:focus-within {
+  border-color: rgba(130, 90, 255, 0.35);
+  background: rgba(130, 90, 255, 0.07);
+  box-shadow: 0 0 20px rgba(130, 90, 255, 0.08);
+}
+
+.dm-input-refined input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #ece6ff;
+  font-size: 13.5px;
+  padding: 8px 8px 8px 12px;
+  outline: none;
+  letter-spacing: 0.01em;
+  min-width: 0;
+}
+
+.dm-input-refined input::placeholder {
+  color: rgba(180, 160, 255, 0.3);
+}
+
+.dm-input-icon-btn {
+  background: none;
+  border: none;
+  color: rgba(180, 160, 255, 0.45);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.dm-input-icon-btn:hover {
+  color: rgba(200, 180, 255, 0.85);
+  background: rgba(130, 90, 255, 0.12);
+}
+
+.dm-send-glow {
+  background: linear-gradient(135deg, #7c4dff, #6366f1) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 14px rgba(124, 77, 255, 0.4), 0 0 8px rgba(124, 77, 255, 0.15);
+  padding: 0 !important;
+}
+
+.dm-send-glow:hover {
+  box-shadow: 0 4px 24px rgba(124, 77, 255, 0.6), 0 0 16px rgba(124, 77, 255, 0.25);
+  transform: scale(1.08);
+}
+
+.dm-send-glow:active {
+  transform: scale(0.95);
+}
+
+/* ── Touch devices: always show meta & actions ─────────────────────── */
+@media (pointer: coarse) {
+  .dm-msg-actions {
+    display: flex;
+    position: static;
+    transform: none;
+  }
+
+  .dm-msg-meta {
+    display: flex !important;
+  }
+
+  .dm-meta-own .dm-msg-time {
+    display: inline !important;
+  }
+
+  .dm-hover-react-bar {
+    display: none !important;
+  }
+}
+
+
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    GHOST WALLPAPER — NIGHT SKY BASE
