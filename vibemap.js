@@ -4077,45 +4077,106 @@ function loadShippingDetails() {
   `;
 }
 
-function loadOrderHistory() {
+async function loadOrderHistory() {
   const container = document.getElementById('orderHistoryContainer');
   if (!container) return;
 
-  const orders = [
-    { id: 'VX-9921', date: 'Oct 24, 2023', status: 'Delivered', total: 1299, items: 1 },
-    { id: 'VX-8842', date: 'Sep 12, 2023', status: 'In Transit', total: 2450, items: 3 }
-  ];
+  // Show loading skeleton
+  container.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;padding:8px 0;">
+      ${Array(3).fill(`
+        <div style="padding:20px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.06);">
+          <div style="height:16px;width:60%;background:rgba(255,255,255,0.06);border-radius:8px;margin-bottom:10px;"></div>
+          <div style="height:12px;width:40%;background:rgba(255,255,255,0.04);border-radius:6px;"></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 
-  if (orders.length === 0) {
+  try {
+    const data = await apiCall('/api/shop/orders', 'GET');
+    const orders = data.orders || [];
+
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📦</div>
+          <p>No orders yet.</p>
+          <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px;">
+            Shop on <a href="https://www.vibexpert.shop" target="_blank" style="color:#a78bfa;text-decoration:none;">vibexpert.shop</a> and your orders will appear here.
+          </p>
+        </div>`;
+      return;
+    }
+
+    let html = '';
+    orders.forEach(order => {
+      const statusColors = {
+        'paid': '#4ade80',
+        'created': '#fbbf24',
+        'failed': '#f87171',
+        'shipped': '#60a5fa',
+        'delivered': '#4ade80'
+      };
+      const statusLabels = {
+        'paid': '✅ Paid',
+        'created': '⏳ Pending',
+        'failed': '❌ Failed',
+        'shipped': '🚚 Shipped',
+        'delivered': '📦 Delivered'
+      };
+      const statusColor = statusColors[order.status] || '#8da4d3';
+      const statusLabel = statusLabels[order.status] || order.status;
+
+      let items = [];
+      try { items = JSON.parse(order.items); } catch (e) { }
+      const itemCount = items.reduce((s, i) => s + (i.quantity || 1), 0);
+
+      const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+
+      const shortOrderId = order.order_id ? order.order_id.slice(-12) : '—';
+
+      html += `
+        <div style="padding:20px;background:rgba(255,255,255,0.04);border-radius:16px;margin-bottom:12px;border:1px solid rgba(79,116,163,0.15);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <h4 style="color:white;margin:0;font-size:14px;font-weight:700;">Order #${shortOrderId}</h4>
+              <span style="color:rgba(255,255,255,0.4);font-size:11px;">${orderDate}</span>
+            </div>
+            <span style="color:${statusColor};font-weight:600;font-size:12px;background:${statusColor}15;padding:4px 10px;border-radius:20px;border:1px solid ${statusColor}30;">${statusLabel}</span>
+          </div>
+          ${items.length > 0 ? `
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+              ${items.slice(0, 3).map(i => `
+                <div style="display:flex;justify-content:space-between;font-size:12px;">
+                  <span style="color:rgba(255,255,255,0.6);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px;">${i.name || 'Item'} × ${i.quantity || 1}</span>
+                  <span style="color:rgba(255,255,255,0.8);font-weight:600;">₹${((i.price || 0) * (i.quantity || 1)).toLocaleString()}</span>
+                </div>
+              `).join('')}
+              ${items.length > 3 ? `<span style="font-size:11px;color:rgba(255,255,255,0.3);">+${items.length - 3} more item${items.length - 3 > 1 ? 's' : ''}</span>` : ''}
+            </div>
+          ` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;">
+            <span style="color:rgba(255,255,255,0.4);font-size:12px;">${itemCount} ${itemCount === 1 ? 'Item' : 'Items'}</span>
+            <span style="color:white;font-weight:700;font-size:15px;">₹${(order.total_amount || 0).toLocaleString()}</span>
+          </div>
+          ${order.payment_id ? `<div style="font-size:10px;color:rgba(255,255,255,0.2);margin-top:6px;font-family:monospace;">Payment: ${order.payment_id}</div>` : ''}
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Load orders error:', error);
     container.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">📦</div>
-        <p>No orders yet. Your future purchases will appear here.</p>
+        <div class="empty-icon">⚠️</div>
+        <p>Could not load orders.</p>
+        <button onclick="loadOrderHistory()" style="margin-top:8px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;">Retry</button>
       </div>`;
-    return;
   }
-
-  let html = '';
-  orders.forEach(order => {
-    const statusColor = order.status === 'Delivered' ? '#4ade80' : '#8da4d3';
-    html += `
-      <div class="order-card" style="padding:25px;background:rgba(255,255,255,0.05);border-radius:20px;margin-bottom:15px;border:1px solid rgba(79,116,163,0.2);">
-        <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
-          <div>
-            <h4 style="color:white;margin:0;">Order #${order.id}</h4>
-            <span style="color:#8da4d3;font-size:12px;">${order.date}</span>
-          </div>
-          <span style="color:${statusColor};font-weight:700;font-size:14px;">${order.status}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="color:#8da4d3;">${order.items} ${order.items === 1 ? 'Item' : 'Items'}</span>
-          <span style="color:white;font-weight:700;">₹${order.total}</span>
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
 }
 
 // PROFILE EDITING & PHOTO UPLOADS
@@ -6252,7 +6313,7 @@ async function loadVibeshopPage() {
 
     if (data.success && data.ssoToken) {
       // Redirect to vibexpert.shop with SSO token
-      window.open(`https://www.vibexpert.shop?sso_token=${data.ssoToken}`, '_blank');
+      window.open(`https://www.vibexpert.shop/shop?sso_token=${data.ssoToken}`, '_blank');
     } else {
       showMessage('❌ Failed to generate SSO token', 'error');
     }
