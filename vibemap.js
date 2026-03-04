@@ -3332,6 +3332,13 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     messagesTabBtn.style.display = isOwn ? '' : 'none';
   }
 
+  // Admin tab — owner-only and can be restricted to specific users later
+  const adminTabBtn = document.getElementById('adminTabBtn');
+  if (adminTabBtn) {
+    // For now, making it visible to the owner so you can test it!
+    adminTabBtn.style.display = isOwn ? 'inline-block' : 'none';
+  }
+
   // Only re-fetch stats if data wasn't already fresh from showUserProfile
   if (!targetUser._dataFresh) {
     fetchProfileStats(targetUser);
@@ -3537,6 +3544,7 @@ function switchProfileTab(tabName, event) {
   else if (tabName === 'shipping') loadShippingDetails();
   else if (tabName === 'orders') loadOrderHistory();
   else if (tabName === 'vibes') loadMyVibes();
+  else if (tabName === 'admin') loadAdminOrders();
 }
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -4179,6 +4187,135 @@ async function loadOrderHistory() {
   }
 }
 
+// 👑 ADMIN ORDERS DASHBOARD 👑
+async function loadAdminOrders() {
+  const container = document.getElementById('adminOrdersContainer');
+  if (!container) return;
+
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:#a855f7;">🔄 Loading store operations...</div>`;
+
+  try {
+    const data = await apiCall('/api/admin/shop-orders', 'GET');
+    const orders = data.orders || [];
+
+    if (orders.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.4);">No orders found in the system yet.</div>`;
+      return;
+    }
+
+    let html = '';
+    orders.forEach(order => {
+      let items = [];
+      let addr = {};
+      try { items = JSON.parse(order.items); } catch (e) { }
+      try { addr = JSON.parse(order.shipping_address) || {}; } catch (e) { }
+
+      const itemCount = items.reduce((s, i) => s + (i.quantity || 1), 0);
+      const userEmail = order.users?.email || 'N/A';
+      const userName = order.users?.username || 'N/A';
+      const orderDate = new Date(order.created_at).toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      const shortOrderId = order.order_id ? order.order_id.slice(-10) : '—';
+
+      const statusColors = {
+        'paid': '#10b981',
+        'created': '#fbbf24',
+        'failed': '#ef4444',
+        'shipped': '#3b82f6',
+        'delivered': '#8b5cf6'
+      };
+
+      const currentStatusColor = statusColors[order.status] || '#94a3b8';
+
+      html += `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:12px;margin-bottom:16px;overflow:hidden;">
+          
+          <!-- Header -->
+          <div style="padding:16px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.2);">
+            <div>
+              <div style="color:#94a3b8;font-size:11px;font-family:monospace;margin-bottom:4px;">ID: ${order.order_id}</div>
+              <div style="color:#f1f5f9;font-weight:700;font-size:15px;">₹${order.total_amount.toLocaleString()} <span style="color:#64748b;font-weight:400;font-size:13px;">— ${itemCount} items</span></div>
+            </div>
+            <div style="text-align:right;">
+              <select 
+                onchange="updateOrderStatus('${order.order_id}', this.value)" 
+                style="background:${currentStatusColor}15;color:${currentStatusColor};border:1px solid ${currentStatusColor}30;padding:6px 10px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;outline:none;"
+              >
+                <option value="created" ${order.status === 'created' ? 'selected' : ''}>Pending Payment</option>
+                <option value="paid" ${order.status === 'paid' ? 'selected' : ''}>Paid (Pending Dispatch)</option>
+                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="failed" ${order.status === 'failed' ? 'selected' : ''}>Failed</option>
+              </select>
+              <div style="color:#64748b;font-size:11px;margin-top:6px;">${orderDate}</div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            
+            <!-- Customer Details -->
+            <div style="background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;">
+              <h4 style="margin:0 0 10px 0;color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Customer</h4>
+              <div style="color:#f1f5f9;font-size:13px;margin-bottom:4px;"><strong>UID:</strong> @${userName}</div>
+              <div style="color:#f1f5f9;font-size:13px;margin-bottom:4px;"><strong>Email:</strong> ${userEmail}</div>
+              <hr style="border:0;border-top:1px dashed rgba(255,255,255,0.1);margin:10px 0;">
+              <div style="color:#f1f5f9;font-size:13px;margin-bottom:4px;"><strong>Ship To:</strong> ${addr.fullName || '—'}</div>
+              <div style="color:#f1f5f9;font-size:13px;margin-bottom:4px;"><strong>Phone:</strong> ${addr.phone || '—'}</div>
+              <div style="color:#94a3b8;font-size:12px;line-height:1.4;margin-top:6px;">
+                ${addr.street || ''}<br>${addr.city || ''}, ${addr.state || ''} ${addr.zipCode || ''}
+              </div>
+            </div>
+
+            <!-- Items -->
+            <div style="background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;">
+              <h4 style="margin:0 0 10px 0;color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Products</h4>
+              <div style="max-height:150px;overflow-y:auto;padding-right:4px;">
+                ${items.map(item => `
+                  <div style="display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <img src="${item.image}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;background:#000;">
+                    <div style="flex:1;">
+                      <div style="color:#f1f5f9;font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${item.name}</div>
+                      <div style="color:#94a3b8;font-size:11px;">Qty: ${item.quantity} × ₹${item.price}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+          </div>
+          <div style="padding:10px 16px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.05);font-size:11px;color:#64748b;font-family:monospace;">
+            Payment Ref: ${order.payment_id || 'Not captured'} | Supabase UID: ${order.user_id}
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+
+  } catch (error) {
+    console.error('Admin Load Error:', error);
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444;">Failed to load system data!<br><button onclick="loadAdminOrders()" style="margin-top:12px;background:rgba(239,68,68,0.2);color:#ef4444;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">Retry</button></div>`;
+  }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const res = await apiCall(`/api/admin/shop-orders/${orderId}/status`, 'PUT', { status: newStatus });
+    if (res.success) {
+      showMessage('Order status updated successfully!', 'success');
+      loadAdminOrders(); // Refresh to update colors
+    } else {
+      showMessage('Failed to update order status.', 'error');
+    }
+  } catch (err) {
+    console.error('Update status error:', err);
+    showMessage('Error communicating with server.', 'error');
+  }
+}
+
 // PROFILE EDITING & PHOTO UPLOADS
 function uploadProfilePic() {
   document.getElementById('profilePicInput').click();
@@ -4284,11 +4421,11 @@ function editProfileBio() {
   if (modal) {
     if (textarea) {
       textarea.value = currentUser.bio || '';
-      if (countDisplay) countDisplay.textContent = `${textarea.value.length}/200`;
+      if (countDisplay) countDisplay.textContent = `${ textarea.value.length } / 200`;
 
       // Character counter
       textarea.oninput = () => {
-        if (countDisplay) countDisplay.textContent = `${textarea.value.length}/200`;
+        if (countDisplay) countDisplay.textContent = `${ textarea.value.length } / 200`;
       };
     }
     if (userInput) userInput.value = currentUser.username || '';
@@ -4339,7 +4476,7 @@ function editShippingAddress() {
   const modal = prompt("Enter Shipping Address:", "Excellence Residency, Block B...");
   if (modal) {
     const container = document.getElementById('shippingAddressContent');
-    if (container) container.innerHTML = `<p>${modal}</p>`;
+    if (container) container.innerHTML = `< p > ${ modal }</p > `;
     showMessage('🚚 Shipping info updated!', 'success');
   }
 }
@@ -4415,7 +4552,7 @@ function disableHeaderAutohide() {
   if (chatContainer) {
     const headerH = header.offsetHeight || 72;
     chatContainer.style.top = headerH + 'px';
-    chatContainer.style.height = `calc(100vh - ${headerH}px)`;
+    chatContainer.style.height = `calc(100vh - ${ headerH }px)`;
   }
 
   document.removeEventListener('mousemove', _headerMouseMove);
@@ -4441,7 +4578,7 @@ function _headerMouseMove(e) {
     if (cont) {
       const hh = header.offsetHeight || 72;
       cont.style.top = hh + 'px';
-      cont.style.height = `calc(100vh - ${hh}px)`;
+      cont.style.height = `calc(100vh - ${ hh }px)`;
     }
   } else if (e.clientY > 120 && !header.contains(e.target)) {
     // Mouse moved well away AND is not over the header — start hide timer
@@ -4468,7 +4605,7 @@ function _headerZoneEnter() {
     if (cont) {
       const hh = header.offsetHeight || 72;
       cont.style.top = hh + 'px';
-      cont.style.height = `calc(100vh - ${hh}px)`;
+      cont.style.height = `calc(100vh - ${ hh }px)`;
     }
   }
 }
@@ -4600,7 +4737,7 @@ async function createPost() {
     if (selectedStickers.length > 0) formData.append('stickers', JSON.stringify(selectedStickers));
 
     if (selectedFiles.length > 0) {
-      showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
+      showMessage(`📤 Uploading ${ selectedFiles.length } file(s)...`, 'success');
       for (let i = 0; i < selectedFiles.length; i++) {
         formData.append('media', selectedFiles[i]);
       }
@@ -4640,7 +4777,7 @@ async function createPost() {
       const postCount = data.postCount || 1;
       setTimeout(() => showPostCelebrationModal(postCount), 1000);
       if (data.badgeUpdated && data.newBadges?.length > 0) {
-        setTimeout(() => showMessage(`🏆 Badge unlocked: ${data.newBadges.join(', ')}`, 'success'), 6000);
+        setTimeout(() => showMessage(`🏆 Badge unlocked: ${ data.newBadges.join(', ') }`, 'success'), 6000);
       }
 
     } else {
@@ -4670,7 +4807,7 @@ function showVibePostSuccessAndReload() {
   const popup = document.createElement('div');
   popup.id = 'vibeSuccessPopup';
   popup.innerHTML = `
-    <div class="vsp-bg-glow"></div>
+    < div class= "vsp-bg-glow" ></div >
     <div class="vsp-icon-ring">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26">
         <polyline points="20 6 9 17 4 12"/>
@@ -4777,13 +4914,13 @@ function showMutualFollowRequired(userId, username, event) {
   const popup = document.createElement('div');
   popup.className = 'mutual-req-popup';
   popup.innerHTML = `
-    <div class="mrp-inner">
+      < div class= "mrp-inner" >
       <div class="mrp-lock">🔒</div>
       <div class="mrp-title">Follow Each Other First</div>
       <div class="mrp-body">You and <strong>@${username}</strong> both need to follow each other to chat.</div>
       <button class="mrp-follow-btn" onclick="quickFollowForChat('${userId}', '${username}', this)">Follow @${username}</button>
       <button class="mrp-close" onclick="this.closest('.mutual-req-popup').remove()">✕</button>
-    </div>`;
+    </div > `;
   document.body.appendChild(popup);
   // Position near click
   if (event) {
@@ -4811,7 +4948,7 @@ async function quickFollowForChat(userId, username, btn) {
     btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
     setTimeout(() => {
       btn.closest('.mutual-req-popup')?.remove();
-      showMessage(`✨ Following @${username}! Ask them to follow back to start chatting.`, 'success');
+      showMessage(`✨ Following @${ username } !Ask them to follow back to start chatting.`, 'success');
     }, 800);
   } else {
     btn.disabled = false;
@@ -4838,7 +4975,7 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
   const wasFollowing = cached.isFollowing !== undefined
     ? cached.isFollowing
     : (opts.isFollowing !== undefined ? opts.isFollowing : false);
-  const endpoint = wasFollowing ? `/api/unfollow/${targetUserId}` : `/api/follow/${targetUserId}`;
+  const endpoint = wasFollowing ? `/ api / unfollow / ${ targetUserId } ` : ` / api / follow / ${ targetUserId } `;
 
   // Optimistically update all UIs immediately
   const nowFollowing = !wasFollowing;
@@ -4933,7 +5070,7 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
   }
 
   // 2. Vibe feed cards — all buttons for this user
-  document.querySelectorAll(`.vibe-follow-btn[data-uid="${userId}"]`).forEach(btn => {
+  document.querySelectorAll(`.vibe - follow - btn[data - uid="${userId}"]`).forEach(btn => {
     btn.textContent = isFollowing ? '✓ Following' : '+ Follow';
     btn.classList.toggle('following', isFollowing);
     btn.disabled = false;
@@ -4972,31 +5109,31 @@ async function showFollowListModal(type) {
   modal.id = 'followListModal';
   modal.className = 'follow-list-modal';
   modal.innerHTML = `
-    <div class="flm-backdrop" onclick="closeFollowListModal()"></div>
-    <div class="flm-sheet">
-      <div class="flm-header">
-        <div class="flm-tabs">
-          <button class="flm-tab ${type === 'followers' ? 'active' : ''}" onclick="switchFollowListTab('followers')">
-            Followers
-          </button>
-          <button class="flm-tab ${type === 'following' ? 'active' : ''}" onclick="switchFollowListTab('following')">
-            Following
-          </button>
+      < div class="flm-backdrop" onclick = "closeFollowListModal()" ></div >
+        <div class="flm-sheet">
+          <div class="flm-header">
+            <div class="flm-tabs">
+              <button class="flm-tab ${type === 'followers' ? 'active' : ''}" onclick="switchFollowListTab('followers')">
+                Followers
+              </button>
+              <button class="flm-tab ${type === 'following' ? 'active' : ''}" onclick="switchFollowListTab('following')">
+                Following
+              </button>
+            </div>
+            <button class="flm-close" onclick="closeFollowListModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="flm-body" id="flmBody">
+            <div class="flm-loading">
+              <div class="flm-spinner"></div>
+              <p>Loading...</p>
+            </div>
+          </div>
         </div>
-        <button class="flm-close" onclick="closeFollowListModal()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-      <div class="flm-body" id="flmBody">
-        <div class="flm-loading">
-          <div class="flm-spinner"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    </div>
-  `;
+    `;
   document.body.appendChild(modal);
   requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('flm-open')));
 
@@ -5015,16 +5152,16 @@ async function loadFollowList(type) {
 
   try {
     const endpoint = type === 'followers'
-      ? `/api/followers/${targetUser.id}`
-      : `/api/following/${targetUser.id}`;
+      ? `/ api / followers / ${ targetUser.id } `
+      : `/ api / following / ${ targetUser.id } `;
     const data = await apiCall(endpoint, 'GET');
 
     if (!data.success || !data.users || data.users.length === 0) {
       body.innerHTML = `
-        <div class="flm-empty">
+      < div class="flm-empty" >
           <div class="flm-empty-icon">${type === 'followers' ? '👥' : '🔍'}</div>
           <p>${type === 'followers' ? 'No followers yet' : 'Not following anyone yet'}</p>
-        </div>`;
+        </div > `;
       return;
     }
 
@@ -5032,23 +5169,25 @@ async function loadFollowList(type) {
     data.users.forEach(user => {
       const isMe = currentUser && user.id === currentUser.id;
       const avatarHtml = user.profile_pic
-        ? `<img src="${user.profile_pic}" alt="${user.username}" class="flm-avatar-img">`
+        ? `< img src = "${user.profile_pic}" alt = "${user.username}" class="flm-avatar-img" > `
         : '<span class="flm-avatar-placeholder">👤</span>';
 
       html += `
-        <div class="flm-user-row" onclick="closeFollowListModal();showUserProfile('${user.id}')">
+      < div class="flm-user-row" onclick = "closeFollowListModal();showUserProfile('${user.id}')" >
           <div class="flm-avatar">${avatarHtml}</div>
           <div class="flm-user-info">
             <div class="flm-username">@${user.username}</div>
             ${user.college ? `<div class="flm-college">🎓 ${user.college}</div>` : ''}
             ${user.bio ? `<div class="flm-bio">${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}</div>` : ''}
           </div>
-          ${!isMe ? `
+          ${
+      !isMe ? `
             <button class="flm-follow-btn ${user.isFollowedByMe ? 'flm-following' : ''}" 
               onclick="event.stopPropagation();flmToggleFollow(this, '${user.id}', '${user.username}', ${user.isFollowedByMe})">
               ${user.isFollowedByMe ? '✓ Following' : 'Follow'}
-            </button>` : '<span class="flm-you-badge">You</span>'}
-        </div>`;
+            </button>` : '<span class="flm-you-badge">You</span>'
+    }
+        </div > `;
     });
     html += '</div>';
     body.innerHTML = html;
@@ -5106,7 +5245,7 @@ function renderPosts(posts) {
     const isLiked = post.is_liked || false;
 
     html += `
-     <div class="enhanced-post" id="post-${post.id}">
+      < div class="enhanced-post" id = "post-${post.id}" >
        <div class="enhanced-post-header">
          <div class="enhanced-user-info" onclick="showMiniProfileCard('${authorId}',event)" style="cursor:pointer;">
            <div class="enhanced-user-avatar">
@@ -5173,9 +5312,9 @@ function renderPosts(posts) {
            <button class="engagement-btn" onclick="sharePost('${post.id}', '${content.replace(/'/g, "\\'")}', '${author}')">🔄 Share</button>
            ${!isOwn && authorId ? `<button class="engagement-btn post-msg-btn" onclick="handlePostMessageClick('${authorId}', '${author}', event)" data-userid="${authorId}" data-username="${author}" title="Message ${author}">✉️ Message</button>` : ''}
          </div>
-       </div>
-     </div>
-   `;
+       </div >
+     </div >
+      `;
   });
 
   return html;
@@ -5205,7 +5344,7 @@ async function deletePost(postId) {
   if (!confirm('Delete this post?')) return;
 
   try {
-    await apiCall(`/api/posts/${postId}`, 'DELETE');
+    await apiCall(`/ api / posts / ${ postId } `, 'DELETE');
     showMessage('🗑️ Deleted', 'success');
 
     // Update local post count
@@ -5214,7 +5353,7 @@ async function deletePost(postId) {
       saveUserToLocal();
     }
 
-    const postEl = document.getElementById(`post-${postId}`);
+    const postEl = document.getElementById(`post - ${ postId } `);
     if (postEl) postEl.remove();
 
     setTimeout(() => loadPosts(), 500);
@@ -5227,12 +5366,12 @@ async function toggleLike(postId) {
   if (!currentUser) return showMessage('⚠️ Login to like', 'error');
 
   try {
-    const likeBtn = document.querySelector(`#like-btn-${postId}`);
-    const likeCount = document.querySelector(`#like-count-${postId}`);
+    const likeBtn = document.querySelector(`#like - btn - ${ postId } `);
+    const likeCount = document.querySelector(`#like - count - ${ postId } `);
 
     if (likeBtn) likeBtn.disabled = true;
 
-    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
+    const data = await apiCall(`/ api / posts / ${ postId }/like`, 'POST');
 
     if (data.success) {
 
