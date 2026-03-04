@@ -1,3 +1,325 @@
+/* ==========================================
+   VIBEXPERT LANDING PAGE REDESIGN
+   Dark, Vibrant, College-Energy Aesthetic
+   ========================================== */
+
+/* CSS Variables for Design System */
+:root {
+  --bg: #0a0a14;
+  --accent: #6c63ff;
+  --accent2: #ff6b35;
+  --text: #e8e8f0;
+  --text-secondary: #b8b8c8;
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Global Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* Section Reveal Animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+}
+
+/* Glassmorphism Navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
+  padding: 1rem 2rem;
+}
+
+.navbar.scrolled {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.navbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-link {
+  color: var(--text);
+  text-decoration: none;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.navbar-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.navbar-link:hover::after {
+  width: 100%;
+}
+
+.navbar-cta {
+  background: var(--accent);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.navbar-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(108, 99, 255, 0.3);
+}
+
+/* Hero Section with Animated Gradient Mesh */
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(ellipse at 20% 50%, #6c63ff33 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, #ff6b3533 0%, transparent 50%),
+    #0a0a14;
+  animation: meshMove 8s ease-in-out infinite alternate;
+  overflow: hidden;
+}
+
+@keyframes meshMove {
+  0% {
+    background: radial-gradient(ellipse at 20% 50%, #6c63ff33 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, #ff6b3533 0%, transparent 50%),
+      #0a0a14;
+  }
+
+  100% {
+    background: radial-gradient(ellipse at 80% 50%, #6c63ff33 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, #ff6b3533 0%, transparent 50%),
+      #0a0a14;
+  }
+}
+
+.hero-content {
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.hero-title .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(50px);
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.hero-title .word:nth-child(1) {
+  animation-delay: 0.2s;
+}
+
+.hero-title .word:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.hero-title .word:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-subtitle {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeIn 1s ease 0.8s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-cta {
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--text);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 20px var(--accent66);
+  transition: all 0.3s ease;
+  opacity: 0;
+  animation: fadeIn 1s ease 1s forwards;
+}
+
+.hero-cta:hover {
+  box-shadow: 0 0 40px var(--accentaa);
+  transform: translateY(-3px);
+}
+
+/* Floating Emoji Orbs */
+.floating-orb {
+  position: absolute;
+  font-size: 2rem;
+  animation: float 6s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.floating-orb:nth-child(1) {
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.floating-orb:nth-child(2) {
+  top: 20%;
+  right: 15%;
+  animation-delay: 1s;
+}
+
+.floating-orb:nth-child(3) {
+  bottom: 20%;
+  left: 20%;
+  animation-delay: 2s;
+}
+
+.floating-orb:nth-child(4) {
+  bottom: 15%;
+  right: 10%;
+  animation-delay: 3s;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: 0;
+  animation: fadeIn 1s ease 1.2s forwards;
+}
+
+.scroll-arrow {
+  width: 30px;
+  height: 30px;
+  border-right: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  transform: rotate(45deg);
+  margin: 1rem auto;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: rotate(45deg) translateY(0);
+  }
+
+  40% {
+    transform: rotate(45deg) translateY(-10px);
+  }
+
+  60% {
+    transform: rotate(45deg) translateY(-5px);
+  }
+}
+
 .hero p {
   font-size: 18px;
 }
@@ -1447,7 +1769,7 @@ footer,
   display: none !important;
 }
 
-.visible {
+.visible:not([data-reveal]) {
   display: block !important;
 }
 
