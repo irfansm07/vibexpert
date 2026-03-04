@@ -10,6 +10,10 @@
   <link rel="apple-touch-icon" href="favicon.png">
   <title>VibeXpert - Connect With Your College</title>
   <link rel="stylesheet" href="vibemap.css" />
+  <link rel="stylesheet" href="landing.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
@@ -70,278 +74,274 @@
   </div>
 
   <!-- ========================================
-   ABOUT US LANDING PAGE (Keep as is - not changing)
+   VIBEXPERT LANDING PAGE — Neon Campus Nights v2
    ======================================== -->
+  <link rel="stylesheet" href="landing.css" />
   <div id="aboutUsPage" class="about-us-page">
-    <!-- Enhanced Vanta Background -->
-    <div id="vanta-globe-bg" class="vanta-globe-background"></div>
 
-    <!-- Scroll Progress Bar -->
-    <div class="scroll-progress-bar">
-      <div class="scroll-progress-fill" id="scrollProgressFill"></div>
+    <!-- BG Layers -->
+    <div class="lp-orb lp-orb-1"></div>
+    <div class="lp-orb lp-orb-2"></div>
+    <div class="lp-orb lp-orb-3"></div>
+    <div class="lp-dot-grid"></div>
+    <canvas id="lp-particles"></canvas>
+
+    <!-- Scroll Progress -->
+    <div class="lp-progress">
+      <div class="lp-progress-fill" id="lpProgressFill"></div>
     </div>
 
-    <!-- Hero Section -->
-    <section class="about-hero">
-      <div class="about-hero-content">
-        <div class="about-logo-large">VibeXpert</div>
-        <h1 class="about-hero-title">Connect. Share. Vibe.</h1>
-        <p class="about-hero-subtitle">The Ultimate Social Platform for College Students</p>
-        <div class="about-scroll-indicator">
-          <span>Scroll to Explore</span>
-          <div class="scroll-arrow">↓</div>
+    <!-- ══ NAVBAR ══ -->
+    <nav class="lp-nav" id="lpNav">
+      <div class="lp-nav-logo">VibeXpert</div>
+      <button class="lp-nav-cta" onclick="showAuthPopup()">Login</button>
+    </nav>
+
+    <!-- ══ HERO ══ -->
+    <section class="lp-hero">
+      <!-- Neon 3D Tubes Cursor Canvas -->
+      <canvas id="tubes-cursor-canvas"></canvas>
+      <div class="lp-hero-content">
+        <div class="lp-badge">
+          <span class="lp-live-dot"></span>
+          India's #1 College Social Platform
         </div>
-        <button class="about-login-btn" onclick="scrollToBottomAndLogin()">
-          🚀 Login Now
-        </button>
-      </div>
-      <div class="about-hero-background">
-        <div class="floating-element" style="top: 10%; left: 10%;">🎓</div>
-        <div class="floating-element" style="top: 20%; right: 15%;">📚</div>
-        <div class="floating-element" style="bottom: 20%; left: 20%;">🎨</div>
-        <div class="floating-element" style="bottom: 15%; right: 10%;">🎵</div>
-        <div class="floating-element" style="top: 50%; left: 5%;">💬</div>
-        <div class="floating-element" style="top: 30%; right: 8%;">🚀</div>
+        <div class="lp-hero-name">VibeXpert</div>
+        <h1 class="lp-hero-title">
+          <span class="ht-1">CONNECT.</span>
+          <span class="ht-2">SHARE.</span>
+          <span class="ht-3">VIBE.</span>
+        </h1>
+        <p class="lp-hero-sub">The ultimate social platform built exclusively for college students across India. Your
+          campus, your people, your vibe.</p>
+        <div class="lp-hero-btns">
+          <button class="btn-primary" onclick="showAuthPopup()">Join Free →</button>
+          <button class="btn-ghost"
+            onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">Explore
+            Features</button>
+        </div>
       </div>
     </section>
 
-    <!-- What is VibeXpert -->
-    <section class="about-section">
-      <div class="about-container">
-        <h2 class="about-section-title">What is VibeXpert?</h2>
-        <div class="about-grid">
-          <div class="about-card reveal-on-scroll">
-            <div class="about-card-icon">🌐</div>
-            <h3>500+ Universities</h3>
-            <p>Connect with students from IITs, AIIMS, State-universities, NITs, IIITs, VITs, NLSIUs and
-              universities across India</p>
-          </div>
-          <div class="about-card reveal-on-scroll">
-            <div class="about-card-icon">💬</div>
+    <!-- ══ WHAT IS VIBEXPERT — 3 Tilt Cards ══ -->
+    <section class="lp-section" id="lp-about">
+      <div class="lp-container">
+        <h2 class="lp-section-title" data-reveal>What is VibeXpert?</h2>
+        <div class="lp-section-accent" data-reveal></div>
+        <div class="lp-cards-grid">
+          <div class="tilt-card" data-reveal>
+            <div class="card-shine"></div>
+            <div class="card-icon-wrap">💬</div>
             <h3>Real-Time Chat</h3>
-            <p>Engage in live conversations with your college group instantly</p>
+            <p>Engage in live conversations with your college group instantly. Group chats, DMs, and ghost mode.</p>
           </div>
-          <div class="about-card reveal-on-scroll">
-            <div class="about-card-icon">🎬</div>
-            <h3>Rich Media Sharing</h3>
-            <p>Share photos, videos, music, and stickers to express yourself</p>
+          <div class="tilt-card" data-reveal>
+            <div class="card-shine"></div>
+            <div class="card-icon-wrap">📱</div>
+            <h3>Post Creation</h3>
+            <p>Share photos, videos, music, and stickers. Crop, edit, and decorate your content with creative tools.</p>
           </div>
-          <div class="about-card reveal-on-scroll">
-            <div class="about-card-icon">🏆</div>
-            <h3>Rewards System</h3>
-            <p>Earn points, unlock achievements, and climb the leaderboard</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="about-section about-features-section">
-      <div class="about-container">
-        <h2 class="about-section-title">Powerful Features</h2>
-        <div class="feature-showcase reveal-on-scroll">
-          <div class="feature-showcase-image">
-            <div class="feature-mockup">
-              <div class="mockup-header">
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-              </div>
-              <div class="mockup-content">
-                <div class="mockup-post">
-                  <div class="mockup-avatar">👤</div>
-                  <div class="mockup-text">
-                    <div class="mockup-line"></div>
-                    <div class="mockup-line short"></div>
-                  </div>
-                </div>
-                <div class="mockup-image"></div>
-                <div class="mockup-actions">
-                  <span>❤️</span>
-                  <span>💬</span>
-                  <span>🔄</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="feature-showcase-text">
-            <h3>📱 Enhanced Post Creation</h3>
-            <ul>
-              <li>✨ Add photos, videos, and audio</li>
-              <li>🎵 Attach music from our library</li>
-              <li>🎨 Decorate with fun stickers</li>
-              <li>✂️ Crop and edit your media</li>
-              <li>🌐 Share to profile or Institute</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="feature-showcase reveal-on-scroll">
-          <div class="feature-showcase-image">
-            <div class="feature-mockup">
-              <div class="mockup-header">
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-              </div>
-              <div class="mockup-content">
-                <div class="mockup-chat-message left">
-                  <div class="chat-bubble"
-                    style="width: 80%; background: #3b3b4f; border-radius: 15px; padding: 10px; margin-bottom: 10px;">
-                    Hey! Anyone online? 👋</div>
-                </div>
-                <div class="mockup-chat-message right">
-                  <div class="chat-bubble"
-                    style="width: 60%; background: #4F46E5; color: white; border-radius: 15px; padding: 10px; margin-left: auto;">
-                    Yes! Let's chat! 💬</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="feature-showcase-text">
-            <h3>💬 Real-Time Chat</h3>
-            <ul>
-              <li>⚡ Instant messaging with no delays</li>
-              <li>👥 Group chats for your institute</li>
-              <li>🔔 Live notifications for new messages</li>
-              <li>😊 Send emojis and stickers easily</li>
-              <li>🌐 Connect instantly with your community</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="feature-showcase feature-showcase-reverse reveal-on-scroll">
-          <div class="feature-showcase-text">
-            <h3>🎓 College Communities</h3>
-            <ul>
-              <li>🔐 Verified college email system</li>
-              <li>💬 Private College chat rooms</li>
-              <li>📢 Share updates with classmates</li>
-              <li>👥 Real-time online indicators</li>
-              <li>🏅 Earn badges for engagement</li>
-            </ul>
-          </div>
-          <div class="feature-showcase-image">
-            <div class="feature-mockup">
-              <div class="mockup-header">
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-              </div>
-              <div class="mockup-content">
-                <div class="mockup-chat-message left">
-                  <div class="chat-bubble">Hey! Anyone up for study group?</div>
-                </div>
-                <div class="mockup-chat-message right">
-                  <div class="chat-bubble">Count me in! 📚</div>
-                </div>
-                <div class="mockup-chat-message left">
-                  <div class="chat-bubble">Library at 4pm?</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="feature-showcase reveal-on-scroll">
-          <div class="feature-showcase-image">
-            <div class="feature-mockup">
-              <div class="mockup-header">
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-                <span class="mockup-dot"></span>
-              </div>
-              <div class="mockup-content">
-                <div class="reward-card-mockup">
-                  <div class="reward-icon">🏆</div>
-                  <div class="reward-title">Daily Streak</div>
-                  <div class="reward-progress">
-                    <div class="progress-bar-mockup"></div>
-                  </div>
-                  <div class="reward-points">+50 pts</div>
-                </div>
-                <div class="reward-card-mockup">
-                  <div class="reward-icon">⭐</div>
-                  <div class="reward-title">Content Creator</div>
-                  <div class="reward-progress">
-                    <div class="progress-bar-mockup" style="width: 70%"></div>
-                  </div>
-                  <div class="reward-points">+200 pts</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="feature-showcase-text">
-            <h3>🎁 Rewards & Achievements</h3>
-            <ul>
-              <li>🎯 Complete daily tasks</li>
-              <li>🏅 Unlock achievements</li>
-              <li>💎 Redeem exclusive rewards</li>
-              <li>📊 Compete on leaderboards</li>
-              <li>✨ Premium themes & badges</li>
-            </ul>
+          <div class="tilt-card" data-reveal>
+            <div class="card-shine"></div>
+            <div class="card-icon-wrap">🎓</div>
+            <h3>College Communities</h3>
+            <p>Verified college email system. Private chat rooms, campus updates, and real-time online indicators.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="about-section about-stats-section">
-      <div class="about-container">
-        <h2 class="about-section-title">Growing Community</h2>
-        <div class="stats-grid reveal-on-scroll">
-          <div class="stat-item">
-            <div class="stat-number" data-count="500">0</div>
-            <div class="stat-label">Universities</div>
+    <!-- ══ FEATURES — 5 Key Feature Cards ══ -->
+    <section class="lp-section" id="lp-features">
+      <div class="lp-container">
+        <h2 class="lp-section-title" data-reveal>Key Features</h2>
+        <div class="lp-section-accent" data-reveal></div>
+        <div class="lp-features-grid">
+
+          <!-- 1. Post Creation -->
+          <div class="feature-card" data-reveal>
+            <div class="feature-card-shine"></div>
+            <div class="feature-card-glow feature-glow-violet"></div>
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                <path d="m14 11 1.5-1.5a2 2 0 0 1 2.828 0L21 12" />
+              </svg>
+            </div>
+            <h3>Post Creation</h3>
+            <p class="feature-desc">Create stunning posts with rich media tools to share your college life.</p>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">✦</span> Photos, videos & audio sharing</li>
+              <li><span class="feature-bullet">✦</span> Built-in music library</li>
+              <li><span class="feature-bullet">✦</span> Fun stickers & decorations</li>
+              <li><span class="feature-bullet">✦</span> Crop & edit media tools</li>
+              <li><span class="feature-bullet">✦</span> Share to profile or institute</li>
+            </ul>
           </div>
-          <div class="stat-item">
-            <div class="stat-number" data-count="10000">0</div>
-            <div class="stat-label">Active Students</div>
+
+          <!-- 2. Real-Time Chat -->
+          <div class="feature-card" data-reveal>
+            <div class="feature-card-shine"></div>
+            <div class="feature-card-glow feature-glow-purple"></div>
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                <path d="M8 10h.01" />
+                <path d="M12 10h.01" />
+                <path d="M16 10h.01" />
+              </svg>
+            </div>
+            <h3>Real-Time Chat</h3>
+            <p class="feature-desc">Lightning-fast messaging with zero delays, built for campus life.</p>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">✦</span> Instant messaging, zero lag</li>
+              <li><span class="feature-bullet">✦</span> Institute group chats</li>
+              <li><span class="feature-bullet">✦</span> Live push notifications</li>
+              <li><span class="feature-bullet">✦</span> Emojis & stickers support</li>
+              <li><span class="feature-bullet">✦</span> Ghost mode — chat anonymously</li>
+            </ul>
           </div>
-          <div class="stat-item">
-            <div class="stat-number" data-count="50000">0</div>
-            <div class="stat-label">Posts Shared</div>
+
+          <!-- 3. College Communities -->
+          <div class="feature-card" data-reveal>
+            <div class="feature-card-shine"></div>
+            <div class="feature-card-glow feature-glow-magenta"></div>
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5" />
+              </svg>
+            </div>
+            <h3>College Communities</h3>
+            <p class="feature-desc">Verified campus communities exclusively for your college peers.</p>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">✦</span> Verified college email system</li>
+              <li><span class="feature-bullet">✦</span> Private campus chat rooms</li>
+              <li><span class="feature-bullet">✦</span> Real-time online indicators</li>
+              <li><span class="feature-bullet">✦</span> Share updates with classmates</li>
+              <li><span class="feature-bullet">✦</span> Exclusive institute feeds</li>
+            </ul>
           </div>
-          <div class="stat-item">
-            <div class="stat-number" data-count="100000">0</div>
-            <div class="stat-label">Messages Sent</div>
+
+          <!-- 4. Rewards & Achievements -->
+          <div class="feature-card" data-reveal>
+            <div class="feature-card-shine"></div>
+            <div class="feature-card-glow feature-glow-violet"></div>
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 22V8a3 3 0 0 0-3-3H6v11h4z" />
+                <path d="M14 22V8a3 3 0 0 1 3-3h1v11h-4z" />
+                <line x1="12" y1="8" x2="12" y2="2" />
+                <polygon points="12,2 9,5 15,5" />
+              </svg>
+            </div>
+            <h3>Rewards & Achievements</h3>
+            <p class="feature-desc">Earn points, unlock badges, and climb leaderboards with every vibe.</p>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">✦</span> Complete daily tasks</li>
+              <li><span class="feature-bullet">✦</span> Unlock achievements & badges</li>
+              <li><span class="feature-bullet">✦</span> Earn & collect vibe points</li>
+              <li><span class="feature-bullet">✦</span> Compete on leaderboards</li>
+              <li><span class="feature-bullet">✦</span> Redeem premium themes</li>
+            </ul>
+          </div>
+
+          <!-- 5. RealVibes (Premium) -->
+          <div class="feature-card feature-card-premium" data-reveal>
+            <div class="feature-card-shine"></div>
+            <div class="feature-card-glow feature-glow-magenta"></div>
+            <div class="feature-premium-badge">✦ Premium</div>
+            <div class="feature-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <h3>RealVibes</h3>
+            <p class="feature-desc">Premium-exclusive content that reaches the entire community — go viral on campus.
+            </p>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">✦</span> Post photos & videos to all</li>
+              <li><span class="feature-bullet">✦</span> Noble plan — visible 15 days</li>
+              <li><span class="feature-bullet">✦</span> Royal plan — visible 25 days</li>
+              <li><span class="feature-bullet">✦</span> Broader community reach</li>
+              <li><span class="feature-bullet">✦</span> Exclusive subscriber feature</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ STATS ══ -->
+    <section class="lp-section" id="lp-stats">
+      <div class="lp-container">
+        <h2 class="lp-section-title" data-reveal>Growing Community</h2>
+        <div class="lp-section-accent" data-reveal></div>
+        <div class="lp-stats-row" data-reveal>
+          <div class="lp-stat-cell">
+            <span class="lp-stat-number" data-count="500">0</span>
+            <span class="lp-stat-label">Universities</span>
+          </div>
+          <div class="lp-stat-cell">
+            <span class="lp-stat-number" data-count="10000">0</span>
+            <span class="lp-stat-label">Active Students</span>
+          </div>
+          <div class="lp-stat-cell">
+            <span class="lp-stat-number" data-count="50000">0</span>
+            <span class="lp-stat-label">Posts Shared</span>
+          </div>
+          <div class="lp-stat-cell">
+            <span class="lp-stat-number" data-count="100000">0</span>
+            <span class="lp-stat-label">Messages Sent</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Why Choose Section -->
-    <section class="about-section">
-      <div class="about-container">
-        <h2 class="about-section-title">Why Choose VibeXpert?</h2>
-        <div class="why-choose-grid">
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">🔒</div>
+    <!-- ══ WHY VIBEXPERT — Magnetic Grid ══ -->
+    <section class="lp-section" id="lp-why">
+      <div class="lp-container">
+        <h2 class="lp-section-title" data-reveal>Why VibeXpert?</h2>
+        <div class="lp-section-accent" data-reveal></div>
+        <div class="lp-why-grid">
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">🔒</div>
             <h4>Safe & Secure</h4>
-            <p>Verified college emails ensure you connect with real students</p>
+            <p>Verified college emails ensure you connect with real students only</p>
           </div>
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">⚡</div>
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">⚡</div>
             <h4>Lightning Fast</h4>
             <p>Real-time updates and instant messaging for seamless communication</p>
           </div>
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">🎨</div>
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">🎨</div>
             <h4>Express Yourself</h4>
             <p>Rich media tools to share your college life authentically</p>
           </div>
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">🌙</div>
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">🌙</div>
             <h4>Dark/Light Mode</h4>
             <p>Beautiful themes that adapt to your preference</p>
           </div>
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">📱</div>
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">📱</div>
             <h4>Mobile Optimized</h4>
             <p>Smooth experience on any device, anywhere</p>
           </div>
-          <div class="why-choose-item reveal-on-scroll">
-            <div class="why-choose-icon">🆓</div>
+          <div class="lp-why-item" data-reveal>
+            <div class="lp-why-icon">🆓</div>
             <h4>100% Free</h4>
             <p>All features available at no cost to students</p>
           </div>
@@ -349,86 +349,141 @@
       </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="about-section about-testimonials-section">
-      <div class="about-container">
-        <h2 class="about-section-title">What Students Say</h2>
-        <div class="testimonials-grid">
-          <div class="testimonial-card reveal-on-scroll">
-            <div class="testimonial-avatar">👨‍🎓</div>
-            <p class="testimonial-text">"VibeXpert made it so easy to connect with my classmates! The Institute
-              chat is
+    <!-- ══ TESTIMONIALS MARQUEE ══ -->
+    <section class="lp-testi-section" id="lp-testi">
+      <div class="lp-container">
+        <h2 class="lp-section-title" data-reveal>What Students Say</h2>
+        <div class="lp-section-accent" data-reveal></div>
+      </div>
+      <div class="lp-marquee-outer">
+        <div class="lp-marquee-track">
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👨‍🎓</div>
+            <p class="lp-testi-text">"VibeXpert made it so easy to connect with my classmates! The Institute chat is
               amazing for study groups."</p>
-            <div class="testimonial-author">Rahul S.</div>
-            <div class="testimonial-college">IIT Delhi</div>
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <div class="lp-testi-author">Rahul S.</div>
+            <div class="lp-testi-college">IIT Delhi</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
           </div>
-          <div class="testimonial-card reveal-on-scroll">
-            <div class="testimonial-avatar">👩‍🎓</div>
-            <p class="testimonial-text">"Love the rewards system! It's fun to earn badges and compete with
-              friends. The
-              interface is so clean!"</p>
-            <div class="testimonial-author">Ritvik.G</div>
-            <div class="testimonial-college">NIT Bhopal</div>
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👩‍🎓</div>
+            <p class="lp-testi-text">"The chat features are insane! Group chats, ghost mode, and the interface is so
+              clean."</p>
+            <div class="lp-testi-author">Ritvik G.</div>
+            <div class="lp-testi-college">NIT Bhopal</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
           </div>
-          <div class="testimonial-card reveal-on-scroll">
-            <div class="testimonial-avatar">👨‍💻</div>
-            <p class="testimonial-text">"Finally, a platform designed for college students! The music and sticker
-              features are super creative."</p>
-            <div class="testimonial-author">IRFAN.SM</div>
-            <div class="testimonial-college">VIT Vellore</div>
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👨‍💻</div>
+            <p class="lp-testi-text">"Finally, a platform designed for college students! The music and sticker features
+              are super creative."</p>
+            <div class="lp-testi-author">Irfan S.M.</div>
+            <div class="lp-testi-college">VIT Vellore</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👩‍💻</div>
+            <p class="lp-testi-text">"College life just got better! Connecting with seniors and batchmates was never
+              this easy."</p>
+            <div class="lp-testi-author">Priya M.</div>
+            <div class="lp-testi-college">BITS Pilani</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">🧑‍🎓</div>
+            <p class="lp-testi-text">"The real-time chat is incredibly fast. Our entire batch uses VibeXpert daily now!"
+            </p>
+            <div class="lp-testi-author">Arjun K.</div>
+            <div class="lp-testi-college">IIIT Hyderabad</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <!-- duplicate for seamless loop -->
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👨‍🎓</div>
+            <p class="lp-testi-text">"VibeXpert made it so easy to connect with my classmates! The Institute chat is
+              amazing for study groups."</p>
+            <div class="lp-testi-author">Rahul S.</div>
+            <div class="lp-testi-college">IIT Delhi</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👩‍🎓</div>
+            <p class="lp-testi-text">"The chat features are insane! Group chats, ghost mode, and the interface is so
+              clean."</p>
+            <div class="lp-testi-author">Ritvik G.</div>
+            <div class="lp-testi-college">NIT Bhopal</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👨‍💻</div>
+            <p class="lp-testi-text">"Finally, a platform designed for college students! The music and sticker features
+              are super creative."</p>
+            <div class="lp-testi-author">Irfan S.M.</div>
+            <div class="lp-testi-college">VIT Vellore</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">👩‍💻</div>
+            <p class="lp-testi-text">"College life just got better! Connecting with seniors and batchmates was never
+              this easy."</p>
+            <div class="lp-testi-author">Priya M.</div>
+            <div class="lp-testi-college">BITS Pilani</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="lp-testi-card">
+            <div class="lp-testi-avatar">🧑‍🎓</div>
+            <p class="lp-testi-text">"The real-time chat is incredibly fast. Our entire batch uses VibeXpert daily now!"
+            </p>
+            <div class="lp-testi-author">Arjun K.</div>
+            <div class="lp-testi-college">IIIT Hyderabad</div>
+            <div class="lp-testi-stars">⭐⭐⭐⭐⭐</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="about-section about-cta-section">
-      <div class="about-container">
-        <div class="cta-box reveal-on-scroll">
-          <h2>Ready to Join the Vibe?</h2>
-          <p>Connect with thousands of students from 500+ universities</p>
-          <div class="cta-features">
-            <span>✅ Free Forever</span>
-            <span>✅ Verified Communities</span>
-            <span>✅ Rich Features</span>
-          </div>
-          <button class="cta-button" onclick="showAuthPopup()">
-            Get Started Now →
-          </button>
-          <p class="cta-note">🔒 Your college email keeps you safe</p>
-        </div>
+    <!-- ══ CTA ══ -->
+    <section class="lp-cta" data-reveal>
+      <h2 class="lp-cta-title">Ready to Join the Vibe?</h2>
+      <div class="lp-cta-buttons">
+        <button class="btn-primary" onclick="showAuthPopup()">Get Started Free →</button>
+        <button class="btn-ghost"
+          onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">Learn More</button>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="about-footer">
-      <div class="about-container">
-        <div class="footer-content">
-          <div class="footer-section">
-            <h3>VibeXpert</h3>
-            <p>The ultimate social platform for college students across India</p>
-          </div>
-          <div class="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="#" onclick="showAuthPopup()">Join Now</a></li>
-              <li><a href="#" onclick="showAuthPopup()">Login</a></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h4>Contact</h4>
-            <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
-                data-cfemail="ddaea8adadb2afa99dabb4bfb8a5adb8afa9f3beb2b0">[email&#160;protected]</a></p>
-            <p>📱 +91-9347702626</p>
+    <!-- ══ FOOTER ══ -->
+    <footer class="lp-footer">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-brand">
+          <h3>VibeXpert</h3>
+          <p>The ultimate social platform for college students across India. Connect, share, and vibe with your campus
+            community.</p>
+          <div class="lp-footer-socials">
+            <a href="#" class="lp-social">📷</a>
+            <a href="#" class="lp-social">🐦</a>
+            <a href="#" class="lp-social">💼</a>
+            <a href="#" class="lp-social">🎬</a>
           </div>
         </div>
-        <div class="footer-bottom">
-          <p>&copy; <span id="footerYear1">2025</span> VibeXpert. All rights reserved.</p>
-          <script>document.getElementById('footerYear1').textContent = new Date().getFullYear();</script>
+        <div class="lp-footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#" onclick="showAuthPopup()">Join Now</a></li>
+            <li><a href="#" onclick="showAuthPopup()">Login</a></li>
+            <li><a href="#lp-features">Features</a></li>
+            <li><a href="#lp-testi">Testimonials</a></li>
+          </ul>
         </div>
+        <div class="lp-footer-col">
+          <h4>Contact</h4>
+          <p>📧 support@vibexpert.com</p>
+          <p>📱 +91-9347702626</p>
+        </div>
+      </div>
+      <div class="lp-footer-bottom">
+        <p>&copy; <span id="footerYear1">2025</span> VibeXpert. All rights reserved.</p>
+        <script>document.getElementById('footerYear1').textContent = new Date().getFullYear();</script>
       </div>
     </footer>
   </div>
@@ -4766,6 +4821,161 @@
       }
     </style>
   </template>
+  <!-- ========== LANDING PAGE JS ========== -->
+  <script>
+    (function () {
+      // ── Particle Canvas ──
+      var c = document.getElementById('lp-particles');
+      if (c) {
+        var ctx = c.getContext('2d'), pArr = [],
+          maxP = ('ontouchstart' in window) ? 40 : 80;
+        function resize() { c.width = window.innerWidth; c.height = window.innerHeight }
+        resize(); window.addEventListener('resize', resize);
+        for (var i = 0; i < maxP; i++)pArr.push({
+          x: Math.random() * c.width, y: Math.random() * c.height,
+          vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3, r: Math.random() * 1.5 + .5
+        });
+        function drawP() {
+          ctx.clearRect(0, 0, c.width, c.height);
+          for (var i = 0; i < pArr.length; i++) {
+            var p = pArr[i]; p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = c.width; if (p.x > c.width) p.x = 0;
+            if (p.y < 0) p.y = c.height; if (p.y > c.height) p.y = 0;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+            for (var j = i + 1; j < pArr.length; j++) {
+              var p2 = pArr[j], dx = p.x - p2.x, dy = p.y - p2.y, d = Math.sqrt(dx * dx + dy * dy);
+              if (d < 120) {
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = 'rgba(0,245,212,' + (0.08 * (1 - d / 120)) + ')'; ctx.stroke()
+              }
+            }
+          }
+          requestAnimationFrame(drawP);
+        }
+        drawP();
+      }
+
+      // ── 3D Tilt Cards ──
+      if (!('ontouchstart' in window)) {
+        document.querySelectorAll('.tilt-card').forEach(function (card) {
+          card.addEventListener('mousemove', function (e) {
+            var r = card.getBoundingClientRect(),
+              x = (e.clientX - r.left) / r.width - .5,
+              y = (e.clientY - r.top) / r.height - .5;
+            card.style.transform = 'perspective(800px) rotateX(' + (-y * 14) + 'deg) rotateY(' + (x * 14) + 'deg) scale(1.04)';
+            var sh = card.querySelector('.card-shine');
+            if (sh) sh.style.background = 'radial-gradient(circle at ' + ((x + .5) * 100) + '% ' + ((y + .5) * 100) + '%, rgba(255,255,255,0.12), transparent 60%)';
+          });
+          card.addEventListener('mouseleave', function () {
+            card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale(1)';
+            card.style.transition = 'transform 0.6s cubic-bezier(0.23,1,0.32,1)';
+            var sh = card.querySelector('.card-shine'); if (sh) sh.style.background = 'none';
+          });
+          card.addEventListener('mouseenter', function () { card.style.transition = 'transform 0.1s'; });
+        });
+      }
+
+      // ── Why-item cursor spotlight ──
+      document.querySelectorAll('.lp-why-item').forEach(function (item) {
+        item.addEventListener('mousemove', function (e) {
+          var r = item.getBoundingClientRect();
+          item.style.setProperty('--mouse-x', (e.clientX - r.left) + 'px');
+          item.style.setProperty('--mouse-y', (e.clientY - r.top) + 'px');
+        });
+      });
+
+      // ── Scroll Reveal ──
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry, i) {
+          if (entry.isIntersecting) {
+            setTimeout(function () { entry.target.classList.add('in-view'); }, i * 80);
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+      document.querySelectorAll('[data-reveal]').forEach(function (el) { obs.observe(el); });
+
+      // ── Stat Counter ──
+      var cDone = false, nums = document.querySelectorAll('.lp-stat-number[data-count]');
+      if (nums.length) {
+        var cObs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !cDone) {
+              cDone = true;
+              nums.forEach(function (el) {
+                var t = parseInt(el.getAttribute('data-count'), 10), dur = 2000, st = performance.now();
+                function anim(now) {
+                  var p = Math.min((now - st) / dur, 1), ease = 1 - (1 - p) * (1 - p),
+                    cur = Math.floor(ease * t); el.textContent = cur.toLocaleString() + '+';
+                  if (p < 1) requestAnimationFrame(anim);
+                } requestAnimationFrame(anim);
+              }); cObs.disconnect();
+            }
+          });
+        }
+          , { threshold: 0.3 });
+        var ss = document.getElementById('lp-stats'); if (ss) cObs.observe(ss);
+      }
+
+      // ── Navbar Scroll ──
+      var nav = document.getElementById('lpNav');
+      if (nav) window.addEventListener('scroll', function () {
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+      }, { passive: true });
+
+      // ── Progress Bar ──
+      var pf = document.getElementById('lpProgressFill');
+      if (pf) window.addEventListener('scroll', function () {
+        var s = window.scrollY, d = document.documentElement.scrollHeight - window.innerHeight;
+        pf.style.width = (d > 0 ? (s / d) * 100 : 0) + '%';
+      }, { passive: true });
+    })();
+  </script>
+
+  <!-- ========== NEON 3D TUBES CURSOR EFFECT ========== -->
+  <script type="module">
+    import TubesCursor from 'https://cdn.jsdelivr.net/npm/threejs-components@0.0.30/build/cursors/tubes1.min.js';
+
+    // Only init if landing page is visible and canvas exists
+    const canvas = document.getElementById('tubes-cursor-canvas');
+    if (canvas) {
+      // Purple/violet/magenta theme colors matching VibeXpert
+      const tubeColors = ['#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6'];
+      const lightColors = ['#a855f7', '#7c3aed', '#c026d3', '#f0abfc', '#6d28d9'];
+
+      const app = TubesCursor(canvas, {
+        tubes: {
+          colors: tubeColors,
+          lights: {
+            intensity: 220,
+            colors: lightColors
+          }
+        }
+      });
+
+      // Randomize colors on click (using purple-spectrum)
+      function randomPurpleColors(count) {
+        const palette = [
+          '#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6',
+          '#d946ef', '#9333ea', '#a21caf', '#7e22ce', '#f0abfc',
+          '#c084fc', '#6d28d9', '#581c87', '#86198f', '#d8b4fe'
+        ];
+        const result = [];
+        for (let i = 0; i < count; i++) {
+          result.push(palette[Math.floor(Math.random() * palette.length)]);
+        }
+        return result;
+      }
+
+      document.addEventListener('click', () => {
+        if (app && app.tubes) {
+          app.tubes.setColors(randomPurpleColors(5));
+          app.tubes.setLightsColors(randomPurpleColors(5));
+        }
+      });
+    }
+  </script>
 </body>
 
 </html>
