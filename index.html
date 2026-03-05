@@ -123,240 +123,1036 @@
       </div>
     </section>
 
-    <!-- ══ WHAT IS VIBEXPERT — 3 Tilt Cards ══ -->
+    <!-- ══ WHAT IS VIBEXPERT — 3 Flip Cards ══ -->
     <section class="lp-section" id="lp-about">
       <div class="lp-container">
         <h2 class="lp-section-title" data-reveal>What is VibeXpert?</h2>
         <div class="lp-section-accent" data-reveal></div>
-        <div class="lp-cards-grid">
-          <div class="tilt-card" data-reveal>
-            <div class="card-shine"></div>
-            <div class="card-icon-wrap">💬</div>
-            <h3>Real-Time Chat</h3>
-            <p>Engage in live conversations with your college group instantly. Group chats, DMs, and ghost mode.</p>
+        <p class="lp-what-hint" data-reveal>Tap a card to learn more 💡</p>
+        <div class="lp-what-grid">
+
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="chat">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">💬</div>
+                <h3>Real-Time Chat</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>Real-Time Chat</h3>
+                <p>Engage in live conversations with your college group instantly. Group chats, DMs, ghost mode, emojis,
+                  stickers, and push notifications — all in real time.</p>
+              </div>
+            </div>
           </div>
-          <div class="tilt-card" data-reveal>
-            <div class="card-shine"></div>
-            <div class="card-icon-wrap">📱</div>
-            <h3>Post Creation</h3>
-            <p>Share photos, videos, music, and stickers. Crop, edit, and decorate your content with creative tools.</p>
+
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="creative">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">📱</div>
+                <h3>Post Creation</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>Post Creation</h3>
+                <p>Share photos, videos, music, and stickers. Crop, edit, and decorate your content with powerful
+                  creative tools built for campus life.</p>
+              </div>
+            </div>
           </div>
-          <div class="tilt-card" data-reveal>
-            <div class="card-shine"></div>
-            <div class="card-icon-wrap">🎓</div>
-            <h3>College Communities</h3>
-            <p>Verified college email system. Private chat rooms, campus updates, and real-time online indicators.</p>
+
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="campus">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">🎓</div>
+                <h3>College Communities</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>College Communities</h3>
+                <p>Verified college email system. Private chat rooms, campus updates, and real-time online indicators —
+                  your entire campus in one place.</p>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
 
-    <!-- ══ FEATURES — 5 Key Feature Cards ══ -->
-    <section class="lp-section" id="lp-features">
-      <div class="lp-container">
-        <h2 class="lp-section-title" data-reveal>Key Features</h2>
+    <!-- ══ INTERACTIVE 3D COVERFLOW GALLERY — Explore VibeXpert ══ -->
+    <section class="lp-section" id="lp-coverflow" style="position:relative;overflow:hidden;isolation:isolate;z-index:2;">
+
+      <!-- ═══ STUDENT VIBE BACKGROUND ═══ -->
+      <div id="cfVibeBg" style="position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;">
+
+        <!-- Deep gradient base matching surrounding pages -->
+        <div style="position:absolute;inset:0;top:-200px;background:#0d0d1a;"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,8,20,0.98) 0%,rgba(17,13,36,0.95) 30%,rgba(13,21,32,0.95) 60%,rgba(10,10,20,0.98) 100%);"></div>
+
+        <!-- Soft ambient orbs — purple/blue/teal matching site palette -->
+        <div style="position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(100,74,169,0.18) 0%,transparent 70%);top:-10%;left:-8%;animation:cfOrbDrift1 12s ease-in-out infinite;"></div>
+        <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(79,116,163,0.15) 0%,transparent 70%);bottom:-15%;right:-5%;animation:cfOrbDrift2 14s ease-in-out infinite;"></div>
+        <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%);top:30%;right:20%;animation:cfOrbDrift3 10s ease-in-out infinite;"></div>
+
+        <!-- Floating student-vibe emojis — big background layer -->
+        <div style="position:absolute;font-size:110px;opacity:0.13;top:3%;left:2%;animation:cfFloat1 9s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3));">🎓</div>
+        <div style="position:absolute;font-size:90px;opacity:0.12;top:5%;right:3%;animation:cfFloat2 11s ease-in-out infinite 1s;filter:drop-shadow(0 0 18px rgba(100,74,169,0.3));">🎵</div>
+        <div style="position:absolute;font-size:95px;opacity:0.13;bottom:5%;left:4%;animation:cfFloat3 10s ease-in-out infinite 0.5s;filter:drop-shadow(0 0 18px rgba(79,116,163,0.3));">🎸</div>
+        <div style="position:absolute;font-size:85px;opacity:0.12;bottom:6%;right:3%;animation:cfFloat1 13s ease-in-out infinite 2s;filter:drop-shadow(0 0 16px rgba(167,139,250,0.3));">🎶</div>
+        <div style="position:absolute;font-size:80px;opacity:0.11;top:40%;left:1%;animation:cfFloat2 8s ease-in-out infinite 1.5s;">🏫</div>
+        <div style="position:absolute;font-size:75px;opacity:0.11;top:35%;right:1%;animation:cfFloat3 12s ease-in-out infinite 0.8s;">📚</div>
+
+        <!-- Mid-size scattered -->
+        <div style="position:absolute;font-size:50px;opacity:0.18;top:12%;left:15%;animation:cfFloat1 7s ease-in-out infinite 0.3s;">🎤</div>
+        <div style="position:absolute;font-size:45px;opacity:0.18;top:18%;right:14%;animation:cfFloat2 8s ease-in-out infinite 1.8s;">🎧</div>
+        <div style="position:absolute;font-size:48px;opacity:0.17;bottom:18%;left:18%;animation:cfFloat3 9s ease-in-out infinite 2.2s;">🌟</div>
+        <div style="position:absolute;font-size:44px;opacity:0.18;bottom:15%;right:16%;animation:cfFloat1 10s ease-in-out infinite 0.6s;">✨</div>
+        <div style="position:absolute;font-size:42px;opacity:0.17;top:55%;left:12%;animation:cfFloat2 7s ease-in-out infinite 1.1s;">🥳</div>
+        <div style="position:absolute;font-size:46px;opacity:0.17;top:50%;right:11%;animation:cfFloat3 8s ease-in-out infinite 2.5s;">🎉</div>
+        <div style="position:absolute;font-size:40px;opacity:0.16;top:28%;left:8%;animation:cfFloat1 11s ease-in-out infinite 0.9s;">🎊</div>
+        <div style="position:absolute;font-size:38px;opacity:0.17;top:25%;right:8%;animation:cfFloat2 9s ease-in-out infinite 1.4s;">🎯</div>
+
+        <!-- Tiny scattered dots of life -->
+        <div style="position:absolute;font-size:24px;opacity:0.28;top:8%;left:30%;animation:cfFloat3 6s ease-in-out infinite 0.2s;">🎵</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:15%;left:55%;animation:cfFloat1 7s ease-in-out infinite 1.3s;">🎶</div>
+        <div style="position:absolute;font-size:22px;opacity:0.26;top:72%;left:32%;animation:cfFloat2 5s ease-in-out infinite 0.7s;">🎓</div>
+        <div style="position:absolute;font-size:18px;opacity:0.28;top:80%;left:68%;animation:cfFloat3 8s ease-in-out infinite 1.9s;">⭐</div>
+        <div style="position:absolute;font-size:20px;opacity:0.26;top:88%;left:48%;animation:cfFloat1 6s ease-in-out infinite 0.4s;">🎵</div>
+        <div style="position:absolute;font-size:16px;opacity:0.30;top:62%;left:85%;animation:cfFloat2 7s ease-in-out infinite 2.1s;">🎤</div>
+        <div style="position:absolute;font-size:18px;opacity:0.28;top:45%;left:90%;animation:cfFloat3 9s ease-in-out infinite 1.6s;">🎧</div>
+        <div style="position:absolute;font-size:22px;opacity:0.26;top:32%;left:78%;animation:cfFloat1 6s ease-in-out infinite 0.8s;">🌟</div>
+        <div style="position:absolute;font-size:16px;opacity:0.30;top:20%;left:38%;animation:cfFloat2 8s ease-in-out infinite 2.3s;">✦</div>
+        <div style="position:absolute;font-size:18px;opacity:0.28;top:92%;left:22%;animation:cfFloat3 5s ease-in-out infinite 1.0s;">🎊</div>
+
+        <!-- Subtle grid dots overlay -->
+        <div style="position:absolute;inset:0;background-image:radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px);background-size:40px 40px;"></div>
+
+        <!-- Bottom fade to blend with next section -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,#0d0d1a);z-index:10;"></div>
+
+        <!-- Card-reactive full-section glow layers — sit above base, below emojis -->
+        <div class="coverflow-dynamic-bg" data-card="0" style="z-index:2!important;"></div>
+        <div class="coverflow-dynamic-bg" data-card="1" style="z-index:2!important;"></div>
+        <div class="coverflow-dynamic-bg" data-card="2" style="z-index:2!important;"></div>
+        <div class="coverflow-dynamic-bg" data-card="3" style="z-index:2!important;"></div>
+        <div class="coverflow-dynamic-bg" data-card="4" style="z-index:2!important;"></div>
+      </div>
+
+      <style>
+        /* Dynamic bg fills the whole section */
+        #lp-coverflow .coverflow-dynamic-bg {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          z-index: 1 !important;
+          pointer-events: none !important;
+        }
+        @keyframes cfFloat1 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          35% { transform: translateY(-20px) rotate(4deg); }
+          70% { transform: translateY(-8px) rotate(-3deg); }
+        }
+        @keyframes cfFloat2 {
+          0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
+          50% { transform: translateY(-25px) rotate(-5deg) scale(1.04); }
+        }
+        @keyframes cfFloat3 {
+          0%,100% { transform: translateY(0px) rotate(0deg); }
+          40% { transform: translateY(-16px) rotate(6deg); }
+          80% { transform: translateY(-6px) rotate(-2deg); }
+        }
+        @keyframes cfOrbDrift1 {
+          0%,100% { transform: translate(0,0); }
+          50% { transform: translate(40px,-30px); }
+        }
+        @keyframes cfOrbDrift2 {
+          0%,100% { transform: translate(0,0); }
+          50% { transform: translate(-35px,25px); }
+        }
+        @keyframes cfOrbDrift3 {
+          0%,100% { transform: translate(0,0); }
+          50% { transform: translate(20px,-40px); }
+        }
+      </style>
+      <!-- ═══ END STUDENT VIBE BACKGROUND ═══ -->
+
+      <div class="lp-container lp-coverflow-container" style="position:relative;z-index:1;">
+        <h2 class="lp-section-title" data-reveal>Explore VibeXpert</h2>
         <div class="lp-section-accent" data-reveal></div>
-        <div class="lp-features-grid">
+      </div>
 
-          <!-- 1. Post Creation -->
-          <div class="feature-card" data-reveal>
-            <div class="feature-card-shine"></div>
-            <div class="feature-card-glow feature-glow-violet"></div>
-            <div class="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                <path d="m14 11 1.5-1.5a2 2 0 0 1 2.828 0L21 12" />
-              </svg>
+      <div class="coverflow-wrapper" id="coverflowWrapper" style="position:relative;z-index:1;">
+
+        <div class="coverflow-viewport">
+          <div class="coverflow-scene" id="coverflowScene">
+
+            <!-- Card 1: Home -->
+            <div class="coverflow-card" data-index="0">
+              <div class="coverflow-card-inner">
+                <img src="gallery-campus.png" alt="Home Feed" draggable="false">
+                <div class="coverflow-card-overlay cf-overlay-text">
+                  <span class="coverflow-card-tag">🏠 Home</span>
+                  <h3 class="cf-card-title">Your Personalized Feed</h3>
+                  <p class="cf-card-desc">See posts, updates, and stories from your college community. Like, comment,
+                    and share the vibes that matter to you.</p>
+                </div>
+              </div>
+              <div class="coverflow-card-reflection"></div>
             </div>
-            <h3>Post Creation</h3>
-            <p class="feature-desc">Create stunning posts with rich media tools to share your college life.</p>
-            <ul class="feature-list">
-              <li><span class="feature-bullet">✦</span> Photos, videos & audio sharing</li>
-              <li><span class="feature-bullet">✦</span> Built-in music library</li>
-              <li><span class="feature-bullet">✦</span> Fun stickers & decorations</li>
-              <li><span class="feature-bullet">✦</span> Crop & edit media tools</li>
-              <li><span class="feature-bullet">✦</span> Share to profile or institute</li>
-            </ul>
-          </div>
 
-          <!-- 2. Real-Time Chat -->
-          <div class="feature-card" data-reveal>
-            <div class="feature-card-shine"></div>
-            <div class="feature-card-glow feature-glow-purple"></div>
-            <div class="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                <path d="M8 10h.01" />
-                <path d="M12 10h.01" />
-                <path d="M16 10h.01" />
-              </svg>
+            <!-- Card 2: Vibe Chats -->
+            <div class="coverflow-card" data-index="1">
+              <div class="coverflow-card-inner">
+                <img src="gallery-chat.png" alt="Vibe Chats" draggable="false">
+                <div class="coverflow-card-overlay cf-overlay-text">
+                  <span class="coverflow-card-tag">💬 Vibe Chats</span>
+                  <h3 class="cf-card-title">Real-Time Messaging</h3>
+                  <p class="cf-card-desc">Instant group chats with your institute, DMs with friends, ghost mode, emojis,
+                    stickers, and push notifications.</p>
+                </div>
+              </div>
+              <div class="coverflow-card-reflection"></div>
             </div>
-            <h3>Real-Time Chat</h3>
-            <p class="feature-desc">Lightning-fast messaging with zero delays, built for campus life.</p>
-            <ul class="feature-list">
-              <li><span class="feature-bullet">✦</span> Instant messaging, zero lag</li>
-              <li><span class="feature-bullet">✦</span> Institute group chats</li>
-              <li><span class="feature-bullet">✦</span> Live push notifications</li>
-              <li><span class="feature-bullet">✦</span> Emojis & stickers support</li>
-              <li><span class="feature-bullet">✦</span> Ghost mode — chat anonymously</li>
-            </ul>
-          </div>
 
-          <!-- 3. College Communities -->
-          <div class="feature-card" data-reveal>
-            <div class="feature-card-shine"></div>
-            <div class="feature-card-glow feature-glow-magenta"></div>
-            <div class="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5" />
-              </svg>
+            <!-- Card 3: RealVibes -->
+            <div class="coverflow-card" data-index="2">
+              <div class="coverflow-card-inner">
+                <img src="gallery-connect.png" alt="RealVibes" draggable="false">
+                <div class="coverflow-card-overlay cf-overlay-text">
+                  <span class="coverflow-card-tag">✨ RealVibes</span>
+                  <h3 class="cf-card-title">Go Viral on Campus</h3>
+                  <p class="cf-card-desc">Premium-exclusive posts visible to the entire community. Noble &amp; Royal
+                    plans for maximum reach and engagement.</p>
+                </div>
+              </div>
+              <div class="coverflow-card-reflection"></div>
             </div>
-            <h3>College Communities</h3>
-            <p class="feature-desc">Verified campus communities exclusively for your college peers.</p>
-            <ul class="feature-list">
-              <li><span class="feature-bullet">✦</span> Verified college email system</li>
-              <li><span class="feature-bullet">✦</span> Private campus chat rooms</li>
-              <li><span class="feature-bullet">✦</span> Real-time online indicators</li>
-              <li><span class="feature-bullet">✦</span> Share updates with classmates</li>
-              <li><span class="feature-bullet">✦</span> Exclusive institute feeds</li>
-            </ul>
-          </div>
 
-          <!-- 4. Rewards & Achievements -->
-          <div class="feature-card" data-reveal>
-            <div class="feature-card-shine"></div>
-            <div class="feature-card-glow feature-glow-violet"></div>
-            <div class="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                <path d="M4 22h16" />
-                <path d="M10 22V8a3 3 0 0 0-3-3H6v11h4z" />
-                <path d="M14 22V8a3 3 0 0 1 3-3h1v11h-4z" />
-                <line x1="12" y1="8" x2="12" y2="2" />
-                <polygon points="12,2 9,5 15,5" />
-              </svg>
+            <!-- Card 4: Vibers -->
+            <div class="coverflow-card" data-index="3">
+              <div class="coverflow-card-inner">
+                <img src="gallery-community.png" alt="Vibers" draggable="false">
+                <div class="coverflow-card-overlay cf-overlay-text">
+                  <span class="coverflow-card-tag">👥 Vibers</span>
+                  <h3 class="cf-card-title">Your Campus Network</h3>
+                  <p class="cf-card-desc">Discover students from your college, follow profiles, view online status, and
+                    build your campus circle.</p>
+                </div>
+              </div>
+              <div class="coverflow-card-reflection"></div>
             </div>
-            <h3>Rewards & Achievements</h3>
-            <p class="feature-desc">Earn points, unlock badges, and climb leaderboards with every vibe.</p>
-            <ul class="feature-list">
-              <li><span class="feature-bullet">✦</span> Complete daily tasks</li>
-              <li><span class="feature-bullet">✦</span> Unlock achievements & badges</li>
-              <li><span class="feature-bullet">✦</span> Earn & collect vibe points</li>
-              <li><span class="feature-bullet">✦</span> Compete on leaderboards</li>
-              <li><span class="feature-bullet">✦</span> Redeem premium themes</li>
-            </ul>
-          </div>
 
-          <!-- 5. RealVibes (Premium) -->
-          <div class="feature-card feature-card-premium" data-reveal>
-            <div class="feature-card-shine"></div>
-            <div class="feature-card-glow feature-glow-magenta"></div>
-            <div class="feature-premium-badge">✦ Premium</div>
-            <div class="feature-icon-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                stroke-linejoin="round">
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+            <!-- Card 5: VibeShop -->
+            <div class="coverflow-card" data-index="4">
+              <div class="coverflow-card-inner">
+                <img src="gallery-achieve.png" alt="VibeShop" draggable="false">
+                <div class="coverflow-card-overlay cf-overlay-text">
+                  <span class="coverflow-card-tag">🛒 VibeShop</span>
+                  <h3 class="cf-card-title">Redeem & Collect</h3>
+                  <p class="cf-card-desc">Earn vibe points through activity, unlock premium themes, badges, and
+                    exclusive goodies from the VibeShop.</p>
+                </div>
+              </div>
+              <div class="coverflow-card-reflection"></div>
             </div>
-            <h3>RealVibes</h3>
-            <p class="feature-desc">Premium-exclusive content that reaches the entire community — go viral on campus.
-            </p>
-            <ul class="feature-list">
-              <li><span class="feature-bullet">✦</span> Post photos & videos to all</li>
-              <li><span class="feature-bullet">✦</span> Noble plan — visible 15 days</li>
-              <li><span class="feature-bullet">✦</span> Royal plan — visible 25 days</li>
-              <li><span class="feature-bullet">✦</span> Broader community reach</li>
-              <li><span class="feature-bullet">✦</span> Exclusive subscriber feature</li>
-            </ul>
-          </div>
 
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── 3D Coverflow Gallery JavaScript (Mouse-Tracking) ── -->
+    <script>
+      (function () {
+        var cards = document.querySelectorAll('.coverflow-card');
+        var scene = document.getElementById('coverflowScene');
+        var wrapper = document.getElementById('coverflowWrapper');
+        if (!cards.length || !scene) return;
+
+        var current = 0;
+        var total = cards.length;
+        var autoTimer = null;
+        var mouseInside = false;
+
+        function updateCoverflow() {
+          cards.forEach(function (card, i) {
+            var offset = i - current;
+            card.classList.remove('cf-active', 'cf-prev', 'cf-prev-2', 'cf-next', 'cf-next-2', 'cf-hidden');
+            var tx = 0, ry = 0, tz = 0, sc = 1, op = 1, zi = 1, br = 0.5;
+
+            if (offset === 0) {
+              tx = 0; ry = 0; tz = 80; sc = 1; op = 1; zi = 10; br = 1;
+              card.classList.add('cf-active');
+            } else if (offset === -1) {
+              tx = -320; ry = 35; tz = 0; sc = 0.82; op = 1; zi = 6; br = 0.55;
+              card.classList.add('cf-prev');
+            } else if (offset === 1) {
+              tx = 320; ry = -35; tz = 0; sc = 0.82; op = 1; zi = 6; br = 0.55;
+              card.classList.add('cf-next');
+            } else if (offset === -2) {
+              tx = -520; ry = 45; tz = -80; sc = 0.68; op = 0.6; zi = 3; br = 0.35;
+              card.classList.add('cf-prev-2');
+            } else if (offset === 2) {
+              tx = 520; ry = -45; tz = -80; sc = 0.68; op = 0.6; zi = 3; br = 0.35;
+              card.classList.add('cf-next-2');
+            } else {
+              tx = offset < 0 ? -700 : 700;
+              ry = offset < 0 ? 50 : -50;
+              tz = -150; sc = 0.5; op = 0; zi = 1; br = 0.2;
+              card.classList.add('cf-hidden');
+            }
+
+            card.style.transform = 'translateX(' + tx + 'px) rotateY(' + ry + 'deg) translateZ(' + tz + 'px) scale(' + sc + ')';
+            card.style.opacity = op;
+            card.style.zIndex = zi;
+            card.style.filter = 'brightness(' + br + ')';
+          });
+
+          // Update dynamic background
+          updateDynamicBackground();
+        }
+
+        function updateDynamicBackground() {
+          var backgrounds = document.querySelectorAll('.coverflow-dynamic-bg');
+          backgrounds.forEach(function (bg) {
+            bg.classList.remove('active');
+          });
+
+          var activeBg = document.querySelector('.coverflow-dynamic-bg[data-card="' + current + '"]');
+          if (activeBg) {
+            activeBg.classList.add('active');
+          }
+        }
+
+        function goTo(index) {
+          if (index < 0) index = 0;
+          if (index >= total) index = total - 1;
+          if (index === current) return;
+          current = index;
+          updateCoverflow();
+        }
+        function goNext() { goTo(Math.min(current + 1, total - 1)); }
+        function goPrev() { goTo(Math.max(current - 1, 0)); }
+
+        // Hover over a card → bring it to center (debounced for smoothness)
+        var hoverTimer = null;
+        cards.forEach(function (card) {
+          card.addEventListener('mouseenter', function () {
+            var idx = parseInt(card.dataset.index);
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(function () {
+              goTo(idx);
+            }, 150);
+          });
+        });
+        wrapper.addEventListener('mouseleave', function () {
+          clearTimeout(hoverTimer);
+        });
+
+        // Keyboard nav
+        document.addEventListener('keydown', function (e) {
+          var rect = wrapper.getBoundingClientRect();
+          var inView = rect.top < window.innerHeight && rect.bottom > 0;
+          if (!inView) return;
+          if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
+        });
+
+        // Touch/drag for mobile
+        var viewport = document.querySelector('.coverflow-viewport');
+        var dragStartX = 0, isDragging = false;
+        viewport.addEventListener('pointerdown', function (e) {
+          isDragging = true; dragStartX = e.clientX;
+          viewport.setPointerCapture(e.pointerId);
+        });
+        viewport.addEventListener('pointerup', function (e) {
+          if (!isDragging) return; isDragging = false;
+          var dx = e.clientX - dragStartX;
+          if (Math.abs(dx) > 60) { if (dx < 0) goNext(); else goPrev(); }
+        });
+        viewport.addEventListener('pointercancel', function () { isDragging = false; });
+
+        // Auto-play when mouse is outside
+        function autoNext() { goTo(current + 1 >= total ? 0 : current + 1); }
+        function startAuto() { autoTimer = setInterval(autoNext, 7000); }
+        function stopAuto() { clearInterval(autoTimer); }
+        wrapper.addEventListener('mouseenter', function () { mouseInside = true; stopAuto(); });
+        wrapper.addEventListener('mouseleave', function () { mouseInside = false; startAuto(); });
+
+        updateCoverflow();
+        startAuto();
+      })();
+    </script>
+
+    <!-- ══ KEY FEATURES — One Feature Per Page ══ -->
+    <!-- ── FEATURE 1: GHOST MODE ── -->
+    <section class="kf-page kf-ghost-mode" id="kf-ghost">
+      <!-- Spectral Ghost Background -->
+      <div class="ghost-bg-layer">
+        <div class="ghost-scanlines"></div>
+        <div class="ghost-orb ghost-orb-1"></div>
+        <div class="ghost-orb ghost-orb-2"></div>
+        <div class="ghost-orb ghost-orb-3"></div>
+        <div class="ghost-vhs-bar"></div>
+        <div class="ghost-entity ghost-entity-1">👻</div>
+        <div class="ghost-entity ghost-entity-2">👻</div>
+        <div class="ghost-entity ghost-entity-3">🔒</div>
+        <div class="ghost-entity ghost-entity-4">👻</div>
+        <div class="ghost-grid"></div>
+      </div>
+
+      <!-- Glowing Ghost Cursor Follower -->
+      <div class="ghost-cursor-follower" id="ghostCursorFollower">
+        <div class="ghost-cursor-glow"></div>
+        <svg class="ghost-cursor-svg" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="ghostBodyGrad" cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stop-color="#fff5d4" />
+              <stop offset="35%" stop-color="#ffe0a0" />
+              <stop offset="70%" stop-color="#ffb347" />
+              <stop offset="100%" stop-color="#ff8c00" />
+            </radialGradient>
+            <radialGradient id="ghostInnerGlow" cx="50%" cy="35%" r="50%">
+              <stop offset="0%" stop-color="rgba(255,245,212,0.6)" />
+              <stop offset="100%" stop-color="rgba(255,179,71,0)" />
+            </radialGradient>
+            <filter id="ghostSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <!-- Ghost body -->
+          <path
+            d="M60,8 C30,8 10,35 10,62 L10,110 C10,110 18,100 26,110 C34,120 42,100 50,110 C58,120 66,100 74,110 C82,120 90,100 98,110 C106,120 110,110 110,110 L110,62 C110,35 90,8 60,8 Z"
+            fill="url(#ghostBodyGrad)" filter="url(#ghostSoftGlow)" />
+          <!-- Inner glow overlay -->
+          <path
+            d="M60,8 C30,8 10,35 10,62 L10,110 C10,110 18,100 26,110 C34,120 42,100 50,110 C58,120 66,100 74,110 C82,120 90,100 98,110 C106,120 110,110 110,110 L110,62 C110,35 90,8 60,8 Z"
+            fill="url(#ghostInnerGlow)" />
+          <!-- Left eye -->
+          <ellipse cx="42" cy="55" rx="10" ry="11" fill="#2a1a08" opacity="0.85" />
+          <ellipse cx="42" cy="55" rx="8" ry="9" fill="#1a0800" />
+          <circle cx="39" cy="52" r="2.5" fill="rgba(255,245,212,0.4)" />
+          <!-- Right eye -->
+          <ellipse cx="78" cy="55" rx="10" ry="11" fill="#2a1a08" opacity="0.85" />
+          <ellipse cx="78" cy="55" rx="8" ry="9" fill="#1a0800" />
+          <circle cx="75" cy="52" r="2.5" fill="rgba(255,245,212,0.4)" />
+        </svg>
+      </div>
+
+      <div class="kf-content">
+        <div class="kf-badge" data-reveal>
+          <span class="kf-badge-icon">👻</span>
+          <span class="kf-badge-label">NEW FEATURE</span>
+        </div>
+        <h2 class="kf-title" data-reveal>Chat Anonymously</h2>
+        <p class="kf-subtitle" data-reveal>Chat anonymously. Zero identity. Full freedom.</p>
+        <p class="kf-desc" data-reveal>
+          Enter the concealed realm — where college students chat freely with <strong>unique ghost names</strong>.
+          Your real identity stays hidden. No names, no faces, just pure unfiltered campus conversations.
+        </p>
+
+        <div class="kf-features-list" data-reveal>
+          <div class="kf-feature-item">
+            <span class="kf-feature-icon">🎭</span>
+            <div>
+              <strong>Concealed Identity</strong>
+              <p>Chat as "Ghosts' Concealed" with auto-generated unique ghost names</p>
+            </div>
+          </div>
+          <div class="kf-feature-item">
+            <span class="kf-feature-icon">🔒</span>
+            <div>
+              <strong>Zero Traceability</strong>
+              <p>Your real name and profile are completely hidden from everyone</p>
+            </div>
+          </div>
+          <div class="kf-feature-item">
+            <span class="kf-feature-icon">💬</span>
+            <div>
+              <strong>Anonymous College Chat</strong>
+              <p>Institute-verified anonymous rooms — only real students, no outsiders</p>
+            </div>
+          </div>
+          <div class="kf-feature-item">
+            <span class="kf-feature-icon">⚡</span>
+            <div>
+              <strong>Live & Real-Time</strong>
+              <p>Instant anonymous messaging with emojis, stickers, and media support</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ STATS ══ -->
-    <section class="lp-section" id="lp-stats">
-      <div class="lp-container">
-        <h2 class="lp-section-title" data-reveal>Growing Community</h2>
-        <div class="lp-section-accent" data-reveal></div>
-        <div class="lp-stats-row" data-reveal>
-          <div class="lp-stat-cell">
-            <span class="lp-stat-number" data-count="500">0</span>
-            <span class="lp-stat-label">Universities</span>
+    <!-- Ghost Cursor Follower Script -->
+    <script>
+      (function () {
+        var ghost = document.getElementById('ghostCursorFollower');
+        var section = document.getElementById('kf-ghost');
+        if (!ghost || !section) return;
+
+        var mouseX = 0, mouseY = 0;
+        var ghostX = 0, ghostY = 0;
+        var isInSection = false;
+        var ease = 0.08;
+        var animId = null;
+
+        section.addEventListener('mouseenter', function () {
+          isInSection = true;
+          ghost.classList.add('ghost-cursor-visible');
+          animate();
+        });
+
+        section.addEventListener('mouseleave', function () {
+          isInSection = false;
+          ghost.classList.remove('ghost-cursor-visible');
+          if (animId) {
+            cancelAnimationFrame(animId);
+            animId = null;
+          }
+        });
+
+        section.addEventListener('mousemove', function (e) {
+          var rect = section.getBoundingClientRect();
+          mouseX = e.clientX - rect.left;
+          mouseY = e.clientY - rect.top;
+        });
+
+        function animate() {
+          if (!isInSection) return;
+
+          var dx = mouseX - ghostX;
+          var dy = mouseY - ghostY;
+          ghostX += dx * ease;
+          ghostY += dy * ease;
+
+          // Slight tilt based on horizontal movement
+          var tilt = dx * 0.15;
+          tilt = Math.max(-15, Math.min(15, tilt));
+
+          // Subtle bob animation
+          var bob = Math.sin(Date.now() * 0.003) * 4;
+
+          ghost.style.transform = 'translate(' + (ghostX - 50) + 'px, ' + (ghostY - 60 + bob) + 'px) rotate(' + tilt + 'deg)';
+
+          animId = requestAnimationFrame(animate);
+        }
+
+        // Initialize ghost position offscreen
+        ghostX = -200;
+        ghostY = -200;
+      })();
+    </script>
+
+    <!-- ══ VIBESHOP — Gift Your Loved Ones ══ -->
+    <section class="kf-page kf-vibeshop" id="kf-vibeshop">
+      <!-- Love & Gift Themed Background -->
+      <div class="vibeshop-bg-layer">
+        <!-- Warm gradient orbs -->
+        <div class="vs-orb vs-orb-1"></div>
+        <div class="vs-orb vs-orb-2"></div>
+        <div class="vs-orb vs-orb-3"></div>
+        <!-- Floating hearts -->
+        <div class="vs-heart vs-heart-1">💖</div>
+        <div class="vs-heart vs-heart-2">💝</div>
+        <div class="vs-heart vs-heart-3">❤️</div>
+        <div class="vs-heart vs-heart-4">💗</div>
+        <div class="vs-heart vs-heart-5">💕</div>
+        <div class="vs-heart vs-heart-6">💖</div>
+        <div class="vs-heart vs-heart-7">❤️</div>
+        <div class="vs-heart vs-heart-8">💝</div>
+        <!-- Floating gifts -->
+        <div class="vs-gift vs-gift-1">🎁</div>
+        <div class="vs-gift vs-gift-2">🎀</div>
+        <div class="vs-gift vs-gift-3">🎁</div>
+        <div class="vs-gift vs-gift-4">🎀</div>
+        <div class="vs-gift vs-gift-5">🎁</div>
+        <!-- Sparkles -->
+        <div class="vs-sparkle vs-sparkle-1">✨</div>
+        <div class="vs-sparkle vs-sparkle-2">✨</div>
+        <div class="vs-sparkle vs-sparkle-3">💫</div>
+        <div class="vs-sparkle vs-sparkle-4">✨</div>
+        <div class="vs-sparkle vs-sparkle-5">💫</div>
+        <div class="vs-sparkle vs-sparkle-6">✨</div>
+        <!-- Soft bokeh particles -->
+        <div class="vs-bokeh vs-bokeh-1"></div>
+        <div class="vs-bokeh vs-bokeh-2"></div>
+        <div class="vs-bokeh vs-bokeh-3"></div>
+        <div class="vs-bokeh vs-bokeh-4"></div>
+        <div class="vs-bokeh vs-bokeh-5"></div>
+        <div class="vs-bokeh vs-bokeh-6"></div>
+        <div class="vs-bokeh vs-bokeh-7"></div>
+        <div class="vs-bokeh vs-bokeh-8"></div>
+        <!-- Ribbon streamers -->
+        <div class="vs-ribbon vs-ribbon-1"></div>
+        <div class="vs-ribbon vs-ribbon-2"></div>
+        <div class="vs-ribbon vs-ribbon-3"></div>
+      </div>
+
+      <div class="kf-content">
+        <div class="kf-badge" data-reveal>
+          <span class="kf-badge-icon">🎁</span>
+          <span class="kf-badge-label">NEW FEATURE</span>
+        </div>
+        <h2 class="kf-title vs-title-glow" data-reveal>VibeShop</h2>
+        <p class="kf-subtitle vs-subtitle" data-reveal>Gift Love. Spread Joy. Make Memories.</p>
+        <p class="kf-desc vs-desc" data-reveal>
+          Discover the perfect gifts for your <strong>friends, family, lovers</strong>, and even yourself.
+          VibeShop curates heartfelt products that turn every moment into a celebration of love and connection.
+        </p>
+
+        <div class="kf-features-list vs-features-list" data-reveal>
+          <div class="kf-feature-item vs-feature-item">
+            <span class="kf-feature-icon">💝</span>
+            <div>
+              <strong>Gifts for Loved Ones</strong>
+              <p>Handpicked gifts for lovers, friends, and family — express your feelings with the perfect present</p>
+            </div>
           </div>
-          <div class="lp-stat-cell">
-            <span class="lp-stat-number" data-count="10000">0</span>
-            <span class="lp-stat-label">Active Students</span>
+          <div class="kf-feature-item vs-feature-item">
+            <span class="kf-feature-icon">🎀</span>
+            <div>
+              <strong>Themed Collections</strong>
+              <p>Valentine's, birthdays, anniversaries, or "just because" — curated collections for every occasion</p>
+            </div>
           </div>
-          <div class="lp-stat-cell">
-            <span class="lp-stat-number" data-count="50000">0</span>
-            <span class="lp-stat-label">Posts Shared</span>
+          <div class="kf-feature-item vs-feature-item">
+            <span class="kf-feature-icon">🛍️</span>
+            <div>
+              <strong>Easy Browsing & Checkout</strong>
+              <p>Smooth shopping experience with wishlist, cart, and secure payments — gift in minutes</p>
+            </div>
           </div>
-          <div class="lp-stat-cell">
-            <span class="lp-stat-number" data-count="100000">0</span>
-            <span class="lp-stat-label">Messages Sent</span>
+          <div class="kf-feature-item vs-feature-item">
+            <span class="kf-feature-icon">💌</span>
+            <div>
+              <strong>Personal Messages</strong>
+              <p>Add a heartfelt note to every gift — make it personal, make it special, make it yours</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ══ WHY VIBEXPERT — Magnetic Grid ══ -->
-    <section class="lp-section" id="lp-why">
-      <div class="lp-container">
+    <!-- ══ WHY VIBEXPERT — Flip Card Grid ══ -->
+    <section class="lp-section" id="lp-why" style="position:relative;overflow:hidden;">
+
+      <!-- Dynamic theme background layer -->
+      <div id="whyBgLayer" style="position:absolute;inset:0;z-index:0;pointer-events:none;transition:all 0.6s ease;"></div>
+
+      <!-- Theme: Safe & Secure — locks, shields -->
+      <div class="why-bg-theme" id="why-theme-shield" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <!-- BIG center lock -->
+        <div style="position:absolute;font-size:220px;opacity:0.18;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(100,74,169,0.5));">🔒</div>
+        <!-- Medium accents -->
+        <div style="position:absolute;font-size:100px;opacity:0.20;top:5%;left:3%;animation:whyFloat1 6s ease-in-out infinite;">🛡️</div>
+        <div style="position:absolute;font-size:85px;opacity:0.18;bottom:8%;right:4%;animation:whyFloat3 7s ease-in-out infinite 1s;">🔐</div>
+        <div style="position:absolute;font-size:75px;opacity:0.17;top:8%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">🔑</div>
+        <div style="position:absolute;font-size:70px;opacity:0.16;bottom:10%;left:6%;animation:whyFloat1 8s ease-in-out infinite 2s;">🛡️</div>
+        <!-- Tiny tiny locks scattered everywhere -->
+        <div style="position:absolute;font-size:22px;opacity:0.30;top:12%;left:18%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">🔒</div>
+        <div style="position:absolute;font-size:18px;opacity:0.28;top:22%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1.2s;">🔒</div>
+        <div style="position:absolute;font-size:20px;opacity:0.25;top:38%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">🔒</div>
+        <div style="position:absolute;font-size:16px;opacity:0.30;top:65%;left:25%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">🔒</div>
+        <div style="position:absolute;font-size:24px;opacity:0.26;top:78%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">🔒</div>
+        <div style="position:absolute;font-size:18px;opacity:0.28;top:15%;left:45%;animation:whyFloat2 8s ease-in-out infinite 2s;">🔒</div>
+        <div style="position:absolute;font-size:20px;opacity:0.25;top:55%;left:80%;animation:whyFloat3 6s ease-in-out infinite 1s;">🔒</div>
+        <div style="position:absolute;font-size:16px;opacity:0.28;top:88%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">🔒</div>
+        <div style="position:absolute;font-size:14px;opacity:0.30;top:30%;left:88%;animation:whyFloat2 5s ease-in-out infinite 1.8s;">🔒</div>
+        <div style="position:absolute;font-size:22px;opacity:0.26;top:70%;left:10%;animation:whyFloat3 9s ease-in-out infinite 0.4s;">🔐</div>
+        <div style="position:absolute;font-size:16px;opacity:0.28;top:48%;left:55%;animation:whyFloat1 6s ease-in-out infinite 2.5s;">🔑</div>
+        <div style="position:absolute;font-size:18px;opacity:0.25;top:92%;left:78%;animation:whyFloat2 7s ease-in-out infinite 1.3s;">🔒</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(100,74,169,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(79,116,163,0.15) 0%, transparent 45%);"></div>
+      </div>
+
+      <!-- Theme: Lightning Fast — bolts, speed -->
+      <div class="why-bg-theme" id="why-theme-electric" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <!-- BIG center bolt -->
+        <div style="position:absolute;font-size:230px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 5s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">⚡</div>
+        <div style="position:absolute;font-size:110px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 4s ease-in-out infinite;">⚡</div>
+        <div style="position:absolute;font-size:90px;opacity:0.20;bottom:6%;right:4%;animation:whyFloat3 5s ease-in-out infinite 1s;">🌩️</div>
+        <div style="position:absolute;font-size:80px;opacity:0.18;top:6%;right:5%;animation:whyFloat1 6s ease-in-out infinite 0.5s;">💨</div>
+        <div style="position:absolute;font-size:75px;opacity:0.19;bottom:12%;left:5%;animation:whyFloat2 7s ease-in-out infinite 1.5s;">⚡</div>
+        <div style="position:absolute;font-size:22px;opacity:0.32;top:15%;left:20%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">⚡</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:25%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1s;">⚡</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:42%;left:10%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">⚡</div>
+        <div style="position:absolute;font-size:16px;opacity:0.32;top:68%;left:28%;animation:whyFloat3 5s ease-in-out infinite 1.4s;">⚡</div>
+        <div style="position:absolute;font-size:24px;opacity:0.28;top:80%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">⚡</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">⚡</div>
+        <div style="position:absolute;font-size:14px;opacity:0.32;top:58%;left:82%;animation:whyFloat3 6s ease-in-out infinite 1.1s;">⚡</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:40%;animation:whyFloat1 7s ease-in-out infinite 0.4s;">⚡</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(251,146,60,0.15) 0%, transparent 45%);"></div>
+      </div>
+
+      <!-- Theme: Express Yourself — art, paint, colors -->
+      <div class="why-bg-theme" id="why-theme-rainbow" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(236,72,153,0.4));">🎨</div>
+        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">🖌️</div>
+        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">✏️</div>
+        <div style="position:absolute;font-size:80px;opacity:0.18;top:7%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">🎭</div>
+        <div style="position:absolute;font-size:70px;opacity:0.19;bottom:11%;left:5%;animation:whyFloat1 7s ease-in-out infinite 2s;">🖍️</div>
+        <div style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">🎨</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:28%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">🖌️</div>
+        <div style="position:absolute;font-size:22px;opacity:0.28;top:44%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">🎨</div>
+        <div style="position:absolute;font-size:16px;opacity:0.30;top:66%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.6s;">✏️</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:82%;left:64%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">🖍️</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:20%;left:50%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">🎨</div>
+        <div style="position:absolute;font-size:14px;opacity:0.32;top:60%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1s;">🎨</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(236,72,153,0.20) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 45%);"></div>
+      </div>
+
+      <!-- Theme: Dark/Light Mode — moon, stars -->
+      <div class="why-bg-theme" id="why-theme-cosmos" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat3 10s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(99,102,241,0.5));">🌙</div>
+        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 8s ease-in-out infinite;">⭐</div>
+        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat2 9s ease-in-out infinite 1s;">🌟</div>
+        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat3 10s ease-in-out infinite 0.5s;">💫</div>
+        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">✨</div>
+        <div style="position:absolute;font-size:22px;opacity:0.35;top:13%;left:20%;animation:whyFloat2 5s ease-in-out infinite 0.2s;">✦</div>
+        <div style="position:absolute;font-size:18px;opacity:0.32;top:26%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1s;">⭐</div>
+        <div style="position:absolute;font-size:20px;opacity:0.30;top:40%;left:8%;animation:whyFloat3 7s ease-in-out infinite 0.6s;">✦</div>
+        <div style="position:absolute;font-size:16px;opacity:0.35;top:65%;left:25%;animation:whyFloat2 5s ease-in-out infinite 1.5s;">💫</div>
+        <div style="position:absolute;font-size:24px;opacity:0.30;top:80%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">✨</div>
+        <div style="position:absolute;font-size:18px;opacity:0.32;top:16%;left:46%;animation:whyFloat3 8s ease-in-out infinite 2s;">✦</div>
+        <div style="position:absolute;font-size:14px;opacity:0.35;top:57%;left:82%;animation:whyFloat2 6s ease-in-out infinite 1.2s;">⭐</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">✦</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.15) 0%, transparent 45%);"></div>
+      </div>
+
+      <!-- Theme: Mobile Optimized — phone, devices -->
+      <div class="why-bg-theme" id="why-theme-ripple" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(34,211,238,0.4));">📱</div>
+        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 7s ease-in-out infinite;">💻</div>
+        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">📲</div>
+        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat1 9s ease-in-out infinite 0.5s;">🖥️</div>
+        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat2 8s ease-in-out infinite 2s;">⌨️</div>
+        <div style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">📱</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:27%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">📱</div>
+        <div style="position:absolute;font-size:22px;opacity:0.28;top:43%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">📲</div>
+        <div style="position:absolute;font-size:16px;opacity:0.32;top:67%;left:27%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">📱</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:81%;left:63%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">💻</div>
+        <div style="position:absolute;font-size:18px;opacity:0.30;top:19%;left:49%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">📱</div>
+        <div style="position:absolute;font-size:14px;opacity:0.32;top:59%;left:84%;animation:whyFloat3 6s ease-in-out infinite 1s;">📱</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.18) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(59,130,246,0.14) 0%, transparent 45%);"></div>
+      </div>
+
+      <!-- Theme: 100% Free — celebration, money -->
+      <div class="why-bg-theme" id="why-theme-golden" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">🎉</div>
+        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">🎊</div>
+        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">🆓</div>
+        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat2 6s ease-in-out infinite 0.5s;">🎁</div>
+        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">🏆</div>
+        <div style="position:absolute;font-size:20px;opacity:0.35;top:13%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">🎉</div>
+        <div style="position:absolute;font-size:18px;opacity:0.32;top:27%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">🎊</div>
+        <div style="position:absolute;font-size:22px;opacity:0.30;top:43%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">✨</div>
+        <div style="position:absolute;font-size:16px;opacity:0.35;top:68%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">🎉</div>
+        <div style="position:absolute;font-size:24px;opacity:0.30;top:81%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">🎊</div>
+        <div style="position:absolute;font-size:18px;opacity:0.32;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">💫</div>
+        <div style="position:absolute;font-size:14px;opacity:0.35;top:58%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1.2s;">🎉</div>
+        <div style="position:absolute;font-size:20px;opacity:0.28;top:91%;left:39%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">✨</div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(245,158,11,0.15) 0%, transparent 45%);"></div>
+      </div>
+
+      <style>
+        @keyframes whyFloat1 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-18px) rotate(4deg); }
+          66% { transform: translateY(-8px) rotate(-3deg); }
+        }
+        @keyframes whyFloat2 {
+          0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+          50% { transform: translateY(-22px) rotate(-5deg) scale(1.05); }
+        }
+        @keyframes whyFloat3 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          40% { transform: translateY(-14px) rotate(6deg); }
+          80% { transform: translateY(-6px) rotate(-2deg); }
+        }
+        .why-bg-theme { transition: opacity 0.5s ease; }
+      </style>
+
+      <div class="lp-container" style="position:relative;z-index:1;">
         <h2 class="lp-section-title" data-reveal>Why VibeXpert?</h2>
         <div class="lp-section-accent" data-reveal></div>
+        <p class="lp-why-hint" data-reveal>Click a card to reveal more ✨</p>
         <div class="lp-why-grid">
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">🔒</div>
-            <h4>Safe & Secure</h4>
-            <p>Verified college emails ensure you connect with real students only</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="shield">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">🔒</div>
+                <h4>Safe & Secure</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>Safe & Secure</h4>
+                <p>Verified college emails ensure you connect with real students only. Your data is encrypted and your
+                  identity is protected at all times.</p>
+              </div>
+            </div>
           </div>
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">⚡</div>
-            <h4>Lightning Fast</h4>
-            <p>Real-time updates and instant messaging for seamless communication</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="electric">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">⚡</div>
+                <h4>Lightning Fast</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>Lightning Fast</h4>
+                <p>Real-time updates and instant messaging for seamless communication. Messages delivered in
+                  milliseconds with zero lag.</p>
+              </div>
+            </div>
           </div>
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">🎨</div>
-            <h4>Express Yourself</h4>
-            <p>Rich media tools to share your college life authentically</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="rainbow">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">🎨</div>
+                <h4>Express Yourself</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>Express Yourself</h4>
+                <p>Rich media tools to share your college life authentically. Photos, videos, stickers, and music — your
+                  creativity has no limits.</p>
+              </div>
+            </div>
           </div>
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">🌙</div>
-            <h4>Dark/Light Mode</h4>
-            <p>Beautiful themes that adapt to your preference</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="cosmos">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+                <div class="why-star why-s1"></div>
+                <div class="why-star why-s2"></div>
+                <div class="why-star why-s3"></div>
+                <div class="why-star why-s4"></div>
+                <div class="why-star why-s5"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">🌙</div>
+                <h4>Dark/Light Mode</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>Dark/Light Mode</h4>
+                <p>Beautiful themes that adapt to your preference. Switch between stunning dark and light modes with a
+                  single tap.</p>
+              </div>
+            </div>
           </div>
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">📱</div>
-            <h4>Mobile Optimized</h4>
-            <p>Smooth experience on any device, anywhere</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="ripple">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">📱</div>
+                <h4>Mobile Optimized</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>Mobile Optimized</h4>
+                <p>Smooth experience on any device, anywhere. Perfectly responsive design that feels native on every
+                  screen size.</p>
+              </div>
+            </div>
           </div>
-          <div class="lp-why-item" data-reveal>
-            <div class="lp-why-icon">🆓</div>
-            <h4>100% Free</h4>
-            <p>All features available at no cost to students</p>
+
+          <div class="lp-why-flip-wrapper" data-reveal data-card-theme="golden">
+            <div class="lp-why-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-why-shine"></div>
+              <div class="lp-why-card-bg">
+                <div class="why-particle why-p1"></div>
+                <div class="why-particle why-p2"></div>
+                <div class="why-particle why-p3"></div>
+                <div class="why-particle why-p4"></div>
+                <div class="why-particle why-p5"></div>
+                <div class="why-particle why-p6"></div>
+              </div>
+              <div class="lp-why-front">
+                <div class="lp-why-icon">🆓</div>
+                <h4>100% Free</h4>
+              </div>
+              <div class="lp-why-back">
+                <h4>100% Free</h4>
+                <p>All features available at no cost to students. No hidden charges, no subscriptions — just pure campus
+                  vibes.</p>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
+
+    <!-- Why VibeXpert dynamic background script -->
+    <script>
+      (function () {
+        var themes = {
+          'shield':   'why-theme-shield',
+          'electric': 'why-theme-electric',
+          'rainbow':  'why-theme-rainbow',
+          'cosmos':   'why-theme-cosmos',
+          'ripple':   'why-theme-ripple',
+          'golden':   'why-theme-golden'
+        };
+        var currentTheme = null;
+
+        function showTheme(themeKey) {
+          Object.values(themes).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) { el.style.display = 'none'; el.style.opacity = '0'; }
+          });
+          if (!themeKey || !themes[themeKey]) { currentTheme = null; return; }
+          var target = document.getElementById(themes[themeKey]);
+          if (!target) return;
+          target.style.display = 'block';
+          setTimeout(function() { target.style.opacity = '1'; }, 10);
+          currentTheme = themeKey;
+        }
+
+        // Click: show bg when card flips open, hide when it flips closed
+        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function(wrapper) {
+          var cardInner = wrapper.querySelector('.lp-why-item');
+          if (!cardInner) return;
+          var theme = wrapper.getAttribute('data-card-theme');
+          // Override onclick to also manage bg
+          var original = cardInner.onclick;
+          cardInner.addEventListener('click', function() {
+            // After toggle, check if flipped
+            setTimeout(function() {
+              if (cardInner.classList.contains('flipped')) {
+                showTheme(theme);
+              } else {
+                // If any other card still open keep its theme, else clear
+                var stillFlipped = document.querySelector('.lp-why-flip-wrapper .lp-why-item.flipped');
+                if (stillFlipped) {
+                  var sw = stillFlipped.closest('.lp-why-flip-wrapper');
+                  showTheme(sw ? sw.getAttribute('data-card-theme') : null);
+                } else {
+                  showTheme(null);
+                }
+              }
+            }, 10);
+          });
+        });
+
+        // Hover: preview the theme
+        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function(wrapper) {
+          var theme = wrapper.getAttribute('data-card-theme');
+          wrapper.addEventListener('mouseenter', function() {
+            showTheme(theme);
+          });
+          wrapper.addEventListener('mouseleave', function() {
+            var flippedCard = document.querySelector('.lp-why-flip-wrapper .lp-why-item.flipped');
+            if (flippedCard) {
+              var fw = flippedCard.closest('.lp-why-flip-wrapper');
+              showTheme(fw ? fw.getAttribute('data-card-theme') : null);
+            } else {
+              showTheme(null);
+            }
+          });
+        });
+      })();
+    </script>
 
     <!-- ══ TESTIMONIALS MARQUEE ══ -->
     <section class="lp-testi-section" id="lp-testi">
+      <!-- Dynamic Animated Background -->
+      <div class="testi-bg-layer">
+        <div class="testi-orb testi-orb-1"></div>
+        <div class="testi-orb testi-orb-2"></div>
+        <div class="testi-orb testi-orb-3"></div>
+        <div class="testi-orb testi-orb-4"></div>
+        <div class="testi-gradient-overlay" id="testiGradientOverlay"></div>
+        <!-- Floating sparkle particles -->
+        <div class="testi-sparkle testi-sp-1">✦</div>
+        <div class="testi-sparkle testi-sp-2">✧</div>
+        <div class="testi-sparkle testi-sp-3">✦</div>
+        <div class="testi-sparkle testi-sp-4">✧</div>
+        <div class="testi-sparkle testi-sp-5">✦</div>
+        <div class="testi-sparkle testi-sp-6">✧</div>
+        <div class="testi-sparkle testi-sp-7">✦</div>
+        <div class="testi-sparkle testi-sp-8">✧</div>
+      </div>
+
       <div class="lp-container">
         <h2 class="lp-section-title" data-reveal>What Students Say</h2>
         <div class="lp-section-accent" data-reveal></div>
       </div>
       <div class="lp-marquee-outer">
-        <div class="lp-marquee-track">
+        <div class="lp-marquee-track" id="testiMarqueeTrack">
           <div class="lp-testi-card">
             <div class="lp-testi-avatar">👨‍🎓</div>
             <p class="lp-testi-text">"VibeXpert made it so easy to connect with my classmates! The Institute chat is
@@ -441,6 +1237,55 @@
         </div>
       </div>
     </section>
+
+    <!-- Testimonials Dynamic Background Script -->
+    <script>
+      (function () {
+        var track = document.getElementById('testiMarqueeTrack');
+        var overlay = document.getElementById('testiGradientOverlay');
+        var orbs = document.querySelectorAll('.testi-orb');
+        if (!track || !overlay) return;
+
+        function updateTestiBg() {
+          var style = window.getComputedStyle(track);
+          var matrix = style.transform || style.webkitTransform;
+          var tx = 0;
+          if (matrix && matrix !== 'none') {
+            var values = matrix.match(/matrix.*\((.+)\)/);
+            if (values && values[1]) {
+              var parts = values[1].split(',');
+              tx = parseFloat(parts[4]) || 0;
+            }
+          }
+
+          // Normalize scroll position (0 to 1 cycle)
+          var trackWidth = track.scrollWidth / 2;
+          var progress = Math.abs(tx) / trackWidth;
+          var cycle = progress % 1;
+
+          // Shift gradient hue based on scroll
+          var hue1 = 270 + cycle * 60;  // purple → magenta
+          var hue2 = 240 + cycle * 80;  // violet → blue
+          var hue3 = 300 - cycle * 40;  // magenta → pink
+
+          overlay.style.background =
+            'radial-gradient(ellipse at ' + (20 + cycle * 60) + '% ' + (30 + cycle * 40) + '%, hsla(' + hue1 + ', 70%, 50%, 0.12) 0%, transparent 55%), ' +
+            'radial-gradient(ellipse at ' + (80 - cycle * 60) + '% ' + (70 - cycle * 40) + '%, hsla(' + hue2 + ', 60%, 45%, 0.10) 0%, transparent 50%), ' +
+            'radial-gradient(circle at 50% 50%, hsla(' + hue3 + ', 65%, 50%, 0.06) 0%, transparent 60%)';
+
+          // Move orbs slightly based on scroll
+          orbs.forEach(function (orb, i) {
+            var offset = cycle * 40 * (i % 2 === 0 ? 1 : -1);
+            var yOffset = cycle * 20 * (i % 2 === 0 ? -1 : 1);
+            orb.style.transform = 'translate(' + offset + 'px, ' + yOffset + 'px)';
+          });
+
+          requestAnimationFrame(updateTestiBg);
+        }
+
+        requestAnimationFrame(updateTestiBg);
+      })();
+    </script>
 
     <!-- ══ CTA ══ -->
     <section class="lp-cta" data-reveal>
@@ -4961,7 +5806,6 @@
     // Only init if landing page is visible and canvas exists
     const canvas = document.getElementById('tubes-cursor-canvas');
     if (canvas) {
-      // Purple/violet/magenta theme colors matching VibeXpert
       const tubeColors = ['#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6'];
       const lightColors = ['#a855f7', '#7c3aed', '#c026d3', '#f0abfc', '#6d28d9'];
 
@@ -4975,7 +5819,6 @@
         }
       });
 
-      // Randomize colors on click (using purple-spectrum)
       function randomPurpleColors(count) {
         const palette = [
           '#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6',
