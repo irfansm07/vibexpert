@@ -14084,3 +14084,4 @@ function execGetPanelHTML() {
   }
   return _tpl.innerHTML.replace(/__VX_COLLEGE__/g, college);
 }
+
