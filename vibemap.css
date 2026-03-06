@@ -2874,25 +2874,31 @@ body.light-theme .footer-section p {
 }
 
 .blob-pupil {
-  transition: cx 0.15s ease-out, cy 0.15s ease-out;
+  transition: cx 0.05s ease-out, cy 0.05s ease-out;
+  fill: #111111 !important;
+  opacity: 1 !important;
 }
 
-/* Eye blink effect - subtle */
+/* Eye blink - uses scaleY so pupils stay visible */
 .blob-eye {
   animation: eyeBlink 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 @keyframes eyeBlink {
 
   0%,
-  48%,
-  52%,
+  47%,
+  53%,
   100% {
+    transform: scaleY(1);
     opacity: 1;
   }
 
   50% {
-    opacity: 0.1;
+    transform: scaleY(0.1);
+    opacity: 1;
   }
 }
 
@@ -28709,25 +28715,31 @@ body.light-theme .footer-section p {
 }
 
 .blob-pupil {
-  transition: cx 0.15s ease-out, cy 0.15s ease-out;
+  transition: cx 0.05s ease-out, cy 0.05s ease-out;
+  fill: #111111 !important;
+  opacity: 1 !important;
 }
 
-/* Eye blink effect - subtle */
+/* Eye blink - uses scaleY so pupils stay visible */
 .blob-eye {
   animation: eyeBlink 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 @keyframes eyeBlink {
 
   0%,
-  48%,
-  52%,
+  47%,
+  53%,
   100% {
+    transform: scaleY(1);
     opacity: 1;
   }
 
   50% {
-    opacity: 0.1;
+    transform: scaleY(0.1);
+    opacity: 1;
   }
 }
 
