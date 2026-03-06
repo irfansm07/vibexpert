@@ -80,11 +80,101 @@
   <div id="aboutUsPage" class="about-us-page">
 
     <!-- BG Layers -->
-    <div class="lp-orb lp-orb-1"></div>
-    <div class="lp-orb lp-orb-2"></div>
-    <div class="lp-orb lp-orb-3"></div>
+    <div class="lp-bg-logo-wrapper">
+      <div class="lp-bg-logo-container">
+        <div class="lp-bg-logo-clipper">
+          <img src="favicon.png" alt="VibeXpert Logo Background" class="lp-bg-logo-img">
+        </div>
+      </div>
+    </div>
+    <style>
+      .lp-bg-logo-wrapper {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        /* Create a perfect square so a circle clip-path works flawlessly */
+        width: 80vh;
+        height: 80vh;
+        max-width: 800px;
+        max-height: 800px;
+        z-index: 0;
+        pointer-events: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .lp-bg-logo-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0.35;
+        animation: logoBreath 6s ease-in-out infinite, logoShine 6s ease-in-out infinite;
+        --dx: 0px;
+        --dy: 0px;
+        transition: filter 0.1s ease-out;
+      }
+
+      .lp-bg-logo-clipper {
+        width: 100%;
+        height: 100%;
+        clip-path: circle(29% at 50% 50%);
+        -webkit-clip-path: circle(29% at 50% 50%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .lp-bg-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      @keyframes logoBreath {
+
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.35;
+        }
+
+        50% {
+          transform: scale(1.05);
+          opacity: 0.55;
+        }
+      }
+
+      @keyframes logoShine {
+
+        0%,
+        100% {
+          filter: drop-shadow(var(--dx) var(--dy) 40px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 60px rgba(124, 58, 237, 0.7)) brightness(1.2);
+        }
+
+        50% {
+          filter: drop-shadow(var(--dx) var(--dy) 80px rgba(168, 85, 247, 1)) drop-shadow(0 0 120px rgba(192, 38, 211, 0.9)) brightness(1.5);
+        }
+      }
+    </style>
+    <script>
+      document.addEventListener('mousemove', function (e) {
+        const container = document.querySelector('.lp-bg-logo-container');
+        if (container) {
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+          const deltaX = ((e.clientX - centerX) / window.innerWidth) * 120;
+          const deltaY = ((e.clientY - centerY) / window.innerHeight) * 120;
+
+          container.style.setProperty('--dx', `${deltaX}px`);
+          container.style.setProperty('--dy', `${deltaY}px`);
+        }
+      });
+    </script>
     <div class="lp-dot-grid"></div>
-    <canvas id="lp-particles"></canvas>
 
     <!-- Scroll Progress -->
     <div class="lp-progress">
@@ -99,8 +189,6 @@
 
     <!-- ══ HERO ══ -->
     <section class="lp-hero">
-      <!-- Neon 3D Tubes Cursor Canvas -->
-      <canvas id="tubes-cursor-canvas"></canvas>
       <div class="lp-hero-content">
         <div class="lp-badge">
           <span class="lp-live-dot"></span>
@@ -205,55 +293,116 @@
     </section>
 
     <!-- ══ INTERACTIVE 3D COVERFLOW GALLERY — Explore VibeXpert ══ -->
-    <section class="lp-section" id="lp-coverflow" style="position:relative;overflow:hidden;isolation:isolate;z-index:2;">
+    <section class="lp-section" id="lp-coverflow"
+      style="position:relative;overflow:hidden;isolation:isolate;z-index:2;">
 
       <!-- ═══ STUDENT VIBE BACKGROUND ═══ -->
       <div id="cfVibeBg" style="position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;">
 
         <!-- Deep gradient base matching surrounding pages -->
         <div style="position:absolute;inset:0;top:-200px;background:#0d0d1a;"></div>
-        <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,8,20,0.98) 0%,rgba(17,13,36,0.95) 30%,rgba(13,21,32,0.95) 60%,rgba(10,10,20,0.98) 100%);"></div>
+        <div
+          style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,8,20,0.98) 0%,rgba(17,13,36,0.95) 30%,rgba(13,21,32,0.95) 60%,rgba(10,10,20,0.98) 100%);">
+        </div>
 
         <!-- Soft ambient orbs — purple/blue/teal matching site palette -->
-        <div style="position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(100,74,169,0.18) 0%,transparent 70%);top:-10%;left:-8%;animation:cfOrbDrift1 12s ease-in-out infinite;"></div>
-        <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(79,116,163,0.15) 0%,transparent 70%);bottom:-15%;right:-5%;animation:cfOrbDrift2 14s ease-in-out infinite;"></div>
-        <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%);top:30%;right:20%;animation:cfOrbDrift3 10s ease-in-out infinite;"></div>
+        <div
+          style="position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(100,74,169,0.18) 0%,transparent 70%);top:-10%;left:-8%;animation:cfOrbDrift1 12s ease-in-out infinite;">
+        </div>
+        <div
+          style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(79,116,163,0.15) 0%,transparent 70%);bottom:-15%;right:-5%;animation:cfOrbDrift2 14s ease-in-out infinite;">
+        </div>
+        <div
+          style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%);top:30%;right:20%;animation:cfOrbDrift3 10s ease-in-out infinite;">
+        </div>
 
         <!-- Floating student-vibe emojis — big background layer -->
-        <div style="position:absolute;font-size:110px;opacity:0.13;top:3%;left:2%;animation:cfFloat1 9s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3));">🎓</div>
-        <div style="position:absolute;font-size:90px;opacity:0.12;top:5%;right:3%;animation:cfFloat2 11s ease-in-out infinite 1s;filter:drop-shadow(0 0 18px rgba(100,74,169,0.3));">🎵</div>
-        <div style="position:absolute;font-size:95px;opacity:0.13;bottom:5%;left:4%;animation:cfFloat3 10s ease-in-out infinite 0.5s;filter:drop-shadow(0 0 18px rgba(79,116,163,0.3));">🎸</div>
-        <div style="position:absolute;font-size:85px;opacity:0.12;bottom:6%;right:3%;animation:cfFloat1 13s ease-in-out infinite 2s;filter:drop-shadow(0 0 16px rgba(167,139,250,0.3));">🎶</div>
-        <div style="position:absolute;font-size:80px;opacity:0.11;top:40%;left:1%;animation:cfFloat2 8s ease-in-out infinite 1.5s;">🏫</div>
-        <div style="position:absolute;font-size:75px;opacity:0.11;top:35%;right:1%;animation:cfFloat3 12s ease-in-out infinite 0.8s;">📚</div>
+        <div
+          style="position:absolute;font-size:110px;opacity:0.13;top:3%;left:2%;animation:cfFloat1 9s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(167,139,250,0.3));">
+          🎓</div>
+        <div
+          style="position:absolute;font-size:90px;opacity:0.12;top:5%;right:3%;animation:cfFloat2 11s ease-in-out infinite 1s;filter:drop-shadow(0 0 18px rgba(100,74,169,0.3));">
+          🎵</div>
+        <div
+          style="position:absolute;font-size:95px;opacity:0.13;bottom:5%;left:4%;animation:cfFloat3 10s ease-in-out infinite 0.5s;filter:drop-shadow(0 0 18px rgba(79,116,163,0.3));">
+          🎸</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.12;bottom:6%;right:3%;animation:cfFloat1 13s ease-in-out infinite 2s;filter:drop-shadow(0 0 16px rgba(167,139,250,0.3));">
+          🎶</div>
+        <div
+          style="position:absolute;font-size:80px;opacity:0.11;top:40%;left:1%;animation:cfFloat2 8s ease-in-out infinite 1.5s;">
+          🏫</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.11;top:35%;right:1%;animation:cfFloat3 12s ease-in-out infinite 0.8s;">
+          📚</div>
 
         <!-- Mid-size scattered -->
-        <div style="position:absolute;font-size:50px;opacity:0.18;top:12%;left:15%;animation:cfFloat1 7s ease-in-out infinite 0.3s;">🎤</div>
-        <div style="position:absolute;font-size:45px;opacity:0.18;top:18%;right:14%;animation:cfFloat2 8s ease-in-out infinite 1.8s;">🎧</div>
-        <div style="position:absolute;font-size:48px;opacity:0.17;bottom:18%;left:18%;animation:cfFloat3 9s ease-in-out infinite 2.2s;">🌟</div>
-        <div style="position:absolute;font-size:44px;opacity:0.18;bottom:15%;right:16%;animation:cfFloat1 10s ease-in-out infinite 0.6s;">✨</div>
-        <div style="position:absolute;font-size:42px;opacity:0.17;top:55%;left:12%;animation:cfFloat2 7s ease-in-out infinite 1.1s;">🥳</div>
-        <div style="position:absolute;font-size:46px;opacity:0.17;top:50%;right:11%;animation:cfFloat3 8s ease-in-out infinite 2.5s;">🎉</div>
-        <div style="position:absolute;font-size:40px;opacity:0.16;top:28%;left:8%;animation:cfFloat1 11s ease-in-out infinite 0.9s;">🎊</div>
-        <div style="position:absolute;font-size:38px;opacity:0.17;top:25%;right:8%;animation:cfFloat2 9s ease-in-out infinite 1.4s;">🎯</div>
+        <div
+          style="position:absolute;font-size:50px;opacity:0.18;top:12%;left:15%;animation:cfFloat1 7s ease-in-out infinite 0.3s;">
+          🎤</div>
+        <div
+          style="position:absolute;font-size:45px;opacity:0.18;top:18%;right:14%;animation:cfFloat2 8s ease-in-out infinite 1.8s;">
+          🎧</div>
+        <div
+          style="position:absolute;font-size:48px;opacity:0.17;bottom:18%;left:18%;animation:cfFloat3 9s ease-in-out infinite 2.2s;">
+          🌟</div>
+        <div
+          style="position:absolute;font-size:44px;opacity:0.18;bottom:15%;right:16%;animation:cfFloat1 10s ease-in-out infinite 0.6s;">
+          ✨</div>
+        <div
+          style="position:absolute;font-size:42px;opacity:0.17;top:55%;left:12%;animation:cfFloat2 7s ease-in-out infinite 1.1s;">
+          🥳</div>
+        <div
+          style="position:absolute;font-size:46px;opacity:0.17;top:50%;right:11%;animation:cfFloat3 8s ease-in-out infinite 2.5s;">
+          🎉</div>
+        <div
+          style="position:absolute;font-size:40px;opacity:0.16;top:28%;left:8%;animation:cfFloat1 11s ease-in-out infinite 0.9s;">
+          🎊</div>
+        <div
+          style="position:absolute;font-size:38px;opacity:0.17;top:25%;right:8%;animation:cfFloat2 9s ease-in-out infinite 1.4s;">
+          🎯</div>
 
         <!-- Tiny scattered dots of life -->
-        <div style="position:absolute;font-size:24px;opacity:0.28;top:8%;left:30%;animation:cfFloat3 6s ease-in-out infinite 0.2s;">🎵</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:15%;left:55%;animation:cfFloat1 7s ease-in-out infinite 1.3s;">🎶</div>
-        <div style="position:absolute;font-size:22px;opacity:0.26;top:72%;left:32%;animation:cfFloat2 5s ease-in-out infinite 0.7s;">🎓</div>
-        <div style="position:absolute;font-size:18px;opacity:0.28;top:80%;left:68%;animation:cfFloat3 8s ease-in-out infinite 1.9s;">⭐</div>
-        <div style="position:absolute;font-size:20px;opacity:0.26;top:88%;left:48%;animation:cfFloat1 6s ease-in-out infinite 0.4s;">🎵</div>
-        <div style="position:absolute;font-size:16px;opacity:0.30;top:62%;left:85%;animation:cfFloat2 7s ease-in-out infinite 2.1s;">🎤</div>
-        <div style="position:absolute;font-size:18px;opacity:0.28;top:45%;left:90%;animation:cfFloat3 9s ease-in-out infinite 1.6s;">🎧</div>
-        <div style="position:absolute;font-size:22px;opacity:0.26;top:32%;left:78%;animation:cfFloat1 6s ease-in-out infinite 0.8s;">🌟</div>
-        <div style="position:absolute;font-size:16px;opacity:0.30;top:20%;left:38%;animation:cfFloat2 8s ease-in-out infinite 2.3s;">✦</div>
-        <div style="position:absolute;font-size:18px;opacity:0.28;top:92%;left:22%;animation:cfFloat3 5s ease-in-out infinite 1.0s;">🎊</div>
+        <div
+          style="position:absolute;font-size:24px;opacity:0.28;top:8%;left:30%;animation:cfFloat3 6s ease-in-out infinite 0.2s;">
+          🎵</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:15%;left:55%;animation:cfFloat1 7s ease-in-out infinite 1.3s;">
+          🎶</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.26;top:72%;left:32%;animation:cfFloat2 5s ease-in-out infinite 0.7s;">
+          🎓</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.28;top:80%;left:68%;animation:cfFloat3 8s ease-in-out infinite 1.9s;">
+          ⭐</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.26;top:88%;left:48%;animation:cfFloat1 6s ease-in-out infinite 0.4s;">
+          🎵</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.30;top:62%;left:85%;animation:cfFloat2 7s ease-in-out infinite 2.1s;">
+          🎤</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.28;top:45%;left:90%;animation:cfFloat3 9s ease-in-out infinite 1.6s;">
+          🎧</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.26;top:32%;left:78%;animation:cfFloat1 6s ease-in-out infinite 0.8s;">
+          🌟</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.30;top:20%;left:38%;animation:cfFloat2 8s ease-in-out infinite 2.3s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.28;top:92%;left:22%;animation:cfFloat3 5s ease-in-out infinite 1.0s;">
+          🎊</div>
 
         <!-- Subtle grid dots overlay -->
-        <div style="position:absolute;inset:0;background-image:radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px);background-size:40px 40px;"></div>
+        <div
+          style="position:absolute;inset:0;background-image:radial-gradient(circle, rgba(167,139,250,0.06) 1px, transparent 1px);background-size:40px 40px;">
+        </div>
 
         <!-- Bottom fade to blend with next section -->
-        <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,#0d0d1a);z-index:10;"></div>
+        <div
+          style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,#0d0d1a);z-index:10;">
+        </div>
 
         <!-- Card-reactive full-section glow layers — sit above base, below emojis -->
         <div class="coverflow-dynamic-bg" data-card="0" style="z-index:2!important;"></div>
@@ -273,31 +422,85 @@
           z-index: 1 !important;
           pointer-events: none !important;
         }
+
         @keyframes cfFloat1 {
-          0%,100% { transform: translateY(0px) rotate(0deg); }
-          35% { transform: translateY(-20px) rotate(4deg); }
-          70% { transform: translateY(-8px) rotate(-3deg); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          35% {
+            transform: translateY(-20px) rotate(4deg);
+          }
+
+          70% {
+            transform: translateY(-8px) rotate(-3deg);
+          }
         }
+
         @keyframes cfFloat2 {
-          0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
-          50% { transform: translateY(-25px) rotate(-5deg) scale(1.04); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg) scale(1);
+          }
+
+          50% {
+            transform: translateY(-25px) rotate(-5deg) scale(1.04);
+          }
         }
+
         @keyframes cfFloat3 {
-          0%,100% { transform: translateY(0px) rotate(0deg); }
-          40% { transform: translateY(-16px) rotate(6deg); }
-          80% { transform: translateY(-6px) rotate(-2deg); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          40% {
+            transform: translateY(-16px) rotate(6deg);
+          }
+
+          80% {
+            transform: translateY(-6px) rotate(-2deg);
+          }
         }
+
         @keyframes cfOrbDrift1 {
-          0%,100% { transform: translate(0,0); }
-          50% { transform: translate(40px,-30px); }
+
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          50% {
+            transform: translate(40px, -30px);
+          }
         }
+
         @keyframes cfOrbDrift2 {
-          0%,100% { transform: translate(0,0); }
-          50% { transform: translate(-35px,25px); }
+
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          50% {
+            transform: translate(-35px, 25px);
+          }
         }
+
         @keyframes cfOrbDrift3 {
-          0%,100% { transform: translate(0,0); }
-          50% { transform: translate(20px,-40px); }
+
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          50% {
+            transform: translate(20px, -40px);
+          }
         }
       </style>
       <!-- ═══ END STUDENT VIBE BACKGROUND ═══ -->
@@ -513,9 +716,342 @@
 
     <!-- ══ KEY FEATURES — One Feature Per Page ══ -->
     <!-- ── FEATURE 1: GHOST MODE ── -->
-    <section class="kf-page kf-ghost-mode" id="kf-ghost">
-      <!-- Spectral Ghost Background -->
-      <div class="ghost-bg-layer">
+    <section class="kf-page kf-ghost-mode" id="kf-ghost" style="position:relative;overflow:hidden;isolation:isolate;">
+
+      <!-- ═══ NEW GHOST BACKGROUND ═══ -->
+      <div style="position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;">
+
+        <!-- Solid dark base -->
+        <div style="position:absolute;inset:0;background:#130800;"></div>
+
+        <!-- Smooth deep orange/amber atmospheric gradient -->
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%, rgba(200,80,0,0.28) 0%, transparent 55%), radial-gradient(ellipse at 80% 30%, rgba(160,60,0,0.20) 0%, transparent 50%), radial-gradient(ellipse at 50% 90%, rgba(120,40,0,0.22) 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, rgba(80,20,0,0.35) 0%, transparent 80%);">
+        </div>
+
+        <!-- Soft pulsing center glow — like a ghost aura -->
+        <div
+          style="position:absolute;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,rgba(255,120,20,0.10) 0%,rgba(200,70,0,0.06) 40%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:ghostPulse 6s ease-in-out infinite;">
+        </div>
+
+        <!-- Top left warm orb -->
+        <div
+          style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,30,0.14) 0%,transparent 65%);top:-8%;left:-5%;animation:ghostOrb1 10s ease-in-out infinite;">
+        </div>
+
+        <!-- Bottom right deep orb -->
+        <div
+          style="position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(180,60,0,0.16) 0%,transparent 65%);bottom:-15%;right:-8%;animation:ghostOrb2 13s ease-in-out infinite 2s;">
+        </div>
+
+        <!-- Floating large ghost silhouettes — very faint -->
+        <div
+          style="position:absolute;font-size:300px;opacity:0.05;top:50%;left:50%;transform:translate(-50%,-50%);animation:ghostSway 8s ease-in-out infinite;filter:blur(2px) sepia(1) saturate(3) hue-rotate(-10deg);">
+          👻</div>
+
+        <!-- Floating ghost entities scattered -->
+        <div
+          style="position:absolute;font-size:120px;opacity:0.12;top:4%;left:2%;animation:ghostFloat1 9s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(255,140,30,0.6));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:90px;opacity:0.10;top:6%;right:3%;animation:ghostFloat2 12s ease-in-out infinite 1.5s;filter:drop-shadow(0 0 24px rgba(255,120,20,0.5));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.09;bottom:8%;left:5%;animation:ghostFloat3 11s ease-in-out infinite 3s;filter:drop-shadow(0 0 20px rgba(255,100,0,0.4));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:80px;opacity:0.10;bottom:6%;right:4%;animation:ghostFloat1 10s ease-in-out infinite 2s;filter:drop-shadow(0 0 22px rgba(255,130,20,0.5));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:55px;opacity:0.10;top:42%;left:2%;animation:ghostFloat2 8s ease-in-out infinite 1s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:60px;opacity:0.09;top:38%;right:2%;animation:ghostFloat3 9s ease-in-out infinite 0.5s;">
+          👻</div>
+
+        <!-- Medium ghosts mid-section -->
+        <div
+          style="position:absolute;font-size:45px;opacity:0.16;top:15%;left:16%;animation:ghostFloat1 7s ease-in-out infinite 0.4s;filter:drop-shadow(0 0 14px rgba(255,150,30,0.5));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:40px;opacity:0.15;top:20%;right:15%;animation:ghostFloat2 9s ease-in-out infinite 2.2s;filter:drop-shadow(0 0 12px rgba(255,120,20,0.4));">
+          👻</div>
+        <div
+          style="position:absolute;font-size:42px;opacity:0.14;bottom:20%;left:20%;animation:ghostFloat3 10s ease-in-out infinite 1.1s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:38px;opacity:0.15;bottom:18%;right:18%;animation:ghostFloat1 8s ease-in-out infinite 3.2s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:36px;opacity:0.14;top:60%;left:14%;animation:ghostFloat2 11s ease-in-out infinite 0.8s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:34px;opacity:0.13;top:55%;right:13%;animation:ghostFloat3 7s ease-in-out infinite 2.6s;">
+          🔮</div>
+        <div
+          style="position:absolute;font-size:32px;opacity:0.15;top:30%;left:10%;animation:ghostFloat1 9s ease-in-out infinite 1.7s;">
+          🕯️</div>
+        <div
+          style="position:absolute;font-size:30px;opacity:0.14;top:26%;right:10%;animation:ghostFloat2 8s ease-in-out infinite 0.3s;">
+          🕯️</div>
+
+        <!-- Tiny ghost dots everywhere -->
+        <div
+          style="position:absolute;font-size:22px;opacity:0.25;top:10%;left:28%;animation:ghostFloat3 6s ease-in-out infinite 0.2s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.22;top:18%;left:52%;animation:ghostFloat1 7s ease-in-out infinite 1.4s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.24;top:10%;right:26%;animation:ghostFloat2 5s ease-in-out infinite 2.1s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.26;top:70%;left:30%;animation:ghostFloat3 8s ease-in-out infinite 0.6s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.22;top:78%;left:58%;animation:ghostFloat1 6s ease-in-out infinite 1.9s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.24;top:68%;right:28%;animation:ghostFloat2 7s ease-in-out infinite 0.9s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.26;top:88%;left:42%;animation:ghostFloat3 5s ease-in-out infinite 1.3s;">
+          👻</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.28;top:35%;left:72%;animation:ghostFloat1 9s ease-in-out infinite 2.7s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.26;top:48%;left:44%;animation:ghostFloat2 8s ease-in-out infinite 0.4s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.24;top:22%;left:38%;animation:ghostFloat3 6s ease-in-out infinite 1.8s;">
+          🌑</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.26;top:82%;right:35%;animation:ghostFloat1 7s ease-in-out infinite 2.4s;">
+          🌑</div>
+
+        <!-- Wispy smoke/fog effect using blurred divs -->
+        <div
+          style="position:absolute;width:300px;height:80px;background:radial-gradient(ellipse,rgba(255,120,30,0.08) 0%,transparent 70%);border-radius:50%;top:25%;left:10%;filter:blur(20px);animation:ghostFog1 15s ease-in-out infinite;">
+        </div>
+        <div
+          style="position:absolute;width:400px;height:100px;background:radial-gradient(ellipse,rgba(255,100,10,0.07) 0%,transparent 70%);border-radius:50%;top:65%;right:8%;filter:blur(25px);animation:ghostFog2 18s ease-in-out infinite 3s;">
+        </div>
+        <div
+          style="position:absolute;width:350px;height:90px;background:radial-gradient(ellipse,rgba(200,80,0,0.06) 0%,transparent 70%);border-radius:50%;bottom:30%;left:30%;filter:blur(22px);animation:ghostFog1 20s ease-in-out infinite 6s;">
+        </div>
+
+        <!-- Top & bottom section blends -->
+        <div
+          style="position:absolute;top:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,#0c0c1a,transparent);">
+        </div>
+        <div
+          style="position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to top,#0c0c1a,transparent);">
+        </div>
+      </div>
+
+      <style>
+        @keyframes ghostPulse {
+
+          0%,
+          100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+          }
+
+          50% {
+            transform: translate(-50%, -50%) scale(1.15);
+            opacity: 0.7;
+          }
+        }
+
+        @keyframes ghostOrb1 {
+
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          50% {
+            transform: translate(40px, 30px);
+          }
+        }
+
+        @keyframes ghostOrb2 {
+
+          0%,
+          100% {
+            transform: translate(0, 0);
+          }
+
+          50% {
+            transform: translate(-50px, -35px);
+          }
+        }
+
+        @keyframes ghostSway {
+
+          0%,
+          100% {
+            transform: translate(-50%, -50%) scale(1) rotate(-2deg);
+            opacity: 0.05;
+          }
+
+          50% {
+            transform: translate(-50%, -52%) scale(1.05) rotate(2deg);
+            opacity: 0.08;
+          }
+        }
+
+        @keyframes ghostFloat1 {
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(-3deg);
+          }
+
+          40% {
+            transform: translateY(-28px) rotate(4deg);
+          }
+
+          70% {
+            transform: translateY(-10px) rotate(-2deg);
+          }
+        }
+
+        @keyframes ghostFloat2 {
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(2deg) scale(1);
+          }
+
+          50% {
+            transform: translateY(-32px) rotate(-4deg) scale(1.05);
+          }
+        }
+
+        @keyframes ghostFloat3 {
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          35% {
+            transform: translateY(-20px) rotate(5deg);
+          }
+
+          75% {
+            transform: translateY(-8px) rotate(-3deg);
+          }
+        }
+
+        @keyframes ghostFog1 {
+
+          0%,
+          100% {
+            transform: translateX(0) scaleX(1);
+            opacity: 1;
+          }
+
+          50% {
+            transform: translateX(60px) scaleX(1.3);
+            opacity: 0.5;
+          }
+        }
+
+        @keyframes ghostFog2 {
+
+          0%,
+          100% {
+            transform: translateX(0) scaleX(1);
+            opacity: 1;
+          }
+
+          50% {
+            transform: translateX(-80px) scaleX(1.4);
+            opacity: 0.4;
+          }
+        }
+      </style>
+      <!-- ═══ END GHOST BACKGROUND ═══ -->
+
+      <style>
+        /* ── Ghost Section Typography Upgrades ── */
+        #kf-ghost {
+          padding-top: 60px !important;
+        }
+
+        #kf-ghost .kf-content {
+          position: relative;
+          z-index: 2;
+        }
+
+        #kf-ghost .kf-title {
+          font-size: clamp(2.6rem, 5.5vw, 4.4rem) !important;
+          line-height: 1.15 !important;
+          letter-spacing: 0.02em !important;
+          margin-bottom: 0.6em !important;
+        }
+
+        #kf-ghost .kf-subtitle {
+          font-size: clamp(1.25rem, 2.4vw, 1.75rem) !important;
+          line-height: 1.4 !important;
+          letter-spacing: 0.06em !important;
+          margin-bottom: 1em !important;
+        }
+
+        #kf-ghost .kf-desc {
+          font-size: clamp(1.05rem, 1.8vw, 1.28rem) !important;
+          line-height: 1.85 !important;
+          max-width: 640px !important;
+          margin-bottom: 2em !important;
+        }
+
+        #kf-ghost .kf-badge-label {
+          font-size: 0.95rem !important;
+          letter-spacing: 0.14em !important;
+        }
+
+        /* Feature cards */
+        #kf-ghost .kf-feature-item {
+          padding: 1.2em 1.4em !important;
+          border-radius: 14px !important;
+          backdrop-filter: blur(8px) !important;
+          background: rgba(255, 120, 20, 0.07) !important;
+          border: 1px solid rgba(255, 120, 20, 0.18) !important;
+          gap: 1em !important;
+          align-items: flex-start !important;
+        }
+
+        #kf-ghost .kf-feature-icon {
+          font-size: 2rem !important;
+          line-height: 1 !important;
+          flex-shrink: 0 !important;
+        }
+
+        #kf-ghost .kf-feature-item strong {
+          font-size: 1.12rem !important;
+          display: block !important;
+          margin-bottom: 0.35em !important;
+          letter-spacing: 0.01em !important;
+        }
+
+        #kf-ghost .kf-feature-item p {
+          font-size: 0.98rem !important;
+          line-height: 1.65 !important;
+          margin: 0 !important;
+          opacity: 0.88 !important;
+        }
+
+        #kf-ghost .kf-features-list {
+          gap: 1em !important;
+        }
+      </style>
+
+      <!-- Keep original ghost-bg-layer hidden so JS cursor still works -->
+      <div class="ghost-bg-layer" style="display:none;">
         <div class="ghost-scanlines"></div>
         <div class="ghost-orb ghost-orb-1"></div>
         <div class="ghost-orb ghost-orb-2"></div>
@@ -529,7 +1065,8 @@
       </div>
 
       <!-- Glowing Ghost Cursor Follower -->
-      <div class="ghost-cursor-follower" id="ghostCursorFollower">
+      <div class="ghost-cursor-follower" id="ghostCursorFollower"
+        style="position:fixed;z-index:10;pointer-events:none;width:0;height:0;overflow:visible;">
         <div class="ghost-cursor-glow"></div>
         <svg class="ghost-cursor-svg" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -575,6 +1112,27 @@
           <span class="kf-badge-icon">👻</span>
           <span class="kf-badge-label">NEW FEATURE</span>
         </div>
+
+        <!-- Feature Name -->
+        <div data-reveal style="margin:0.6rem 0 0.8rem;">
+          <span style="
+            display:inline-flex;
+            align-items:center;
+            gap:0.6rem;
+            font-size:clamp(2.4rem,5.5vw,4.2rem);
+            font-weight:900;
+            letter-spacing:0.04em;
+            background: linear-gradient(135deg, #ff8c20 0%, #ffb347 50%, #ff6a00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 24px rgba(255,120,20,0.65));
+            font-family: inherit;
+          "><span
+              style="-webkit-text-fill-color:initial;font-size:0.85em;animation:ghostFloat1 4s ease-in-out infinite;display:inline-block;">🫣</span>
+            Ghosts' Concealed</span>
+        </div>
+
         <h2 class="kf-title" data-reveal>Chat Anonymously</h2>
         <p class="kf-subtitle" data-reveal>Chat anonymously. Zero identity. Full freedom.</p>
         <p class="kf-desc" data-reveal>
@@ -763,144 +1321,1018 @@
           </div>
         </div>
       </div>
+
+      <style>
+        /* ── VibeShop Section Typography Upgrades ── */
+        #kf-vibeshop .kf-content {
+          position: relative;
+          z-index: 2;
+        }
+
+        #kf-vibeshop .vs-title-glow {
+          font-size: clamp(2.8rem, 5.5vw, 4.6rem) !important;
+          line-height: 1.15 !important;
+          letter-spacing: 0.02em !important;
+          margin-bottom: 0.4em !important;
+        }
+
+        #kf-vibeshop .vs-subtitle {
+          font-size: clamp(1.25rem, 2.4vw, 1.75rem) !important;
+          line-height: 1.4 !important;
+          letter-spacing: 0.07em !important;
+          margin-bottom: 1em !important;
+        }
+
+        #kf-vibeshop .vs-desc {
+          font-size: clamp(1.05rem, 1.8vw, 1.28rem) !important;
+          line-height: 1.85 !important;
+          max-width: 660px !important;
+          margin-bottom: 2em !important;
+        }
+
+        #kf-vibeshop .kf-badge-label {
+          font-size: 0.95rem !important;
+          letter-spacing: 0.14em !important;
+        }
+
+        /* Feature cards */
+        #kf-vibeshop .vs-feature-item {
+          padding: 1.2em 1.4em !important;
+          border-radius: 14px !important;
+          backdrop-filter: blur(8px) !important;
+          background: rgba(220, 60, 100, 0.08) !important;
+          border: 1px solid rgba(220, 60, 100, 0.20) !important;
+          gap: 1em !important;
+          align-items: flex-start !important;
+        }
+
+        #kf-vibeshop .kf-feature-icon {
+          font-size: 2rem !important;
+          line-height: 1 !important;
+          flex-shrink: 0 !important;
+        }
+
+        #kf-vibeshop .vs-feature-item strong {
+          font-size: 1.12rem !important;
+          display: block !important;
+          margin-bottom: 0.35em !important;
+          letter-spacing: 0.01em !important;
+        }
+
+        #kf-vibeshop .vs-feature-item p {
+          font-size: 0.98rem !important;
+          line-height: 1.65 !important;
+          margin: 0 !important;
+          opacity: 0.88 !important;
+        }
+
+        #kf-vibeshop .vs-features-list {
+          gap: 1em !important;
+        }
+      </style>
+
+    </section>
+
+    <!-- ══ PREMIUM FEATURE: REALVIBE ══ -->
+    <section class="kf-page kf-realvibe" id="kf-realvibe">
+      <!-- Golden Theme Background Layer -->
+      <div class="realvibe-bg-layer">
+        <div class="rv-orb rv-orb-1"></div>
+        <div class="rv-orb rv-orb-2"></div>
+        <div class="rv-orb rv-orb-3"></div>
+        <div class="rv-floating rv-crown">👑</div>
+        <div class="rv-floating rv-star-1">✨</div>
+        <div class="rv-floating rv-star-2">✨</div>
+        <div class="rv-floating rv-diamond">💎</div>
+        <div class="rv-floating rv-sparkle">🌟</div>
+        <div class="rv-floating rv-crown-small">👑</div>
+
+        <!-- Subtle rain or golden dust -->
+        <div class="rv-dust rv-dust-1"></div>
+        <div class="rv-dust rv-dust-2"></div>
+        <div class="rv-dust rv-dust-3"></div>
+        <div class="rv-dust rv-dust-4"></div>
+        <div class="rv-dust rv-dust-5"></div>
+      </div>
+
+      <div class="kf-content realvibe-content">
+        <div class="kf-badge premium-badge" data-reveal>
+          <span class="kf-badge-icon badge-glow">🎁</span>
+          <span class="kf-badge-label badge-text-glow">NEW FEATURE</span>
+        </div>
+
+        <h2 class="kf-title rv-title-gold" data-reveal>
+          <div class="rv-title-icon">👑</div>
+          Choose Your Plan
+        </h2>
+        <p class="kf-subtitle rv-subtitle" data-reveal>Boost your visibility across VibeXpert</p>
+
+        <!-- Pricing Cards Grid -->
+        <div class="rv-pricing-grid" data-reveal>
+          <!-- NOBLE CATEGORY -->
+          <div class="rv-pricing-card noble-card">
+            <div class="rv-plan-badge-silver">🥈 POPULAR</div>
+            <h3 class="rv-plan-name">Noble</h3>
+            <div class="rv-price-box">
+              <span class="rv-currency">₹</span><span class="rv-amount">9</span>
+              <span class="rv-duration"> / 15 days</span>
+            </div>
+
+            <ul class="rv-features-list">
+              <li>
+                <div class="rv-check-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>5 Advertisement Posters</span>
+              </li>
+              <li>
+                <div class="rv-check-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>1 Advertisement Video</span>
+              </li>
+              <li>
+                <div class="rv-check-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>Community & RealVibes reach</span>
+              </li>
+              <li>
+                <div class="rv-check-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>Premium badge</span>
+              </li>
+              <li class="rv-empty-feature"></li>
+            </ul>
+
+            <button class="rv-btn-silver">GET NOBLE ✨</button>
+          </div>
+
+          <!-- ROYAL CATEGORY -->
+          <div class="rv-pricing-card royal-card">
+            <div class="rv-plan-badge-gold">👑 BEST VALUE</div>
+            <h3 class="rv-plan-name-gold">Royal</h3>
+            <div class="rv-price-box">
+              <span class="rv-currency-gold">₹</span><span class="rv-amount-gold">25</span>
+              <span class="rv-duration"> / 23 days</span>
+            </div>
+
+            <ul class="rv-features-list">
+              <li>
+                <div class="rv-check-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>5 Advertisement Posters</span>
+              </li>
+              <li>
+                <div class="rv-check-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span style="color:#60a5fa">3 Advertisement Videos</span>
+              </li>
+              <li>
+                <div class="rv-check-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>Community & RealVibes reach</span>
+              </li>
+              <li>
+                <div class="rv-check-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>Premium badge</span>
+              </li>
+              <li>
+                <div class="rv-check-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
+                    stroke-width="4">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg></div>
+                <span>Priority support</span>
+              </li>
+            </ul>
+
+            <button class="rv-btn-gold">GET ROYAL 👑</button>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        /* ── RealVibe Premium Section Styles ── */
+        .kf-realvibe {
+          position: relative;
+          background: #0d1117;
+          /* Very dark rich background */
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+        }
+
+        .realvibe-content {
+          position: relative;
+          z-index: 5;
+          text-align: center;
+          width: 100%;
+          max-width: 900px;
+          margin: 0 auto;
+        }
+
+        /* Deep Glowing Background Theme */
+        .realvibe-bg-layer {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          overflow: hidden;
+          background: radial-gradient(circle at center, rgba(30, 20, 50, 0.8) 0%, #0d1117 80%);
+        }
+
+        .rv-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          animation: rvOrbFloat 15s infinite ease-in-out alternate;
+          opacity: 0.4;
+        }
+
+        .rv-orb-1 {
+          width: 400px;
+          height: 400px;
+          background: rgba(255, 215, 0, 0.15);
+          top: -100px;
+          left: -100px;
+          animation-delay: 0s;
+        }
+
+        .rv-orb-2 {
+          width: 500px;
+          height: 500px;
+          background: rgba(147, 51, 234, 0.15);
+          bottom: -200px;
+          right: -100px;
+          animation-delay: -5s;
+        }
+
+        .rv-orb-3 {
+          width: 300px;
+          height: 300px;
+          background: rgba(255, 140, 0, 0.15);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation-delay: -10s;
+          filter: blur(100px);
+          opacity: 0.2;
+        }
+
+        @keyframes rvOrbFloat {
+          0% {
+            transform: translate(0, 0) scale(1);
+          }
+
+          100% {
+            transform: translate(30px, 40px) scale(1.1);
+          }
+        }
+
+        /* Floating Golden Elements */
+        .rv-floating {
+          position: absolute;
+          pointer-events: none;
+          animation: rvFloatItem 12s infinite linear;
+          opacity: 0.5;
+        }
+
+        @keyframes rvFloatItem {
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+          }
+
+          10% {
+            opacity: 0.6;
+          }
+
+          90% {
+            opacity: 0.6;
+          }
+
+          100% {
+            transform: translate(0, -100px) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
+        .rv-crown {
+          font-size: 3rem;
+          top: 15%;
+          left: 15%;
+          animation-duration: 25s;
+          filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+        }
+
+        .rv-star-1 {
+          font-size: 1.5rem;
+          top: 40%;
+          left: 10%;
+          animation-duration: 18s;
+          animation-delay: 3s;
+        }
+
+        .rv-star-2 {
+          font-size: 2rem;
+          top: 20%;
+          right: 20%;
+          animation-duration: 22s;
+          animation-delay: 5s;
+        }
+
+        .rv-diamond {
+          font-size: 2.5rem;
+          bottom: 30%;
+          left: 25%;
+          animation-duration: 28s;
+          animation-delay: 2s;
+        }
+
+        .rv-sparkle {
+          font-size: 1.5rem;
+          bottom: 20%;
+          right: 15%;
+          animation-duration: 20s;
+          animation-delay: 7s;
+        }
+
+        .rv-crown-small {
+          font-size: 1.8rem;
+          bottom: 15%;
+          right: 35%;
+          animation-duration: 26s;
+          filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+        }
+
+        /* Premium Badge */
+        .premium-badge {
+          display: inline-flex;
+          align-items: center;
+          background: rgba(40, 10, 20, 0.7);
+          border: 1px solid rgba(220, 40, 80, 0.4);
+          border-radius: 50px;
+          padding: 6px 16px;
+          margin-bottom: 25px;
+          box-shadow: 0 0 20px rgba(220, 40, 80, 0.2);
+        }
+
+        .premium-badge .badge-text-glow {
+          color: #ff9d00;
+          font-weight: 800;
+          letter-spacing: 0.15em;
+          font-size: 0.85rem;
+          margin-left: 8px;
+          text-shadow: 0 0 10px rgba(255, 157, 0, 0.5);
+        }
+
+        .premium-badge .badge-glow {
+          filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.8));
+          font-size: 1.1rem;
+        }
+
+        /* Golden Header */
+        .rv-title-gold {
+          font-size: clamp(2.5rem, 4vw, 3.5rem) !important;
+          font-weight: 900 !important;
+          color: #ffca28 !important;
+          letter-spacing: 0.02em !important;
+          margin-bottom: 0.3em !important;
+          text-transform: capitalize;
+          filter: drop-shadow(0 0 25px rgba(255, 200, 0, 0.3));
+        }
+
+        .rv-title-icon {
+          font-size: clamp(2.8rem, 4.5vw, 4rem);
+          margin-bottom: -10px;
+          display: block;
+          filter: drop-shadow(0 5px 15px rgba(255, 215, 0, 0.4));
+        }
+
+        .rv-subtitle {
+          font-size: 1.15rem !important;
+          color: rgba(255, 255, 255, 0.6) !important;
+          margin-bottom: 2.5rem !important;
+          letter-spacing: 0.03em;
+        }
+
+        /* GRID LAYOUT */
+        .rv-pricing-grid {
+          display: flex;
+          justify-content: center;
+          gap: 25px;
+          flex-wrap: wrap;
+          padding: 0 15px;
+        }
+
+        .rv-pricing-card {
+          width: 340px;
+          border-radius: 20px;
+          padding: 35px 30px;
+          text-align: left;
+          position: relative;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Noble */
+        .noble-card {
+          background: #232732;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .noble-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .rv-plan-badge-silver {
+          position: absolute;
+          top: -15px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(255, 255, 255, 0.9);
+          color: #1a1e26;
+          padding: 6px 18px;
+          border-radius: 50px;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Royal */
+        .royal-card {
+          background: #1a1c23;
+          border: 1.5px solid #ffca28;
+          box-shadow: 0 15px 40px rgba(255, 202, 40, 0.15), inset 0 0 30px rgba(255, 202, 40, 0.05);
+          transform: scale(1.03);
+          /* Best value pops out */
+          z-index: 2;
+        }
+
+        .royal-card:hover {
+          transform: scale(1.03) translateY(-8px);
+          box-shadow: 0 25px 50px rgba(255, 202, 40, 0.25), inset 0 0 40px rgba(255, 202, 40, 0.08);
+        }
+
+        .rv-plan-badge-gold {
+          position: absolute;
+          top: -16px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(90deg, #ffca28, #ffb300);
+          color: #111;
+          padding: 6px 20px;
+          border-radius: 50px;
+          font-size: 0.8rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          box-shadow: 0 6px 20px rgba(255, 202, 40, 0.4);
+          text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Custom glowing border effect for Royal */
+        .royal-card::before {
+          content: "";
+          position: absolute;
+          inset: -2px;
+          border-radius: 22px;
+          background: linear-gradient(135deg, rgba(255, 202, 40, 0.8), rgba(255, 140, 0, 0.2), rgba(255, 202, 40, 0.8));
+          z-index: -1;
+          filter: blur(8px);
+          opacity: 0.6;
+        }
+
+        /* Card Content */
+        .rv-plan-name {
+          font-size: 1.8rem;
+          color: #ffffff;
+          font-weight: 800;
+          margin-bottom: 1.2rem;
+        }
+
+        .rv-plan-name-gold {
+          font-size: 2rem;
+          color: #ffca28;
+          font-weight: 900;
+          margin-bottom: 1rem;
+          text-shadow: 0 0 15px rgba(255, 202, 40, 0.3);
+        }
+
+        .rv-price-box {
+          display: flex;
+          align-items: baseline;
+          margin-bottom: 1.5rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          padding-bottom: 1.5rem;
+        }
+
+        .rv-currency {
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: #ffca28;
+          margin-right: 4px;
+        }
+
+        .rv-amount {
+          font-size: 3rem;
+          font-weight: 800;
+          color: #ffca28;
+          line-height: 1;
+          text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .rv-duration {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.5);
+          font-weight: 500;
+          margin-left: 8px;
+        }
+
+        .rv-currency-gold,
+        .rv-amount-gold {
+          color: #ffca28;
+          filter: drop-shadow(0 0 10px rgba(255, 202, 40, 0.5));
+        }
+
+        .rv-currency-gold {
+          font-size: 2rem;
+          font-weight: 800;
+          margin-right: 4px;
+        }
+
+        .rv-amount-gold {
+          font-size: 3.5rem;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        /* Features List */
+        .rv-features-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 2rem 0;
+          min-height: 200px;
+        }
+
+        .rv-features-list li {
+          display: flex;
+          align-items: center;
+          margin-bottom: 14px;
+          gap: 12px;
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.85);
+          font-weight: 500;
+        }
+
+        .rv-empty-feature {
+          height: 24px;
+        }
+
+        .rv-check-green {
+          background: #10b981;
+          border-radius: 50%;
+          width: 22px;
+          height: 22px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-shrink: 0;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .rv-check-gold {
+          background: #ffb300;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-shrink: 0;
+          box-shadow: 0 0 12px rgba(255, 179, 0, 0.4);
+        }
+
+        /* Buttons */
+        .rv-btn-silver {
+          width: 100%;
+          padding: 14px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          color: white;
+          font-weight: 800;
+          font-size: 1rem;
+          letter-spacing: 0.05em;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.2s;
+        }
+
+        .rv-btn-silver:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.02);
+        }
+
+        .rv-btn-gold {
+          width: 100%;
+          padding: 16px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #ffca28, #ff8f00);
+          border: none;
+          color: #111;
+          font-weight: 900;
+          font-size: 1.05rem;
+          letter-spacing: 0.08em;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
+        }
+
+        .rv-btn-gold:hover {
+          transform: scale(1.04);
+          box-shadow: 0 10px 30px rgba(255, 179, 0, 0.6);
+        }
+
+        @media screen and (max-width: 768px) {
+          .rv-pricing-grid {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .royal-card {
+            transform: scale(1);
+          }
+
+          .royal-card:hover {
+            transform: translateY(-5px);
+          }
+        }
+      </style>
     </section>
 
     <!-- ══ WHY VIBEXPERT — Flip Card Grid ══ -->
     <section class="lp-section" id="lp-why" style="position:relative;overflow:hidden;">
 
       <!-- Dynamic theme background layer -->
-      <div id="whyBgLayer" style="position:absolute;inset:0;z-index:0;pointer-events:none;transition:all 0.6s ease;"></div>
+      <div id="whyBgLayer" style="position:absolute;inset:0;z-index:0;pointer-events:none;transition:all 0.6s ease;">
+      </div>
 
       <!-- Theme: Safe & Secure — locks, shields -->
-      <div class="why-bg-theme" id="why-theme-shield" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+      <div class="why-bg-theme" id="why-theme-shield"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
         <!-- BIG center lock -->
-        <div style="position:absolute;font-size:220px;opacity:0.18;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(100,74,169,0.5));">🔒</div>
+        <div
+          style="position:absolute;font-size:220px;opacity:0.18;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(100,74,169,0.5));">
+          🔒</div>
         <!-- Medium accents -->
-        <div style="position:absolute;font-size:100px;opacity:0.20;top:5%;left:3%;animation:whyFloat1 6s ease-in-out infinite;">🛡️</div>
-        <div style="position:absolute;font-size:85px;opacity:0.18;bottom:8%;right:4%;animation:whyFloat3 7s ease-in-out infinite 1s;">🔐</div>
-        <div style="position:absolute;font-size:75px;opacity:0.17;top:8%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">🔑</div>
-        <div style="position:absolute;font-size:70px;opacity:0.16;bottom:10%;left:6%;animation:whyFloat1 8s ease-in-out infinite 2s;">🛡️</div>
+        <div
+          style="position:absolute;font-size:100px;opacity:0.20;top:5%;left:3%;animation:whyFloat1 6s ease-in-out infinite;">
+          🛡️</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.18;bottom:8%;right:4%;animation:whyFloat3 7s ease-in-out infinite 1s;">
+          🔐</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.17;top:8%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">
+          🔑</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.16;bottom:10%;left:6%;animation:whyFloat1 8s ease-in-out infinite 2s;">
+          🛡️</div>
         <!-- Tiny tiny locks scattered everywhere -->
-        <div style="position:absolute;font-size:22px;opacity:0.30;top:12%;left:18%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">🔒</div>
-        <div style="position:absolute;font-size:18px;opacity:0.28;top:22%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1.2s;">🔒</div>
-        <div style="position:absolute;font-size:20px;opacity:0.25;top:38%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">🔒</div>
-        <div style="position:absolute;font-size:16px;opacity:0.30;top:65%;left:25%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">🔒</div>
-        <div style="position:absolute;font-size:24px;opacity:0.26;top:78%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">🔒</div>
-        <div style="position:absolute;font-size:18px;opacity:0.28;top:15%;left:45%;animation:whyFloat2 8s ease-in-out infinite 2s;">🔒</div>
-        <div style="position:absolute;font-size:20px;opacity:0.25;top:55%;left:80%;animation:whyFloat3 6s ease-in-out infinite 1s;">🔒</div>
-        <div style="position:absolute;font-size:16px;opacity:0.28;top:88%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">🔒</div>
-        <div style="position:absolute;font-size:14px;opacity:0.30;top:30%;left:88%;animation:whyFloat2 5s ease-in-out infinite 1.8s;">🔒</div>
-        <div style="position:absolute;font-size:22px;opacity:0.26;top:70%;left:10%;animation:whyFloat3 9s ease-in-out infinite 0.4s;">🔐</div>
-        <div style="position:absolute;font-size:16px;opacity:0.28;top:48%;left:55%;animation:whyFloat1 6s ease-in-out infinite 2.5s;">🔑</div>
-        <div style="position:absolute;font-size:18px;opacity:0.25;top:92%;left:78%;animation:whyFloat2 7s ease-in-out infinite 1.3s;">🔒</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(100,74,169,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(79,116,163,0.15) 0%, transparent 45%);"></div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.30;top:12%;left:18%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.28;top:22%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1.2s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.25;top:38%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.30;top:65%;left:25%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:24px;opacity:0.26;top:78%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.28;top:15%;left:45%;animation:whyFloat2 8s ease-in-out infinite 2s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.25;top:55%;left:80%;animation:whyFloat3 6s ease-in-out infinite 1s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.28;top:88%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.30;top:30%;left:88%;animation:whyFloat2 5s ease-in-out infinite 1.8s;">
+          🔒</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.26;top:70%;left:10%;animation:whyFloat3 9s ease-in-out infinite 0.4s;">
+          🔐</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.28;top:48%;left:55%;animation:whyFloat1 6s ease-in-out infinite 2.5s;">
+          🔑</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.25;top:92%;left:78%;animation:whyFloat2 7s ease-in-out infinite 1.3s;">
+          🔒</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(100,74,169,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(79,116,163,0.15) 0%, transparent 45%);">
+        </div>
       </div>
 
       <!-- Theme: Lightning Fast — bolts, speed -->
-      <div class="why-bg-theme" id="why-theme-electric" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+      <div class="why-bg-theme" id="why-theme-electric"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
         <!-- BIG center bolt -->
-        <div style="position:absolute;font-size:230px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 5s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">⚡</div>
-        <div style="position:absolute;font-size:110px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 4s ease-in-out infinite;">⚡</div>
-        <div style="position:absolute;font-size:90px;opacity:0.20;bottom:6%;right:4%;animation:whyFloat3 5s ease-in-out infinite 1s;">🌩️</div>
-        <div style="position:absolute;font-size:80px;opacity:0.18;top:6%;right:5%;animation:whyFloat1 6s ease-in-out infinite 0.5s;">💨</div>
-        <div style="position:absolute;font-size:75px;opacity:0.19;bottom:12%;left:5%;animation:whyFloat2 7s ease-in-out infinite 1.5s;">⚡</div>
-        <div style="position:absolute;font-size:22px;opacity:0.32;top:15%;left:20%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">⚡</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:25%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1s;">⚡</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:42%;left:10%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">⚡</div>
-        <div style="position:absolute;font-size:16px;opacity:0.32;top:68%;left:28%;animation:whyFloat3 5s ease-in-out infinite 1.4s;">⚡</div>
-        <div style="position:absolute;font-size:24px;opacity:0.28;top:80%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">⚡</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">⚡</div>
-        <div style="position:absolute;font-size:14px;opacity:0.32;top:58%;left:82%;animation:whyFloat3 6s ease-in-out infinite 1.1s;">⚡</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:40%;animation:whyFloat1 7s ease-in-out infinite 0.4s;">⚡</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(251,146,60,0.15) 0%, transparent 45%);"></div>
+        <div
+          style="position:absolute;font-size:230px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 5s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:110px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 4s ease-in-out infinite;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:90px;opacity:0.20;bottom:6%;right:4%;animation:whyFloat3 5s ease-in-out infinite 1s;">
+          🌩️</div>
+        <div
+          style="position:absolute;font-size:80px;opacity:0.18;top:6%;right:5%;animation:whyFloat1 6s ease-in-out infinite 0.5s;">
+          💨</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.19;bottom:12%;left:5%;animation:whyFloat2 7s ease-in-out infinite 1.5s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.32;top:15%;left:20%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:25%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:42%;left:10%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.32;top:68%;left:28%;animation:whyFloat3 5s ease-in-out infinite 1.4s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:24px;opacity:0.28;top:80%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.32;top:58%;left:82%;animation:whyFloat3 6s ease-in-out infinite 1.1s;">
+          ⚡</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:40%;animation:whyFloat1 7s ease-in-out infinite 0.4s;">
+          ⚡</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(251,146,60,0.15) 0%, transparent 45%);">
+        </div>
       </div>
 
       <!-- Theme: Express Yourself — art, paint, colors -->
-      <div class="why-bg-theme" id="why-theme-rainbow" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
-        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(236,72,153,0.4));">🎨</div>
-        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">🖌️</div>
-        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">✏️</div>
-        <div style="position:absolute;font-size:80px;opacity:0.18;top:7%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">🎭</div>
-        <div style="position:absolute;font-size:70px;opacity:0.19;bottom:11%;left:5%;animation:whyFloat1 7s ease-in-out infinite 2s;">🖍️</div>
-        <div style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">🎨</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:28%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">🖌️</div>
-        <div style="position:absolute;font-size:22px;opacity:0.28;top:44%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">🎨</div>
-        <div style="position:absolute;font-size:16px;opacity:0.30;top:66%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.6s;">✏️</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:82%;left:64%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">🖍️</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:20%;left:50%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">🎨</div>
-        <div style="position:absolute;font-size:14px;opacity:0.32;top:60%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1s;">🎨</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(236,72,153,0.20) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 45%);"></div>
+      <div class="why-bg-theme" id="why-theme-rainbow"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div
+          style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 8s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(236,72,153,0.4));">
+          🎨</div>
+        <div
+          style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">
+          🖌️</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">
+          ✏️</div>
+        <div
+          style="position:absolute;font-size:80px;opacity:0.18;top:7%;right:5%;animation:whyFloat2 9s ease-in-out infinite 0.5s;">
+          🎭</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.19;bottom:11%;left:5%;animation:whyFloat1 7s ease-in-out infinite 2s;">
+          🖍️</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">
+          🎨</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:28%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">
+          🖌️</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.28;top:44%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">
+          🎨</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.30;top:66%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.6s;">
+          ✏️</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:82%;left:64%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">
+          🖍️</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:20%;left:50%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">
+          🎨</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.32;top:60%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1s;">
+          🎨</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(236,72,153,0.20) 0%, transparent 65%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.15) 0%, transparent 45%);">
+        </div>
       </div>
 
       <!-- Theme: Dark/Light Mode — moon, stars -->
-      <div class="why-bg-theme" id="why-theme-cosmos" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
-        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat3 10s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(99,102,241,0.5));">🌙</div>
-        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 8s ease-in-out infinite;">⭐</div>
-        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat2 9s ease-in-out infinite 1s;">🌟</div>
-        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat3 10s ease-in-out infinite 0.5s;">💫</div>
-        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">✨</div>
-        <div style="position:absolute;font-size:22px;opacity:0.35;top:13%;left:20%;animation:whyFloat2 5s ease-in-out infinite 0.2s;">✦</div>
-        <div style="position:absolute;font-size:18px;opacity:0.32;top:26%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1s;">⭐</div>
-        <div style="position:absolute;font-size:20px;opacity:0.30;top:40%;left:8%;animation:whyFloat3 7s ease-in-out infinite 0.6s;">✦</div>
-        <div style="position:absolute;font-size:16px;opacity:0.35;top:65%;left:25%;animation:whyFloat2 5s ease-in-out infinite 1.5s;">💫</div>
-        <div style="position:absolute;font-size:24px;opacity:0.30;top:80%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">✨</div>
-        <div style="position:absolute;font-size:18px;opacity:0.32;top:16%;left:46%;animation:whyFloat3 8s ease-in-out infinite 2s;">✦</div>
-        <div style="position:absolute;font-size:14px;opacity:0.35;top:57%;left:82%;animation:whyFloat2 6s ease-in-out infinite 1.2s;">⭐</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">✦</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.15) 0%, transparent 45%);"></div>
+      <div class="why-bg-theme" id="why-theme-cosmos"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div
+          style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat3 10s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(99,102,241,0.5));">
+          🌙</div>
+        <div
+          style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 8s ease-in-out infinite;">
+          ⭐</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat2 9s ease-in-out infinite 1s;">
+          🌟</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat3 10s ease-in-out infinite 0.5s;">
+          💫</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">
+          ✨</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.35;top:13%;left:20%;animation:whyFloat2 5s ease-in-out infinite 0.2s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.32;top:26%;left:72%;animation:whyFloat1 6s ease-in-out infinite 1s;">
+          ⭐</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.30;top:40%;left:8%;animation:whyFloat3 7s ease-in-out infinite 0.6s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.35;top:65%;left:25%;animation:whyFloat2 5s ease-in-out infinite 1.5s;">
+          💫</div>
+        <div
+          style="position:absolute;font-size:24px;opacity:0.30;top:80%;left:60%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">
+          ✨</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.32;top:16%;left:46%;animation:whyFloat3 8s ease-in-out infinite 2s;">
+          ✦</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.35;top:57%;left:82%;animation:whyFloat2 6s ease-in-out infinite 1.2s;">
+          ⭐</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:90%;left:38%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">
+          ✦</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(139,92,246,0.15) 0%, transparent 45%);">
+        </div>
       </div>
 
       <!-- Theme: Mobile Optimized — phone, devices -->
-      <div class="why-bg-theme" id="why-theme-ripple" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
-        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(34,211,238,0.4));">📱</div>
-        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 7s ease-in-out infinite;">💻</div>
-        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">📲</div>
-        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat1 9s ease-in-out infinite 0.5s;">🖥️</div>
-        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat2 8s ease-in-out infinite 2s;">⌨️</div>
-        <div style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">📱</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:27%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">📱</div>
-        <div style="position:absolute;font-size:22px;opacity:0.28;top:43%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">📲</div>
-        <div style="position:absolute;font-size:16px;opacity:0.32;top:67%;left:27%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">📱</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:81%;left:63%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">💻</div>
-        <div style="position:absolute;font-size:18px;opacity:0.30;top:19%;left:49%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">📱</div>
-        <div style="position:absolute;font-size:14px;opacity:0.32;top:59%;left:84%;animation:whyFloat3 6s ease-in-out infinite 1s;">📱</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.18) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(59,130,246,0.14) 0%, transparent 45%);"></div>
+      <div class="why-bg-theme" id="why-theme-ripple"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div
+          style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat1 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(34,211,238,0.4));">
+          📱</div>
+        <div
+          style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat2 7s ease-in-out infinite;">
+          💻</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">
+          📲</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat1 9s ease-in-out infinite 0.5s;">
+          🖥️</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat2 8s ease-in-out infinite 2s;">
+          ⌨️</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.32;top:14%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.3s;">
+          📱</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:27%;left:68%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">
+          📱</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.28;top:43%;left:9%;animation:whyFloat2 7s ease-in-out infinite 0.7s;">
+          📲</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.32;top:67%;left:27%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">
+          📱</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:81%;left:63%;animation:whyFloat1 6s ease-in-out infinite 0.2s;">
+          💻</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.30;top:19%;left:49%;animation:whyFloat2 8s ease-in-out infinite 2.2s;">
+          📱</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.32;top:59%;left:84%;animation:whyFloat3 6s ease-in-out infinite 1s;">
+          📱</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.18) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(59,130,246,0.14) 0%, transparent 45%);">
+        </div>
       </div>
 
       <!-- Theme: 100% Free — celebration, money -->
-      <div class="why-bg-theme" id="why-theme-golden" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
-        <div style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">🎉</div>
-        <div style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">🎊</div>
-        <div style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">🆓</div>
-        <div style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat2 6s ease-in-out infinite 0.5s;">🎁</div>
-        <div style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">🏆</div>
-        <div style="position:absolute;font-size:20px;opacity:0.35;top:13%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">🎉</div>
-        <div style="position:absolute;font-size:18px;opacity:0.32;top:27%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">🎊</div>
-        <div style="position:absolute;font-size:22px;opacity:0.30;top:43%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">✨</div>
-        <div style="position:absolute;font-size:16px;opacity:0.35;top:68%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">🎉</div>
-        <div style="position:absolute;font-size:24px;opacity:0.30;top:81%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">🎊</div>
-        <div style="position:absolute;font-size:18px;opacity:0.32;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">💫</div>
-        <div style="position:absolute;font-size:14px;opacity:0.35;top:58%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1.2s;">🎉</div>
-        <div style="position:absolute;font-size:20px;opacity:0.28;top:91%;left:39%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">✨</div>
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(245,158,11,0.15) 0%, transparent 45%);"></div>
+      <div class="why-bg-theme" id="why-theme-golden"
+        style="display:none;position:absolute;inset:0;pointer-events:none;z-index:0;">
+        <div
+          style="position:absolute;font-size:220px;opacity:0.20;top:50%;left:50%;transform:translate(-50%,-50%);animation:whyFloat2 7s ease-in-out infinite;filter:drop-shadow(0 0 40px rgba(234,179,8,0.5));">
+          🎉</div>
+        <div
+          style="position:absolute;font-size:105px;opacity:0.22;top:4%;left:3%;animation:whyFloat1 7s ease-in-out infinite;">
+          🎊</div>
+        <div
+          style="position:absolute;font-size:85px;opacity:0.20;bottom:7%;right:4%;animation:whyFloat3 8s ease-in-out infinite 1s;">
+          🆓</div>
+        <div
+          style="position:absolute;font-size:75px;opacity:0.19;top:7%;right:5%;animation:whyFloat2 6s ease-in-out infinite 0.5s;">
+          🎁</div>
+        <div
+          style="position:absolute;font-size:70px;opacity:0.18;bottom:11%;left:5%;animation:whyFloat1 9s ease-in-out infinite 2s;">
+          🏆</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.35;top:13%;left:22%;animation:whyFloat3 5s ease-in-out infinite 0.2s;">
+          🎉</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.32;top:27%;left:70%;animation:whyFloat1 6s ease-in-out infinite 1.1s;">
+          🎊</div>
+        <div
+          style="position:absolute;font-size:22px;opacity:0.30;top:43%;left:8%;animation:whyFloat2 7s ease-in-out infinite 0.6s;">
+          ✨</div>
+        <div
+          style="position:absolute;font-size:16px;opacity:0.35;top:68%;left:26%;animation:whyFloat3 5s ease-in-out infinite 1.5s;">
+          🎉</div>
+        <div
+          style="position:absolute;font-size:24px;opacity:0.30;top:81%;left:62%;animation:whyFloat1 6s ease-in-out infinite 0.3s;">
+          🎊</div>
+        <div
+          style="position:absolute;font-size:18px;opacity:0.32;top:18%;left:48%;animation:whyFloat2 8s ease-in-out infinite 2s;">
+          💫</div>
+        <div
+          style="position:absolute;font-size:14px;opacity:0.35;top:58%;left:83%;animation:whyFloat3 6s ease-in-out infinite 1.2s;">
+          🎉</div>
+        <div
+          style="position:absolute;font-size:20px;opacity:0.28;top:91%;left:39%;animation:whyFloat1 7s ease-in-out infinite 0.5s;">
+          ✨</div>
+        <div
+          style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(234,179,8,0.22) 0%, transparent 65%), radial-gradient(ellipse at 20% 20%, rgba(245,158,11,0.15) 0%, transparent 45%);">
+        </div>
       </div>
 
       <style>
         @keyframes whyFloat1 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          33% { transform: translateY(-18px) rotate(4deg); }
-          66% { transform: translateY(-8px) rotate(-3deg); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          33% {
+            transform: translateY(-18px) rotate(4deg);
+          }
+
+          66% {
+            transform: translateY(-8px) rotate(-3deg);
+          }
         }
+
         @keyframes whyFloat2 {
-          0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-          50% { transform: translateY(-22px) rotate(-5deg) scale(1.05); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg) scale(1);
+          }
+
+          50% {
+            transform: translateY(-22px) rotate(-5deg) scale(1.05);
+          }
         }
+
         @keyframes whyFloat3 {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          40% { transform: translateY(-14px) rotate(6deg); }
-          80% { transform: translateY(-6px) rotate(-2deg); }
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          40% {
+            transform: translateY(-14px) rotate(6deg);
+          }
+
+          80% {
+            transform: translateY(-6px) rotate(-2deg);
+          }
         }
-        .why-bg-theme { transition: opacity 0.5s ease; }
+
+        .why-bg-theme {
+          transition: opacity 0.5s ease;
+        }
       </style>
 
       <div class="lp-container" style="position:relative;z-index:1;">
@@ -1060,17 +2492,17 @@
     <script>
       (function () {
         var themes = {
-          'shield':   'why-theme-shield',
+          'shield': 'why-theme-shield',
           'electric': 'why-theme-electric',
-          'rainbow':  'why-theme-rainbow',
-          'cosmos':   'why-theme-cosmos',
-          'ripple':   'why-theme-ripple',
-          'golden':   'why-theme-golden'
+          'rainbow': 'why-theme-rainbow',
+          'cosmos': 'why-theme-cosmos',
+          'ripple': 'why-theme-ripple',
+          'golden': 'why-theme-golden'
         };
         var currentTheme = null;
 
         function showTheme(themeKey) {
-          Object.values(themes).forEach(function(id) {
+          Object.values(themes).forEach(function (id) {
             var el = document.getElementById(id);
             if (el) { el.style.display = 'none'; el.style.opacity = '0'; }
           });
@@ -1078,20 +2510,20 @@
           var target = document.getElementById(themes[themeKey]);
           if (!target) return;
           target.style.display = 'block';
-          setTimeout(function() { target.style.opacity = '1'; }, 10);
+          setTimeout(function () { target.style.opacity = '1'; }, 10);
           currentTheme = themeKey;
         }
 
         // Click: show bg when card flips open, hide when it flips closed
-        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function(wrapper) {
+        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function (wrapper) {
           var cardInner = wrapper.querySelector('.lp-why-item');
           if (!cardInner) return;
           var theme = wrapper.getAttribute('data-card-theme');
           // Override onclick to also manage bg
           var original = cardInner.onclick;
-          cardInner.addEventListener('click', function() {
+          cardInner.addEventListener('click', function () {
             // After toggle, check if flipped
-            setTimeout(function() {
+            setTimeout(function () {
               if (cardInner.classList.contains('flipped')) {
                 showTheme(theme);
               } else {
@@ -1109,12 +2541,12 @@
         });
 
         // Hover: preview the theme
-        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function(wrapper) {
+        document.querySelectorAll('.lp-why-flip-wrapper[data-card-theme]').forEach(function (wrapper) {
           var theme = wrapper.getAttribute('data-card-theme');
-          wrapper.addEventListener('mouseenter', function() {
+          wrapper.addEventListener('mouseenter', function () {
             showTheme(theme);
           });
-          wrapper.addEventListener('mouseleave', function() {
+          wrapper.addEventListener('mouseleave', function () {
             var flippedCard = document.querySelector('.lp-why-flip-wrapper .lp-why-item.flipped');
             if (flippedCard) {
               var fw = flippedCard.closest('.lp-why-flip-wrapper');
@@ -1339,211 +2771,1269 @@
     <div class="auth-popup-content">
       <button class="auth-popup-close" onclick="closeAuthPopup()">&times;</button>
 
+      <style>
+        /* ═══════════════════════════════════════════════════════
+           AUTH POPUP — VIBEXPERT ✨ ULTRA GLOW EDITION
+        ═══════════════════════════════════════════════════════ */
+
+        /* Overlay backdrop */
+        .auth-popup-overlay {
+          background: rgba(4, 2, 16, 0.88) !important;
+          backdrop-filter: blur(10px) !important;
+        }
+
+        /* ── Rotating rainbow border container ── */
+        .auth-popup-content {
+          background: transparent !important;
+          border-radius: 26px !important;
+          overflow: hidden !important;
+          max-width: 900px !important;
+          width: 95vw !important;
+          max-height: 92vh !important;
+          position: relative !important;
+          padding: 2px !important;
+          /* animated border trick */
+          background: linear-gradient(var(--auth-angle, 135deg),
+              #7c3aed, #a855f7, #c026d3, #e879f9, #7c3aed) !important;
+          background-size: 300% 300% !important;
+          animation: authBorderSpin 4s linear infinite, authBorderGlow 3s ease-in-out infinite alternate !important;
+          box-shadow:
+            0 0 40px rgba(168, 85, 247, 0.45),
+            0 0 80px rgba(124, 58, 237, 0.25),
+            0 0 120px rgba(192, 38, 211, 0.15),
+            0 40px 80px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        @keyframes authBorderSpin {
+          0% {
+            background-position: 0% 50%;
+          }
+
+          50% {
+            background-position: 100% 50%;
+          }
+
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
+        @keyframes authBorderGlow {
+          from {
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.45), 0 0 80px rgba(124, 58, 237, 0.25),
+              0 0 120px rgba(192, 38, 211, 0.12), 0 40px 80px rgba(0, 0, 0, 0.8);
+          }
+
+          to {
+            box-shadow: 0 0 60px rgba(168, 85, 247, 0.7), 0 0 100px rgba(192, 38, 211, 0.4),
+              0 0 160px rgba(124, 58, 237, 0.25), 0 40px 80px rgba(0, 0, 0, 0.8);
+          }
+        }
+
+        /* Card wrapper */
+        .auth-card-wrapper {
+          display: flex !important;
+          min-height: 560px !important;
+          max-height: 90vh !important;
+          background: #0a0818 !important;
+          overflow: hidden !important;
+          border-radius: 24px !important;
+        }
+
+        /* ── LEFT PANEL ── */
+        .auth-characters-panel {
+          position: relative !important;
+          flex: 0 0 42% !important;
+          background: linear-gradient(160deg, #0e0825 0%, #090620 45%, #0d0f2c 100%) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          overflow: hidden !important;
+          padding: 2rem 2rem 4rem !important;
+        }
+
+        /* Stage floor glow — big radial under blobs */
+        .auth-characters-panel::before {
+          content: '' !important;
+          position: absolute !important;
+          width: 520px !important;
+          height: 520px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle,
+              rgba(168, 85, 247, 0.32) 0%,
+              rgba(124, 58, 237, 0.14) 35%,
+              transparent 68%) !important;
+          bottom: -180px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          animation: authFloorGlow 4s ease-in-out infinite alternate !important;
+          pointer-events: none !important;
+        }
+
+        /* Top corner accent orb */
+        .auth-characters-panel::after {
+          content: '' !important;
+          position: absolute !important;
+          width: 260px !important;
+          height: 260px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle, rgba(192, 38, 211, 0.24) 0%, transparent 65%) !important;
+          top: -70px !important;
+          right: -55px !important;
+          animation: authOrbPulse 6s ease-in-out infinite 1.5s !important;
+          pointer-events: none !important;
+        }
+
+        @keyframes authFloorGlow {
+          from {
+            opacity: 0.65;
+            transform: translateX(-50%) scale(0.95);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.2);
+          }
+        }
+
+        /* Floating sparkle dots */
+        .auth-panel-sparkles {
+          position: absolute !important;
+          inset: 0 !important;
+          pointer-events: none !important;
+          z-index: 1 !important;
+          overflow: hidden !important;
+        }
+
+        .auth-sparkle {
+          position: absolute !important;
+          border-radius: 50% !important;
+          animation: authSparkleFloat linear infinite !important;
+          pointer-events: none !important;
+        }
+
+        @keyframes authSparkleFloat {
+          0% {
+            transform: translateY(0) scale(1) rotate(0deg);
+            opacity: 0;
+          }
+
+          8% {
+            opacity: 1;
+          }
+
+          88% {
+            opacity: 0.55;
+          }
+
+          100% {
+            transform: translateY(-105vh) scale(0.3) rotate(200deg);
+            opacity: 0;
+          }
+        }
+
+        /* Sweeping light beam */
+        .auth-panel-beam {
+          position: absolute !important;
+          top: 0 !important;
+          left: -120% !important;
+          width: 55% !important;
+          height: 100% !important;
+          background: linear-gradient(108deg,
+              transparent 25%,
+              rgba(255, 255, 255, 0.025) 42%,
+              rgba(168, 85, 247, 0.10) 50%,
+              rgba(255, 255, 255, 0.025) 58%,
+              transparent 75%) !important;
+          animation: authBeamSweep 7s ease-in-out infinite !important;
+          pointer-events: none !important;
+          z-index: 3 !important;
+        }
+
+        @keyframes authBeamSweep {
+          0% {
+            left: -120%;
+          }
+
+          42% {
+            left: 160%;
+          }
+
+          100% {
+            left: 160%;
+          }
+        }
+
+        /* Orbit rings behind blobs */
+        .auth-orbit-ring {
+          position: absolute !important;
+          border-radius: 50% !important;
+          border-style: solid !important;
+          border-color: rgba(168, 85, 247, 0.18) !important;
+          border-width: 1px !important;
+          pointer-events: none !important;
+          z-index: 1 !important;
+          top: 50% !important;
+          left: 50% !important;
+          animation: authRingPulse ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authRingPulse {
+          from {
+            opacity: 0.2;
+            transform: translate(-50%, -55%) scale(0.92);
+          }
+
+          to {
+            opacity: 0.5;
+            transform: translate(-50%, -55%) scale(1.06);
+          }
+        }
+
+        /* Twinkling stars */
+        .auth-star {
+          position: absolute !important;
+          pointer-events: none !important;
+          z-index: 2 !important;
+          animation: authStarTwinkle ease-in-out infinite alternate !important;
+          line-height: 1 !important;
+          user-select: none !important;
+        }
+
+        @keyframes authStarTwinkle {
+          from {
+            opacity: 0.12;
+            transform: scale(0.7) rotate(-15deg);
+            filter: blur(0.5px);
+          }
+
+          to {
+            opacity: 0.85;
+            transform: scale(1.3) rotate(15deg);
+            filter: blur(0px);
+          }
+        }
+
+        /* Neon floor ellipse under blobs */
+        .auth-ground-ring {
+          position: absolute !important;
+          bottom: 14% !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: 190px !important;
+          height: 22px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(ellipse, rgba(168, 85, 247, 0.5) 0%, rgba(192, 38, 211, 0.2) 40%, transparent 72%) !important;
+          filter: blur(7px) !important;
+          pointer-events: none !important;
+          z-index: 1 !important;
+          animation: authGroundPulse 3s ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authGroundPulse {
+          from {
+            opacity: 0.55;
+            width: 170px;
+          }
+
+          to {
+            opacity: 1;
+            width: 230px;
+          }
+        }
+
+        /* VibeXpert neon tag at bottom */
+        .auth-panel-tag {
+          position: absolute !important;
+          bottom: 1.2rem !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 10 !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          padding: 5px 18px !important;
+          border-radius: 50px !important;
+          background: rgba(168, 85, 247, 0.10) !important;
+          border: 1px solid rgba(168, 85, 247, 0.32) !important;
+          backdrop-filter: blur(12px) !important;
+          white-space: nowrap !important;
+          animation: authTagGlow 3s ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authTagGlow {
+          from {
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+            border-color: rgba(168, 85, 247, 0.32);
+          }
+
+          to {
+            box-shadow: 0 0 24px rgba(168, 85, 247, 0.55), 0 0 50px rgba(192, 38, 211, 0.2);
+            border-color: rgba(192, 38, 211, 0.5);
+          }
+        }
+
+        .auth-panel-tag span {
+          font-family: 'Syne', sans-serif !important;
+          font-size: 0.76rem !important;
+          font-weight: 700 !important;
+          letter-spacing: 2px !important;
+          background: linear-gradient(135deg, #e879f9 0%, #c084fc 50%, #a5f3fc 100%) !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          background-clip: text !important;
+        }
+
+        /* SVG characters — glow on wrapper so clip-path inside SVG works perfectly */
+        .auth-characters-svg-wrapper {
+          position: relative !important;
+          z-index: 4 !important;
+          width: 86% !important;
+          max-width: 310px !important;
+          filter:
+            drop-shadow(0 0 14px rgba(168, 85, 247, 0.7)) drop-shadow(0 0 35px rgba(192, 38, 211, 0.4)) drop-shadow(0 0 60px rgba(124, 58, 237, 0.2)) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55)) !important;
+          animation: authCharFloat 4.5s ease-in-out infinite !important;
+          margin-bottom: 2rem !important;
+        }
+
+        /* SVG itself: no filter — keeps clip-path and pupils crisp */
+        .auth-characters-svg {
+          position: relative !important;
+          width: 100% !important;
+          height: auto !important;
+          display: block !important;
+          filter: none !important;
+        }
+
+        /* Pupils must always render fully opaque and dark */
+        .auth-characters-svg .blob-pupil {
+          fill: #111111 !important;
+          opacity: 1 !important;
+        }
+
+        /* Eye whites stay crisp */
+        .auth-characters-svg .blob-eyes-layer circle:not(.blob-pupil) {
+          opacity: 1 !important;
+        }
+
+        /* Override eyeBlink to never use opacity fade — use scaleY instead */
+        .auth-characters-svg .blob-eye {
+          transform-box: fill-box !important;
+          transform-origin: center !important;
+        }
+
+        @keyframes authCharFloat {
+
+          0%,
+          100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+
+          30% {
+            transform: translateY(-13px) rotate(0.7deg);
+          }
+
+          70% {
+            transform: translateY(-6px) rotate(-0.5deg);
+          }
+        }
+
+        /* ── RIGHT PANEL ── */
+        .auth-form-panel {
+          flex: 1 !important;
+          background: linear-gradient(160deg, #100e24 0%, #0c0a1e 55%, #0f0b22 100%) !important;
+          padding: 2.4rem 2.6rem !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: flex-start !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          max-height: 90vh !important;
+          min-width: 0 !important;
+          width: 0 !important;
+          border-left: 1px solid rgba(168, 85, 247, 0.22) !important;
+          position: relative !important;
+        }
+
+        /* Top neon accent bar */
+        .auth-form-panel::after {
+          content: '' !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 10% !important;
+          right: 10% !important;
+          height: 2px !important;
+          background: linear-gradient(90deg,
+              transparent 0%,
+              rgba(168, 85, 247, 0.6) 20%,
+              rgba(232, 121, 249, 0.9) 50%,
+              rgba(168, 85, 247, 0.6) 80%,
+              transparent 100%) !important;
+          border-radius: 2px !important;
+          animation: authTopBarGlow 3s ease-in-out infinite alternate !important;
+          pointer-events: none !important;
+          z-index: 5 !important;
+        }
+
+        @keyframes authTopBarGlow {
+          from {
+            opacity: 0.5;
+            left: 15%;
+            right: 15%;
+          }
+
+          to {
+            opacity: 1;
+            left: 5%;
+            right: 5%;
+            box-shadow: 0 0 18px rgba(192, 38, 211, 0.6);
+          }
+        }
+
+        /* Multi-layer ambient glow overlay */
+        .auth-form-panel::before {
+          content: '' !important;
+          position: absolute !important;
+          inset: 0 !important;
+          background:
+            radial-gradient(ellipse 75% 45% at 90% 5%, rgba(168, 85, 247, 0.10) 0%, transparent 55%),
+            radial-gradient(ellipse 55% 35% at 5% 95%, rgba(192, 38, 211, 0.09) 0%, transparent 55%),
+            radial-gradient(ellipse 40% 25% at 50% 50%, rgba(124, 58, 237, 0.04) 0%, transparent 60%) !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+          animation: authPanelBreath 6s ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authPanelBreath {
+          from {
+            opacity: 0.7;
+          }
+
+          to {
+            opacity: 1.0;
+          }
+        }
+
+        .auth-form-panel>* {
+          position: relative !important;
+          z-index: 1 !important;
+        }
+
+        /* Floating right-panel dots layer */
+        .auth-right-sparkles {
+          position: absolute !important;
+          inset: 0 !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .auth-right-dot {
+          position: absolute !important;
+          border-radius: 50% !important;
+          pointer-events: none !important;
+          animation: authRightDotFloat ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authRightDotFloat {
+          from {
+            transform: translateY(0px) scale(1);
+            opacity: 0.4;
+          }
+
+          to {
+            transform: translateY(-14px) scale(1.15);
+            opacity: 0.9;
+          }
+        }
+
+        /* Subtle dot-grid shimmer on right panel */
+        .auth-right-grid {
+          position: absolute !important;
+          inset: 0 !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+          background-image: radial-gradient(circle, rgba(168, 85, 247, 0.07) 1px, transparent 1px) !important;
+          background-size: 28px 28px !important;
+          -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 30%, transparent 100%) !important;
+          mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 30%, transparent 100%) !important;
+          animation: authGridPulse 5s ease-in-out infinite alternate !important;
+        }
+
+        @keyframes authGridPulse {
+          from {
+            opacity: 0.4;
+          }
+
+          to {
+            opacity: 1.0;
+          }
+        }
+
+        /* Corner accent glow — top right */
+        .auth-right-corner-tl {
+          position: absolute !important;
+          top: -60px !important;
+          right: -60px !important;
+          width: 200px !important;
+          height: 200px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle, rgba(192, 38, 211, 0.18) 0%, transparent 68%) !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+          animation: authOrbPulse 5s ease-in-out infinite !important;
+        }
+
+        /* Corner accent glow — bottom left */
+        .auth-right-corner-br {
+          position: absolute !important;
+          bottom: -60px !important;
+          left: -40px !important;
+          width: 180px !important;
+          height: 180px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle, rgba(124, 58, 237, 0.16) 0%, transparent 68%) !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+          animation: authOrbPulse 7s ease-in-out infinite 2.5s !important;
+        }
+
+        /* Logo mark — glowing with shimmer */
+        .auth-form-logo {
+          width: 46px !important;
+          height: 46px !important;
+          border-radius: 14px !important;
+          background: linear-gradient(135deg, #7c3aed, #c026d3) !important;
+          margin-bottom: 1.2rem !important;
+          position: relative !important;
+          overflow: hidden !important;
+          box-shadow:
+            0 0 20px rgba(168, 85, 247, 0.6),
+            0 0 40px rgba(192, 38, 211, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+          animation: authLogoGlow 3s ease-in-out infinite alternate !important;
+        }
+
+        .auth-form-logo::after {
+          content: '' !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: -100% !important;
+          width: 60% !important;
+          height: 100% !important;
+          background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%) !important;
+          animation: authLogoShimmer 3s ease-in-out infinite !important;
+        }
+
+        @keyframes authLogoShimmer {
+          0% {
+            left: -100%;
+          }
+
+          50% {
+            left: 150%;
+          }
+
+          100% {
+            left: 150%;
+          }
+        }
+
+        @keyframes authLogoGlow {
+          from {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.6), 0 0 40px rgba(192, 38, 211, 0.3);
+          }
+
+          to {
+            box-shadow: 0 0 35px rgba(168, 85, 247, 0.9), 0 0 65px rgba(192, 38, 211, 0.55);
+          }
+        }
+
+        /* Title — rainbow shimmer text */
+        .auth-form-title {
+          font-size: 1.9rem !important;
+          font-weight: 800 !important;
+          margin: 0 0 0.4rem !important;
+          line-height: 1.2 !important;
+          background: linear-gradient(135deg, #e879f9 0%, #c4b5fd 30%, #ffffff 52%, #a5f3fc 72%, #c4b5fd 100%) !important;
+          background-size: 220% 220% !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          background-clip: text !important;
+          animation: authTitleShimmer 4s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.35)) !important;
+        }
+
+        @keyframes authTitleShimmer {
+          0% {
+            background-position: 0% 50%;
+          }
+
+          100% {
+            background-position: 100% 50%;
+          }
+        }
+
+        /* Subtitle */
+        .auth-form-subtitle {
+          font-size: 0.95rem !important;
+          color: rgba(210, 195, 240, 0.72) !important;
+          margin: 0 0 1.6rem !important;
+          line-height: 1.55 !important;
+        }
+
+        /* Section titles (Reset, Create) */
+        .auth-section-title {
+          font-size: 1.4rem !important;
+          font-weight: 700 !important;
+          background: linear-gradient(135deg, #e879f9, #c4b5fd) !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          background-clip: text !important;
+          margin: 0 0 1rem !important;
+          filter: drop-shadow(0 0 12px rgba(232, 121, 249, 0.25)) !important;
+        }
+
+        /* Input labels — with neon dot accent */
+        .auth-input-group label {
+          font-size: 0.9rem !important;
+          font-weight: 700 !important;
+          color: rgba(196, 181, 253, 0.9) !important;
+          letter-spacing: 0.12em !important;
+          text-transform: uppercase !important;
+          margin-bottom: 0.45rem !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+        }
+
+        .auth-input-group label::before {
+          content: '' !important;
+          display: inline-block !important;
+          width: 5px !important;
+          height: 5px !important;
+          border-radius: 50% !important;
+          background: linear-gradient(135deg, #a855f7, #e879f9) !important;
+          box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
+          flex-shrink: 0 !important;
+        }
+
+        /* Inputs — glowing focus with floating label feel */
+        .auth-input-group input,
+        .auth-input-group .auth-code-input {
+          width: 100% !important;
+          background: rgba(168, 85, 247, 0.05) !important;
+          border: 1.5px solid rgba(168, 85, 247, 0.20) !important;
+          border-radius: 12px !important;
+          color: #ffffff !important;
+          font-size: 0.95rem !important;
+          padding: 0.78rem 1rem !important;
+          transition: border-color 0.25s, box-shadow 0.3s, background 0.25s !important;
+          outline: none !important;
+        }
+
+        .auth-input-group input:hover {
+          border-color: rgba(168, 85, 247, 0.38) !important;
+          background: rgba(168, 85, 247, 0.07) !important;
+        }
+
+        .auth-input-group input:focus {
+          border-color: #c084fc !important;
+          box-shadow:
+            0 0 0 3px rgba(168, 85, 247, 0.16),
+            0 0 20px rgba(168, 85, 247, 0.22),
+            0 0 45px rgba(192, 38, 211, 0.10),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+          background: rgba(168, 85, 247, 0.08) !important;
+        }
+
+        .auth-input-group input::placeholder {
+          color: rgba(180, 170, 210, 0.35) !important;
+        }
+
+        /* Password wrapper */
+        .password-input-wrapper {
+          position: relative !important;
+        }
+
+        .password-input-wrapper input {
+          padding-right: 2.8rem !important;
+        }
+
+        .password-eye-toggle {
+          position: absolute !important;
+          right: 0.9rem !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+          background: none !important;
+          border: none !important;
+          color: rgba(196, 181, 253, 0.55) !important;
+          cursor: pointer !important;
+          padding: 0 !important;
+          transition: color 0.2s, filter 0.2s !important;
+        }
+
+        .password-eye-toggle:hover {
+          color: #e879f9 !important;
+          filter: drop-shadow(0 0 6px rgba(232, 121, 249, 0.6)) !important;
+        }
+
+        /* Input group spacing */
+        .auth-input-group {
+          margin-bottom: 1rem !important;
+        }
+
+        /* Remember me & forgot */
+        .auth-form-options {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          margin-bottom: 1.2rem !important;
+        }
+
+        .auth-remember-me {
+          display: flex !important;
+          align-items: center !important;
+          gap: 0.5rem !important;
+          font-size: 0.87rem !important;
+          color: rgba(200, 190, 230, 0.75) !important;
+          cursor: pointer !important;
+        }
+
+        .auth-remember-me input[type="checkbox"] {
+          width: 16px !important;
+          height: 16px !important;
+          accent-color: #a855f7 !important;
+          cursor: pointer !important;
+        }
+
+        .auth-forgot-link {
+          font-size: 0.87rem !important;
+          font-weight: 600 !important;
+          color: #c084fc !important;
+          text-decoration: none !important;
+          transition: color 0.2s, text-shadow 0.2s !important;
+          position: relative !important;
+        }
+
+        .auth-forgot-link::after {
+          content: '' !important;
+          position: absolute !important;
+          bottom: -1px !important;
+          left: 0 !important;
+          right: 0 !important;
+          height: 1px !important;
+          background: linear-gradient(90deg, #a855f7, #e879f9) !important;
+          transform: scaleX(0) !important;
+          transition: transform 0.25s !important;
+          transform-origin: left !important;
+        }
+
+        .auth-forgot-link:hover {
+          color: #e879f9 !important;
+          text-shadow: 0 0 14px rgba(232, 121, 249, 0.55) !important;
+        }
+
+        .auth-forgot-link:hover::after {
+          transform: scaleX(1) !important;
+        }
+
+        /* ── SHIMMER SUBMIT BUTTON ── */
+        .auth-submit-btn {
+          width: 100% !important;
+          padding: 0.9rem !important;
+          border: none !important;
+          border-radius: 14px !important;
+          background: linear-gradient(135deg, #6d28d9 0%, #9333ea 30%, #c026d3 65%, #7c3aed 100%) !important;
+          background-size: 250% 250% !important;
+          color: #ffffff !important;
+          font-size: 1rem !important;
+          font-weight: 700 !important;
+          cursor: pointer !important;
+          letter-spacing: 0.05em !important;
+          transition: transform 0.18s, box-shadow 0.25s !important;
+          box-shadow:
+            0 4px 22px rgba(124, 58, 237, 0.50),
+            0 0 45px rgba(192, 38, 211, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+          margin-bottom: 1rem !important;
+          position: relative !important;
+          overflow: hidden !important;
+          animation: authBtnPulse 3s ease-in-out infinite !important;
+        }
+
+        /* Shimmer sweep */
+        .auth-submit-btn::before {
+          content: '' !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: -100% !important;
+          width: 70% !important;
+          height: 100% !important;
+          background: linear-gradient(108deg,
+              transparent 28%,
+              rgba(255, 255, 255, 0.24) 50%,
+              transparent 72%) !important;
+          animation: authBtnShimmer 2.6s ease-in-out infinite !important;
+          pointer-events: none !important;
+        }
+
+        /* Glowing border ring on button */
+        .auth-submit-btn::after {
+          content: '' !important;
+          position: absolute !important;
+          inset: 0 !important;
+          border-radius: 14px !important;
+          border: 1px solid rgba(255, 255, 255, 0.15) !important;
+          pointer-events: none !important;
+        }
+
+        @keyframes authBtnShimmer {
+          0% {
+            left: -100%;
+          }
+
+          55% {
+            left: 130%;
+          }
+
+          100% {
+            left: 130%;
+          }
+        }
+
+        @keyframes authBtnPulse {
+
+          0%,
+          100% {
+            background-position: 0% 50%;
+            box-shadow: 0 4px 22px rgba(124, 58, 237, 0.5), 0 0 45px rgba(192, 38, 211, 0.22);
+          }
+
+          50% {
+            background-position: 100% 50%;
+            box-shadow: 0 6px 32px rgba(168, 85, 247, 0.7), 0 0 65px rgba(192, 38, 211, 0.38);
+          }
+        }
+
+        .auth-submit-btn:hover {
+          transform: translateY(-2px) scale(1.015) !important;
+          box-shadow:
+            0 10px 36px rgba(168, 85, 247, 0.7),
+            0 0 70px rgba(192, 38, 211, 0.45),
+            inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+        }
+
+        .auth-submit-btn:active {
+          transform: translateY(0) scale(0.985) !important;
+        }
+
+        /* Divider with neon line */
+        .auth-divider {
+          display: flex !important;
+          align-items: center !important;
+          gap: 1rem !important;
+          margin: 0.2rem 0 1rem !important;
+          color: rgba(180, 170, 210, 0.45) !important;
+          font-size: 0.82rem !important;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+          content: '' !important;
+          flex: 1 !important;
+          height: 1px !important;
+          background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.35), rgba(192, 38, 211, 0.25), transparent) !important;
+        }
+
+        /* Google button — glassy with hover glow */
+        .auth-google-btn {
+          width: 100% !important;
+          padding: 0.82rem !important;
+          border-radius: 12px !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+          border: 1.5px solid rgba(255, 255, 255, 0.10) !important;
+          color: rgba(220, 215, 240, 0.9) !important;
+          font-size: 0.95rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0.6rem !important;
+          transition: background 0.25s, border-color 0.25s, box-shadow 0.25s !important;
+          margin-bottom: 1.2rem !important;
+          backdrop-filter: blur(8px) !important;
+        }
+
+        .auth-google-btn:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.08) !important;
+          border-color: rgba(255, 255, 255, 0.22) !important;
+          box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35) !important;
+        }
+
+        /* Switch text */
+        .auth-switch-text {
+          font-size: 0.87rem !important;
+          color: rgba(200, 190, 230, 0.65) !important;
+          text-align: center !important;
+          margin: 0 !important;
+        }
+
+        .auth-switch-text a {
+          color: #c084fc !important;
+          font-weight: 700 !important;
+          text-decoration: none !important;
+          transition: color 0.2s, text-shadow 0.2s !important;
+          position: relative !important;
+        }
+
+        .auth-switch-text a:hover {
+          color: #e879f9 !important;
+          text-shadow: 0 0 14px rgba(232, 121, 249, 0.55) !important;
+        }
+
+        /* Helper text */
+        .auth-helper-text {
+          font-size: 0.88rem !important;
+          color: rgba(200, 190, 230, 0.65) !important;
+          margin-bottom: 1rem !important;
+          line-height: 1.55 !important;
+        }
+
+        /* Secondary button */
+        .auth-secondary-btn {
+          padding: 0.8rem 1.2rem !important;
+          border-radius: 12px !important;
+          background: transparent !important;
+          border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+          color: #c084fc !important;
+          font-size: 0.9rem !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: background 0.2s, box-shadow 0.2s, border-color 0.2s !important;
+        }
+
+        .auth-secondary-btn:hover {
+          background: rgba(168, 85, 247, 0.10) !important;
+          border-color: rgba(168, 85, 247, 0.55) !important;
+          box-shadow: 0 0 18px rgba(168, 85, 247, 0.28) !important;
+        }
+
+        /* Button row */
+        .auth-btn-row {
+          display: flex !important;
+          gap: 0.8rem !important;
+          flex-wrap: wrap !important;
+        }
+
+        .auth-btn-row .auth-submit-btn {
+          flex: 1 !important;
+        }
+
+        /* Close button */
+        .auth-popup-close {
+          position: absolute !important;
+          top: 1rem !important;
+          right: 1rem !important;
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 50% !important;
+          background: rgba(168, 85, 247, 0.15) !important;
+          border: 1.5px solid rgba(168, 85, 247, 0.42) !important;
+          color: #c4b5fd !important;
+          font-size: 1.1rem !important;
+          cursor: pointer !important;
+          z-index: 10 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          transition: background 0.2s, box-shadow 0.2s, transform 0.25s !important;
+        }
+
+        .auth-popup-close:hover {
+          background: rgba(192, 38, 211, 0.28) !important;
+          box-shadow: 0 0 18px rgba(192, 38, 211, 0.55), 0 0 35px rgba(168, 85, 247, 0.25) !important;
+          transform: rotate(90deg) scale(1.12) !important;
+        }
+
+        /* Message box */
+        #message {
+          margin-bottom: 0.8rem !important;
+        }
+
+        /* Animations */
+        @keyframes authOrbPulse {
+
+          0%,
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+
+          50% {
+            transform: scale(1.15);
+            opacity: 0.68;
+          }
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+          .auth-characters-panel {
+            display: none !important;
+          }
+
+          .auth-form-panel {
+            padding: 2rem 1.4rem !important;
+          }
+        }
+      </style>
+
       <div class="auth-card-wrapper">
         <!-- LEFT PANEL: Animated Characters -->
         <div class="auth-characters-panel">
-          <svg class="auth-characters-svg" viewBox="0 0 420 460" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <!-- Gradients for depth -->
-              <linearGradient id="pinkGrad" x1="0" y1="0" x2="0.3" y2="1">
-                <stop offset="0%" stop-color="#F7B8CB" />
-                <stop offset="100%" stop-color="#E8809E" />
-              </linearGradient>
-              <linearGradient id="mintGrad" x1="0" y1="0" x2="0.3" y2="1">
-                <stop offset="0%" stop-color="#A8E6CF" />
-                <stop offset="100%" stop-color="#5CB89A" />
-              </linearGradient>
-              <linearGradient id="tealGrad" x1="0" y1="0" x2="0.3" y2="1">
-                <stop offset="0%" stop-color="#4ECDC4" />
-                <stop offset="100%" stop-color="#1A8A7D" />
-              </linearGradient>
-              <linearGradient id="orangeGrad" x1="0" y1="0" x2="0.3" y2="1">
-                <stop offset="0%" stop-color="#F4845F" />
-                <stop offset="100%" stop-color="#C55A35" />
-              </linearGradient>
-              <linearGradient id="blueGrad" x1="0" y1="0" x2="0.3" y2="1">
-                <stop offset="0%" stop-color="#7EB8E0" />
-                <stop offset="100%" stop-color="#4A8DBE" />
-              </linearGradient>
-              <!-- Shadow filter -->
-              <filter id="blobShadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-                <feOffset dx="2" dy="4" result="offset" />
-                <feFlood flood-color="rgba(0,0,0,0.18)" />
-                <feComposite in2="offset" operator="in" />
-                <feMerge>
-                  <feMergeNode />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
+          <!-- Floating sparkles -->
+          <div class="auth-panel-sparkles" id="authSparkles"></div>
+          <!-- Sweeping light beam -->
+          <div class="auth-panel-beam"></div>
+          <!-- Orbit rings -->
+          <div class="auth-orbit-ring" style="width:280px;height:280px;animation-duration:3.5s;"></div>
+          <div class="auth-orbit-ring"
+            style="width:360px;height:360px;border-color:rgba(192,38,211,0.12)!important;animation-duration:5s;animation-delay:0.8s;">
+          </div>
+          <div class="auth-orbit-ring"
+            style="width:440px;height:440px;border-color:rgba(124,58,237,0.08)!important;animation-duration:7s;animation-delay:1.5s;">
+          </div>
+          <!-- Twinkling stars -->
+          <span class="auth-star" style="top:8%;left:12%;font-size:14px;animation-duration:1.8s;">✦</span>
+          <span class="auth-star"
+            style="top:14%;right:14%;font-size:10px;animation-duration:2.4s;animation-delay:0.6s;">★</span>
+          <span class="auth-star"
+            style="top:22%;left:72%;font-size:8px;animation-duration:1.5s;animation-delay:1.1s;">✦</span>
+          <span class="auth-star"
+            style="top:65%;left:8%;font-size:12px;animation-duration:2.1s;animation-delay:0.3s;">✧</span>
+          <span class="auth-star"
+            style="top:70%;right:8%;font-size:9px;animation-duration:2.8s;animation-delay:0.9s;">✦</span>
+          <span class="auth-star"
+            style="top:38%;left:5%;font-size:7px;animation-duration:1.6s;animation-delay:1.4s;">★</span>
+          <span class="auth-star"
+            style="top:44%;right:6%;font-size:11px;animation-duration:2.2s;animation-delay:0.4s;">✧</span>
+          <span class="auth-star"
+            style="top:5%;left:50%;font-size:8px;animation-duration:3s;animation-delay:0.7s;">✦</span>
+          <!-- Neon floor glow -->
+          <div class="auth-ground-ring"></div>
+          <!-- SVG Characters -->
+          <div class="auth-characters-svg-wrapper">
+            <svg class="auth-characters-svg" viewBox="0 0 420 460" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- Enhanced gradients -->
+                <linearGradient id="pinkGrad" x1="0" y1="0" x2="0.3" y2="1">
+                  <stop offset="0%" stop-color="#FFCCE0" />
+                  <stop offset="60%" stop-color="#F09EBA" />
+                  <stop offset="100%" stop-color="#E07090" />
+                </linearGradient>
+                <linearGradient id="mintGrad" x1="0" y1="0" x2="0.3" y2="1">
+                  <stop offset="0%" stop-color="#C0F2DC" />
+                  <stop offset="60%" stop-color="#7DD8B0" />
+                  <stop offset="100%" stop-color="#4AB890" />
+                </linearGradient>
+                <linearGradient id="tealGrad" x1="0" y1="0" x2="0.3" y2="1">
+                  <stop offset="0%" stop-color="#60E0D8" />
+                  <stop offset="100%" stop-color="#1A8A7D" />
+                </linearGradient>
+                <linearGradient id="orangeGrad" x1="0" y1="0" x2="0.3" y2="1">
+                  <stop offset="0%" stop-color="#F9A880" />
+                  <stop offset="100%" stop-color="#C55A35" />
+                </linearGradient>
+                <linearGradient id="blueGrad" x1="0" y1="0" x2="0.3" y2="1">
+                  <stop offset="0%" stop-color="#A0D0F4" />
+                  <stop offset="100%" stop-color="#4A8DBE" />
+                </linearGradient>
+                <!-- ClipPaths — one per eye white, hard-clips pupil inside circle -->
+                <clipPath id="clipMintL">
+                  <circle cx="62" cy="230" r="16" />
+                </clipPath>
+                <clipPath id="clipMintR">
+                  <circle cx="103" cy="230" r="16" />
+                </clipPath>
+                <clipPath id="clipPinkL">
+                  <circle cx="195" cy="200" r="29" />
+                </clipPath>
+                <clipPath id="clipPinkR">
+                  <circle cx="250" cy="200" r="21" />
+                </clipPath>
+                <clipPath id="clipRedL">
+                  <circle cx="208" cy="62" r="9.5" />
+                </clipPath>
+                <clipPath id="clipRedR">
+                  <circle cx="235" cy="62" r="9.5" />
+                </clipPath>
+                <clipPath id="clipTealL">
+                  <circle cx="78" cy="345" r="13" />
+                </clipPath>
+                <clipPath id="clipTealR">
+                  <circle cx="117" cy="345" r="13" />
+                </clipPath>
+                <clipPath id="clipBlueL">
+                  <circle cx="285" cy="358" r="12" />
+                </clipPath>
+                <clipPath id="clipBlueR">
+                  <circle cx="315" cy="358" r="12" />
+                </clipPath>
+              </defs>
 
-            <!-- Ground shadows with subtle animation -->
-            <ellipse class="ground-shadow" cx="85" cy="430" rx="55" ry="8" fill="rgba(0,0,0,0.12)" />
-            <ellipse class="ground-shadow" cx="215" cy="438" rx="70" ry="10" fill="rgba(0,0,0,0.12)"
-              style="animation-delay: 0.5s;" />
-            <ellipse class="ground-shadow" cx="100" cy="450" rx="42" ry="6" fill="rgba(0,0,0,0.1)"
-              style="animation-delay: 1s;" />
-            <ellipse class="ground-shadow" cx="320" cy="448" rx="40" ry="6" fill="rgba(0,0,0,0.1)"
-              style="animation-delay: 1.5s;" />
+              <!-- Ground shadows with subtle animation -->
+              <ellipse class="ground-shadow" cx="85" cy="430" rx="55" ry="8" fill="rgba(0,0,0,0.12)" />
+              <ellipse class="ground-shadow" cx="215" cy="438" rx="70" ry="10" fill="rgba(0,0,0,0.12)"
+                style="animation-delay: 0.5s;" />
+              <ellipse class="ground-shadow" cx="100" cy="450" rx="42" ry="6" fill="rgba(0,0,0,0.1)"
+                style="animation-delay: 1s;" />
+              <ellipse class="ground-shadow" cx="320" cy="448" rx="40" ry="6" fill="rgba(0,0,0,0.1)"
+                style="animation-delay: 1.5s;" />
 
-            <!-- ===== MINT GREEN BLOB (left, tall) ===== -->
-            <g class="blob-character" data-blob="mint" filter="url(#blobShadow)">
-              <path d="M40,160 C35,120 130,118 125,160 L128,390 C130,420 32,422 35,390 Z" fill="url(#mintGrad)" />
-              <!-- Body highlight -->
-              <ellipse cx="70" cy="200" rx="28" ry="80" fill="rgba(255,255,255,0.15)" transform="rotate(-5,70,200)" />
-              <!-- Ears/bumps -->
-              <ellipse cx="52" cy="152" rx="14" ry="12" fill="#7DD4B5" />
-              <ellipse cx="113" cy="152" rx="14" ry="12" fill="#7DD4B5" />
-              <!-- Left Eye -->
-              <g class="blob-eye" data-eye="mint-left">
-                <circle cx="62" cy="230" r="17" fill="white" />
-                <circle cx="62" cy="230" r="16" fill="white" stroke="rgba(0,0,0,0.05)" stroke-width="0.5" />
-                <circle class="blob-pupil" cx="62" cy="232" r="9" fill="#2d2d4e" />
-                <circle cx="66" cy="226" r="3.5" fill="white" opacity="0.9" />
+              <!-- ===== MINT GREEN BLOB ===== -->
+              <!-- BODY with glow filter -->
+              <g class="blob-character" data-blob="mint">
+                <path d="M40,160 C35,120 130,118 125,160 L128,390 C130,420 32,422 35,390 Z" fill="url(#mintGrad)" />
+                <ellipse cx="70" cy="200" rx="28" ry="80" fill="rgba(255,255,255,0.15)" transform="rotate(-5,70,200)" />
+                <ellipse cx="52" cy="152" rx="14" ry="12" fill="#7DD4B5" />
+                <ellipse cx="113" cy="152" rx="14" ry="12" fill="#7DD4B5" />
+                <path d="M68,260 Q82,278 96,260" stroke="#2a7a5e" stroke-width="2.5" fill="none"
+                  stroke-linecap="round" />
+                <ellipse cx="50" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
+                <ellipse cx="115" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
+                <ellipse cx="55" cy="418" rx="18" ry="12" fill="#52B892" />
+                <ellipse cx="82" cy="420" rx="16" ry="13" fill="#52B892" />
+                <ellipse cx="110" cy="418" rx="18" ry="12" fill="#52B892" />
+                <!-- EYES inside body group so they float together -->
+                <g class="blob-eye" data-eye="mint-left">
+                  <circle cx="62" cy="230" r="17" fill="white" />
+                  <circle class="blob-pupil" cx="62" cy="232" r="9" fill="#111111" />
+                  <circle cx="66" cy="226" r="3" fill="white" opacity="0.9" />
+                </g>
+                <g class="blob-eye" data-eye="mint-right">
+                  <circle cx="103" cy="230" r="17" fill="white" />
+                  <circle class="blob-pupil" cx="103" cy="232" r="9" fill="#111111" />
+                  <circle cx="107" cy="226" r="3" fill="white" opacity="0.9" />
+                </g>
               </g>
-              <!-- Right Eye -->
-              <g class="blob-eye" data-eye="mint-right">
-                <circle cx="103" cy="230" r="17" fill="white" />
-                <circle cx="103" cy="230" r="16" fill="white" stroke="rgba(0,0,0,0.05)" stroke-width="0.5" />
-                <circle class="blob-pupil" cx="103" cy="232" r="9" fill="#2d2d4e" />
-                <circle cx="107" cy="226" r="3.5" fill="white" opacity="0.9" />
-              </g>
-              <!-- Happy smile -->
-              <path d="M68,260 Q82,278 96,260" stroke="#2a7a5e" stroke-width="2.5" fill="none" stroke-linecap="round" />
-              <!-- Cheeks -->
-              <ellipse cx="50" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
-              <ellipse cx="115" cy="252" rx="9" ry="6" fill="#6CC4A0" opacity="0.5" />
-              <!-- Feet -->
-              <ellipse cx="55" cy="418" rx="18" ry="12" fill="#52B892" />
-              <ellipse cx="82" cy="420" rx="16" ry="13" fill="#52B892" />
-              <ellipse cx="110" cy="418" rx="18" ry="12" fill="#52B892" />
-            </g>
 
-            <!-- ===== BIG PINK BLOB (center, tallest) ===== -->
-            <g class="blob-character" data-blob="pink" filter="url(#blobShadow)">
-              <path d="M155,95 C148,50 280,48 275,95 L282,395 C285,435 148,437 152,395 Z" fill="url(#pinkGrad)" />
-              <!-- Body highlight -->
-              <ellipse cx="195" cy="180" rx="35" ry="100" fill="rgba(255,255,255,0.13)"
-                transform="rotate(-4,195,180)" />
-              <!-- Ears -->
-              <ellipse cx="172" cy="80" rx="16" ry="18" fill="#F0A0BA" />
-              <ellipse cx="260" cy="80" rx="16" ry="18" fill="#F0A0BA" />
-              <!-- Left Eye (big) -->
-              <g class="blob-eye" data-eye="pink-left">
-                <circle cx="195" cy="200" r="30" fill="white" />
-                <circle cx="195" cy="200" r="29" fill="white" stroke="rgba(0,0,0,0.04)" stroke-width="0.5" />
-                <circle class="blob-pupil" cx="195" cy="203" r="16" fill="#2d2d4e" />
-                <circle cx="201" cy="193" r="5.5" fill="white" opacity="0.9" />
-                <circle cx="190" cy="210" r="2.5" fill="white" opacity="0.5" />
+              <!-- ===== BIG PINK BLOB ===== -->
+              <!-- BODY -->
+              <g class="blob-character" data-blob="pink">
+                <path d="M155,95 C148,50 280,48 275,95 L282,395 C285,435 148,437 152,395 Z" fill="url(#pinkGrad)" />
+                <ellipse cx="195" cy="180" rx="35" ry="100" fill="rgba(255,255,255,0.13)"
+                  transform="rotate(-4,195,180)" />
+                <ellipse cx="172" cy="80" rx="16" ry="18" fill="#F0A0BA" />
+                <ellipse cx="260" cy="80" rx="16" ry="18" fill="#F0A0BA" />
+                <ellipse cx="168" cy="240" rx="14" ry="9" fill="#E07090" opacity="0.4" />
+                <ellipse cx="278" cy="238" rx="12" ry="8" fill="#E07090" opacity="0.4" />
+                <path d="M205,250 Q220,262 238,252" stroke="#C06080" stroke-width="2" fill="none"
+                  stroke-linecap="round" />
+                <ellipse cx="175" cy="432" rx="22" ry="14" fill="#DE8DA6" />
+                <ellipse cx="215" cy="435" rx="20" ry="15" fill="#DE8DA6" />
+                <ellipse cx="255" cy="432" rx="22" ry="14" fill="#DE8DA6" />
+                <!-- EYES inside body group -->
+                <g class="blob-eye" data-eye="pink-left">
+                  <circle cx="195" cy="200" r="30" fill="white" />
+                  <circle class="blob-pupil" cx="195" cy="203" r="16" fill="#111111" />
+                  <circle cx="201" cy="193" r="5" fill="white" opacity="0.9" />
+                  <circle cx="190" cy="210" r="2.5" fill="white" opacity="0.5" />
+                </g>
+                <g class="blob-eye" data-eye="pink-right">
+                  <circle cx="250" cy="200" r="22" fill="white" />
+                  <circle class="blob-pupil" cx="250" cy="202" r="12" fill="#111111" />
+                  <circle cx="255" cy="194" r="3.5" fill="white" opacity="0.9" />
+                </g>
               </g>
-              <!-- Right Eye (slightly smaller for character) -->
-              <g class="blob-eye" data-eye="pink-right">
-                <circle cx="250" cy="200" r="22" fill="white" />
-                <circle cx="250" cy="200" r="21" fill="white" stroke="rgba(0,0,0,0.04)" stroke-width="0.5" />
-                <circle class="blob-pupil" cx="250" cy="202" r="12" fill="#2d2d4e" />
-                <circle cx="255" cy="194" r="4" fill="white" opacity="0.9" />
-              </g>
-              <!-- Rosy cheeks -->
-              <ellipse cx="168" cy="240" rx="14" ry="9" fill="#E07090" opacity="0.4" />
-              <ellipse cx="278" cy="238" rx="12" ry="8" fill="#E07090" opacity="0.4" />
-              <!-- Subtle smile -->
-              <path d="M205,250 Q220,262 238,252" stroke="#C06080" stroke-width="2" fill="none"
-                stroke-linecap="round" />
-              <!-- Feet -->
-              <ellipse cx="175" cy="432" rx="22" ry="14" fill="#DE8DA6" />
-              <ellipse cx="215" cy="435" rx="20" ry="15" fill="#DE8DA6" />
-              <ellipse cx="255" cy="432" rx="22" ry="14" fill="#DE8DA6" />
-            </g>
 
-            <!-- ===== ORANGE BLOB (top, small, riding on pink) ===== -->
-            <g class="blob-character" data-blob="red" filter="url(#blobShadow)">
-              <path d="M192,25 C188,5 255,3 252,25 L256,105 C258,128 188,130 190,105 Z" fill="url(#orangeGrad)" />
-              <!-- Body highlight -->
-              <ellipse cx="215" cy="50" rx="16" ry="30" fill="rgba(255,255,255,0.16)" transform="rotate(-3,215,50)" />
-              <!-- Wavy hair/crown -->
-              <circle cx="202" cy="14" r="11" fill="#E87550" />
-              <circle cx="220" cy="8" r="13" fill="#EC8060" />
-              <circle cx="238" cy="14" r="11" fill="#E87550" />
-              <!-- Left Eye -->
-              <g class="blob-eye" data-eye="red-left">
-                <circle cx="208" cy="62" r="10" fill="white" />
-                <circle class="blob-pupil" cx="208" cy="63" r="5.5" fill="#2d2d4e" />
-                <circle cx="211" cy="59" r="2" fill="white" opacity="0.9" />
+              <!-- ===== ORANGE BLOB ===== -->
+              <!-- BODY -->
+              <g class="blob-character" data-blob="red">
+                <path d="M192,25 C188,5 255,3 252,25 L256,105 C258,128 188,130 190,105 Z" fill="url(#orangeGrad)" />
+                <ellipse cx="215" cy="50" rx="16" ry="30" fill="rgba(255,255,255,0.16)" transform="rotate(-3,215,50)" />
+                <circle cx="202" cy="14" r="11" fill="#E87550" />
+                <circle cx="220" cy="8" r="13" fill="#EC8060" />
+                <circle cx="238" cy="14" r="11" fill="#E87550" />
+                <path d="M214,83 Q222,93 230,83" stroke="#8B3A20" stroke-width="2" fill="none" stroke-linecap="round" />
+                <ellipse cx="200" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
+                <ellipse cx="243" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
+                <!-- EYES inside body group -->
+                <g class="blob-eye" data-eye="red-left">
+                  <circle cx="208" cy="62" r="10" fill="white" />
+                  <circle class="blob-pupil" cx="208" cy="63" r="5.5" fill="#111111" />
+                  <circle cx="211" cy="59" r="2" fill="white" opacity="0.9" />
+                </g>
+                <g class="blob-eye" data-eye="red-right">
+                  <circle cx="235" cy="62" r="10" fill="white" />
+                  <circle class="blob-pupil" cx="235" cy="63" r="5.5" fill="#111111" />
+                  <circle cx="238" cy="59" r="2" fill="white" opacity="0.9" />
+                </g>
               </g>
-              <!-- Right Eye -->
-              <g class="blob-eye" data-eye="red-right">
-                <circle cx="235" cy="62" r="10" fill="white" />
-                <circle class="blob-pupil" cx="235" cy="63" r="5.5" fill="#2d2d4e" />
-                <circle cx="238" cy="59" r="2" fill="white" opacity="0.9" />
-              </g>
-              <!-- Open smile -->
-              <path d="M214,83 Q222,93 230,83" stroke="#8B3A20" stroke-width="2" fill="none" stroke-linecap="round" />
-              <!-- Cheeks -->
-              <ellipse cx="200" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
-              <ellipse cx="243" cy="75" rx="6" ry="4" fill="#D06040" opacity="0.4" />
-            </g>
 
-            <!-- ===== TEAL BLOB (bottom-left, short) ===== -->
-            <g class="blob-character" data-blob="teal" filter="url(#blobShadow)">
-              <path d="M55,305 C50,275 145,273 140,305 L143,418 C145,442 48,444 52,418 Z" fill="url(#tealGrad)" />
-              <!-- Body highlight -->
-              <ellipse cx="88" cy="340" rx="22" ry="45" fill="rgba(255,255,255,0.14)" transform="rotate(-4,88,340)" />
-              <!-- Ears -->
-              <ellipse cx="68" cy="290" rx="10" ry="12" fill="#40BFB2" />
-              <ellipse cx="127" cy="290" rx="10" ry="12" fill="#40BFB2" />
-              <!-- Left Eye -->
-              <g class="blob-eye" data-eye="teal-left">
-                <circle cx="78" cy="345" r="14" fill="white" />
-                <circle class="blob-pupil" cx="78" cy="347" r="8" fill="#2d2d4e" />
-                <circle cx="81" cy="341" r="3" fill="white" opacity="0.9" />
+              <!-- ===== TEAL BLOB ===== -->
+              <!-- BODY -->
+              <g class="blob-character" data-blob="teal">
+                <path d="M55,305 C50,275 145,273 140,305 L143,418 C145,442 48,444 52,418 Z" fill="url(#tealGrad)" />
+                <ellipse cx="88" cy="340" rx="22" ry="45" fill="rgba(255,255,255,0.14)" transform="rotate(-4,88,340)" />
+                <ellipse cx="68" cy="290" rx="10" ry="12" fill="#40BFB2" />
+                <ellipse cx="127" cy="290" rx="10" ry="12" fill="#40BFB2" />
+                <path d="M85,372 Q97,386 110,372" stroke="#0E6B60" stroke-width="2.2" fill="none"
+                  stroke-linecap="round" />
+                <ellipse cx="66" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
+                <ellipse cx="130" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
+                <!-- EYES inside body group -->
+                <g class="blob-eye" data-eye="teal-left">
+                  <circle cx="78" cy="345" r="14" fill="white" />
+                  <circle class="blob-pupil" cx="78" cy="347" r="8" fill="#111111" />
+                  <circle cx="81" cy="341" r="2.8" fill="white" opacity="0.9" />
+                </g>
+                <g class="blob-eye" data-eye="teal-right">
+                  <circle cx="117" cy="345" r="14" fill="white" />
+                  <circle class="blob-pupil" cx="117" cy="347" r="8" fill="#111111" />
+                  <circle cx="120" cy="341" r="2.8" fill="white" opacity="0.9" />
+                </g>
               </g>
-              <!-- Right Eye -->
-              <g class="blob-eye" data-eye="teal-right">
-                <circle cx="117" cy="345" r="14" fill="white" />
-                <circle class="blob-pupil" cx="117" cy="347" r="8" fill="#2d2d4e" />
-                <circle cx="120" cy="341" r="3" fill="white" opacity="0.9" />
-              </g>
-              <!-- Grin -->
-              <path d="M85,372 Q97,386 110,372" stroke="#0E6B60" stroke-width="2.2" fill="none"
-                stroke-linecap="round" />
-              <!-- Cheeks -->
-              <ellipse cx="66" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
-              <ellipse cx="130" cy="365" rx="8" ry="5" fill="#28907F" opacity="0.45" />
-            </g>
 
-            <!-- ===== BLUE BLOB (bottom-right, small & cute) ===== -->
-            <g class="blob-character" data-blob="blue" filter="url(#blobShadow)">
-              <path d="M265,320 C260,295 340,293 335,320 L338,418 C340,438 258,440 262,418 Z" fill="url(#blueGrad)" />
-              <!-- Body highlight -->
-              <ellipse cx="292" cy="355" rx="18" ry="35" fill="rgba(255,255,255,0.15)" transform="rotate(-3,292,355)" />
-              <!-- Ears -->
-              <ellipse cx="278" cy="310" rx="8" ry="10" fill="#6CB4D8" />
-              <ellipse cx="322" cy="310" rx="8" ry="10" fill="#6CB4D8" />
-              <!-- Left Eye -->
-              <g class="blob-eye" data-eye="blue-left">
-                <circle cx="285" cy="358" r="13" fill="white" />
-                <circle class="blob-pupil" cx="285" cy="360" r="7" fill="#2d2d4e" />
-                <circle cx="288" cy="354" r="2.5" fill="white" opacity="0.9" />
+              <!-- ===== BLUE BLOB ===== -->
+              <!-- BODY -->
+              <g class="blob-character" data-blob="blue">
+                <path d="M265,320 C260,295 340,293 335,320 L338,418 C340,438 258,440 262,418 Z" fill="url(#blueGrad)" />
+                <ellipse cx="292" cy="355" rx="18" ry="35" fill="rgba(255,255,255,0.15)"
+                  transform="rotate(-3,292,355)" />
+                <ellipse cx="278" cy="310" rx="8" ry="10" fill="#6CB4D8" />
+                <ellipse cx="322" cy="310" rx="8" ry="10" fill="#6CB4D8" />
+                <path d="M290,382 Q300,395 310,382" stroke="#2A6C90" stroke-width="2" fill="none"
+                  stroke-linecap="round" />
+                <ellipse cx="275" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
+                <ellipse cx="325" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
+                <!-- EYES inside body group -->
+                <g class="blob-eye" data-eye="blue-left">
+                  <circle cx="285" cy="358" r="13" fill="white" />
+                  <circle class="blob-pupil" cx="285" cy="360" r="7" fill="#111111" />
+                  <circle cx="288" cy="354" r="2.5" fill="white" opacity="0.9" />
+                </g>
+                <g class="blob-eye" data-eye="blue-right">
+                  <circle cx="315" cy="358" r="13" fill="white" />
+                  <circle class="blob-pupil" cx="315" cy="360" r="7" fill="#111111" />
+                  <circle cx="318" cy="354" r="2.5" fill="white" opacity="0.9" />
+                </g>
               </g>
-              <!-- Right Eye -->
-              <g class="blob-eye" data-eye="blue-right">
-                <circle cx="315" cy="358" r="13" fill="white" />
-                <circle class="blob-pupil" cx="315" cy="360" r="7" fill="#2d2d4e" />
-                <circle cx="318" cy="354" r="2.5" fill="white" opacity="0.9" />
-              </g>
-              <!-- Big happy smile -->
-              <path d="M290,382 Q300,395 310,382" stroke="#2A6C90" stroke-width="2" fill="none"
-                stroke-linecap="round" />
-              <!-- Cheeks -->
-              <ellipse cx="275" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
-              <ellipse cx="325" cy="375" rx="7" ry="5" fill="#4A90B8" opacity="0.4" />
-            </g>
-          </svg>
+            </svg>
+          </div><!-- end auth-characters-svg-wrapper -->
+          <!-- Neon brand tag -->
+          <div class="auth-panel-tag">
+            <span>✦ VIBEXPERT VERSE ✦</span>
+          </div>
         </div>
 
         <!-- RIGHT PANEL: Forms -->
         <div class="auth-form-panel">
+          <!-- Decorative bg elements -->
+          <div class="auth-right-grid"></div>
+          <div class="auth-right-sparkles" id="authRightSparkles"></div>
+          <div class="auth-right-corner-tl"></div>
+          <div class="auth-right-corner-br"></div>
           <div class="auth-form-logo"></div>
           <h1 class="auth-form-title">Hey there, Vibe Master!</h1>
           <p class="auth-form-subtitle">Ready to dive back into the action? Let's get you connected!</p>
@@ -1687,14 +4177,13 @@
           <form id="signupForm" onsubmit="signup(event)" style="display:none;">
             <h2 class="auth-section-title">Create Account</h2>
             <div class="auth-input-group">
-              <label for="signupName">Full Name</label>
-              <input type="text" id="signupName" placeholder="Full Name" required>
+              <label for="signupName">Username</label>
+              <input type="text" id="signupName" placeholder="Username" required>
             </div>
             <div class="auth-input-group">
               <label for="signupEmail">Email</label>
               <input type="email" id="signupEmail" placeholder="Email" required>
             </div>
-
 
             <div class="auth-input-group">
               <label for="signupPass">Password</label>
@@ -1739,17 +4228,387 @@
               </div>
             </div>
 
+            <!-- GENDER -->
+            <div class="auth-input-group">
+              <label>Gender</label>
+              <div class="signup-gender-row">
+                <label class="signup-gender-chip">
+                  <input type="radio" name="signupGender" value="male">
+                  <span>👦 Male</span>
+                </label>
+                <label class="signup-gender-chip">
+                  <input type="radio" name="signupGender" value="female">
+                  <span>👧 Female</span>
+                </label>
+                <label class="signup-gender-chip">
+                  <input type="radio" name="signupGender" value="nonbinary">
+                  <span>🌈 Non-binary</span>
+                </label>
+                <label class="signup-gender-chip">
+                  <input type="radio" name="signupGender" value="prefer_not">
+                  <span>🤐 Prefer not to say</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- DATE OF BIRTH -->
+            <div class="auth-input-group">
+              <label for="signupDOB">Date of Birth <span class="dob-age-badge" id="dobAgeBadge"
+                  style="display:none;"></span></label>
+              <div class="dob-input-wrapper">
+                <span class="dob-icon">🎂</span>
+                <input type="date" id="signupDOB" name="dob" required onchange="handleDOBChange(this)"
+                  style="color-scheme: dark;">
+              </div>
+              <p class="dob-hint" id="dobHint">You must be at least 13 years old to join VibeXpert</p>
+            </div>
+
+            <!-- HOBBIES -->
+            <div class="auth-input-group">
+              <label>Hobbies <span style="font-weight:400;opacity:0.6;text-transform:none;letter-spacing:0;">(pick a
+                  few)</span></label>
+              <div class="signup-hobbies-grid" id="signupHobbiesGrid">
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="music">🎵
+                  Music</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="gaming">🎮
+                  Gaming</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="art">🎨
+                  Art</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="sports">⚽
+                  Sports</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="coding">💻
+                  Coding</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="reading">📚
+                  Reading</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="travel">✈️
+                  Travel</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="movies">🎬
+                  Movies</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="cooking">🍳
+                  Cooking</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="fitness">🏋️
+                  Fitness</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="photography">📷
+                  Photography</button>
+                <button type="button" class="signup-hobby-chip" onclick="toggleHobby(this)" data-value="dance">💃
+                  Dance</button>
+              </div>
+              <input type="hidden" id="signupHobbies" name="hobbies">
+            </div>
+
             <button type="submit" class="auth-submit-btn">Create Account</button>
             <p class="auth-switch-text">Already have account? <a href="#" onclick="goLogin(event)">Login</a></p>
+
+            <style>
+              /* ── DOB Field ── */
+              .dob-input-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+                background: rgba(168, 85, 247, 0.04);
+                border: 1.5px solid rgba(130, 90, 255, 0.22);
+                border-radius: 12px;
+                padding: 0 14px;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                overflow: hidden;
+              }
+
+              .dob-input-wrapper:focus-within {
+                border-color: #a855f7;
+                box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.18), 0 0 20px rgba(168, 85, 247, 0.15);
+                background: rgba(168, 85, 247, 0.07);
+              }
+
+              .dob-icon {
+                font-size: 1.1rem;
+                margin-right: 10px;
+                flex-shrink: 0;
+                opacity: 0.8;
+              }
+
+              #signupDOB {
+                flex: 1;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: rgba(210, 200, 240, 0.9);
+                font-size: 0.95rem;
+                font-family: 'Outfit', sans-serif;
+                padding: 13px 0;
+                cursor: pointer;
+                width: 100%;
+                outline: none;
+              }
+
+              #signupDOB::-webkit-calendar-picker-indicator {
+                filter: invert(0.7) sepia(1) saturate(3) hue-rotate(230deg);
+                cursor: pointer;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+              }
+
+              #signupDOB::-webkit-calendar-picker-indicator:hover {
+                opacity: 1;
+              }
+
+              .dob-age-badge {
+                display: inline-flex !important;
+                align-items: center;
+                padding: 2px 10px;
+                border-radius: 50px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                margin-left: 8px;
+                vertical-align: middle;
+                transition: all 0.3s;
+              }
+
+              .dob-age-badge.valid {
+                background: rgba(0, 220, 130, 0.15);
+                border: 1px solid rgba(0, 220, 130, 0.4);
+                color: #6effc8;
+              }
+
+              .dob-age-badge.invalid {
+                background: rgba(255, 80, 80, 0.15);
+                border: 1px solid rgba(255, 80, 80, 0.4);
+                color: #ff9090;
+              }
+
+              .dob-hint {
+                font-size: 0.75rem;
+                color: rgba(168, 155, 210, 0.55);
+                margin: 6px 4px 0;
+                transition: color 0.3s;
+              }
+
+              .dob-hint.error {
+                color: #ff9090 !important;
+              }
+
+              .dob-hint.success {
+                color: #6effc8 !important;
+              }
+
+              /* Gender chips */
+              .signup-gender-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 0.3rem;
+                max-width: 100%;
+                overflow: hidden;
+              }
+
+              .signup-gender-chip {
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+              }
+
+              .signup-gender-chip input[type="radio"] {
+                display: none;
+                width: auto !important;
+                border: none !important;
+                background: none !important;
+                padding: 0 !important;
+              }
+
+              .signup-gender-chip span {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.55rem 1.05rem;
+                border-radius: 50px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1.5px solid rgba(130, 90, 255, 0.22);
+                color: rgba(210, 200, 240, 0.9);
+                font-family: 'Syne', sans-serif;
+                font-size: 0.92rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                transition: all 0.18s;
+                cursor: pointer;
+                white-space: nowrap;
+                gap: 8px;
+              }
+
+              .signup-gender-chip input[type="radio"]:checked+span {
+                background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(79, 108, 212, 0.35));
+                border-color: #a78bfa;
+                color: #e9d5ff;
+                box-shadow: 0 0 12px rgba(124, 58, 237, 0.3);
+              }
+
+              .signup-gender-chip:hover span {
+                border-color: rgba(167, 139, 250, 0.5);
+                background: rgba(130, 90, 255, 0.1);
+              }
+
+              /* Hobby chips */
+              .signup-hobbies-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.55rem;
+                margin-top: 0.4rem;
+                max-width: 100%;
+                overflow: hidden;
+              }
+
+              .signup-hobby-chip {
+                padding: 0.5rem 1rem;
+                border-radius: 50px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1.5px solid rgba(130, 90, 255, 0.22);
+                color: rgba(210, 200, 240, 0.85);
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.94rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.18s;
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+              }
+
+              .signup-hobby-chip:hover {
+                border-color: rgba(167, 139, 250, 0.5);
+                background: rgba(130, 90, 255, 0.1);
+                color: #e9d5ff;
+              }
+
+              .signup-hobby-chip.selected {
+                background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(79, 108, 212, 0.35));
+                border-color: #a78bfa;
+                color: #e9d5ff;
+                box-shadow: 0 0 10px rgba(124, 58, 237, 0.25);
+              }
+            </style>
           </form>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ========================================
-   MAIN PAGE (ENHANCED UI/UX)
-   ======================================== -->
+  <script>
+    // Toggle hobby chip selection + sync to hidden input
+    function toggleHobby(btn) {
+      btn.classList.toggle('selected');
+      var selected = Array.from(document.querySelectorAll('#signupHobbiesGrid .signup-hobby-chip.selected'))
+        .map(function (b) { return b.getAttribute('data-value'); });
+      var hiddenInput = document.getElementById('signupHobbies');
+      if (hiddenInput) hiddenInput.value = selected.join(',');
+    }
+
+    // Set max DOB date (must be at least 13 years old)
+    (function () {
+      var dobInput = document.getElementById('signupDOB');
+      if (dobInput) {
+        var today = new Date();
+        var maxDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+        dobInput.max = maxDate.toISOString().split('T')[0];
+      }
+    })();
+
+    // Handle DOB change — calculate age & validate
+    function handleDOBChange(input) {
+      var badge = document.getElementById('dobAgeBadge');
+      var hint = document.getElementById('dobHint');
+      if (!input.value) {
+        badge.style.display = 'none';
+        hint.textContent = 'You must be at least 13 years old to join VibeXpert';
+        hint.className = 'dob-hint';
+        return;
+      }
+      var dob = new Date(input.value);
+      var today = new Date();
+      var age = today.getFullYear() - dob.getFullYear();
+      var m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      badge.style.display = 'inline-flex';
+      if (age < 13) {
+        badge.textContent = age + ' yrs';
+        badge.className = 'dob-age-badge invalid';
+        hint.textContent = '⚠️ You must be at least 13 years old to create an account.';
+        hint.className = 'dob-hint error';
+        input.setCustomValidity('Must be at least 13 years old.');
+      } else if (age > 100) {
+        badge.textContent = age + ' yrs';
+        badge.className = 'dob-age-badge invalid';
+        hint.textContent = '⚠️ Please enter a valid date of birth.';
+        hint.className = 'dob-hint error';
+        input.setCustomValidity('Please enter a valid date of birth.');
+      } else {
+        badge.textContent = age + ' yrs ✓';
+        badge.className = 'dob-age-badge valid';
+        hint.textContent = '🎉 Welcome to the vibe, ' + age + '-year-old!';
+        hint.className = 'dob-hint success';
+        input.setCustomValidity('');
+      }
+    }
+
+    // ── Auth popup sparkle particles on left panel ──
+    (function () {
+      function spawnSparkles() {
+        var container = document.getElementById('authSparkles');
+        if (!container) return;
+        var colors = [
+          '#a855f7', '#c026d3', '#e879f9', '#7c3aed', '#c084fc',
+          '#f0abfc', '#818cf8', '#38bdf8', '#34d399', '#fbbf24'
+        ];
+        for (var i = 0; i < 28; i++) {
+          (function () {
+            var dot = document.createElement('div');
+            dot.className = 'auth-sparkle';
+            var size = Math.random() * 5 + 1.5;
+            var color = colors[Math.floor(Math.random() * colors.length)];
+            var left = Math.random() * 100;
+            var delay = Math.random() * 12;
+            var dur = Math.random() * 10 + 8;
+            dot.style.cssText = 'width:' + size + 'px;height:' + size + 'px;background:' + color +
+              ';left:' + left + '%;bottom:-8px;box-shadow:0 0 ' + (size * 4) + 'px ' + (size) + 'px ' + color +
+              ';animation-duration:' + dur + 's;animation-delay:' + delay + 's;animation-name:authSparkleFloat';
+            container.appendChild(dot);
+          })();
+        }
+
+        // Right panel floating dots
+        var rContainer = document.getElementById('authRightSparkles');
+        if (rContainer) {
+          var rColors = ['#a855f7', '#c026d3', '#e879f9', '#7c3aed', '#c084fc', '#818cf8'];
+          var rPositions = [
+            { top: '8%', right: '6%' }, { top: '20%', left: '4%' }, { top: '35%', right: '4%' },
+            { top: '55%', left: '3%' }, { top: '72%', right: '7%' }, { top: '85%', left: '6%' },
+            { top: '14%', right: '18%' }, { top: '60%', right: '14%' }, { top: '42%', left: '8%' }
+          ];
+          rPositions.forEach(function (pos, idx) {
+            var dot = document.createElement('div');
+            dot.className = 'auth-right-dot';
+            var size = Math.random() * 4 + 2;
+            var color = rColors[idx % rColors.length];
+            var delay = Math.random() * 4;
+            var dur = Math.random() * 3 + 2.5;
+            var styleStr = 'width:' + size + 'px;height:' + size + 'px;background:' + color +
+              ';box-shadow:0 0 ' + (size * 3.5) + 'px ' + color +
+              ';animation-duration:' + dur + 's;animation-delay:' + delay + 's;';
+            Object.keys(pos).forEach(function (k) { styleStr += k + ':' + pos[k] + ';'; });
+            dot.style.cssText = styleStr;
+            rContainer.appendChild(dot);
+          });
+        }
+      } // End of spawnSparkles()
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          spawnSparkles();
+        });
+      } else {
+        spawnSparkles();
+      }
+    })();
+  </script>
   <div id="mainPage" class="main-page" style="display:none;">
     <!-- ✅ NET BACKGROUND FOR MAIN PAGE -->
     <div id="vanta-net-bg" class="vanta-background"></div>
@@ -2636,11 +5495,9 @@
 
         <!-- Cover photo hero + floating avatar -->
         <div class="profile-hero-wrap">
-          <div class="profile-cover" id="profileCoverPhoto"
-            onclick="document.getElementById('coverPhotoInput').click()">
+          <div class="profile-cover" id="profileCoverPhoto">
             <img id="profileCoverImg" src="" alt="" class="profile-cover-img">
             <div class="profile-cover-overlay"></div>
-            <div class="profile-cover-edit">✏️ Edit cover</div>
           </div>
           <!-- Floating avatar that overlaps banner -->
           <div class="profile-floating-avatar">
@@ -2655,13 +5512,110 @@
                   style="width:100%;height:100%;object-fit:cover;display:none;">
                 <span id="profilePageAvatarInitial"
                   style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:34px;background:#1a1933;">👤</span>
-                <button class="avatar-edit-overlay" onclick="uploadProfilePic()"
-                  style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:12px;cursor:pointer;padding:4px 0;">📷</button>
+              </div>
+
+              <!-- UNIFIED THREE DOT EDIT MENU -->
+              <div class="profile-edit-menu-wrap"
+                style="display:none; position:absolute; bottom:4px; right:-32px; z-index:999;">
+                <button class="profile-edit-menu-btn"
+                  onclick="document.getElementById('profileEditDropdown').classList.toggle('show'); event.stopPropagation();"
+                  title="Edit Profile">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="2.2"></circle>
+                    <circle cx="12" cy="5" r="2.2"></circle>
+                    <circle cx="12" cy="19" r="2.2"></circle>
+                  </svg>
+                </button>
+                <div class="profile-edit-dropdown" id="profileEditDropdown">
+                  <div class="profile-edit-dropdown-item"
+                    onclick="showEditProfilePage(); document.getElementById('profileEditDropdown').classList.remove('show'); event.stopPropagation();">
+                    ✏️ Edit Username</div>
+                  <div class="profile-edit-dropdown-item"
+                    onclick="uploadProfilePic(); document.getElementById('profileEditDropdown').classList.remove('show'); event.stopPropagation();">
+                    📷 Edit Photo</div>
+                  <div class="profile-edit-dropdown-item"
+                    onclick="document.getElementById('coverPhotoInput').click(); document.getElementById('profileEditDropdown').classList.remove('show'); event.stopPropagation();">
+                    🖼️ Edit Coverphoto</div>
+                </div>
               </div>
             </div>
             <div id="profilePresenceDot" class="profile-presence-dot"></div>
           </div>
         </div>
+
+        <style>
+          .profile-edit-menu-btn {
+            background: #1f1f2e;
+            border: 2px solid #0a0a14;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.85);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s ease;
+          }
+
+          .profile-edit-menu-btn:hover {
+            background: #2b2b3f;
+            color: #fff;
+            transform: scale(1.05);
+          }
+
+          .profile-edit-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(26, 26, 36, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+          }
+
+          .profile-edit-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+          }
+
+          .profile-edit-dropdown-item {
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(226, 232, 240, 0.9);
+            font-size: 0.92rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+          }
+
+          .profile-edit-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+          }
+        </style>
+        <script>
+          // Close dropdown when clicking outside
+          document.addEventListener('click', function (e) {
+            if (!e.target.closest('.profile-edit-menu-wrap')) {
+              const dropdown = document.getElementById('profileEditDropdown');
+              if (dropdown) dropdown.classList.remove('show');
+            }
+          });
+        </script>
 
         <div class="profile-page-container" style="padding-top:12px;">
           <!-- Name + actions row -->
@@ -2672,6 +5626,9 @@
               </p>
               <p id="profileStatusText" style="margin:4px 0 0;font-size:12px;color:#a78bfa;font-style:italic;">Vibing
               </p>
+              <div id="profilePageUserId" class="profile-private-id"
+                style="font-family:monospace;color:rgba(255,255,255,0.25);font-size:10px;margin-top:10px;letter-spacing:0.05em;">
+                ID: #000000</div>
             </div>
             <div style="display:flex;gap:8px;margin-top:4px;">
               <button id="followBtn" class="btn-primary" style="display:none;padding:7px 18px;font-size:13px;"
@@ -2682,9 +5639,6 @@
           </div>
 
           <div class="profile-badges" id="profilePageBadges" style="margin-top:8px;"></div>
-          <div id="profilePageUserId"
-            style="font-family:monospace;color:rgba(255,255,255,0.25);font-size:10px;margin-top:4px;">ID:
-            #000000</div>
 
           <!-- 3-col glassmorphic stats strip -->
           <div
@@ -5799,47 +8753,7 @@
     })();
   </script>
 
-  <!-- ========== NEON 3D TUBES CURSOR EFFECT ========== -->
-  <script type="module">
-    import TubesCursor from 'https://cdn.jsdelivr.net/npm/threejs-components@0.0.30/build/cursors/tubes1.min.js';
 
-    // Only init if landing page is visible and canvas exists
-    const canvas = document.getElementById('tubes-cursor-canvas');
-    if (canvas) {
-      const tubeColors = ['#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6'];
-      const lightColors = ['#a855f7', '#7c3aed', '#c026d3', '#f0abfc', '#6d28d9'];
-
-      const app = TubesCursor(canvas, {
-        tubes: {
-          colors: tubeColors,
-          lights: {
-            intensity: 220,
-            colors: lightColors
-          }
-        }
-      });
-
-      function randomPurpleColors(count) {
-        const palette = [
-          '#a855f7', '#7c3aed', '#c026d3', '#e879f9', '#8b5cf6',
-          '#d946ef', '#9333ea', '#a21caf', '#7e22ce', '#f0abfc',
-          '#c084fc', '#6d28d9', '#581c87', '#86198f', '#d8b4fe'
-        ];
-        const result = [];
-        for (let i = 0; i < count; i++) {
-          result.push(palette[Math.floor(Math.random() * palette.length)]);
-        }
-        return result;
-      }
-
-      document.addEventListener('click', () => {
-        if (app && app.tubes) {
-          app.tubes.setColors(randomPurpleColors(5));
-          app.tubes.setLightsColors(randomPurpleColors(5));
-        }
-      });
-    }
-  </script>
 </body>
 
 </html>
