@@ -454,7 +454,7 @@ body:not(.logged-in) .live-activity-notif {
 /* VibeXpert name line */
 .lp-hero-name {
     display: block;
-    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-size: clamp(5rem, 15vw, 10rem);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -2px;
