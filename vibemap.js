@@ -1102,9 +1102,12 @@ function initBlobEyeTracking() {
   }
 
   const handler = function (e) {
+    if (!svg) return;
     const svgRect = svg.getBoundingClientRect();
     const svgWidth = svgRect.width;
     const svgHeight = svgRect.height;
+    if (svgWidth === 0 || svgHeight === 0) return; // Prevent NaN errors if hidden
+
     // SVG viewBox is 420x460
     const scaleX = 420 / svgWidth;
     const scaleY = 460 / svgHeight;
@@ -1118,23 +1121,45 @@ function initBlobEyeTracking() {
       const eyeWhite = eye.querySelector('circle:first-child');
       if (!pupil || !eyeWhite) return;
 
+      // Make pupil move smoothly via CSS
+      if (!pupil.style.transition) {
+        pupil.style.transition = 'transform 0.15s ease-out';
+        pupil.style.transformOrigin = 'center';
+        // Also ensure pupil is black and visible directly inline to fix visibility issue
+        pupil.style.fill = '#000000';
+        pupil.style.opacity = '1';
+      }
+
       const cx = parseFloat(eyeWhite.getAttribute('cx'));
       const cy = parseFloat(eyeWhite.getAttribute('cy'));
       const eyeR = parseFloat(eyeWhite.getAttribute('r'));
       const pupilR = parseFloat(pupil.getAttribute('r'));
-      const maxMove = eyeR - pupilR - 2;
 
+      // Read original start centers (only once)
+      if (!pupil.dataset.origCx) {
+        pupil.dataset.origCx = pupil.getAttribute('cx');
+        pupil.dataset.origCy = pupil.getAttribute('cy');
+      }
+      const origPx = parseFloat(pupil.dataset.origCx);
+      const origPy = parseFloat(pupil.dataset.origCy);
+
+      const maxMove = eyeR - pupilR - 1.5;
+
+      // Calculate distance from center of eyeball
       const dx = mouseX - cx;
       const dy = mouseY - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const angle = Math.atan2(dy, dx);
 
       const clampedDist = Math.min(dist * 0.15, maxMove);
-      const newCx = cx + Math.cos(angle) * clampedDist;
-      const newCy = cy + Math.sin(angle) * clampedDist;
+      const targetCx = cx + Math.cos(angle) * clampedDist;
+      const targetCy = cy + Math.sin(angle) * clampedDist;
 
-      pupil.setAttribute('cx', newCx);
-      pupil.setAttribute('cy', newCy);
+      // Translate relative to original pupil position
+      const transX = targetCx - origPx;
+      const transY = targetCy - origPy;
+
+      pupil.style.transform = `translate(${transX}px, ${transY}px)`;
     });
   };
 
@@ -1159,6 +1184,9 @@ function initPasswordEyeClosing() {
   const svg = document.querySelector('.auth-characters-svg');
 
   if (!svg) return;
+  // Prevent duplicate event listener bugs on multiple popup opens
+  if (svg.dataset.eyeClosingInitialized) return;
+  svg.dataset.eyeClosingInitialized = 'true';
 
   const eyes = svg.querySelectorAll('.blob-eye');
   let closedLines = [];
@@ -1175,7 +1203,9 @@ function initPasswordEyeClosing() {
     eyes.forEach(eye => {
       // Hide all original eye children (circles, pupils, highlights)
       Array.from(eye.children).forEach(child => {
-        child.setAttribute('data-orig-display', child.style.display || '');
+        if (!child.hasAttribute('data-orig-display')) {
+          child.setAttribute('data-orig-display', child.style.display || '');
+        }
         child.style.display = 'none';
       });
 
@@ -3221,11 +3251,19 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   if (nameEl) nameEl.textContent = targetUser.name || targetUser.username;
   if (userEl) userEl.textContent = `@${targetUser.username}`;
 
-  // Real User ID Display
+  // Ownership Visibility
+  const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
+
+  // Real User ID Display - only show if viewing own profile
   const userIdEl = document.getElementById('profilePageUserId');
   if (userIdEl) {
-    const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
-    userIdEl.textContent = `ID: #${shortId}`;
+    if (isOwn) {
+      const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
+      userIdEl.textContent = `ID: #${shortId}`;
+      userIdEl.style.display = 'block';
+    } else {
+      userIdEl.style.display = 'none';
+    }
   }
 
   // Avatar
@@ -3254,12 +3292,12 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   const noteBubble = document.getElementById('profileNoteBubble');
   const noteText = document.getElementById('profileNoteText');
   if (noteBubble && noteText) {
-    const isOwn = currentUser && (targetUser.id === currentUser.id);
-    const userNote = targetUser.note || (isOwn ? localStorage.getItem('vibeNote_' + currentUser.id) : null);
+    const isOwnNote = currentUser && (targetUser.id === currentUser.id);
+    const userNote = targetUser.note || (isOwnNote ? localStorage.getItem('vibeNote_' + currentUser.id) : null);
     if (userNote) {
       noteText.textContent = userNote;
       noteBubble.style.display = 'block';
-    } else if (isOwn) {
+    } else if (isOwnNote) {
       noteText.textContent = '💭 Tap to add a note';
       noteBubble.style.display = 'block';
     } else {
@@ -3291,13 +3329,10 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     badgesEl.innerHTML = badges || '<span class="badge-item">🆕 New Member</span>';
   }
 
-  // Ownership Visibility
-  const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
-
   // ── Set global so dmBtn can find who to message ──────────────────
   currentProfileUserId = isOwn ? null : (targetUser.id || null);
 
-  document.querySelectorAll('.edit-cover-btn, .avatar-edit-overlay, .btn-micro').forEach(btn => {
+  document.querySelectorAll('.edit-cover-btn, .avatar-edit-overlay, .btn-micro, .profile-edit-menu-wrap').forEach(btn => {
     btn.style.display = isOwn ? 'block' : 'none';
   });
 
@@ -4421,11 +4456,11 @@ function editProfileBio() {
   if (modal) {
     if (textarea) {
       textarea.value = currentUser.bio || '';
-      if (countDisplay) countDisplay.textContent = `${ textarea.value.length } / 200`;
+      if (countDisplay) countDisplay.textContent = `${textarea.value.length} / 200`;
 
       // Character counter
       textarea.oninput = () => {
-        if (countDisplay) countDisplay.textContent = `${ textarea.value.length } / 200`;
+        if (countDisplay) countDisplay.textContent = `${textarea.value.length} / 200`;
       };
     }
     if (userInput) userInput.value = currentUser.username || '';
@@ -4476,7 +4511,7 @@ function editShippingAddress() {
   const modal = prompt("Enter Shipping Address:", "Excellence Residency, Block B...");
   if (modal) {
     const container = document.getElementById('shippingAddressContent');
-    if (container) container.innerHTML = `< p > ${ modal }</p > `;
+    if (container) container.innerHTML = `< p > ${modal}</p > `;
     showMessage('🚚 Shipping info updated!', 'success');
   }
 }
@@ -4552,7 +4587,7 @@ function disableHeaderAutohide() {
   if (chatContainer) {
     const headerH = header.offsetHeight || 72;
     chatContainer.style.top = headerH + 'px';
-    chatContainer.style.height = `calc(100vh - ${ headerH }px)`;
+    chatContainer.style.height = `calc(100vh - ${headerH}px)`;
   }
 
   document.removeEventListener('mousemove', _headerMouseMove);
@@ -4578,7 +4613,7 @@ function _headerMouseMove(e) {
     if (cont) {
       const hh = header.offsetHeight || 72;
       cont.style.top = hh + 'px';
-      cont.style.height = `calc(100vh - ${ hh }px)`;
+      cont.style.height = `calc(100vh - ${hh}px)`;
     }
   } else if (e.clientY > 120 && !header.contains(e.target)) {
     // Mouse moved well away AND is not over the header — start hide timer
@@ -4605,7 +4640,7 @@ function _headerZoneEnter() {
     if (cont) {
       const hh = header.offsetHeight || 72;
       cont.style.top = hh + 'px';
-      cont.style.height = `calc(100vh - ${ hh }px)`;
+      cont.style.height = `calc(100vh - ${hh}px)`;
     }
   }
 }
@@ -4737,7 +4772,7 @@ async function createPost() {
     if (selectedStickers.length > 0) formData.append('stickers', JSON.stringify(selectedStickers));
 
     if (selectedFiles.length > 0) {
-      showMessage(`📤 Uploading ${ selectedFiles.length } file(s)...`, 'success');
+      showMessage(`📤 Uploading ${selectedFiles.length} file(s)...`, 'success');
       for (let i = 0; i < selectedFiles.length; i++) {
         formData.append('media', selectedFiles[i]);
       }
@@ -4777,7 +4812,7 @@ async function createPost() {
       const postCount = data.postCount || 1;
       setTimeout(() => showPostCelebrationModal(postCount), 1000);
       if (data.badgeUpdated && data.newBadges?.length > 0) {
-        setTimeout(() => showMessage(`🏆 Badge unlocked: ${ data.newBadges.join(', ') }`, 'success'), 6000);
+        setTimeout(() => showMessage(`🏆 Badge unlocked: ${data.newBadges.join(', ')}`, 'success'), 6000);
       }
 
     } else {
@@ -4948,7 +4983,7 @@ async function quickFollowForChat(userId, username, btn) {
     btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
     setTimeout(() => {
       btn.closest('.mutual-req-popup')?.remove();
-      showMessage(`✨ Following @${ username } !Ask them to follow back to start chatting.`, 'success');
+      showMessage(`✨ Following @${username} !Ask them to follow back to start chatting.`, 'success');
     }, 800);
   } else {
     btn.disabled = false;
@@ -4975,7 +5010,7 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
   const wasFollowing = cached.isFollowing !== undefined
     ? cached.isFollowing
     : (opts.isFollowing !== undefined ? opts.isFollowing : false);
-  const endpoint = wasFollowing ? `/ api / unfollow / ${ targetUserId } ` : ` / api / follow / ${ targetUserId } `;
+  const endpoint = wasFollowing ? `/ api / unfollow / ${targetUserId} ` : ` / api / follow / ${targetUserId} `;
 
   // Optimistically update all UIs immediately
   const nowFollowing = !wasFollowing;
@@ -5152,8 +5187,8 @@ async function loadFollowList(type) {
 
   try {
     const endpoint = type === 'followers'
-      ? `/ api / followers / ${ targetUser.id } `
-      : `/ api / following / ${ targetUser.id } `;
+      ? `/ api / followers / ${targetUser.id} `
+      : `/ api / following / ${targetUser.id} `;
     const data = await apiCall(endpoint, 'GET');
 
     if (!data.success || !data.users || data.users.length === 0) {
@@ -5180,13 +5215,12 @@ async function loadFollowList(type) {
             ${user.college ? `<div class="flm-college">🎓 ${user.college}</div>` : ''}
             ${user.bio ? `<div class="flm-bio">${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}</div>` : ''}
           </div>
-          ${
-      !isMe ? `
+          ${!isMe ? `
             <button class="flm-follow-btn ${user.isFollowedByMe ? 'flm-following' : ''}" 
               onclick="event.stopPropagation();flmToggleFollow(this, '${user.id}', '${user.username}', ${user.isFollowedByMe})">
               ${user.isFollowedByMe ? '✓ Following' : 'Follow'}
             </button>` : '<span class="flm-you-badge">You</span>'
-    }
+        }
         </div > `;
     });
     html += '</div>';
@@ -5344,7 +5378,7 @@ async function deletePost(postId) {
   if (!confirm('Delete this post?')) return;
 
   try {
-    await apiCall(`/ api / posts / ${ postId } `, 'DELETE');
+    await apiCall(`/ api / posts / ${postId} `, 'DELETE');
     showMessage('🗑️ Deleted', 'success');
 
     // Update local post count
@@ -5353,7 +5387,7 @@ async function deletePost(postId) {
       saveUserToLocal();
     }
 
-    const postEl = document.getElementById(`post - ${ postId } `);
+    const postEl = document.getElementById(`post - ${postId} `);
     if (postEl) postEl.remove();
 
     setTimeout(() => loadPosts(), 500);
@@ -5366,12 +5400,12 @@ async function toggleLike(postId) {
   if (!currentUser) return showMessage('⚠️ Login to like', 'error');
 
   try {
-    const likeBtn = document.querySelector(`#like - btn - ${ postId } `);
-    const likeCount = document.querySelector(`#like - count - ${ postId } `);
+    const likeBtn = document.querySelector(`#like - btn - ${postId} `);
+    const likeCount = document.querySelector(`#like - count - ${postId} `);
 
     if (likeBtn) likeBtn.disabled = true;
 
-    const data = await apiCall(`/ api / posts / ${ postId }/like`, 'POST');
+    const data = await apiCall(`/ api / posts / ${postId}/like`, 'POST');
 
     if (data.success) {
 
@@ -14084,4 +14118,3 @@ function execGetPanelHTML() {
   }
   return _tpl.innerHTML.replace(/__VX_COLLEGE__/g, college);
 }
-
