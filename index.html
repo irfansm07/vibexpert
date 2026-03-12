@@ -4623,7 +4623,7 @@
       </div>
 
       <nav class="nav">
-        <a href="#" class="nav-link active" onclick="showPage('home', event)">🏠 Home</a>
+        <a href="#" class="nav-link active" onclick="showPage('home', event)">⚡ Zero Velocity</a>
         <a href="#" class="nav-link" onclick="showPage('communities', event)">👥 Vibe Chats</a>
         <a href="#" class="nav-link" onclick="showPage('realvibe', event)">✨ RealVibes</a>
         <a href="#" class="nav-link" onclick="showPage('posts', event)">📝 Vibers</a>
@@ -4677,7 +4677,7 @@
             <div class="search-results" id="mobileSearchResults" style="display:none;"></div>
           </div>
           <hr>
-          <div class="menu-item" onclick="showPage('home', event)">🏠 Home</div>
+          <div class="menu-item" onclick="showPage('home', event)">⚡ Zero Velocity</div>
           <div class="menu-item" onclick="showPage('communities', event)">👥 Communities</div>
           <div class="menu-item" onclick="showPage('realvibe', event)">✨ RealVibe</div>
           <div class="menu-item" onclick="showPage('posts', event)">📝 Posts</div>
@@ -4794,55 +4794,13 @@
     <main class="content">
       <!-- HOME -->
       <section id="home" class="page active">
-        <div class="hero">
-          <h1>Welcome to VibeXpert</h1>
-          <p>Connect with students across 500+ universities!</p>
-          <div class="hero-stats">
-            <div class="hero-stat">
-              <span class="stat-num" id="heroOnline">0</span>
-              <span class="stat-label">Online Now</span>
-            </div>
-            <div class="hero-stat">
-              <span class="stat-num" id="heroPostsToday">0</span>
-              <span class="stat-label">Posts Today</span>
-            </div>
-            <div class="hero-stat">
-              <span class="stat-num" id="heroChats">0</span>
-              <span class="stat-label">Active Chats</span>
-            </div>
-          </div>
+        <div class="home-feed-header">
+          <h2>⚡ Zero Velocity</h2>
         </div>
-
-        <div class="trending-section">
-          <h2 class="title">🔥 Trending Now</h2>
-          <div id="trendingContainer" class="trending-grid"></div>
-        </div>
-
-        <h2 class="title" id="active-universities">500+ Active Universities</h2>
-        <div class="cards">
-          <div class="card" onclick="selectUniversity('nit')">
-            <div class="icon">🏛️</div>
-            <h3>NIT Colleges</h3>
-            <p>National Institutes of Technology</p>
-            <button>Explore</button>
-          </div>
-          <div class="card" onclick="selectUniversity('iit')">
-            <div class="icon">🏰</div>
-            <h3>IIT Colleges</h3>
-            <p>Indian Institutes of Technology</p>
-            <button>Explore</button>
-          </div>
-          <div class="card" onclick="selectUniversity('vit')">
-            <div class="icon">🎓</div>
-            <h3>VIT Colleges</h3>
-            <p>VIT Bhopal & Other Campuses</p>
-            <button>Explore</button>
-          </div>
-          <div class="card" onclick="selectUniversity('other')">
-            <div class="icon">🌟</div>
-            <h3>Other Universities</h3>
-            <p>Central & State Universities</p>
-            <button>Explore</button>
+        <div id="homeFeedContainer">
+          <div class="home-feed-loading" id="homeFeedLoading">
+            <div class="vibe-spinner-ring"></div>
+            <p>Loading posts…</p>
           </div>
         </div>
       </section>
@@ -5059,11 +5017,11 @@
 
         <!-- Left-edge vertical tab switcher (For You / College) -->
         <div class="vibe-side-tabs">
-          <button class="vibe-side-tab active" data-tab="all" onclick="switchVibeTab('all', this)">
+          <button class="vibe-side-tab" data-tab="all" onclick="switchVibeTab('all', this)">
             <span class="vst-text">For You</span>
           </button>
           <div class="vibe-side-divider"></div>
-          <button class="vibe-side-tab" data-tab="community" onclick="switchVibeTab('community', this)">
+          <button class="vibe-side-tab active" data-tab="community" onclick="switchVibeTab('community', this)">
             <span class="vst-text">College</span>
           </button>
         </div>
