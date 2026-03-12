@@ -2887,37 +2887,38 @@ async function requestVerificationCode() {
   const emailInput = document.getElementById('verifyEmail');
   if (!emailInput) return;
 
-  const email = emailInput.value.trim();
-  if (!email) return showMessage('⚠️ Enter email', 'error');
+  const email = emailInput.value.trim().toLowerCase();
+  if (!email) return showMessage('⚠️ Enter your college email', 'error');
 
   if (!email.endsWith(currentVerifyCollege.emailDomain)) {
-    return showMessage('⚠️ Must end with ' + currentVerifyCollege.emailDomain, 'error');
+    return showMessage('⚠️ Email must end with ' + currentVerifyCollege.emailDomain, 'error');
   }
 
+  // Disable send button to prevent double-click
+  const sendBtn = emailInput.closest('.verify-step')?.querySelector('button');
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '📧 Sending...'; }
+
   try {
-    showMessage('📧 Sending code...', 'success');
     await apiCall('/api/college/request-verification', 'POST', {
       collegeName: currentVerifyCollege.name,
       collegeEmail: email
     });
 
-    showMessage('✅ Code sent to ' + email, 'success');
+    showMessage('✅ Code sent to ' + email + ' — check your inbox (and spam!)', 'success');
 
     // Enable OTP section
     const codeSection = document.getElementById('codeSection');
     const verifyCodeInput = document.getElementById('verifyCode');
     const verifyBtn = document.getElementById('verifyBtn');
+    if (codeSection) codeSection.classList.remove('disabled-step');
+    if (verifyCodeInput) { verifyCodeInput.disabled = false; verifyCodeInput.focus(); }
+    if (verifyBtn) verifyBtn.disabled = false;
 
-    if (codeSection) {
-      codeSection.classList.remove('disabled-step');
-      if (verifyCodeInput) {
-        verifyCodeInput.disabled = false;
-        verifyCodeInput.focus();
-      }
-      if (verifyBtn) verifyBtn.disabled = false;
-    }
+    // Re-enable send button with resend label
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '🔁 Resend Code'; }
   } catch (error) {
-    showMessage('❌ ' + error.message, 'error');
+    showMessage('❌ ' + (error.message || 'Failed to send code'), 'error');
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '📧 Send Verification Code'; }
   }
 }
 
