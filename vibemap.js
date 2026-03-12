@@ -961,6 +961,8 @@ document.addEventListener('DOMContentLoaded', function () {
           updateLiveNotif(`Connected to ${currentUser.college}`);
           initializeSocket();
         }
+        // Load home feed on startup
+        setTimeout(() => loadHomeFeed(), 300);
       } else {
         // Invalid user data, show login
         showAboutUsPage();
@@ -2212,17 +2214,42 @@ function loadCommunities() {
   if (!container) return;
 
   if (!currentUser || !currentUser.communityJoined) {
+
     container.innerHTML = `
     <div class="join-community-container"
-        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px;">
-        <div class="join-icon" style="font-size: 80px; margin-bottom: 20px;">🤝</div>
-        <h2 style="margin-bottom: 15px; color: var(--text-color);">Join a Community</h2>
-        <p style="margin-bottom: 30px; color: var(--text-muted); max-width: 400px;">Connect with students from your
-            university. Join now to start chatting and sharing vibes!</p>
-        <button onclick="goToActiveUniversities()" class="cta-button"
-            style="padding: 15px 40px; font-size: 18px; border-radius: 30px; background: linear-gradient(45deg, #4f74a3, #8da4d3); border: none; color: white; cursor: pointer; box-shadow: 0 5px 15px rgba(79, 116, 163, 0.4); transition: transform 0.2s;">
-            Join Now →
-        </button>
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; overflow-y: auto;">
+        <div class="join-icon" style="font-size: 80px; margin-bottom: 10px; margin-top: 40px;">🤝</div>
+        <h2 style="margin-bottom: 5px; color: var(--text-color);">Join a Community</h2>
+        <p style="margin-bottom: 20px; color: var(--text-muted); max-width: 400px;">Connect with students from your
+            university. Select your college to start chatting and sharing vibes!</p>
+            
+        <h2 class="title" style="margin-top: 10px; margin-bottom: 15px; color: var(--text-color);">500+ Active Universities</h2>
+        <div class="cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; padding-bottom: 40px;">
+          <div class="card" onclick="selectUniversity('nit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏛️</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">NIT Colleges</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">National Institutes of Technology</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('iit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏰</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">IIT Colleges</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Indian Institutes of Technology</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('vit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🎓</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">VIT Colleges</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">VIT Bhopal & Other Campuses</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('other')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌟</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Other Universities</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Central & State Universities</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+        </div>
     </div>
     `;
     return;
@@ -2254,15 +2281,16 @@ function loadCommunities() {
   container.innerHTML = _waTpl.innerHTML
     .replace(/__VX_COLLEGE__/g, escapeHtml(currentUser.college));
 
-  // Initialize chat
+  // Initialize chat — default to Executive Chat tab
   setTimeout(() => {
     if (typeof initWhatsAppChatFixes === 'function') {
-      initWhatsAppChatFixes();  // ← ADD ONLY THIS LINE
+      initWhatsAppChatFixes();
     }
-    loadWhatsAppMessages();
+    // Open Executive Chat as the default tab
+    openExecutiveChat();
     initWhatsAppFeatures();
     loadTwitterFeed();
-  }, 100);
+  }, 150);
 }
 
 // ==========================================
@@ -2727,17 +2755,13 @@ function goToActiveUniversities() {
   // If user is already joined, go directly to chat
   if (currentUser && currentUser.college) {
     console.log('🎓 User already has college:', currentUser.college);
-    // Switch to communities tab which will trigger initCommunityChat
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     document.querySelector('.nav-link[onclick*="communities"]')?.classList.add('active');
-
-    // Manually trigger showPage for communities
     showPage('communities');
     return;
   }
-
-  showPage('activeUniversities');
-  renderActiveUniversities();
+  // Not joined — go to communities which renders the join/select screen
+  showPage('communities');
 }
 
 function selectUniversity(type) {
@@ -2752,14 +2776,11 @@ function selectUniversity(type) {
     other: 'Other Universities'
   };
 
+  // Use showPage so all pages are hidden/shown correctly
+  showPage('collegeList');
+
   const title = document.getElementById('collegeTitle');
   if (title) title.textContent = titles[type];
-
-  const home = document.getElementById('home');
-  const list = document.getElementById('collegeList');
-
-  if (home) home.style.display = 'none';
-  if (list) list.style.display = 'block';
 
   showColleges();
 }
@@ -2805,11 +2826,13 @@ function searchColleges() {
 }
 
 function backToUniversities() {
-  const list = document.getElementById('collegeList');
-  const home = document.getElementById('home');
-
-  if (list) list.style.display = 'none';
-  if (home) home.style.display = 'block';
+  // If user hasn't joined yet, go back to communities join screen
+  // If user came from home page university cards, go back to home
+  if (currentUser && currentUser.communityJoined) {
+    showPage('home');
+  } else {
+    showPage('communities');
+  }
 }
 
 function openVerify(name, emailDomain) {
@@ -2911,13 +2934,20 @@ async function verifyCollegeCode() {
 
     showMessage('🎉 ' + data.message, 'success');
     currentUser.college = data.college;
-    currentUser.registration_number = data.collegeEmail || currentUser.email; // Use verified college email
+    currentUser.registration_number = data.collegeEmail || currentUser.email;
     currentUser.communityJoined = true;
     currentUser.badges = data.badges;
     localStorage.setItem('user', JSON.stringify(currentUser));
 
     closeModal('verifyModal');
-    initializeSocket();
+
+    // If socket already connected, just join the college room
+    // Otherwise initialize the socket fresh
+    if (typeof socket !== 'undefined' && socket && socket.connected) {
+      socket.emit('join_college', data.college);
+    } else {
+      initializeSocket();
+    }
 
     setTimeout(() => {
       showPage('communities');
@@ -4678,7 +4708,8 @@ function showPage(name, e) {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if (e?.target) e.target.classList.add('active');
 
-  if (name === 'posts') loadPosts();
+  if (name === 'home') loadHomeFeed();
+  else if (name === 'posts') loadPosts();
   else if (name === 'communities') loadCommunities();
   else if (name === 'vibeshop') loadVibeshopPage();
 
@@ -4697,9 +4728,15 @@ function showPage(name, e) {
   }
 
   // Auto-hide header on communities, posts, realvibe
+  // But NOT on communities when user hasn't joined a college — that page is a static join screen
   const autoHidePages = ['communities', 'posts', 'realvibe'];
   if (autoHidePages.includes(name)) {
-    enableHeaderAutohide();
+    const communityJoined = currentUser && currentUser.communityJoined && currentUser.college;
+    if (name === 'communities' && !communityJoined) {
+      disableHeaderAutohide();
+    } else {
+      enableHeaderAutohide();
+    }
   } else {
     disableHeaderAutohide();
   }
@@ -4723,6 +4760,156 @@ function goHome() {
   const homeLink = document.querySelector('.nav-link[onclick*="home"]');
   if (homeLink) homeLink.classList.add('active');
 }
+// ══════════════════════════════════════════════════════════════
+// HOME FEED — For You (Global Posts, no add button)
+// ══════════════════════════════════════════════════════════════
+let _homeFeedLoading = false;
+
+async function loadHomeFeed() {
+  if (_homeFeedLoading) return;
+  _homeFeedLoading = true;
+
+  const container = document.getElementById('homeFeedContainer');
+  if (!container) { _homeFeedLoading = false; return; }
+
+  // Show loading spinner
+  container.innerHTML = `<div class="home-feed-loading">
+    <div class="vibe-spinner-ring"></div><p>Loading posts…</p>
+  </div>`;
+
+  try {
+    const data = await apiCall('/api/posts', 'GET');
+    const allPosts = data.posts || [];
+    // Only show OTHER people's posts on home feed
+    const posts = allPosts.filter(p => {
+      const ownerId = (p.users && p.users.id) || p.user_id;
+      return !currentUser || ownerId !== currentUser.id;
+    });
+
+    if (!posts.length) {
+      container.innerHTML = `<div class="home-feed-empty">
+        <div style="font-size:48px;margin-bottom:12px;">📭</div>
+        <h3>No posts yet</h3>
+        <p>Be the first to post something!</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = posts.map(post => buildHomeFeedCard(post)).join('');
+  } catch (err) {
+    container.innerHTML = `<div class="home-feed-empty">
+      <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+      <h3>Failed to load</h3>
+      <p>${err.message || 'Check your connection'}</p>
+      <button onclick="loadHomeFeed()" class="action-btn" style="margin-top:12px;">Retry</button>
+    </div>`;
+  } finally {
+    _homeFeedLoading = false;
+  }
+}
+
+function buildHomeFeedCard(post) {
+  const user = post.users || {};
+  const username = escapeHtml(user.username || 'Unknown');
+  const userId = user.id || '';
+  const college = user.college ? `<span class="hf-college">🎓 ${escapeHtml(user.college)}</span>` : '';
+  const avatar = user.profile_pic
+    ? `<img src="${escapeHtml(user.profile_pic)}" class="hf-avatar" onclick="showUserProfile('${escapeHtml(userId)}')">`
+    : `<div class="hf-avatar hf-avatar-fb" onclick="showUserProfile('${escapeHtml(userId)}')">${escapeHtml((user.username || 'U').charAt(0).toUpperCase())}</div>`;
+
+  const content = post.content ? `<p class="hf-content">${escapeHtml(post.content)}</p>` : '';
+
+  // Media
+  const media = Array.isArray(post.media) ? post.media : [];
+  let mediaHtml = '';
+  if (media.length > 0) {
+    const m = media[0];
+    if (m.type === 'video') {
+      mediaHtml = `<video class="hf-media" src="${escapeHtml(m.url)}" controls playsinline></video>`;
+    } else if (m.type === 'image') {
+      mediaHtml = `<img class="hf-media" src="${escapeHtml(m.url)}" loading="lazy">`;
+    }
+  }
+
+  const postId = post._id || post.id || '';
+  const likes = post.like_count || 0;
+  const comments = post.comment_count || 0;
+  const isLiked = post.is_liked;
+  const isOwn = currentUser && (userId === currentUser.id);
+  const isFollowing = post.is_following_author || (_followState[userId] && _followState[userId].isFollowing);
+
+  const followBtn = (!isOwn && userId)
+    ? `<button class="hf-follow-btn ${isFollowing ? 'hf-following' : ''}" onclick="homeFeedToggleFollow('${escapeHtml(userId)}', this)">
+        ${isFollowing ? '✓ Following' : '+ Follow'}
+      </button>`
+    : '';
+
+  const time = post.createdAt ? timeAgo(new Date(post.createdAt)) : '';
+
+  return `<div class="hf-card" id="hf-post-${escapeHtml(postId)}">
+    <div class="hf-card-header">
+      ${avatar}
+      <div class="hf-user-info">
+        <span class="hf-username" onclick="showUserProfile('${escapeHtml(userId)}')">${username}</span>
+        ${college}
+        <span class="hf-time">${time}</span>
+      </div>
+      ${followBtn}
+    </div>
+    ${content}
+    ${mediaHtml}
+    <div class="hf-actions">
+      <button class="hf-action-btn hf-like-btn ${isLiked ? 'hf-liked' : ''}" onclick="homeFeedToggleLike('${escapeHtml(postId)}', this)">
+        <span class="hf-like-icon">${isLiked ? '❤️' : '🤍'}</span>
+        <span class="hf-like-count">${likes}</span>
+      </button>
+      <button class="hf-action-btn" onclick="openCommentModal('${escapeHtml(postId)}')">
+        💬 <span>${comments}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+async function homeFeedToggleLike(postId, btn) {
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
+  try {
+    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
+    const liked = data.liked;
+    const countEl = btn.querySelector('.hf-like-count');
+    const iconEl = btn.querySelector('.hf-like-icon');
+    if (iconEl) iconEl.textContent = liked ? '❤️' : '🤍';
+    if (countEl) countEl.textContent = data.likeCount ?? (parseInt(countEl.textContent) + (liked ? 1 : -1));
+    btn.classList.toggle('hf-liked', liked);
+  } catch (err) { showMessage('❌ ' + (err.message || 'Failed'), 'error'); }
+}
+
+async function homeFeedToggleFollow(userId, btn) {
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
+  const isFollowing = btn.classList.contains('hf-following');
+  try {
+    if (isFollowing) {
+      await apiCall(`/api/unfollow/${userId}`, 'POST');
+      btn.textContent = '+ Follow';
+      btn.classList.remove('hf-following');
+    } else {
+      await apiCall(`/api/follow/${userId}`, 'POST');
+      btn.textContent = '✓ Following';
+      btn.classList.add('hf-following');
+    }
+    if (!_followState[userId]) _followState[userId] = {};
+    _followState[userId].isFollowing = !isFollowing;
+  } catch (err) { showMessage('❌ ' + (err.message || 'Failed'), 'error'); }
+}
+
+function timeAgo(date) {
+  const diff = Math.floor((Date.now() - date) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+
 
 function goToActiveUniversities() {
   showPage('home');
@@ -9071,88 +9258,52 @@ function setupCommunitySocketListeners() {
 }
 
 function initCommunityChat() {
-
-  console.log('💬 Initializing Community Chat...');
-
-  // Reload user from storage to be sure
+  // Reload user from storage if needed
   if (!currentUser) {
     try {
       const stored = localStorage.getItem('user');
       if (stored) currentUser = JSON.parse(stored);
-    } catch (e) {
-      console.error('Error parsing user', e);
-    }
+    } catch (e) { console.error('Error parsing user', e); }
   }
 
-  console.log('👤 Current User Status:', currentUser ? 'Logged In' : 'Null', currentUser?.college);
+  // Guard: only run if user has joined a college
+  if (!currentUser || !currentUser.college || !currentUser.communityJoined) return;
 
-  const chatState = document.getElementById('communityChatState');
-  const joinState = document.getElementById('joinCommunityState');
-
-  if (!currentUser || !currentUser.college) {
-    console.log('❌ User not joined to a college. Showing Join State.');
-    if (joinState) { joinState.style.display = 'flex'; joinState.classList.remove('hidden'); }
-    if (chatState) { chatState.style.display = 'none'; chatState.classList.add('hidden'); }
-    return;
-  }
-
-  // ── GHOST NAME GATE ─────────────────────────────────────────────────
-  // If muted, still let them in (read-only), but require ghost name first.
+  // The chat UI is already rendered by loadCommunities() via the whatsapp template.
+  // This function handles: ghost name gate, socket join, mute check, message load.
   requireGhostName(() => {
-    // Update ghost name display in header if present
     const gnEl = document.getElementById('chatGhostNameDisplay');
     if (gnEl) gnEl.textContent = `👻 ${getGhostName()}`;
 
-    // User is joined — show chat
-    if (joinState) { joinState.style.display = 'none'; joinState.classList.add('hidden'); }
-    if (chatState) { chatState.style.display = 'flex'; chatState.classList.remove('hidden'); }
-
-    // Update Header
     const title = document.getElementById('communityTitle');
     if (title) title.textContent = `👻 ${currentUser.college} — Anonymous Chat`;
 
-    // Join Socket Room
     if (socket) {
       socket.emit('join_college', currentUser.college);
-      // Register ghost name for uniqueness enforcement
       if (hasGhostName()) {
         socket.emit('register_ghost_name', {
           userId: currentUser.id,
           collegeName: currentUser.college,
           ghostName: getGhostName()
         });
-        // If ghost name is already taken on reconnect, force re-selection
         socket.once('ghost_name_result', (result) => {
           if (!result.success) {
             _ghostName = '';
             localStorage.removeItem('vx_ghost_name');
-            showMessage(`👻 Your ghost name was taken. Choose a new one!`, 'error');
+            showMessage('👻 Your ghost name was taken. Choose a new one!', 'error');
           }
         });
       }
       setupCommunitySocketListeners();
     }
 
-    // Check mute state
     if (isChatMuted()) showCommunityMutedBanner(muteTimeLeft());
 
-    // Position chat container
-    requestAnimationFrame(() => {
-      const header = document.querySelector('.header');
-      const chatContainer = document.querySelector('.whatsapp-container');
-      if (header && chatContainer) {
-        if (document.body.classList.contains('header-autohide')) {
-          chatContainer.style.top = '0';
-          chatContainer.style.height = '100vh';
-        } else {
-          const hh = header.offsetHeight || 72;
-          chatContainer.style.top = hh + 'px';
-          chatContainer.style.height = `calc(100vh - ${hh}px)`;
-        }
-      }
-    });
-
-    loadCommunityMessages();
+    const messagesArea = document.getElementById('chatMessages') || document.getElementById('whatsappMessages');
+    if (messagesArea) {
+      if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+      else if (typeof loadWhatsAppMessages === 'function') loadWhatsAppMessages();
+    }
   });
 }
 
@@ -10271,53 +10422,18 @@ function searchInChat() {
   if (box) box.focus();
 }
 
-// Global scope override for showPage
-// We capture the previous implementation if we can, but since we are appending,
-// we just define a wrapper.
-const previousShowPage = window.showPage;
+// showPage hook — only adds communities chat init, avoids duplicating logic already in showPage()
+(function () {
+  const _prev = window.showPage;
+  window.showPage = function (pageId, ...args) {
+    if (typeof _prev === 'function') _prev(pageId, ...args);
+    // Init community chat ONLY after user has joined a college
+    if (pageId === 'communities' && currentUser && currentUser.college && currentUser.communityJoined) {
+      setTimeout(() => initCommunityChat(), 80);
+    }
+  };
+})();
 
-window.showPage = function (pageId, ...args) {
-  console.log(`Navigate to: ${pageId}`);
-
-  // Call original logic (assuming it handles display:block/none)
-  if (typeof previousShowPage === 'function') {
-    previousShowPage(pageId, ...args);
-  } else {
-    // Fallback if previousShowPage isn't captured (e.g. it was defined as function declaration)
-    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-
-    const page = document.getElementById(pageId);
-    if (page) page.style.display = 'block';
-  }
-
-  // Hide footer on communities, posts, realvibe
-  const footer = document.getElementById('mainFooter');
-  if (footer) {
-    const noFooterPages = ['communities', 'posts', 'realvibe'];
-    footer.style.display = noFooterPages.includes(pageId) ? 'none' : '';
-  }
-
-  // Auto-hide header on communities, posts, realvibe
-  const autoHidePages = ['communities', 'posts', 'realvibe'];
-  if (autoHidePages.includes(pageId)) {
-    enableHeaderAutohide();
-  } else {
-    disableHeaderAutohide();
-  }
-
-  // Hide crown button on communities, posts, realvibe only
-  const crownBtn = document.querySelector('.premium-crown-btn');
-  if (crownBtn) {
-    const hideCrownPages = ['communities', 'posts', 'realvibe'];
-    crownBtn.style.display = hideCrownPages.includes(pageId) ? 'none' : '';
-  }
-
-  // Hook for Communities
-  if (pageId === 'communities') {
-    setTimeout(() => { initCommunityChat(); setTimeout(() => openExecutiveChat(), 200); }, 50);
-  }
-};
 
 // ============================================================
 //  VIBE FEED — Full-Screen Posts · Real-Time Data
@@ -10325,7 +10441,7 @@ window.showPage = function (pageId, ...args) {
 //  Uses existing: toggleLike(), openCommentModal(), deletePost()
 // ============================================================
 
-let vibeActiveTab = 'all';         // 'all' | 'community'
+let vibeActiveTab = 'community';   // 'all' | 'community'
 let vibeActiveSharePostId = null;  // post id for share drawer
 let vibeActiveCommentPostId = null;// post id for comments drawer
 let vibeDestination = 'profile';   // upload destination
