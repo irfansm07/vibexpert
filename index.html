@@ -4078,20 +4078,77 @@
             <div class="auth-divider">
               <span>or</span>
             </div>
-            <button type="button" class="auth-google-btn" disabled title="Coming soon!"
-              style="cursor: not-allowed; opacity: 0.5;" onclick="">
-              <svg width="18" height="18" viewBox="0 0 18 18">
-                <path fill="#4285F4"
-                  d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" />
-                <path fill="#34A853"
-                  d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
-                <path fill="#FBBC05"
-                  d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" />
-                <path fill="#EA4335"
-                  d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" />
-              </svg>
-              Log in with Google
-            </button>
+            <div style="display: flex; justify-content: center; width: 100%; margin: 10px 0;">
+              <div id="googleLoginBtnContainer"></div>
+            </div>
+
+            <!-- Google Identity Services Script -->
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <script>
+              function handleGoogleAuthResponse(response) {
+                if (!response.credential) {
+                  const msg = typeof showMessage === 'function' ? showMessage : alert;
+                  msg('Google login failed', 'error');
+                  return;
+                }
+                
+                const API_URL = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+
+                fetch(API_URL + '/api/auth/google', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ idToken: response.credential })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    if (typeof window.currentUser !== 'undefined') {
+                      window.currentUser = data.user;
+                    }
+                    if (typeof window._token !== 'undefined') {
+                      window._token = data.token;
+                    }
+
+                    if (typeof showMessage === 'function') {
+                      showMessage('Successfully logged in with Google!', 'success');
+                    }
+
+                    const authModal = document.getElementById('authModal');
+                    if (authModal) authModal.style.display = 'none';
+
+                    if (typeof loadInitialData === 'function') loadInitialData();
+                    if (typeof checkLoginState === 'function') checkLoginState();
+                    if (typeof showPage === 'function') showPage('home');
+                    if (typeof updateHeaderUI === 'function') updateHeaderUI();
+                  } else {
+                    if (typeof showMessage === 'function') showMessage(data.message || 'Google Auth Failed', 'error');
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  if (typeof showMessage === 'function') showMessage('Server error during Google Login', 'error');
+                });
+              }
+
+              window.addEventListener('load', () => {
+                setTimeout(() => {
+                  if (window.google) {
+                    google.accounts.id.initialize({
+                      client_id: "709002398930-bepd25ejutp0220j6qlgmjtf8gek1718.apps.googleusercontent.com",
+                      callback: handleGoogleAuthResponse,
+                      auto_select: false
+                    });
+                    google.accounts.id.renderButton(
+                      document.getElementById("googleLoginBtnContainer"),
+                      { theme: "filled_black", size: "large", type: "standard", shape: "pill", width: 280 }
+                    );
+                  }
+                }, 1000); // Give it a second to load
+              });
+            </script>
             <p class="auth-switch-text">Don't have an account? <a href="#" onclick="goSignup(event)">Sign up</a>
             </p>
           </form>
