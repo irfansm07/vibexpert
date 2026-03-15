@@ -961,6 +961,8 @@ document.addEventListener('DOMContentLoaded', function () {
           updateLiveNotif(`Connected to ${currentUser.college}`);
           initializeSocket();
         }
+        // Sync latest user data from server on every refresh
+        refreshCurrentUser();
         // Load home feed on startup
         setTimeout(() => loadHomeFeed(), 300);
       } else {
@@ -984,6 +986,34 @@ document.addEventListener('DOMContentLoaded', function () {
   loadTrending();
   console.log('✅ Initialized');
 });
+
+
+// ========================================
+// REFRESH CURRENT USER FROM SERVER
+// Pulls cover_photo + profile_pic fresh
+// from Supabase on every page load
+// ========================================
+async function refreshCurrentUser() {
+  if (!currentUser || !currentUser.id) return;
+  try {
+    const data = await apiCall('/api/profile/' + currentUser.id, 'GET');
+    if (data && data.success && data.user) {
+      currentUser.profile_pic = data.user.profile_pic || currentUser.profile_pic || null;
+      currentUser.cover_photo = data.user.cover_photo || null;
+      currentUser.coverPhoto  = currentUser.cover_photo;
+      currentUser.bio         = data.user.bio || currentUser.bio || '';
+      currentUser.badges      = data.user.badges || currentUser.badges || [];
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      // If profile modal is open, re-render it with fresh data
+      const profileModal = document.getElementById('enhancedProfileModal');
+      if (profileModal && profileModal.style.display !== 'none') {
+        loadEnhancedProfileData();
+      }
+    }
+  } catch (e) {
+    console.warn('[refreshCurrentUser] Could not sync:', e.message);
+  }
+}
 
 // ========================================
 // ABOUT US PAGE FUNCTIONALITY
@@ -8276,10 +8306,11 @@ async function loadEnhancedProfileData() {
   }
 
   // Cover photo
-  if (currentUser.coverPhoto) {
+  const _coverUrl = currentUser.cover_photo || currentUser.coverPhoto || null;
+  if (_coverUrl) {
     const cover = document.getElementById('profileCover');
     if (cover) {
-      cover.style.backgroundImage = `url('${currentUser.coverPhoto}')`;
+      cover.style.backgroundImage = `url('${_coverUrl}')`;
       cover.style.backgroundSize = 'cover';
       cover.style.backgroundPosition = 'center';
     }
@@ -8447,6 +8478,7 @@ async function handleCoverPhotoUpload(event) {
 
     if (data.success && data.photoUrl) {
       currentUser.coverPhoto = data.photoUrl;
+      currentUser.cover_photo = data.photoUrl;
       localStorage.setItem('user', JSON.stringify(currentUser));
 
       const cover = document.getElementById('profileCover');
