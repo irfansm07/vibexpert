@@ -6778,7 +6778,6 @@ function updateLiveStats() {
   const activeChats = Math.floor(Math.random() * 100) + 50;
 
   const elements = {
-    'liveUsersCount': onlineCount + ' Active',
     'heroOnline': onlineCount,
     'heroPostsToday': postsToday,
     'heroChats': activeChats,
@@ -6792,13 +6791,12 @@ function updateLiveStats() {
 }
 
 function updateOnlineCount(count) {
-  const elements = ['liveUsersCount', 'heroOnline', 'chatOnlineCount', 'footerUsers'];
+  const elements = ['heroOnline', 'chatOnlineCount', 'footerUsers'];
 
   elements.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      if (id === 'liveUsersCount') el.textContent = count + ' Active';
-      else el.textContent = count;
+      el.textContent = count;
     }
   });
 }

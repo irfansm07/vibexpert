@@ -53398,9 +53398,3 @@ body.light-theme .mv-skeleton-cell {
   display: none !important;
 }
 
-.live-counter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
