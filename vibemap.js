@@ -958,7 +958,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (userName) userName.textContent = 'Hi, ' + currentUser.username;
 
         if (currentUser.college) {
-          updateLiveNotif(`Connected to ${currentUser.college}`);
+          // Removed updateLiveNotif
           initializeSocket();
         }
         // Sync latest user data from server on every refresh.
@@ -1035,7 +1035,7 @@ async function refreshCurrentUser() {
         } else if (typeof socket !== 'undefined' && socket && socket.connected) {
           socket.emit('join_college', data.user.college);
         }
-        updateLiveNotif('Connected to ' + data.user.college);
+        // Removed updateLiveNotif
       }
       if (data.user.community_joined != null) {
         currentUser.communityJoined = !!data.user.community_joined;
@@ -3040,7 +3040,7 @@ async function verifyCollegeCode() {
 
     setTimeout(() => {
       showPage('communities');
-      updateLiveNotif('Connected to ' + data.college);
+      // Removed updateLiveNotif
     }, 1500);
   } catch (error) {
     showMessage('❌ ' + error.message, 'error');
@@ -6804,8 +6804,7 @@ function updateOnlineCount(count) {
 }
 
 function updateLiveNotif(text) {
-  const notif = document.getElementById('notifText');
-  if (notif) notif.textContent = text;
+  // Removed logic
 }
 
 function toggleOptionsMenu() {
