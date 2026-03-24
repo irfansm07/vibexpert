@@ -961,8 +961,15 @@ document.addEventListener('DOMContentLoaded', function () {
           updateLiveNotif(`Connected to ${currentUser.college}`);
           initializeSocket();
         }
-        // Sync latest user data from server on every refresh
-        refreshCurrentUser();
+        // Sync latest user data from server on every refresh.
+        // After sync, if college/communityJoined were restored from the server,
+        // re-render the communities page so chat shows without requiring re-login.
+        refreshCurrentUser().then(() => {
+          const activePage = document.querySelector('.page.active, .page[style*="display: block"]');
+          if (activePage && activePage.id === 'communities') {
+            if (typeof loadCommunities === 'function') loadCommunities();
+          }
+        });
         // Load home feed on startup
         setTimeout(() => loadHomeFeed(), 300);
       } else {
@@ -1000,10 +1007,43 @@ async function refreshCurrentUser() {
     if (data && data.success && data.user) {
       currentUser.profile_pic = data.user.profile_pic || currentUser.profile_pic || null;
       currentUser.cover_photo = data.user.cover_photo || null;
-      currentUser.coverPhoto  = currentUser.cover_photo;
-      currentUser.bio         = data.user.bio || currentUser.bio || '';
-      currentUser.badges      = data.user.badges || currentUser.badges || [];
+      currentUser.coverPhoto = currentUser.cover_photo;
+      currentUser.bio = data.user.bio || currentUser.bio || '';
+      currentUser.badges = data.user.badges || currentUser.badges || [];
+      currentUser.hobbies = data.user.hobbies || currentUser.hobbies || '';
+
+      // ── Sync follower / following counts from server ──────────────────
+      currentUser.followersCount = data.user.followersCount || 0;
+      currentUser.followingCount = data.user.followingCount || 0;
+      currentUser.postCount = data.user.postCount || currentUser.postCount || 0;
+
+      // Immediately update stat elements if profile page is visible
+      const followersStat = document.getElementById('profileStatFollowers');
+      const followingStat = document.getElementById('profileStatFollowing');
+      const postsStat = document.getElementById('profileStatPosts');
+      if (followersStat) followersStat.textContent = currentUser.followersCount;
+      if (followingStat) followingStat.textContent = currentUser.followingCount;
+      if (postsStat) postsStat.textContent = currentUser.postCount;
+      // ─────────────────────────────────────────────────────────────────
+
+      // ── Sync college & communityJoined from server ────────────────────
+      if (data.user.college) {
+        const collegeChanged = currentUser.college !== data.user.college;
+        currentUser.college = data.user.college;
+        if (collegeChanged && typeof initializeSocket === 'function') {
+          initializeSocket();
+        } else if (typeof socket !== 'undefined' && socket && socket.connected) {
+          socket.emit('join_college', data.user.college);
+        }
+        updateLiveNotif('Connected to ' + data.user.college);
+      }
+      if (data.user.community_joined != null) {
+        currentUser.communityJoined = !!data.user.community_joined;
+      }
+      // ─────────────────────────────────────────────────────────────────
+
       localStorage.setItem('user', JSON.stringify(currentUser));
+
       // If profile modal is open, re-render it with fresh data
       const profileModal = document.getElementById('enhancedProfileModal');
       if (profileModal && profileModal.style.display !== 'none') {
@@ -1376,8 +1416,21 @@ function initializeMusicPlayer() {
 // ========================================
 
 function getToken() {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('authToken') ||
+    localStorage.getItem('token') ||
+    sessionStorage.getItem('authToken') ||
+    sessionStorage.getItem('token') ||
+    null;
 }
+
+// Normalise token storage — always write under 'authToken' so every part of
+// the app reads the same key regardless of which login path was used.
+(function normaliseTokenKey() {
+  const t = localStorage.getItem('token') || sessionStorage.getItem('token');
+  if (t && !localStorage.getItem('authToken')) {
+    localStorage.setItem('authToken', t);
+  }
+})();
 
 // Fixed apiCall function - merged both versions with proper endpoint handling
 async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
@@ -1515,6 +1568,7 @@ async function signup(e) {
   const email = document.getElementById('signupEmail')?.value.trim();
   const password = document.getElementById('signupPass')?.value;
   const confirm = document.getElementById('signupConfirm')?.value;
+  const hobbies = document.getElementById('signupHobbies')?.value || '';
 
   if (!username || !email || !password || !confirm) return showMessage('Fill all fields', 'error');
   if (password !== confirm) return showMessage('Passwords don\'t match', 'error');
@@ -1527,7 +1581,7 @@ async function signup(e) {
 
   try {
     showMessage('Creating account...', 'success');
-    await apiCall('/api/register', 'POST', { username, email, password });
+    await apiCall('/api/register', 'POST', { username, email, password, hobbies });
     showMessage('🎉 Account created!', 'success');
     const form = document.getElementById('signupForm');
     if (form) form.reset();
@@ -2243,7 +2297,11 @@ function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   if (!container) return;
 
-  if (!currentUser || !currentUser.communityJoined) {
+  // ── BUG FIX: Treat having a college as equivalent to communityJoined=true.
+  // This covers older sessions where communityJoined was never saved to localStorage
+  // but the user had already verified their college email on the server.
+  const isJoined = currentUser && (currentUser.communityJoined || currentUser.community_joined || !!currentUser.college);
+  if (!currentUser || !isJoined) {
 
     container.innerHTML = `
     <div class="join-community-container"
@@ -3264,9 +3322,60 @@ async function showUserProfile(userId) {
         if (followersStat) followersStat.textContent = data.user.followersCount || 0;
         if (followingStat) followingStat.textContent = data.user.followingCount || 0;
         if (postsStat) postsStat.textContent = data.user.postCount || 0;
-        // Update target user object
+        // Update target user object with ALL fresh fields including profile_pic, cover, hobbies
         if (window.currentProfileUser) {
           Object.assign(window.currentProfileUser, data.user);
+          const tu = window.currentProfileUser;
+          // Refresh avatar
+          const avatarImg = document.getElementById('profilePageAvatarImg');
+          const avatarInitial = document.getElementById('profilePageAvatarInitial');
+          if (tu.profile_pic) {
+            if (avatarImg) { avatarImg.src = tu.profile_pic; avatarImg.style.display = 'block'; avatarImg.onerror = function () { this.style.display = 'none'; if (avatarInitial) avatarInitial.style.display = 'block'; }; }
+            if (avatarInitial) avatarInitial.style.display = 'none';
+          } else {
+            if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
+            if (avatarInitial) avatarInitial.style.display = 'block';
+          }
+          // Refresh cover photo
+          const coverImg = document.getElementById('profileCoverImg');
+          const coverWrap = document.getElementById('profileCoverPhoto');
+          const coverUrl = tu.cover_photo || tu.coverPhoto || null;
+          if (coverImg) {
+            if (coverUrl) { coverImg.src = coverUrl; coverImg.style.display = 'block'; if (coverWrap) coverWrap.style.background = 'none'; }
+            else { coverImg.src = ''; coverImg.style.display = 'none'; if (coverWrap) coverWrap.style.background = ''; }
+          }
+          // Refresh bio
+          const bioEl = document.getElementById('profileBio');
+          if (bioEl) bioEl.textContent = tu.bio || 'Tell the world about yourself...';
+          // Refresh college/email
+          const collegeEl = document.getElementById('profileCollege');
+          const regNoEl = document.getElementById('profileRegNo');
+          if (collegeEl) collegeEl.textContent = tu.college || 'No college set';
+          if (regNoEl) regNoEl.textContent = tu.registration_number || tu.email || 'No email';
+          // Refresh hobbies
+          const _isOwnCached = !!(currentUser && tu && (tu.id === currentUser.id || tu.username === currentUser.username));
+          renderProfileHobbies(tu, _isOwnCached);
+
+          // ── Always sync follow button with FRESH server isFollowing ───
+          const followBtnFresh = document.getElementById('followBtn');
+          if (followBtnFresh && !_isOwnCached) {
+            followBtnFresh.style.display = 'block';
+            if (data.user.isFollowing) {
+              followBtnFresh.innerHTML = '<span class="follow-check-anim">\u2713</span> Following';
+              followBtnFresh.className = 'btn-secondary follow-btn-following';
+            } else {
+              followBtnFresh.innerHTML = 'Follow';
+              followBtnFresh.className = 'btn-primary follow-btn-not-following';
+            }
+            followBtnFresh.style.opacity = '1';
+            followBtnFresh.disabled = false;
+          }
+          // Sync _followState + _mpcCache with authoritative server value
+          _seedFollowState(userId, data.user.isFollowing, data.user.followersCount || 0);
+          if (window._mpcCache && window._mpcCache[userId]) {
+            window._mpcCache[userId].isFollowing = data.user.isFollowing;
+          }
+          // ─────────────────────────────────────────────────────────────
         }
       } else {
         showProfilePage(data.user, true);
@@ -3327,13 +3436,36 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     }
   }
 
-  // Avatar
+  // Avatar — always force correct state so switching between users never shows stale pic
   if (targetUser.profile_pic) {
-    if (avatarImg) { avatarImg.src = targetUser.profile_pic; avatarImg.style.display = 'block'; }
+    if (avatarImg) {
+      avatarImg.src = targetUser.profile_pic;
+      avatarImg.style.display = 'block';
+      avatarImg.onerror = function () {
+        this.style.display = 'none';
+        if (avatarInitial) avatarInitial.style.display = 'block';
+      };
+    }
     if (avatarInitial) avatarInitial.style.display = 'none';
   } else {
-    if (avatarImg) avatarImg.style.display = 'none';
+    if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
     if (avatarInitial) avatarInitial.style.display = 'block';
+  }
+
+  // Cover photo — render for ALL users (own + others)
+  const coverImg = document.getElementById('profileCoverImg');
+  const coverWrap = document.getElementById('profileCoverPhoto');
+  const coverUrl = targetUser.cover_photo || targetUser.coverPhoto || null;
+  if (coverImg) {
+    if (coverUrl) {
+      coverImg.src = coverUrl;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    } else {
+      coverImg.src = '';
+      coverImg.style.display = 'none';
+      if (coverWrap) coverWrap.style.background = '';
+    }
   }
 
   // Real data from database
@@ -3348,6 +3480,9 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   // Set bio
   const bioEl = document.getElementById('profileBio');
   if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
+
+  // Render hobbies — pass isOwn explicitly so edit button always shows correctly
+  renderProfileHobbies(targetUser, isOwn);
 
   // Instagram-style Note bubble
   const noteBubble = document.getElementById('profileNoteBubble');
@@ -3436,7 +3571,9 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   }
 
   // Only re-fetch stats if data wasn't already fresh from showUserProfile
-  if (!targetUser._dataFresh) {
+  // Always re-fetch for own profile to ensure follower/following counts are live
+  const forceRefresh = isOwn || !targetUser._dataFresh;
+  if (forceRefresh) {
     fetchProfileStats(targetUser);
   } else {
     // Data is already authoritative - just seed the follow state and sync UI
@@ -4507,6 +4644,101 @@ async function saveProfileChanges() {
   }
 }
 
+// ══════════════════════════════════════════
+//  HOBBIES — display, edit, save
+// ══════════════════════════════════════════
+const HOBBY_EMOJI = {
+  music: '🎵', gaming: '🎮', art: '🎨', sports: '⚽', coding: '💻',
+  reading: '📚', travel: '✈️', movies: '🎬', cooking: '🍳', fitness: '🏋️',
+  photography: '📷', dance: '💃', music_production: '🎧', anime: '🌸',
+  writing: '✍️', yoga: '🧘'
+};
+const HOBBY_LABEL = {
+  music: 'Music', gaming: 'Gaming', art: 'Art', sports: 'Sports', coding: 'Coding',
+  reading: 'Reading', travel: 'Travel', movies: 'Movies', cooking: 'Cooking',
+  fitness: 'Fitness', photography: 'Photography', dance: 'Dance',
+  music_production: 'Music Prod.', anime: 'Anime', writing: 'Writing', yoga: 'Yoga'
+};
+
+function renderProfileHobbies(targetUser, isOwn) {
+  const wrap = document.getElementById('profileHobbiesWrap');
+  if (!wrap) return;
+  // If isOwn not passed explicitly, compute it as fallback
+  if (isOwn === undefined) {
+    isOwn = !!(currentUser && targetUser && (
+      targetUser.id === currentUser.id ||
+      targetUser.username === currentUser.username
+    ));
+  }
+  const editBtn = document.getElementById('editHobbiesBtn');
+  if (editBtn) editBtn.style.display = isOwn ? 'flex' : 'none';
+
+  const rawHobbies = targetUser.hobbies || '';
+  const list = typeof rawHobbies === 'string'
+    ? rawHobbies.split(',').map(h => h.trim()).filter(Boolean)
+    : (Array.isArray(rawHobbies) ? rawHobbies : []);
+
+  if (!list.length) {
+    wrap.innerHTML = '<span class="vx-hobbies-empty">' +
+      (isOwn ? '✨ Tap "Edit" to add your hobbies!' : 'No hobbies added yet.') +
+      '</span>';
+    return;
+  }
+  wrap.innerHTML = list.map(h =>
+    `<span class="vx-hobby-chip">${HOBBY_EMOJI[h] || '🌟'} ${HOBBY_LABEL[h] || h}</span>`
+  ).join('');
+}
+
+function openEditHobbiesModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById('editHobbiesModal');
+  if (!modal) return;
+  // Pre-select current hobbies
+  const raw = currentUser.hobbies || '';
+  const current = typeof raw === 'string'
+    ? raw.split(',').map(h => h.trim()).filter(Boolean)
+    : (Array.isArray(raw) ? raw : []);
+  document.querySelectorAll('#editHobbiesGrid .vx-hobmodal-chip').forEach(chip => {
+    chip.classList.toggle('sel', current.includes(chip.dataset.value));
+    chip.onclick = () => chip.classList.toggle('sel');
+  });
+  modal.classList.add('open');
+}
+
+function closeEditHobbiesModal() {
+  const modal = document.getElementById('editHobbiesModal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function saveHobbies() {
+  if (!currentUser) return;
+  const selected = Array.from(
+    document.querySelectorAll('#editHobbiesGrid .vx-hobmodal-chip.sel')
+  ).map(c => c.dataset.value);
+  const hobbiesStr = selected.join(',');
+  try {
+    showMessage('Saving hobbies...', 'info');
+    const result = await apiCall('/api/profile/update', 'PUT', {
+      username: currentUser.username,
+      bio: currentUser.bio || '',
+      college: currentUser.college || '',
+      registration_number: currentUser.registration_number || '',
+      hobbies: hobbiesStr
+    });
+    if (result.success) {
+      currentUser = result.user;
+      currentUser.hobbies = hobbiesStr; // ensure local state updated
+      saveUserToLocal();
+      renderProfileHobbies(currentUser, true);
+      closeEditHobbiesModal();
+      showMessage('🎯 Hobbies updated!', 'success');
+    }
+  } catch (e) {
+    console.error('Save hobbies error:', e);
+    showMessage('❌ Failed to save hobbies', 'error');
+  }
+}
+
 function editProfileBio() {
   if (!currentUser) return;
   const modal = document.getElementById('bioEditModal');
@@ -4572,7 +4804,7 @@ function editShippingAddress() {
   const modal = prompt("Enter Shipping Address:", "Excellence Residency, Block B...");
   if (modal) {
     const container = document.getElementById('shippingAddressContent');
-    if (container) container.innerHTML = `< p > ${modal}</p > `;
+    if (container) container.innerHTML = `<p > ${modal}</p> `;
     showMessage('🚚 Shipping info updated!', 'success');
   }
 }
@@ -4739,15 +4971,19 @@ function showPage(name, e) {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if (e?.target) e.target.classList.add('active');
 
-  if (name === 'home') loadHomeFeed();
+  if (name === 'home') { _homeFeedLoading = false; loadHomeFeed(); }
   else if (name === 'posts') loadPosts();
   else if (name === 'communities') loadCommunities();
   else if (name === 'vibeshop') loadVibeshopPage();
 
+  // Show FAB only on home page
+  const fab = document.getElementById('homeAddVibeBtn');
+  if (fab) fab.style.display = name === 'home' ? 'flex' : 'none';
+
   // Hide footer on communities, posts, realvibe
   const footer = document.getElementById('mainFooter');
   if (footer) {
-    const noFooterPages = ['communities', 'posts', 'realvibe'];
+    const noFooterPages = ['communities', 'posts', 'realvibe', 'home'];
     footer.style.display = noFooterPages.includes(name) ? 'none' : '';
   }
 
@@ -4758,12 +4994,12 @@ function showPage(name, e) {
     liveNotif.style.display = hideNotifPages.includes(name) ? 'none' : '';
   }
 
-  // Auto-hide header on communities, posts, realvibe
-  // But NOT on communities when user hasn't joined a college — that page is a static join screen
+  // Auto-hide header on communities, posts, realvibe ONLY
+  // home (Zero Velocity) and profile always keep the header visible
   const autoHidePages = ['communities', 'posts', 'realvibe'];
   if (autoHidePages.includes(name)) {
-    const communityJoined = currentUser && currentUser.communityJoined && currentUser.college;
-    if (name === 'communities' && !communityJoined) {
+    const isJoined = currentUser && (currentUser.communityJoined || currentUser.community_joined || !!currentUser.college);
+    if (name === 'communities' && !isJoined) {
       disableHeaderAutohide();
     } else {
       enableHeaderAutohide();
@@ -4772,10 +5008,15 @@ function showPage(name, e) {
     disableHeaderAutohide();
   }
 
+  // Explicitly ensure header is always visible on home and profile
+  if (name === 'home' || name === 'profile') {
+    disableHeaderAutohide();
+  }
+
   // Hide crown button on communities, posts, realvibe only
   const crownBtn = document.querySelector('.premium-crown-btn');
   if (crownBtn) {
-    const hideCrownPages = ['communities', 'posts', 'realvibe'];
+    const hideCrownPages = ['communities', 'posts', 'realvibe', 'home'];
     crownBtn.style.display = hideCrownPages.includes(name) ? 'none' : '';
   }
 
@@ -4803,10 +5044,26 @@ async function loadHomeFeed() {
   const container = document.getElementById('homeFeedContainer');
   if (!container) { _homeFeedLoading = false; return; }
 
-  // Show loading spinner
-  container.innerHTML = `<div class="home-feed-loading">
-    <div class="vibe-spinner-ring"></div><p>Loading posts…</p>
-  </div>`;
+  // Always clear and show skeletons fresh on every visit
+  container.innerHTML = '';
+
+  // Show skeleton loading cards
+  const skeletonCard = () => `
+    <div class="hf-card hf-skeleton">
+      <div class="hf-card-header">
+        <div class="hf-skel hf-skel-avatar"></div>
+        <div class="hf-user-info">
+          <div class="hf-skel hf-skel-line" style="width:38%;height:13px;"></div>
+          <div class="hf-skel hf-skel-line" style="width:24%;height:10px;margin-top:5px;"></div>
+        </div>
+        <div class="hf-skel hf-skel-line" style="width:80px;height:28px;border-radius:20px;"></div>
+      </div>
+      <div class="hf-skel hf-skel-line" style="width:90%;height:12px;margin-bottom:6px;"></div>
+      <div class="hf-skel hf-skel-line" style="width:72%;height:12px;margin-bottom:10px;"></div>
+      <div class="hf-skel hf-skel-media"></div>
+      <div class="hf-skel hf-skel-line" style="width:110px;height:28px;border-radius:8px;margin-top:8px;"></div>
+    </div>`;
+  container.innerHTML = skeletonCard() + skeletonCard() + skeletonCard();
 
   try {
     const data = await apiCall('/api/posts', 'GET');
@@ -5060,7 +5317,7 @@ function showVibePostSuccessAndReload() {
   const popup = document.createElement('div');
   popup.id = 'vibeSuccessPopup';
   popup.innerHTML = `
-    < div class= "vsp-bg-glow" ></div >
+    <div class="vsp-bg-glow" ></div>
     <div class="vsp-icon-ring">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26">
         <polyline points="20 6 9 17 4 12"/>
@@ -5167,13 +5424,13 @@ function showMutualFollowRequired(userId, username, event) {
   const popup = document.createElement('div');
   popup.className = 'mutual-req-popup';
   popup.innerHTML = `
-      < div class= "mrp-inner" >
+      <div class="mrp-inner" >
       <div class="mrp-lock">🔒</div>
       <div class="mrp-title">Follow Each Other First</div>
       <div class="mrp-body">You and <strong>@${username}</strong> both need to follow each other to chat.</div>
       <button class="mrp-follow-btn" onclick="quickFollowForChat('${userId}', '${username}', this)">Follow @${username}</button>
       <button class="mrp-close" onclick="this.closest('.mutual-req-popup').remove()">✕</button>
-    </div > `;
+    </div> `;
   document.body.appendChild(popup);
   // Position near click
   if (event) {
@@ -5228,7 +5485,7 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
   const wasFollowing = cached.isFollowing !== undefined
     ? cached.isFollowing
     : (opts.isFollowing !== undefined ? opts.isFollowing : false);
-  const endpoint = wasFollowing ? `/ api / unfollow / ${targetUserId} ` : ` / api / follow / ${targetUserId} `;
+  const endpoint = wasFollowing ? `/api/unfollow/${targetUserId}` : `/api/follow/${targetUserId}`;
 
   // Optimistically update all UIs immediately
   const nowFollowing = !wasFollowing;
@@ -5266,6 +5523,12 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
       existingCache.isFollowing = nowFollowing;
       existingCache.followersCount = realFollowersCount;
       _setMpcCache(targetUserId, existingCache);
+    } else {
+      // Even if no cache entry exists yet, create one to persist follow state
+      if (!window._mpcCache) window._mpcCache = {};
+      window._mpcCache[targetUserId] = { id: targetUserId, isFollowing: nowFollowing, followersCount: realFollowersCount };
+      if (!window._mpcCacheTime) window._mpcCacheTime = {};
+      window._mpcCacheTime[targetUserId] = Date.now();
     }
 
     // Update currentProfileUser if it's the same person
@@ -5323,7 +5586,7 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
   }
 
   // 2. Vibe feed cards — all buttons for this user
-  document.querySelectorAll(`.vibe - follow - btn[data - uid="${userId}"]`).forEach(btn => {
+  document.querySelectorAll(`.vibe-follow-btn[data-uid="${userId}"]`).forEach(btn => {
     btn.textContent = isFollowing ? '✓ Following' : '+ Follow';
     btn.classList.toggle('following', isFollowing);
     btn.disabled = false;
@@ -5362,7 +5625,7 @@ async function showFollowListModal(type) {
   modal.id = 'followListModal';
   modal.className = 'follow-list-modal';
   modal.innerHTML = `
-      < div class="flm-backdrop" onclick = "closeFollowListModal()" ></div >
+      <div class="flm-backdrop" onclick="closeFollowListModal()" ></div>
         <div class="flm-sheet">
           <div class="flm-header">
             <div class="flm-tabs">
@@ -5405,16 +5668,15 @@ async function loadFollowList(type) {
 
   try {
     const endpoint = type === 'followers'
-      ? `/ api / followers / ${targetUser.id} `
-      : `/ api / following / ${targetUser.id} `;
+      ? `/api/followers/${targetUser.id}`
+      : `/api/following/${targetUser.id}`;
     const data = await apiCall(endpoint, 'GET');
 
     if (!data.success || !data.users || data.users.length === 0) {
-      body.innerHTML = `
-      < div class="flm-empty" >
-          <div class="flm-empty-icon">${type === 'followers' ? '👥' : '🔍'}</div>
-          <p>${type === 'followers' ? 'No followers yet' : 'Not following anyone yet'}</p>
-        </div > `;
+      body.innerHTML = `<div class="flm-empty">
+        <div class="flm-empty-icon">${type === 'followers' ? '👥' : '🔍'}</div>
+        <p>${type === 'followers' ? 'No followers yet' : 'Not following anyone yet'}</p>
+      </div>`;
       return;
     }
 
@@ -5422,24 +5684,21 @@ async function loadFollowList(type) {
     data.users.forEach(user => {
       const isMe = currentUser && user.id === currentUser.id;
       const avatarHtml = user.profile_pic
-        ? `< img src = "${user.profile_pic}" alt = "${user.username}" class="flm-avatar-img" > `
+        ? `<img src="${user.profile_pic}" alt="${user.username}" class="flm-avatar-img">`
         : '<span class="flm-avatar-placeholder">👤</span>';
 
-      html += `
-      < div class="flm-user-row" onclick = "closeFollowListModal();showUserProfile('${user.id}')" >
-          <div class="flm-avatar">${avatarHtml}</div>
-          <div class="flm-user-info">
-            <div class="flm-username">@${user.username}</div>
-            ${user.college ? `<div class="flm-college">🎓 ${user.college}</div>` : ''}
-            ${user.bio ? `<div class="flm-bio">${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}</div>` : ''}
-          </div>
-          ${!isMe ? `
-            <button class="flm-follow-btn ${user.isFollowedByMe ? 'flm-following' : ''}" 
-              onclick="event.stopPropagation();flmToggleFollow(this, '${user.id}', '${user.username}', ${user.isFollowedByMe})">
-              ${user.isFollowedByMe ? '✓ Following' : 'Follow'}
-            </button>` : '<span class="flm-you-badge">You</span>'
-        }
-        </div > `;
+      html += `<div class="flm-user-row" onclick="closeFollowListModal();showUserProfile('${user.id}')">
+        <div class="flm-avatar">${avatarHtml}</div>
+        <div class="flm-user-info">
+          <div class="flm-username">@${user.username}</div>
+          ${user.college ? `<div class="flm-college">🎓 ${user.college}</div>` : ''}
+          ${user.bio ? `<div class="flm-bio">${user.bio.substring(0, 60)}${user.bio.length > 60 ? '...' : ''}</div>` : ''}
+        </div>
+        ${!isMe ? `<button class="flm-follow-btn ${user.isFollowedByMe ? 'flm-following' : ''}"
+          onclick="event.stopPropagation();flmToggleFollow(this,'${user.id}','${user.username}',${user.isFollowedByMe})">
+          ${user.isFollowedByMe ? '✓ Following' : 'Follow'}
+        </button>` : '<span class="flm-you-badge">You</span>'}
+      </div>`;
     });
     html += '</div>';
     body.innerHTML = html;
@@ -5496,23 +5755,32 @@ function renderPosts(posts) {
     const shareCount = post.share_count || 0;
     const isLiked = post.is_liked || false;
 
+    const authorCollege = post.users?.college ? `<span class="enhanced-post-college">🎓 ${post.users.college}</span>` : '';
+    const followBtn = (!isOwn && authorId)
+      ? `<button class="hf-follow-btn ${(_followState[authorId]?.isFollowing || post.is_following_author) ? 'hf-following' : ''}" onclick="homeFeedToggleFollow('${authorId}', this)">
+          ${(_followState[authorId]?.isFollowing || post.is_following_author) ? '✓ Following' : '+ Follow'}
+        </button>`
+      : '';
+
     html += `
-      < div class="enhanced-post" id = "post-${post.id}" >
+      <div class="enhanced-post" id="post-${post.id}" >
        <div class="enhanced-post-header">
-         <div class="enhanced-user-info" onclick="showMiniProfileCard('${authorId}',event)" style="cursor:pointer;">
-           <div class="enhanced-user-avatar">
+         <div class="enhanced-user-info" style="cursor:pointer;">
+           <div class="enhanced-user-avatar" onclick="showUserProfile('${authorId}')">
              ${post.users?.profile_pic ?
         `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` :
         '👤'
       }
            </div>
            <div class="enhanced-user-details">
-             <div class="enhanced-username">@${author}</div>
+             <div class="enhanced-username" onclick="showUserProfile('${authorId}')" style="cursor:pointer;">@${author}</div>
              <div class="enhanced-post-meta">
+               ${authorCollege}
                <span>${time}</span>
              </div>
            </div>
          </div>
+         ${followBtn}
          ${isOwn ? `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
        </div>
        <div class="enhanced-post-content">
@@ -5564,8 +5832,8 @@ function renderPosts(posts) {
            <button class="engagement-btn" onclick="sharePost('${post.id}', '${content.replace(/'/g, "\\'")}', '${author}')">🔄 Share</button>
            ${!isOwn && authorId ? `<button class="engagement-btn post-msg-btn" onclick="handlePostMessageClick('${authorId}', '${author}', event)" data-userid="${authorId}" data-username="${author}" title="Message ${author}">✉️ Message</button>` : ''}
          </div>
-       </div >
-     </div >
+       </div>
+     </div>
       `;
   });
 
@@ -5596,7 +5864,7 @@ async function deletePost(postId) {
   if (!confirm('Delete this post?')) return;
 
   try {
-    await apiCall(`/ api / posts / ${postId} `, 'DELETE');
+    await apiCall(`/api/posts/${postId}`, 'DELETE');
     showMessage('🗑️ Deleted', 'success');
 
     // Update local post count
@@ -5623,7 +5891,7 @@ async function toggleLike(postId) {
 
     if (likeBtn) likeBtn.disabled = true;
 
-    const data = await apiCall(`/ api / posts / ${postId}/like`, 'POST');
+    const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
 
     if (data.success) {
 
@@ -9131,6 +9399,11 @@ async function sendWhatsAppMessageFixed() {
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
       if (tempEl) tempEl.remove();
       appendWhatsAppMessageFixed(response.message);
+    } else if (response.success) {
+      // ✅ FIX: success but no message object — keep temp visible, mark sent
+      const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
+      if (tempEl) { tempEl.classList.remove('sending'); tempEl.classList.add('sent'); }
+      playMessageSound('send');
     } else if (response.code === 'GHOST_NAME_TAKEN') {
       showMessage(`👻 ${response.error}`, 'error');
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
@@ -9144,8 +9417,20 @@ async function sendWhatsAppMessageFixed() {
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
-    const tempEl = document.querySelector('[id^="wa-msg-temp-"]');
-    if (tempEl) tempEl.remove();
+    // ✅ FIX: Mark failed instead of silently removing
+    const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`) || document.querySelector('[id^="wa-msg-temp-"]');
+    if (tempEl) {
+      tempEl.classList.add('msg-send-failed');
+      const meta = tempEl.querySelector('.message-meta') || tempEl.querySelector('.message-footer');
+      if (meta && !meta.querySelector('.msg-fail-label')) {
+        const fail = document.createElement('span');
+        fail.className = 'msg-fail-label';
+        fail.style.cssText = 'color:#ff6b6b;font-size:10px;margin-left:4px;cursor:pointer;';
+        fail.textContent = '⚠ Not sent · Tap to retry';
+        fail.onclick = () => { tempEl.remove(); sendWhatsAppMessageFixed(); };
+        meta.appendChild(fail);
+      }
+    }
   }
 }
 
@@ -10137,15 +10422,40 @@ async function sendWhatsAppMessageWithMedia() {
 
     if (response.success && response.message) {
       playMessageSound('send');
+      // ✅ FIX: Replace temp with real message — never remove without replacement
       const tempEl = document.getElementById(`wa-msg-${tempId}`);
       if (tempEl) tempEl.remove();
       appendWhatsAppMessageFixed(response.message);
+    } else if (response.success) {
+      // ✅ FIX: API returned success but no message object — keep the temp bubble
+      // visible so the user sees their message. Mark it sent.
+      const tempEl = document.getElementById(`wa-msg-${tempId}`);
+      if (tempEl) {
+        tempEl.classList.remove('sending');
+        tempEl.classList.add('sent');
+      }
+      playMessageSound('send');
     }
   } catch (error) {
     console.error('Send error:', error);
     showMessage('❌ Failed to send message', 'error');
+    // ✅ FIX: Don't remove temp on error — mark it as failed so user can retry
     const tempEl = document.getElementById(`wa-msg-${tempId}`);
-    if (tempEl) tempEl.remove();
+    if (tempEl) {
+      tempEl.classList.add('msg-send-failed');
+      const meta = tempEl.querySelector('.message-meta') || tempEl.querySelector('.message-footer');
+      if (meta && !meta.querySelector('.msg-fail-label')) {
+        const fail = document.createElement('span');
+        fail.className = 'msg-fail-label';
+        fail.style.cssText = 'color:#ff6b6b;font-size:10px;margin-left:4px;';
+        fail.textContent = '⚠ Not sent · Tap to retry';
+        fail.onclick = function () {
+          if (tempEl) tempEl.remove();
+          sendWhatsAppMessageWithMedia();
+        };
+        meta.appendChild(fail);
+      }
+    }
   }
 }
 
@@ -10642,10 +10952,10 @@ function buildVibeCard(post, idx) {
   // ── Avatar HTML ──
   const proxiedAvatar = proxyMediaUrl(avatar);
   const avHtml = proxiedAvatar
-    ? `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
+    ? `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')" style="cursor:pointer;">
          <img src="${proxiedAvatar}" alt="${username}" loading="lazy">
        </div>`
-    : `<div class="vibe-card-avatar" onclick="showMiniProfileCard('${userId}',event)">
+    : `<div class="vibe-card-avatar" onclick="showUserProfile('${userId}')" style="cursor:pointer;">
          ${username.charAt(0).toUpperCase() || '😊'}
        </div>`;
 
@@ -10690,7 +11000,7 @@ function buildVibeCard(post, idx) {
       <div class="vibe-card-user">
         ${avHtml}
         <div class="vibe-card-usernames">
-          <div class="vibe-card-username" onclick="showMiniProfileCard('${userId}',event)">
+          <div class="vibe-card-username" onclick="showUserProfile('${userId}')" style="cursor:pointer;">
             @${username}
           </div>
         </div>
