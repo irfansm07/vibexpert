@@ -1632,6 +1632,8 @@ function logout() {
     socket = null;
   }
   currentUser = null;
+  // Clear in-memory follow state so it doesn't bleed into next session
+  Object.keys(_followState).forEach(k => delete _followState[k]);
   localStorage.clear();
   location.reload();
 }
@@ -1711,7 +1713,8 @@ async function sendEnhancedMessage() {
     if (socket && currentUser.college) {
       socket.emit('stop_typing', {
         collegeName: currentUser.college,
-        username: currentUser.username
+        // Ghost chat: broadcast ghost name, never real username
+        username: getGhostName()
       });
     }
   } catch (error) {
@@ -2488,7 +2491,8 @@ async function sendWhatsAppMessage() {
     if (socket && currentUser.college) {
       socket.emit('stop_typing', {
         collegeName: currentUser.college,
-        username: currentUser.username
+        // Ghost chat: broadcast ghost name, never real username
+        username: (typeof getGhostName === 'function' && hasGhostName && hasGhostName() ? getGhostName() : currentUser.username)
       });
     }
 
@@ -2625,13 +2629,14 @@ function replyToWhatsAppMsg(messageId) {
       .join('').trim() || textEl.textContent.trim() || '';
   }
 
-  // Get sender: own messages show current user's name, others show sender name div
+  // Get sender: in ghost mode always use ghost name, never real username
   const isOwn = wrapper.classList.contains('own');
   let sender;
   if (isOwn) {
-    sender = (currentUser && (currentUser.username || currentUser.name)) || 'You';
+    sender = getGhostName() || (currentUser && (currentUser.username || currentUser.name)) || 'You';
   } else {
-    sender = wrapper.querySelector('.message-sender-name')?.textContent?.trim() || 'User';
+    // For others: prefer anon_name stored on the element, fall back to visible sender name
+    sender = wrapper.dataset.anonName || wrapper.querySelector('.message-sender-name')?.textContent?.trim() || 'User';
   }
 
   // Check if there's media instead
@@ -3301,6 +3306,12 @@ async function showUserProfile(userId) {
   // Show cached data INSTANTLY if available (no waiting for network)
   const cached = window._mpcCache && window._mpcCache[userId];
   if (cached) {
+    // Prefer _followState if it exists — it is always more up-to-date than _mpcCache
+    // (e.g. user followed from home feed before opening this profile)
+    const knownFollowState = _followState[userId];
+    if (knownFollowState && knownFollowState.isFollowing !== undefined) {
+      cached.isFollowing = knownFollowState.isFollowing;
+    }
     _seedFollowState(userId, cached.isFollowing, cached.followersCount || 0);
     showProfilePage(cached, true);
   }
@@ -3308,8 +3319,15 @@ async function showUserProfile(userId) {
   try {
     const data = await apiCall(`/api/profile/${userId}`, 'GET');
     if (data.success && data.user) {
-      // Seed follow state immediately from this authoritative fetch
-      _seedFollowState(userId, data.user.isFollowing, data.user.followersCount || 0);
+      // Seed follow state from server — but only if no local follow action has been taken
+      // (prevents the profile fetch from reverting a follow the user just did from home feed / vibe cards)
+      const localState = _followState[userId];
+      const serverIsFollowing = data.user.isFollowing;
+      const effectiveIsFollowing = (localState && localState.isFollowing !== undefined)
+        ? localState.isFollowing   // trust local action over server response
+        : serverIsFollowing;
+      data.user.isFollowing = effectiveIsFollowing;
+      _seedFollowState(userId, effectiveIsFollowing, data.user.followersCount || 0);
       // Update cache
       if (!window._mpcCache) window._mpcCache = {};
       window._mpcCache[userId] = data.user;
@@ -3355,6 +3373,25 @@ async function showUserProfile(userId) {
           // Refresh hobbies
           const _isOwnCached = !!(currentUser && tu && (tu.id === currentUser.id || tu.username === currentUser.username));
           renderProfileHobbies(tu, _isOwnCached);
+
+          // Refresh Note Bubble dynamically for visitors
+          const noteBubble = document.getElementById('profileNoteBubble');
+          const noteText = document.getElementById('profileNoteText');
+          if (noteBubble && noteText) {
+            tu.note = data.user.note; // Ensure targetUser gets the freshest note
+            const isOwnNote = _isOwnCached;
+            const userNote = tu.note; 
+            if (userNote) {
+              noteText.textContent = userNote;
+              noteBubble.style.display = 'block';
+            } else if (isOwnNote) {
+              const localNote = localStorage.getItem('vibeNote_' + currentUser.id);
+              noteText.textContent = localNote || '💭 Tap to add a note';
+              noteBubble.style.display = localNote || isOwnNote ? 'block' : 'none';
+            } else {
+              noteBubble.style.display = 'none';
+            }
+          }
 
           // ── Always sync follow button with FRESH server isFollowing ───
           const followBtnFresh = document.getElementById('followBtn');
@@ -3437,17 +3474,23 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   }
 
   // Avatar — always force correct state so switching between users never shows stale pic
-  if (targetUser.profile_pic) {
-    if (avatarImg) {
-      avatarImg.src = targetUser.profile_pic;
-      avatarImg.style.display = 'block';
-      avatarImg.onerror = function () {
-        this.style.display = 'none';
-        if (avatarInitial) avatarInitial.style.display = 'block';
-      };
+  if (isOwn) {
+    if (targetUser.profile_pic) {
+      if (avatarImg) {
+        avatarImg.src = targetUser.profile_pic;
+        avatarImg.style.display = 'block';
+        avatarImg.onerror = function () {
+          this.style.display = 'none';
+          if (avatarInitial) avatarInitial.style.display = 'block';
+        };
+      }
+      if (avatarInitial) avatarInitial.style.display = 'none';
+    } else {
+      if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
+      if (avatarInitial) avatarInitial.style.display = 'block';
     }
-    if (avatarInitial) avatarInitial.style.display = 'none';
   } else {
+    // Privacy: do not show profile photo to other users
     if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
@@ -3457,11 +3500,12 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   const coverWrap = document.getElementById('profileCoverPhoto');
   const coverUrl = targetUser.cover_photo || targetUser.coverPhoto || null;
   if (coverImg) {
-    if (coverUrl) {
+    if (isOwn && coverUrl) {
       coverImg.src = coverUrl;
       coverImg.style.display = 'block';
       if (coverWrap) coverWrap.style.background = 'none';
     } else {
+      // Privacy: do not show cover photo to other users
       coverImg.src = '';
       coverImg.style.display = 'none';
       if (coverWrap) coverWrap.style.background = '';
@@ -3469,7 +3513,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   }
 
   // Real data from database
-  if (collegeEl) collegeEl.textContent = targetUser.college || 'No college set';
+  if (collegeEl) collegeEl.textContent = isOwn ? (targetUser.college || 'No college set') : 'No college set';
   if (regNoEl) regNoEl.textContent = targetUser.registration_number || targetUser.email || 'No email';
   if (postsStat) postsStat.textContent = targetUser.postCount || 0;
   if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
@@ -3479,7 +3523,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Set bio
   const bioEl = document.getElementById('profileBio');
-  if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
+  if (bioEl) bioEl.textContent = isOwn ? (targetUser.bio || 'Tell the world about yourself...') : 'Tell the world about yourself...';
 
   // Render hobbies — pass isOwn explicitly so edit button always shows correctly
   renderProfileHobbies(targetUser, isOwn);
@@ -3514,8 +3558,8 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
         badges += '<span class="badge-item" style="background:rgba(192,192,192,0.2);color:#c0c0c0;">🥈 Noble</span>';
       }
     }
-    // Community badge
-    if (targetUser.college) {
+    // Community badge (privacy: only show to owner)
+    if (isOwn && targetUser.college) {
       badges += `<span class="badge-item">🎓 ${targetUser.college}</span>`;
     }
     // Verified badge (if has email)
@@ -3532,13 +3576,31 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     btn.style.display = isOwn ? 'block' : 'none';
   });
 
+  // Hide/show hamburger menu button — use 'flex' to preserve its layout (spans need flexbox)
+  const hamburgerBtn = document.getElementById('profileHamburgerBtn');
+  if (hamburgerBtn) hamburgerBtn.style.display = isOwn ? 'flex' : 'none';
+  // Force-close the menu if it was open when switching to another user's profile
+  if (!isOwn) {
+    const hamburgerMenu = document.getElementById('profileHamburgerMenu');
+    if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+  }
+
+  // Force-hide the hobbies Edit button when viewing another user's profile
+  // (overrides any fallback inside renderProfileHobbies that might compute isOwn incorrectly)
+  const editHobbiesBtn = document.getElementById('editHobbiesBtn');
+  if (editHobbiesBtn) editHobbiesBtn.style.display = isOwn ? 'flex' : 'none';
+
   // Handle Follow Button
   if (followBtn) {
     if (isOwn) {
       followBtn.style.display = 'none';
     } else {
       followBtn.style.display = 'block';
-      const isFollowing = targetUser.isFollowing;
+      // Prefer _followState — it is always most up-to-date (e.g. followed from home feed/vibe cards)
+      const knownState = _followState[targetUser.id];
+      const isFollowing = (knownState && knownState.isFollowing !== undefined)
+        ? knownState.isFollowing
+        : targetUser.isFollowing;
       if (isFollowing) {
         followBtn.innerHTML = '<span class="follow-check-anim">✓</span> Following';
         followBtn.className = 'btn-secondary follow-btn-following';
@@ -3607,18 +3669,41 @@ async function fetchProfileStats(targetUser) {
       if (followersStat) followersStat.textContent = u.followersCount || 0;
       if (followingStat) followingStat.textContent = u.followingCount || 0;
       if (postsStat) postsStat.textContent = u.postCount || 0;
-      // Update counts on target object
+      // Update counts and note on target object
       targetUser.followersCount = u.followersCount || 0;
       targetUser.followingCount = u.followingCount || 0;
       targetUser.postCount = u.postCount || 0;
+      if (u.note !== undefined) targetUser.note = u.note;
 
-      // Only update follow state if no action is in-flight for this user
-      // This prevents a slow fetchProfileStats from overwriting a user's just-clicked follow
+      // Update Instagram-style Note bubble dynamically
+      const noteBubble = document.getElementById('profileNoteBubble');
+      const noteText = document.getElementById('profileNoteText');
+      if (noteBubble && noteText) {
+        const isOwnNote = currentUser && (targetUser.id === currentUser.id);
+        const userNote = targetUser.note || (isOwnNote ? localStorage.getItem('vibeNote_' + currentUser.id) : null);
+        if (userNote) {
+          noteText.textContent = userNote;
+          noteBubble.style.display = 'block';
+        } else if (isOwnNote) {
+          noteText.textContent = '💭 Tap to add a note';
+          noteBubble.style.display = 'block';
+        } else {
+          noteBubble.style.display = 'none';
+        }
+      }
+
+      // Only update follow state if no in-flight AND no local follow action exists.
+      // _followState is the source of truth for actions taken from home feed / vibe cards
+      // (in-flight marker is already cleared by the time the profile opens).
       const inFlight = _followInFlight[targetUser.id] || 0;
       const isRecentAction = (Date.now() - inFlight) < 5000; // 5s grace window
-      if (!isRecentAction) {
+      const localState = _followState[targetUser.id];
+      const hasLocalAction = localState && localState.isFollowing !== undefined;
+
+      if (!isRecentAction && !hasLocalAction) {
+        // No local action — server value is authoritative
         targetUser.isFollowing = u.isFollowing;
-        _seedFollowState(targetUser.id, u.isFollowing, u.followersCount || 0);
+        _seedFollowState(targetUser.id, u.isFollowing, u.followersCount || 0); // already persists via _seedFollowState
         if (window._mpcCache && window._mpcCache[targetUser.id]) {
           window._mpcCache[targetUser.id].isFollowing = u.isFollowing;
           window._mpcCache[targetUser.id].followersCount = u.followersCount || 0;
@@ -3640,12 +3725,19 @@ async function fetchProfileStats(targetUser) {
           }
         }
       } else {
-        // In-flight action: still update the follower counts (accurate from server)
-        // but do NOT touch isFollowing state
+        // Local follow action or in-flight: preserve user's follow state,
+        // only update follower counts from server (they are always accurate).
+        const preservedIsFollowing = hasLocalAction ? localState.isFollowing : targetUser.isFollowing;
+        targetUser.isFollowing = preservedIsFollowing;
         _followState[targetUser.id] = {
-          ..._followState[targetUser.id],
+          isFollowing: preservedIsFollowing,
           followersCount: u.followersCount || 0
         };
+        _saveFollowStateToStorage(_followState);
+        if (window._mpcCache && window._mpcCache[targetUser.id]) {
+          window._mpcCache[targetUser.id].isFollowing = preservedIsFollowing;
+          window._mpcCache[targetUser.id].followersCount = u.followersCount || 0;
+        }
       }
     }
   } catch (e) {
@@ -4673,6 +4765,12 @@ function renderProfileHobbies(targetUser, isOwn) {
   const editBtn = document.getElementById('editHobbiesBtn');
   if (editBtn) editBtn.style.display = isOwn ? 'flex' : 'none';
 
+  // Privacy: do not show hobbies list to other users
+  if (!isOwn) {
+    wrap.innerHTML = '<span class="vx-hobbies-empty">No hobbies added yet.</span>';
+    return;
+  }
+
   const rawHobbies = targetUser.hobbies || '';
   const list = typeof rawHobbies === 'string'
     ? rawHobbies.split(',').map(h => h.trim()).filter(Boolean)
@@ -5098,7 +5196,8 @@ async function loadHomeFeed() {
 
 function buildHomeFeedCard(post) {
   const user = post.users || {};
-  const username = escapeHtml(user.username || 'Unknown');
+  const authorRaw = user.username || 'Unknown';
+  const username = escapeHtml(authorRaw);
   const userId = user.id || '';
   const college = user.college ? `<span class="hf-college">🎓 ${escapeHtml(user.college)}</span>` : '';
   const avatar = user.profile_pic
@@ -5122,19 +5221,23 @@ function buildHomeFeedCard(post) {
   const postId = post._id || post.id || '';
   const likes = post.like_count || 0;
   const comments = post.comment_count || 0;
+  const shares = post.share_count || 0;
   const isLiked = post.is_liked;
   const isOwn = currentUser && (userId === currentUser.id);
   const isFollowing = post.is_following_author || (_followState[userId] && _followState[userId].isFollowing);
+  const isRealVibe = !!post.is_real_vibe;
 
   const followBtn = (!isOwn && userId)
-    ? `<button class="hf-follow-btn ${isFollowing ? 'hf-following' : ''}" onclick="homeFeedToggleFollow('${escapeHtml(userId)}', this)">
+    ? `<button class="hf-follow-btn ${isFollowing ? 'hf-following' : ''}" data-uid="${escapeHtml(userId)}" data-username="${escapeHtml(username)}" onclick="homeFeedToggleFollow('${escapeHtml(userId)}', this)">
         ${isFollowing ? '✓ Following' : '+ Follow'}
       </button>`
     : '';
 
   const time = post.createdAt ? timeAgo(new Date(post.createdAt)) : '';
+  const postContentForShare = (post.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+  const authorForShare = (authorRaw || '').replace(/'/g, "\\'");
 
-  return `<div class="hf-card" id="hf-post-${escapeHtml(postId)}">
+  return `<div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}')">
     <div class="hf-card-header">
       ${avatar}
       <div class="hf-user-info">
@@ -5151,11 +5254,146 @@ function buildHomeFeedCard(post) {
         <span class="hf-like-icon">${isLiked ? '❤️' : '🤍'}</span>
         <span class="hf-like-count">${likes}</span>
       </button>
-      <button class="hf-action-btn" onclick="openCommentModal('${escapeHtml(postId)}')">
-        💬 <span>${comments}</span>
+      <button class="hf-action-btn" onclick="homeFeedToggleComments('${escapeHtml(postId)}')">
+        💬 <span id="hf-comment-count-${escapeHtml(postId)}">${comments}</span>
+      </button>
+      <button class="hf-action-btn" onclick="sharePost('${escapeHtml(postId)}', '${postContentForShare}', '${authorForShare}')">
+        🔄 <span>${shares}</span> Share
       </button>
     </div>
+    <!-- Inline Comments Section -->
+    <div id="hf-comments-wrap-${escapeHtml(postId)}" style="display:none; transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease; opacity: 0; max-height: 0; overflow: hidden; margin-top: 10px; border-top: 1px solid rgba(79,116,163,0.15); padding: 0 15px;">
+      <div id="hf-comments-list-${escapeHtml(postId)}" style="max-height: 320px; overflow-y: auto; padding: 15px 0;"></div>
+      <div style="padding: 10px 0 20px 0; border-top: 1px solid rgba(79,116,163,0.1);">
+        <div id="hf-emoji-picker-${escapeHtml(postId)}" style="display:none; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding:8px; background:rgba(12,8,32,0.8); border:1px solid rgba(124,92,252,0.2); border-radius:12px; max-height:120px; overflow-y:auto;">
+          ${['😊','😂','❤️','🔥','👍','🥺','🎉','💯','✨','😍','🙏','😎','😭','🤣','😘','🥰','🤔','😤','😡','🤩','🥳','🙌','💪','🤝','👋','👀','💀','👽'].map(e => `<span onclick="document.getElementById('hf-comment-input-${escapeHtml(postId)}').value += '${e}'; document.getElementById('hf-comment-input-${escapeHtml(postId)}').focus();" style="cursor:pointer; font-size:20px; padding:5px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(124,92,252,0.3)'" onmouseout="this.style.background='transparent'">${e}</span>`).join('')}
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+          <button onclick="document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display = document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display === 'none' ? 'flex' : 'none'" style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 4px 6px 0; opacity:0.7; transition:0.2s; align-self:flex-end;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😀</button>
+          <textarea id="hf-comment-input-${escapeHtml(postId)}" placeholder="Write a comment..." 
+            style="flex:1; min-height:44px; max-height:100px; border-radius:22px; padding:12px 18px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; font-family:inherit; resize:vertical; font-size:14px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.2); outline:none; transition:border 0.2s;"
+            onfocus="this.style.borderColor='rgba(124,92,252,0.6)'" onblur="this.style.borderColor='rgba(79,116,163,0.3)'"></textarea>
+          <button onclick="homeFeedSubmitComment('${escapeHtml(postId)}')" 
+            style="background:linear-gradient(135deg,#7c3aed,#a855f7); border:none; border-radius:22px; padding:0 24px; height:44px; color:white; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(124,58,237,0.3); transition:all 0.2s; align-self:flex-end;"
+            onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">Post</button>
+        </div>
+      </div>
+    </div>
   </div>`;
+}
+
+async function homeFeedToggleComments(postId) {
+  if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
+  const wrap = document.getElementById('hf-comments-wrap-' + postId);
+  if (!wrap) return;
+
+  if (wrap.style.display !== 'none' && wrap.style.opacity === '1') {
+    wrap.style.maxHeight = '0';
+    wrap.style.opacity = '0';
+    setTimeout(() => wrap.style.display = 'none', 400);
+    return;
+  }
+
+  wrap.style.display = 'block';
+  setTimeout(() => {
+    wrap.style.maxHeight = '600px'; 
+    wrap.style.opacity = '1';
+  }, 10);
+
+  const list = document.getElementById('hf-comments-list-' + postId);
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#8da4d3;font-size:13px;animation:vxFadeIn 0.5s infinite alternate;">⏳ Loading comments...</div>';
+  
+  try {
+    const data = await apiCall('/api/posts/' + postId + '/comments', 'GET');
+    if (!data.success || !data.comments || data.comments.length === 0) {
+      list.innerHTML = '<div style="text-align:center;font-size:13px;color:#8da4d3;padding:20px;background:rgba(255,255,255,0.02);border-radius:12px;">✨ No comments yet. Start the conversation!</div>';
+      return;
+    }
+
+    let html = '';
+    data.comments.forEach(c => {
+      const author = c.users?.username || 'User';
+      const time = new Date(c.created_at).toLocaleString([], {hour:'2-digit', minute:'2-digit', month:'short', day:'numeric'});
+      const pic = c.users?.profile_pic ? '<img src="' + c.users.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
+      html += `
+        <div style="display:flex; gap:12px; margin-bottom:16px; animation:vxFadeIn 0.4s ease both;">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#4f74a3,#2d1b8e); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;" onclick="showUserProfile('${c.user_id}')">
+            ${pic}
+          </div>
+          <div style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(79,116,163,0.15); border-radius:0 14px 14px 14px; padding:12px 16px; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #a78bfa, #8b5cf6); border-radius:3px 0 0 3px;"></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
+              <span style="font-weight:700; font-size:13px; color:#c4b5fd; cursor:pointer;" onclick="showUserProfile('${c.user_id}')">@${author}</span>
+              <button onclick="this.innerHTML = this.innerHTML === '❤️' ? '🤍' : '❤️'; this.classList.toggle('comment-liked'); event.stopPropagation();" 
+                style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
+                onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🤍</button>
+            </div>
+            <div style="font-size:13px; color:#e2e8f0; line-height:1.5; word-break:break-word;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;color:#f87171;font-size:13px;padding:20px;">❌ Error loading comments</div>';
+  }
+}
+
+async function homeFeedSubmitComment(postId) {
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+  const input = document.getElementById('hf-comment-input-' + postId);
+  const btn = input.nextElementSibling;
+  const text = input.value.trim();
+  if (!text) return;
+  
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  
+  try {
+    const data = await apiCall('/api/posts/' + postId + '/comments', 'POST', { content: text });
+    if(data.success) {
+      input.value = '';
+      const countEl = document.getElementById('hf-comment-count-' + postId);
+      if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+      
+      const emjPicker = document.getElementById('hf-emoji-picker-' + postId);
+      if (emjPicker) emjPicker.style.display = 'none';
+
+      const list = document.getElementById('hf-comments-list-' + postId);
+      const author = currentUser.username || 'You';
+      const pic = currentUser.profile_pic ? '<img src="' + currentUser.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
+      const time = 'Just now';
+      
+      const newC = document.createElement('div');
+      newC.style.cssText = 'display:flex; gap:12px; margin-bottom:16px; animation:vxFadeIn 0.4s ease both;';
+      newC.innerHTML = `
+        <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#7c3aed); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(124,58,237,0.4);" onclick="showUserProfile('${currentUser.id}')">
+          ${pic}
+        </div>
+        <div style="flex:1; background:rgba(124,92,252,0.08); border:1px solid rgba(124,92,252,0.3); border-radius:0 14px 14px 14px; padding:12px 16px; position:relative; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+          <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #d8b4fe, #c084fc); border-radius:3px 0 0 3px;"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
+            <span style="font-weight:700; font-size:13px; color:#e9d5ff; cursor:pointer;" onclick="showUserProfile('${currentUser.id}')">@${author}</span>
+            <button onclick="this.innerHTML = this.innerHTML === '❤️' ? '🤍' : '❤️'; this.classList.toggle('comment-liked'); event.stopPropagation();" 
+                style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
+                onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🤍</button>
+          </div>
+          <div style="font-size:13px; color:#f8fafc; line-height:1.5; word-break:break-word;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        </div>
+      `;
+      
+      if (list.querySelector('div') && list.querySelector('div').textContent.includes('No comments')) {
+        list.innerHTML = '';
+      }
+      list.appendChild(newC);
+      list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+    }
+  } catch(e) {
+    showMessage('❌ Error posting comment', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
 }
 
 async function homeFeedToggleLike(postId, btn) {
@@ -5171,22 +5409,32 @@ async function homeFeedToggleLike(postId, btn) {
   } catch (err) { showMessage('❌ ' + (err.message || 'Failed'), 'error'); }
 }
 
+// Double-click post card to auto-like (only if not already liked)
+async function homeFeedDoubleLike(postId) {
+  const card = document.getElementById(`hf-post-${postId}`);
+  if (!card) return;
+
+  /* ── Heart burst animation ── */
+  const burst = document.createElement('div');
+  burst.className = 'hf-heart-burst';
+  burst.textContent = '❤️';
+  card.style.position = 'relative';
+  card.appendChild(burst);
+  setTimeout(() => burst.remove(), 700);
+
+  const likeBtn = card.querySelector('.hf-like-btn');
+  if (!likeBtn) return;
+  /* Only like if not already liked */
+  if (likeBtn.classList.contains('hf-liked')) return;
+  await homeFeedToggleLike(postId, likeBtn);
+}
+
 async function homeFeedToggleFollow(userId, btn) {
   if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
-  const isFollowing = btn.classList.contains('hf-following');
-  try {
-    if (isFollowing) {
-      await apiCall(`/api/unfollow/${userId}`, 'POST');
-      btn.textContent = '+ Follow';
-      btn.classList.remove('hf-following');
-    } else {
-      await apiCall(`/api/follow/${userId}`, 'POST');
-      btn.textContent = '✓ Following';
-      btn.classList.add('hf-following');
-    }
-    if (!_followState[userId]) _followState[userId] = {};
-    _followState[userId].isFollowing = !isFollowing;
-  } catch (err) { showMessage('❌ ' + (err.message || 'Failed'), 'error'); }
+  // Route through centralToggleFollow so every section (profile, vibes, home feed, own stats) stays in sync
+  const cached = _followState[userId] || {};
+  const username = btn?.dataset?.username || '';
+  await centralToggleFollow(userId, username, { isFollowing: cached.isFollowing || false });
 }
 
 function timeAgo(date) {
@@ -5471,7 +5719,24 @@ async function quickFollowForChat(userId, username, btn) {
 // CENTRAL FOLLOW ENGINE — single source of truth for all follow actions
 // Syncs: profile page, vibe cards, mini profile card, _mpcCache
 // ═══════════════════════════════════════════════════════════════
-const _followState = {}; // userId -> { isFollowing, followersCount }
+// ── Persistent follow state (survives page refresh) ──────────────────────────
+// Keyed per logged-in user so different accounts on the same device don't bleed.
+const VX_FOLLOW_KEY_PREFIX = 'vx_followState_';
+function _getFollowStorageKey() {
+  try {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    return VX_FOLLOW_KEY_PREFIX + (u.id || u.user_id || 'anon');
+  } catch (e) { return VX_FOLLOW_KEY_PREFIX + 'anon'; }
+}
+function _loadFollowStateFromStorage() {
+  try {
+    return JSON.parse(localStorage.getItem(_getFollowStorageKey()) || '{}');
+  } catch (e) { return {}; }
+}
+function _saveFollowStateToStorage(state) {
+  try { localStorage.setItem(_getFollowStorageKey(), JSON.stringify(state)); } catch (e) { }
+}
+const _followState = _loadFollowStateFromStorage(); // userId -> { isFollowing, followersCount }
 
 async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
   if (!currentUser) { showMessage('⚠️ Please log in first', 'error'); return null; }
@@ -5493,6 +5758,11 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
     isFollowing: nowFollowing,
     followersCount: (cached.followersCount || 0) + (nowFollowing ? 1 : -1)
   };
+  _saveFollowStateToStorage(_followState);
+  // Optimistically update currentUser.followingCount so _syncAllFollowUI section 5 shows correct value
+  if (currentUser) {
+    currentUser.followingCount = Math.max(0, (currentUser.followingCount || 0) + (nowFollowing ? 1 : -1));
+  }
   _syncAllFollowUI(targetUserId, nowFollowing, _followState[targetUserId].followersCount);
 
   try {
@@ -5505,29 +5775,32 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
 
     // Update state with real data
     _followState[targetUserId] = { isFollowing: nowFollowing, followersCount: realFollowersCount };
+    _saveFollowStateToStorage(_followState);
 
     // Sync all UIs with real counts
     _syncAllFollowUI(targetUserId, nowFollowing, realFollowersCount);
 
-    // Update currentUser following count
+    // Update currentUser following count with authoritative server value
+    // (optimistic update was already applied above; only override if server returns a real count)
     if (realMyFollowing !== null) {
       currentUser.followingCount = realMyFollowing;
-    } else {
-      currentUser.followingCount = Math.max(0, (currentUser.followingCount || 0) + (nowFollowing ? 1 : -1));
+      // Re-sync UI now that we have the authoritative count
+      _syncAllFollowUI(targetUserId, nowFollowing, realFollowersCount);
     }
+    // else: keep the optimistic count already applied — do not add again
     saveUserToLocal?.();
 
     // Update _mpcCache (and reset TTL since we have fresh data)
-    const existingCache = _getMpcCache(targetUserId);
+    // Always write — even if cache expired/missing — so profile page shows correct follow state
+    if (!window._mpcCache) window._mpcCache = {};
+    if (!window._mpcCacheTime) window._mpcCacheTime = {};
+    const existingCache = window._mpcCache[targetUserId];
     if (existingCache) {
       existingCache.isFollowing = nowFollowing;
       existingCache.followersCount = realFollowersCount;
       _setMpcCache(targetUserId, existingCache);
     } else {
-      // Even if no cache entry exists yet, create one to persist follow state
-      if (!window._mpcCache) window._mpcCache = {};
       window._mpcCache[targetUserId] = { id: targetUserId, isFollowing: nowFollowing, followersCount: realFollowersCount };
-      if (!window._mpcCacheTime) window._mpcCacheTime = {};
       window._mpcCacheTime[targetUserId] = Date.now();
     }
 
@@ -5554,6 +5827,7 @@ async function centralToggleFollow(targetUserId, targetUsername, opts = {}) {
     delete _followInFlight[targetUserId];
     // Revert on failure
     _followState[targetUserId] = { isFollowing: wasFollowing, followersCount: cached.followersCount || 0 };
+    _saveFollowStateToStorage(_followState);
     _syncAllFollowUI(targetUserId, wasFollowing, cached.followersCount || 0);
     showMessage('❌ Action failed. Try again.', 'error');
     return null;
@@ -5602,12 +5876,42 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
     const mpcFollowers = document.getElementById('mpcFollowers');
     if (mpcFollowers) mpcFollowers.textContent = followersCount;
   }
+
+  // 4. Home feed cards — sync all hf-follow-btn for this user
+  document.querySelectorAll(`.hf-follow-btn[data-uid="${userId}"]`).forEach(btn => {
+    btn.textContent = isFollowing ? '✓ Following' : '+ Follow';
+    btn.classList.toggle('hf-following', isFollowing);
+    btn.disabled = false;
+  });
+
+  // 5. Update current user's own "Following" count in profile stats
+  //    (applies when viewing another user's profile after following/unfollowing them)
+  if (currentUser) {
+    const myFollowingStat = document.getElementById('profileStatFollowing');
+    if (myFollowingStat) {
+      // Only update if we're NOT viewing the target user's profile
+      // (their follower stat is handled above in section 1)
+      const viewingTarget = window.currentProfileUser && window.currentProfileUser.id === userId;
+      if (!viewingTarget) {
+        myFollowingStat.textContent = currentUser.followingCount || 0;
+      } else {
+        // We are on the target's profile — update our own following count too
+        // (the element shows the target's followers above; our following count
+        //  lives on our own profile, so only refresh if the stat element is
+        //  actually showing the logged-in user's stats i.e. own profile open)
+        if (window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+          myFollowingStat.textContent = currentUser.followingCount || 0;
+        }
+      }
+    }
+  }
 }
 
 // Seed follow state from known data (called when profile/posts load)
 function _seedFollowState(userId, isFollowing, followersCount) {
   if (!userId) return;
   _followState[userId] = { isFollowing, followersCount };
+  _saveFollowStateToStorage(_followState);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -5757,7 +6061,7 @@ function renderPosts(posts) {
 
     const authorCollege = post.users?.college ? `<span class="enhanced-post-college">🎓 ${post.users.college}</span>` : '';
     const followBtn = (!isOwn && authorId)
-      ? `<button class="hf-follow-btn ${(_followState[authorId]?.isFollowing || post.is_following_author) ? 'hf-following' : ''}" onclick="homeFeedToggleFollow('${authorId}', this)">
+      ? `<button class="hf-follow-btn ${(_followState[authorId]?.isFollowing || post.is_following_author) ? 'hf-following' : ''}" data-uid="${authorId}" data-username="${escapeHtml(post.author?.username || '')}" onclick="homeFeedToggleFollow('${authorId}', this)">
           ${(_followState[authorId]?.isFollowing || post.is_following_author) ? '✓ Following' : '+ Follow'}
         </button>`
       : '';
@@ -5985,15 +6289,19 @@ async function loadComments(postId) {
              </div>
              <div>
                <div style="font-weight:600;color:#4f74a3;">@${author}</div>
-               <div style="font-size:11px;color:#888;">${time}</div>
              </div>
            </div>
-           ${isOwn ?
+           <div style="display:flex; align-items:center; gap:8px;">
+             <button onclick="this.innerHTML = this.innerHTML === '❤️' ? '🤍' : '❤️'; this.classList.toggle('comment-liked'); event.stopPropagation();" 
+              style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;outline:none;transition:transform 0.2s;" 
+              onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🤍</button>
+             ${isOwn ?
           `<button onclick="deleteComment('${comment.id}','${postId}')" 
                style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:none;
                padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>` :
           ''
         }
+           </div>
          </div>
          <div style="color:#e0e0e0;line-height:1.5;">${comment.content}</div>
        </div>
@@ -7749,11 +8057,13 @@ function renderRvComments(comments) {
   }
   list.innerHTML = comments.map(c => {
     const u = c.users || {};
+    const uid = u.id || '';
+    const clickAttr = uid ? `onclick="showUserProfile('${uid}')" style="cursor:pointer;"` : '';
     const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username || 'U').charAt(0).toUpperCase()}</span>`;
     return `<div class="rv-comment-item">
-      <div class="rv-comment-avatar">${av}</div>
+      <div class="rv-comment-avatar" ${clickAttr}>${av}</div>
       <div class="rv-comment-body">
-        <span class="rv-comment-author">${escapeHtml(u.username || 'User')}</span>
+        <span class="rv-comment-author" ${clickAttr}>${escapeHtml(u.username || 'User')}</span>
         <p class="rv-comment-text">${escapeHtml(c.content)}</p>
       </div>
     </div>`;
@@ -8425,14 +8735,16 @@ function initWhatsAppFeatures() {
       if (socket && currentUser && currentUser.college) {
         socket.emit('typing', {
           collegeName: currentUser.college,
-          username: currentUser.username
+          // Ghost chat: broadcast ghost name, never real username
+          username: (typeof getGhostName === 'function' && hasGhostName && hasGhostName() ? getGhostName() : currentUser.username)
         });
 
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
           socket.emit('stop_typing', {
             collegeName: currentUser.college,
-            username: currentUser.username
+            // Ghost chat: broadcast ghost name, never real username
+            username: (typeof getGhostName === 'function' && hasGhostName && hasGhostName() ? getGhostName() : currentUser.username)
           });
         }, 2000);
       }
@@ -8891,11 +9203,16 @@ function appendWhatsAppMessage(msg) {
   wrapper.className = 'whatsapp-message ' + (isOwn ? 'own' : 'other');
   wrapper.id = `wa-msg-${messageId}`;
   wrapper.dataset.timestamp = Date.now();
+  // Keep resolved ghost sender on element for safe reply lookups
+  wrapper.dataset.anonName = isOwn ? (getGhostName() || 'You') : (msg.anon_name || sender || 'Ghost');
 
   let messageHTML = '';
 
   if (!isOwn) {
-    messageHTML += `<div class="message-sender-name">${escapeHtml(sender)}</div>`;
+    const senderId = msg.sender_id || (msg.users && msg.users.id) || '';
+    const clickableClass = senderId ? 'clickable-username' : '';
+    const onclickHandler = senderId ? `onclick="showUserProfile('${senderId}')"` : '';
+    messageHTML += `<div class="message-sender-name ${clickableClass}" ${onclickHandler} style="cursor:pointer;">${escapeHtml(sender)}</div>`;
   }
 
   // ✅ FIX: Render media in the base appendWhatsAppMessage function
@@ -9027,7 +9344,8 @@ function handleWhatsAppTyping() {
   if (!window.lastWhatsAppTypingEmit || (now - window.lastWhatsAppTypingEmit) > 2000) {
     socket.emit('typing', {
       collegeName: currentUser.college,
-      username: currentUser.username
+      // Ghost chat: broadcast ghost name, never real username
+      username: (typeof getGhostName === 'function' && hasGhostName && hasGhostName() ? getGhostName() : currentUser.username)
     });
     window.lastWhatsAppTypingEmit = now;
   }
@@ -9039,7 +9357,8 @@ function handleWhatsAppTyping() {
   typingIndicatorTimeout = setTimeout(() => {
     socket.emit('stop_typing', {
       collegeName: currentUser.college,
-      username: currentUser.username
+      // Ghost chat: broadcast ghost name, never real username
+      username: (typeof getGhostName === 'function' && hasGhostName && hasGhostName() ? getGhostName() : currentUser.username)
     });
   }, 3000);
 }
@@ -9246,7 +9565,7 @@ function appendWhatsAppMessageFixed(msg) {
           font-size:14px;line-height:1;border:1.5px solid rgba(255,255,255,0.12);">
           👻
         </div>
-        <span class="message-sender-name" style="color:${nameColor};font-size:12px;font-weight:600;">${safeSender}</span>
+        <span class="message-sender-name ${msg.sender_id ? 'clickable-username' : ''}" style="color:${nameColor};font-size:12px;font-weight:600;${msg.sender_id ? 'cursor:pointer;' : ''}" ${msg.sender_id ? `onclick="showUserProfile('${msg.sender_id}')"` : ''}>${safeSender}</span>
       </div>`;
   }
 
@@ -9257,7 +9576,20 @@ function appendWhatsAppMessageFixed(msg) {
   let replyQuoteHTML = '';
   if (msg.reply_to) {
     const rt = msg.reply_to;
-    const rtSender = escapeHtml ? escapeHtml(rt.sender_username || 'User') : (rt.sender_username || 'User');
+    // Never leak real username in ghost mode: resolve sender from ghost fields/visible message only.
+    let rtSenderRaw = rt.anon_name || rt.sender_anon_name || '';
+    if (!rtSenderRaw && rt.id) {
+      const originalMsgEl = document.getElementById(`wa-msg-${rt.id}`);
+      if (originalMsgEl) {
+        if (originalMsgEl.classList.contains('own')) {
+          rtSenderRaw = getGhostName() || 'You';
+        } else {
+          rtSenderRaw = originalMsgEl.dataset.anonName || originalMsgEl.querySelector('.message-sender-name')?.textContent?.trim() || '';
+        }
+      }
+    }
+    if (!rtSenderRaw) rtSenderRaw = 'User';
+    const rtSender = escapeHtml ? escapeHtml(rtSenderRaw) : rtSenderRaw;
     let rtContent = '';
     if (rt.content && rt.content.trim()) {
       rtContent = `<span class="rq-text">${escapeHtml ? escapeHtml(rt.content) : rt.content}</span>`;
@@ -10355,12 +10687,13 @@ async function sendWhatsAppMessageWithMedia() {
       }
       const rqIsOwn = rqEl.classList.contains('own');
       const rqSender = rqIsOwn
-        ? (currentUser?.username || 'You')
-        : (rqEl.querySelector('.message-sender-name')?.textContent?.trim() || 'User');
+        ? (getGhostName() || currentUser?.username || 'You')
+        : (rqEl.dataset.anonName || rqEl.querySelector('.message-sender-name')?.textContent?.trim() || 'User');
       const rqMedia = rqEl.querySelector('.msg-media') ? { type: 'image' } : (rqEl.querySelector('video.msg-media') ? { type: 'video' } : null);
       replyToDataForTemp = {
         id: replyToIdForTemp,
         content: rqText,
+        anon_name: rqSender,
         sender_username: rqSender,
         media_type: rqMedia ? rqMedia.type : null
       };
@@ -10399,7 +10732,11 @@ async function sendWhatsAppMessageWithMedia() {
   cancelReply(); // clear reply preview
 
   if (socket && currentUser.college) {
-    socket.emit('stop_typing', { collegeName: currentUser.college, username: currentUser.username });
+    socket.emit('stop_typing', {
+      collegeName: currentUser.college,
+      // Ghost chat: broadcast ghost name, never real username
+      username: getGhostName()
+    });
   }
 
   try {
@@ -10920,6 +11257,7 @@ function buildVibeCard(post, idx) {
   const isOwn = currentUser && userId === currentUser.id;
   const dest = post.posted_to === 'community' ? '🎓 College' : '👤 Profile';
   const postTime = vibeTimeAgo(post.created_at || post.timestamp);
+  const isRealVibe = !!post.is_real_vibe;
 
   // ── Background layer ──
   const firstMedia = media[0];
@@ -10980,7 +11318,7 @@ function buildVibeCard(post, idx) {
     : '';
 
   return `
-  <div class="vibe-card" data-id="${post.id}" data-idx="${idx}">
+  <div class="vibe-card${isRealVibe ? ' vx-realvibe-premium' : ''}" data-id="${post.id}" data-idx="${idx}">
     ${bgLayer}
     <div class="vibe-card-overlay"></div>
     ${moreMedia}
@@ -11260,14 +11598,16 @@ async function vibeOpenComments(postId, idx) {
     }
     list.innerHTML = comments.map(c => {
       const u = c.users || {};
+      const uid = u.id || '';
+      const clickAttr = uid ? `onclick="showUserProfile('${uid}')" style="cursor:pointer;"` : '';
       const av = u.profile_pic
-        ? `<div class="vibe-comment-av"><img src="${u.profile_pic}" alt=""></div>`
-        : `<div class="vibe-comment-av">${(u.username || '?').charAt(0).toUpperCase()}</div>`;
+        ? `<div class="vibe-comment-av" ${clickAttr}><img src="${u.profile_pic}" alt=""></div>`
+        : `<div class="vibe-comment-av" ${clickAttr}>${(u.username || '?').charAt(0).toUpperCase()}</div>`;
       return `
       <div class="vibe-comment-item">
         ${av}
         <div class="vibe-comment-body">
-          <div class="vibe-comment-username">@${u.username || 'User'}</div>
+          <div class="vibe-comment-username" ${clickAttr}>@${u.username || 'User'}</div>
           <div class="vibe-comment-text">${c.content || ''}</div>
           <div class="vibe-comment-meta">
             <span class="vibe-comment-time">${vibeTimeAgo(c.created_at)}</span>
@@ -11293,16 +11633,18 @@ async function submitVibeComment() {
     if (!data.success) return;
 
     const u = currentUser;
+    const ownUid = u.id || '';
+    const ownClickAttr = ownUid ? `onclick="showUserProfile('${ownUid}')" style="cursor:pointer;"` : '';
     const av = u.profilePic
-      ? `<div class="vibe-comment-av"><img src="${u.profilePic}" alt=""></div>`
-      : `<div class="vibe-comment-av">${(u.username || '?').charAt(0).toUpperCase()}</div>`;
+      ? `<div class="vibe-comment-av" ${ownClickAttr}><img src="${u.profilePic}" alt=""></div>`
+      : `<div class="vibe-comment-av" ${ownClickAttr}>${(u.username || '?').charAt(0).toUpperCase()}</div>`;
 
     const newItem = document.createElement('div');
     newItem.className = 'vibe-comment-item';
     newItem.innerHTML = `
       ${av}
       <div class="vibe-comment-body">
-        <div class="vibe-comment-username">@${u.username}</div>
+        <div class="vibe-comment-username" ${ownClickAttr}>@${u.username}</div>
         <div class="vibe-comment-text">${content}</div>
         <div class="vibe-comment-meta">
           <span class="vibe-comment-time">just now</span>
@@ -13548,6 +13890,10 @@ function openExecutiveChat() {
   document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
   document.getElementById('execSidebarItem')?.classList.add('active');
 
+  // Executive-only: show chat rules card in sidebar
+  const rules = document.getElementById('executiveChatRules');
+  if (rules) rules.style.display = '';
+
   // Switch panels
   const ghostPanel = document.getElementById('ghostChatPanel');
   if (ghostPanel) ghostPanel.style.display = 'none';
@@ -13572,6 +13918,10 @@ function openCommunityChat() {
   document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
   const ghostItem = document.getElementById('ghostChatItem');
   if (ghostItem) ghostItem.classList.add('active');
+
+  // Ghost-only: never show chat rules card in sidebar
+  const rules = document.getElementById('executiveChatRules');
+  if (rules) rules.style.display = 'none';
 
   const ghostPanel = document.getElementById('ghostChatPanel');
   const execPanel = document.getElementById('executiveChatPanel');
@@ -13605,6 +13955,111 @@ function openCommunityChat() {
     }, 300);
   });
 }
+
+// ── Manual screen adjust: draggable sidebar width ─────────────────────
+(function initCommunitiesPaneResizer() {
+  let ready = false;
+
+  function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
+
+  function applySidebarWidth(px) {
+    const container = document.querySelector('.whatsapp-container');
+    if (!container) return;
+    const w = clamp(px, 280, 560);
+    container.style.setProperty('--vx-sidebar-w', `${w}px`);
+  }
+
+  function restore() {
+    const saved = parseInt(localStorage.getItem('vxSidebarW') || '', 10);
+    if (!Number.isFinite(saved)) return;
+    applySidebarWidth(saved);
+  }
+
+  function bind() {
+    const container = document.querySelector('.whatsapp-container');
+    const resizer = document.getElementById('vxPaneResizer');
+    const sidebar = document.querySelector('.whatsapp-sidebar');
+    if (!container || !resizer || !sidebar) return false;
+
+    // Only enable on desktop widths (mobile uses show-sidebar layout)
+    if (window.matchMedia('(max-width: 820px)').matches) {
+      container.style.removeProperty('--vx-sidebar-w');
+      return true;
+    }
+
+    restore();
+
+    let dragging = false;
+
+    const onMove = (clientX) => {
+      if (!dragging) return;
+      const rect = container.getBoundingClientRect();
+      const px = clientX - rect.left;
+      applySidebarWidth(px);
+    };
+
+    const onDown = (e) => {
+      if (window.matchMedia('(max-width: 820px)').matches) return;
+      dragging = true;
+      resizer.classList.add('vx-resizing');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      onMove(e.clientX);
+      e.preventDefault();
+    };
+
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      resizer.classList.remove('vx-resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      // Persist current sidebar width
+      const w = Math.round(sidebar.getBoundingClientRect().width);
+      if (Number.isFinite(w) && w > 0) localStorage.setItem('vxSidebarW', String(w));
+    };
+
+    // Mouse + touch (pointer events)
+    resizer.addEventListener('pointerdown', (e) => {
+      try { resizer.setPointerCapture(e.pointerId); } catch { }
+      onDown(e);
+    });
+    resizer.addEventListener('pointermove', (e) => onMove(e.clientX));
+    resizer.addEventListener('pointerup', onUp);
+    resizer.addEventListener('pointercancel', onUp);
+
+    // Keyboard accessibility: arrows adjust width
+    resizer.addEventListener('keydown', (e) => {
+      if (window.matchMedia('(max-width: 820px)').matches) return;
+      const step = e.shiftKey ? 24 : 12;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const current = Math.round(sidebar.getBoundingClientRect().width);
+      const next = e.key === 'ArrowLeft' ? current - step : current + step;
+      applySidebarWidth(next);
+      localStorage.setItem('vxSidebarW', String(clamp(next, 280, 560)));
+      e.preventDefault();
+    });
+
+    window.addEventListener('resize', () => {
+      // When switching to mobile, drop custom width
+      if (window.matchMedia('(max-width: 820px)').matches) {
+        container.style.removeProperty('--vx-sidebar-w');
+      } else {
+        restore();
+      }
+    });
+
+    return true;
+  }
+
+  // Communities layout is injected dynamically; retry until it exists.
+  const tick = () => {
+    if (ready) return;
+    ready = bind();
+    if (!ready) setTimeout(tick, 400);
+  };
+  tick();
+})();
 
 // ── Socket listeners (registered once) ───────────────────────────────
 function execRegisterSocketListeners() {
