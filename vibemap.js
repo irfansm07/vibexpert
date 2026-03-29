@@ -9184,7 +9184,7 @@ async function handleCoverPhotoUpload(event) {
 
       showMessage('✅ Cover updated!', 'success');
     } else {
-      showMessage('❌ Cover upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
+      showMessage('❌ Cover upload failed: ' + (data && (data.details || data.error) ? (data.details || data.error) : 'Unknown error'), 'error');
     }
   } catch (error) {
     console.error('Cover upload error:', error);
