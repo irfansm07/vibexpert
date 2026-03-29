@@ -1002,12 +1002,22 @@ document.addEventListener('DOMContentLoaded', function () {
 // ========================================
 async function refreshCurrentUser() {
   if (!currentUser || !currentUser.id) return;
+
+  // ── Preserve photos from localStorage so a failed sync never wipes them ──
+  const _savedPic = currentUser.profile_pic || null;
+  const _savedCover = currentUser.cover_photo || currentUser.coverPhoto || null;
+
+  // Always apply whatever is already saved in localStorage to the DOM immediately,
+  // so photos are visible even if the server sync below fails.
+  _applyPhotosToDOM(_savedPic, _savedCover);
+
   try {
     const data = await apiCall('/api/profile/' + currentUser.id, 'GET');
     if (data && data.success && data.user) {
-      currentUser.profile_pic = data.user.profile_pic || currentUser.profile_pic || null;
-      currentUser.cover_photo = data.user.cover_photo || null;
-      currentUser.coverPhoto = currentUser.cover_photo;
+      // Use server value if present, otherwise keep the locally-saved one
+      currentUser.profile_pic = data.user.profile_pic || _savedPic;
+      currentUser.cover_photo = data.user.cover_photo || _savedCover;
+      currentUser.coverPhoto  = currentUser.cover_photo;
       currentUser.bio = data.user.bio || currentUser.bio || '';
       currentUser.badges = data.user.badges || currentUser.badges || [];
       currentUser.hobbies = data.user.hobbies || currentUser.hobbies || '';
@@ -1020,10 +1030,10 @@ async function refreshCurrentUser() {
       // Immediately update stat elements if profile page is visible
       const followersStat = document.getElementById('profileStatFollowers');
       const followingStat = document.getElementById('profileStatFollowing');
-      const postsStat = document.getElementById('profileStatPosts');
+      const postsStat     = document.getElementById('profileStatPosts');
       if (followersStat) followersStat.textContent = currentUser.followersCount;
       if (followingStat) followingStat.textContent = currentUser.followingCount;
-      if (postsStat) postsStat.textContent = currentUser.postCount;
+      if (postsStat)     postsStat.textContent     = currentUser.postCount;
       // ─────────────────────────────────────────────────────────────────
 
       // ── Sync college & communityJoined from server ────────────────────
@@ -1035,7 +1045,6 @@ async function refreshCurrentUser() {
         } else if (typeof socket !== 'undefined' && socket && socket.connected) {
           socket.emit('join_college', data.user.college);
         }
-        // Removed updateLiveNotif
       }
       if (data.user.community_joined != null) {
         currentUser.communityJoined = !!data.user.community_joined;
@@ -1044,14 +1053,49 @@ async function refreshCurrentUser() {
 
       localStorage.setItem('user', JSON.stringify(currentUser));
 
+      // Apply freshly synced photos to DOM (may differ from saved ones)
+      _applyPhotosToDOM(currentUser.profile_pic, currentUser.cover_photo);
+
       // If profile modal is open, re-render it with fresh data
       const profileModal = document.getElementById('enhancedProfileModal');
       if (profileModal && profileModal.style.display !== 'none') {
         loadEnhancedProfileData();
       }
     }
+    // If API returned success:false or 404, photos were already applied
+    // from localStorage above — nothing more to do.
   } catch (e) {
     console.warn('[refreshCurrentUser] Could not sync:', e.message);
+    // Photos from localStorage were already applied above — they stay visible.
+  }
+}
+
+// ── Shared helper: apply profile pic + cover photo to every DOM slot ─────────
+function _applyPhotosToDOM(picUrl, coverUrl) {
+  // Profile picture
+  const profileImg      = document.getElementById('profilePageAvatarImg');
+  const profileInitial  = document.getElementById('profilePageAvatarInitial');
+  const mainAvatarImg   = document.getElementById('profileAvatarImg');
+  const mainAvatarInit  = document.getElementById('profileAvatarInitial');
+  if (picUrl) {
+    if (profileImg)     { profileImg.src = picUrl; profileImg.style.display = 'block'; }
+    if (profileInitial)   profileInitial.style.display = 'none';
+    if (mainAvatarImg)  { mainAvatarImg.src = picUrl; mainAvatarImg.style.display = 'block'; }
+    if (mainAvatarInit)   mainAvatarInit.style.display = 'none';
+  }
+  // Cover photo
+  const coverImg  = document.getElementById('profileCoverImg');
+  const coverWrap = document.getElementById('profileCoverPhoto');
+  if (coverImg) {
+    if (coverUrl) {
+      coverImg.src = coverUrl;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    } else {
+      coverImg.src = '';
+      coverImg.style.display = 'none';
+      if (coverWrap) coverWrap.style.background = '';
+    }
   }
 }
 
@@ -3473,39 +3517,40 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     }
   }
 
-  // Avatar — always force correct state so switching between users never shows stale pic
-  if (isOwn) {
-    if (targetUser.profile_pic) {
-      if (avatarImg) {
-        avatarImg.src = targetUser.profile_pic;
-        avatarImg.style.display = 'block';
-        avatarImg.onerror = function () {
-          this.style.display = 'none';
-          if (avatarInitial) avatarInitial.style.display = 'block';
-        };
-      }
-      if (avatarInitial) avatarInitial.style.display = 'none';
-    } else {
-      if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
-      if (avatarInitial) avatarInitial.style.display = 'block';
+  // Avatar + cover — for own profile also check localStorage as fallback
+  // in case the server sync failed and targetUser has stale/null photos.
+  const _resolvedPic = isOwn
+    ? (targetUser.profile_pic || (currentUser && currentUser.profile_pic) || null)
+    : (targetUser.profile_pic || null);
+  const _resolvedCover = isOwn
+    ? (targetUser.cover_photo || targetUser.coverPhoto || (currentUser && (currentUser.cover_photo || currentUser.coverPhoto)) || null)
+    : (targetUser.cover_photo || targetUser.coverPhoto || null);
+
+  // Profile picture
+  if (_resolvedPic) {
+    if (avatarImg) {
+      avatarImg.src = _resolvedPic;
+      avatarImg.style.display = 'block';
+      avatarImg.onerror = function () {
+        this.style.display = 'none';
+        if (avatarInitial) avatarInitial.style.display = 'block';
+      };
     }
+    if (avatarInitial) avatarInitial.style.display = 'none';
   } else {
-    // Privacy: do not show profile photo to other users
     if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
 
   // Cover photo — render for ALL users (own + others)
-  const coverImg = document.getElementById('profileCoverImg');
+  const coverImg  = document.getElementById('profileCoverImg');
   const coverWrap = document.getElementById('profileCoverPhoto');
-  const coverUrl = targetUser.cover_photo || targetUser.coverPhoto || null;
   if (coverImg) {
-    if (isOwn && coverUrl) {
-      coverImg.src = coverUrl;
+    if (_resolvedCover) {
+      coverImg.src = _resolvedCover;
       coverImg.style.display = 'block';
       if (coverWrap) coverWrap.style.background = 'none';
     } else {
-      // Privacy: do not show cover photo to other users
       coverImg.src = '';
       coverImg.style.display = 'none';
       if (coverWrap) coverWrap.style.background = '';
@@ -3513,7 +3558,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   }
 
   // Real data from database
-  if (collegeEl) collegeEl.textContent = isOwn ? (targetUser.college || 'No college set') : 'No college set';
+  if (collegeEl) collegeEl.textContent = targetUser.college || 'No college set';
   if (regNoEl) regNoEl.textContent = targetUser.registration_number || targetUser.email || 'No email';
   if (postsStat) postsStat.textContent = targetUser.postCount || 0;
   if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
@@ -3523,7 +3568,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Set bio
   const bioEl = document.getElementById('profileBio');
-  if (bioEl) bioEl.textContent = isOwn ? (targetUser.bio || 'Tell the world about yourself...') : 'Tell the world about yourself...';
+  if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
 
   // Render hobbies — pass isOwn explicitly so edit button always shows correctly
   renderProfileHobbies(targetUser, isOwn);
@@ -4646,37 +4691,57 @@ function uploadProfilePic() {
   document.getElementById('profilePicInput').click();
 }
 
-function handleProfilePicUpload(event) {
+async function handleProfilePicUpload(event) {
   const file = event.target.files[0];
   if (!file || !currentUser) return;
 
+  // Show instant local preview
   const reader = new FileReader();
   reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    currentUser.profile_pic = dataUrl;
-
-    // Update UI components
     const profileImg = document.getElementById('profilePageAvatarImg');
     const profileInitial = document.getElementById('profilePageAvatarInitial');
     const mainAvatarImg = document.getElementById('profileAvatarImg');
     const mainAvatarInitial = document.getElementById('profileAvatarInitial');
-
-    if (profileImg) {
-      profileImg.src = dataUrl;
-      profileImg.style.display = 'block';
-    }
+    if (profileImg) { profileImg.src = e.target.result; profileImg.style.display = 'block'; }
     if (profileInitial) profileInitial.style.display = 'none';
-
-    if (mainAvatarImg) {
-      mainAvatarImg.src = dataUrl;
-      mainAvatarImg.style.display = 'block';
-    }
+    if (mainAvatarImg) { mainAvatarImg.src = e.target.result; mainAvatarImg.style.display = 'block'; }
     if (mainAvatarInitial) mainAvatarInitial.style.display = 'none';
-
-    saveUserToLocal();
-    showMessage('✨ Profile picture updated!', 'success');
   };
   reader.readAsDataURL(file);
+
+  // Upload to server so it persists on reload and shows to other users
+  try {
+    showMessage('📤 Uploading...', 'success');
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    const data = await apiCall('/api/user/profile-photo', 'POST', formData);
+    if (data && data.success && data.photoUrl) {
+      currentUser.profile_pic = data.photoUrl;
+      saveUserToLocal();
+      const profileImg = document.getElementById('profilePageAvatarImg');
+      const mainAvatarImg = document.getElementById('profileAvatarImg');
+      if (profileImg) profileImg.src = data.photoUrl;
+      if (mainAvatarImg) mainAvatarImg.src = data.photoUrl;
+
+      // Keep window.currentProfileUser in sync
+      if (window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+        window.currentProfileUser.profile_pic = data.photoUrl;
+      }
+
+      // Invalidate cache so other users see fresh DP on next visit
+      if (window._mpcCache && window._mpcCache[currentUser.id]) {
+        window._mpcCache[currentUser.id].profile_pic = data.photoUrl;
+      }
+
+      showMessage('✨ Profile picture updated!', 'success');
+    } else {
+      showMessage('❌ Upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Profile pic upload error:', error);
+    showMessage('❌ Failed to upload photo: ' + error.message, 'error');
+  }
+  event.target.value = '';
 }
 
 
@@ -8216,6 +8281,13 @@ async function selectPlan(planType) {
     return;
   }
 
+  // Check if Cashfree SDK is loaded (may be blocked by ad blockers)
+  if (typeof Cashfree === 'undefined') {
+    showMessage('⚠️ Payment SDK blocked! Please disable your ad blocker and refresh the page.', 'error');
+    showSubView('subscriptionFailed');
+    return;
+  }
+
   const plans = {
     noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 9, posters: 5, videos: 1, days: 15 },
     royal: { name: 'Royal', firstTimePrice: 25, regularPrice: 25, posters: 5, videos: 3, days: 23 }
@@ -8240,102 +8312,58 @@ async function selectPlan(planType) {
     }
 
     // Step 1: Create order on backend
+    const returnUrl = `${window.location.origin}${window.location.pathname}?order_id={order_id}&planType=${planType}`;
+    console.log('📦 Creating payment order...', { amount: price, planType, returnUrl });
+
     const orderRes = await fetch(`${API_URL}/api/payment/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ amount: price, planType, isFirstTime })
+      body: JSON.stringify({ amount: price, planType, isFirstTime, returnUrl })
     });
-    const orderData = await orderRes.json();
 
-    if (!orderRes.ok || !orderData.success) {
-      throw new Error(orderData.error || 'Failed to create order');
+    if (!orderRes.ok) {
+      const errorText = await orderRes.text();
+      console.error('❌ Order creation HTTP error:', orderRes.status, errorText);
+      if (orderRes.status === 404) {
+        throw new Error('Payment endpoint not found. Backend may need redeployment.');
+      }
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || `Server error (${orderRes.status})`);
+      } catch (parseErr) {
+        if (parseErr.message.includes('Payment endpoint') || parseErr.message.includes('Server error')) throw parseErr;
+        throw new Error(`Server error (${orderRes.status}). Please try again.`);
+      }
     }
 
-    // Step 2: Open REAL Razorpay Checkout - money goes to YOUR account
-    showIntroView(); // Hide processing while Razorpay opens
+    const orderData = await orderRes.json();
+    console.log('✅ Order created:', orderData);
 
-    const rzpOptions = {
-      key: orderData.razorpayKeyId,
-      amount: orderData.amount * 100, // Razorpay wants paise
-      currency: 'INR',
-      name: 'VibeXpert',
-      description: `${plan.name} Plan - ${plan.days} Days`,
-      image: 'https://vibexpert.online/assets/logo.png',
-      order_id: orderData.orderId,
-      prefill: {
-        name: currentUser.name || currentUser.username || '',
-        email: currentUser.email || ''
-      },
-      theme: { color: '#FFD700' },
-      handler: async function (response) {
-        // Payment successful on Razorpay's side - now verify on our backend
-        showSubView('subscriptionProcessing');
-        try {
-          const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              planType
-            })
-          });
-          const verifyData = await verifyRes.json();
+    if (!orderData.success || !orderData.payment_session_id) {
+      throw new Error(orderData.error || 'Failed to create order — no payment session received');
+    }
 
-          if (verifyData.success) {
-            // Update local user data
-            currentUser.subscription = {
-              plan: planType,
-              startDate: new Date(),
-              endDate: new Date(verifyData.subscription ? verifyData.subscription.endDate : Date.now() + plan.days * 86400000),
-              posters: plan.posters,
-              videos: plan.videos,
-              postersUsed: 0,
-              videosUsed: 0
-            };
-            currentUser.hasSubscribed = true;
-            currentUser.isPremium = true;
-            localStorage.setItem('user', JSON.stringify(currentUser));
+    // Step 2: Open REAL Cashfree Checkout
+    showIntroView(); // Hide processing while Cashfree prepares
 
-            // Show success in popup
-            const successEl = document.getElementById('successPlanDetails');
-            if (successEl) {
-              successEl.innerHTML = `<strong>${plan.name} Plan</strong> activated!<br>` +
-                `📸 ${plan.posters} Posters + 🎥 ${plan.videos} Video${plan.videos > 1 ? 's' : ''}<br>` +
-                `⏰ Valid for ${plan.days} days<br>` +
-                `<small style="opacity:0.7">Payment ID: ${response.razorpay_payment_id}</small>`;
-            }
-            showSubView('subscriptionSuccess');
-            updatePremiumBadge();
-            showMessage('🎉 Subscription activated!', 'success');
-          } else {
-            throw new Error(verifyData.error || 'Verification failed');
-          }
-        } catch (vErr) {
-          console.error('Payment verification error:', vErr);
-          showSubView('subscriptionFailed');
-          showMessage('❌ Payment verification failed', 'error');
-        }
-      },
-      modal: {
-        ondismiss: function () {
-          showIntroView();
-          showMessage('Payment cancelled', 'error');
-        }
-      }
-    };
+    try {
+      const cashfree = Cashfree({
+        mode: "sandbox"
+      });
 
-    const rzp = new Razorpay(rzpOptions);
-    rzp.on('payment.failed', function (resp) {
-      console.error('Razorpay payment failed:', resp.error);
-      showSubView('subscriptionFailed');
-      showMessage('❌ Payment failed: ' + (resp.error.description || 'Unknown error'), 'error');
-    });
-    rzp.open();
+      console.log('🚀 Launching Cashfree checkout with session:', orderData.payment_session_id);
+
+      await cashfree.checkout({
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_self"
+      });
+    } catch (sdkError) {
+      console.error('❌ Cashfree SDK error:', sdkError);
+      throw new Error('Payment gateway failed to load. Please disable ad blocker and try again.');
+    }
 
   } catch (error) {
-    console.error('Subscription error:', error);
+    console.error('❌ Subscription error:', error);
     showSubView('subscriptionFailed');
     showMessage('❌ ' + (error.message || 'Payment failed. Please try again.'), 'error');
   }
@@ -8444,7 +8472,69 @@ document.addEventListener('DOMContentLoaded', function () {
   if (currentUser) {
     fetchSubscriptionStatus();
   }
+  setTimeout(verifyCashfreePaymentOnLoad, 1500); // Give auth logic a moment to load currentUser
 });
+
+async function verifyCashfreePaymentOnLoad() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('order_id');
+  const planType = urlParams.get('planType');
+
+  if (orderId) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // If returning from Cashfree, give it a tiny delay to ensure everything is mounted
+    setTimeout(async () => {
+      const token = getToken();
+      if (!token) {
+        showMessage('⚠️ Session expired or not logged in. Could not verify payment.', 'error');
+        return;
+      }
+
+      showMessage('Verifying payment...', 'info');
+      try {
+        const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ order_id: orderId, planType: planType || 'noble' })
+        });
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          const plans = { 
+            noble: { name: 'Noble', posters: 5, videos: 1, days: 15 },
+            royal: { name: 'Royal', posters: 5, videos: 3, days: 23 } 
+          };
+          const plan = plans[verifyData.subscription.plan] || plans['noble'];
+
+          if (currentUser) {
+              currentUser.subscription = {
+                plan: verifyData.subscription.plan,
+                startDate: new Date(),
+                endDate: new Date(verifyData.subscription.endDate),
+                posters: plan.posters,
+                videos: plan.videos,
+                postersUsed: 0,
+                videosUsed: 0
+              };
+              currentUser.hasSubscribed = true;
+              currentUser.isPremium = true;
+              localStorage.setItem('user', JSON.stringify(currentUser));
+              updatePremiumBadge();
+          }
+
+          showMessage('🎉 Subscription activated successfully!', 'success');
+          showSubscriptionSuccessModal(plan);
+        } else {
+          showMessage('❌ Payment verification failed: ' + (verifyData.error || 'Payment may be incomplete'), 'error');
+        }
+      } catch (err) {
+        console.error('Payment verification error OnLoad:', err);
+        showMessage('❌ Error verifying payment', 'error');
+      }
+    }, 1000);
+  }
+}
 
 // TWITTER-STYLE FEED FUNCTIONS
 // ==========================================
@@ -9045,6 +9135,19 @@ async function handleCoverPhotoUpload(event) {
     return;
   }
 
+  // Show instant local preview so user sees it immediately
+  const previewReader = new FileReader();
+  previewReader.onload = (e) => {
+    const coverImg = document.getElementById('profileCoverImg');
+    const coverWrap = document.getElementById('profileCoverPhoto');
+    if (coverImg) {
+      coverImg.src = e.target.result;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    }
+  };
+  previewReader.readAsDataURL(file);
+
   try {
     showMessage('📤 Uploading cover...', 'success');
 
@@ -9053,23 +9156,39 @@ async function handleCoverPhotoUpload(event) {
 
     const data = await apiCall('/api/user/cover-photo', 'POST', formData);
 
-    if (data.success && data.photoUrl) {
+    if (data && data.success && data.photoUrl) {
       currentUser.coverPhoto = data.photoUrl;
       currentUser.cover_photo = data.photoUrl;
       localStorage.setItem('user', JSON.stringify(currentUser));
 
-      const cover = document.getElementById('profileCover');
-      if (cover) {
-        cover.style.backgroundImage = `url('${data.photoUrl}')`;
-        cover.style.backgroundSize = 'cover';
-        cover.style.backgroundPosition = 'center';
+      // Update DOM with permanent Cloudinary URL
+      const coverImg = document.getElementById('profileCoverImg');
+      const coverWrap = document.getElementById('profileCoverPhoto');
+      if (coverImg) {
+        coverImg.src = data.photoUrl;
+        coverImg.style.display = 'block';
+        if (coverWrap) coverWrap.style.background = 'none';
+      }
+
+      // Keep window.currentProfileUser in sync
+      if (window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+        window.currentProfileUser.cover_photo = data.photoUrl;
+        window.currentProfileUser.coverPhoto = data.photoUrl;
+      }
+
+      // Invalidate cache so other users see fresh cover on next visit
+      if (window._mpcCache && window._mpcCache[currentUser.id]) {
+        window._mpcCache[currentUser.id].cover_photo = data.photoUrl;
+        window._mpcCache[currentUser.id].coverPhoto = data.photoUrl;
       }
 
       showMessage('✅ Cover updated!', 'success');
+    } else {
+      showMessage('❌ Cover upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
     }
   } catch (error) {
     console.error('Cover upload error:', error);
-    showMessage('❌ Failed to upload cover', 'error');
+    showMessage('❌ Failed to upload cover: ' + error.message, 'error');
   }
 
   event.target.value = '';
@@ -13574,18 +13693,7 @@ function renderActivityHeatmap() {
   container.innerHTML = cells.join('');
 }
 
-// ── Cover Photo Handler ────────────────────────────────────────────
-async function handleCoverPhotoUpload(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = document.getElementById('profileCoverImg');
-    if (img) { img.src = e.target.result; img.style.display = 'block'; }
-  };
-  reader.readAsDataURL(file);
-  showMessage('Cover photo updated locally (backend storage optional)', 'success');
-}
+// ── Cover Photo Handler is defined above ──────────────────────────
 
 // ── Profile tab switcher patch — handle new tabs ───────────────────
 const _origSwitchProfileTab = window.switchProfileTab;
