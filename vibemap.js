@@ -3507,6 +3507,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Real User ID Display - only show if viewing own profile
   const userIdEl = document.getElementById('profilePageUserId');
+  const editCoverBtnWrap = document.getElementById('editCoverBtnWrap');
   if (userIdEl) {
     if (isOwn) {
       const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
@@ -3515,6 +3516,11 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     } else {
       userIdEl.style.display = 'none';
     }
+  }
+  
+  // Show edit cover button on own profile
+  if (editCoverBtnWrap) {
+    editCoverBtnWrap.style.display = isOwn ? 'block' : 'none';
   }
 
   // Avatar + cover — for own profile also check localStorage as fallback
@@ -9184,7 +9190,11 @@ async function handleCoverPhotoUpload(event) {
 
       showMessage('✅ Cover updated!', 'success');
     } else {
+<<<<<<< HEAD
       showMessage('❌ Cover upload failed: ' + (data && (data.details || data.error) ? (data.details || data.error) : 'Unknown error'), 'error');
+=======
+      showMessage('❌ Cover upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
+>>>>>>> f624cab (Enhance cover photo UI)
     }
   } catch (error) {
     console.error('Cover upload error:', error);
