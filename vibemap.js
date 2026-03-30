@@ -9190,11 +9190,7 @@ async function handleCoverPhotoUpload(event) {
 
       showMessage('✅ Cover updated!', 'success');
     } else {
-<<<<<<< HEAD
       showMessage('❌ Cover upload failed: ' + (data && (data.details || data.error) ? (data.details || data.error) : 'Unknown error'), 'error');
-=======
-      showMessage('❌ Cover upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
->>>>>>> f624cab (Enhance cover photo UI)
     }
   } catch (error) {
     console.error('Cover upload error:', error);
