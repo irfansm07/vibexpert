@@ -1002,11 +1002,21 @@ document.addEventListener('DOMContentLoaded', function () {
 // ========================================
 async function refreshCurrentUser() {
   if (!currentUser || !currentUser.id) return;
+
+  // ── Preserve photos from localStorage so a failed sync never wipes them ──
+  const _savedPic = currentUser.profile_pic || null;
+  const _savedCover = currentUser.cover_photo || currentUser.coverPhoto || null;
+
+  // Always apply whatever is already saved in localStorage to the DOM immediately,
+  // so photos are visible even if the server sync below fails.
+  _applyPhotosToDOM(_savedPic, _savedCover);
+
   try {
     const data = await apiCall('/api/profile/' + currentUser.id, 'GET');
     if (data && data.success && data.user) {
-      currentUser.profile_pic = data.user.profile_pic || currentUser.profile_pic || null;
-      currentUser.cover_photo = data.user.cover_photo || null;
+      // Use server value if present, otherwise keep the locally-saved one
+      currentUser.profile_pic = data.user.profile_pic || _savedPic;
+      currentUser.cover_photo = data.user.cover_photo || _savedCover;
       currentUser.coverPhoto = currentUser.cover_photo;
       currentUser.bio = data.user.bio || currentUser.bio || '';
       currentUser.badges = data.user.badges || currentUser.badges || [];
@@ -1035,7 +1045,6 @@ async function refreshCurrentUser() {
         } else if (typeof socket !== 'undefined' && socket && socket.connected) {
           socket.emit('join_college', data.user.college);
         }
-        // Removed updateLiveNotif
       }
       if (data.user.community_joined != null) {
         currentUser.communityJoined = !!data.user.community_joined;
@@ -1044,14 +1053,49 @@ async function refreshCurrentUser() {
 
       localStorage.setItem('user', JSON.stringify(currentUser));
 
+      // Apply freshly synced photos to DOM (may differ from saved ones)
+      _applyPhotosToDOM(currentUser.profile_pic, currentUser.cover_photo);
+
       // If profile modal is open, re-render it with fresh data
       const profileModal = document.getElementById('enhancedProfileModal');
       if (profileModal && profileModal.style.display !== 'none') {
         loadEnhancedProfileData();
       }
     }
+    // If API returned success:false or 404, photos were already applied
+    // from localStorage above — nothing more to do.
   } catch (e) {
     console.warn('[refreshCurrentUser] Could not sync:', e.message);
+    // Photos from localStorage were already applied above — they stay visible.
+  }
+}
+
+// ── Shared helper: apply profile pic + cover photo to every DOM slot ─────────
+function _applyPhotosToDOM(picUrl, coverUrl) {
+  // Profile picture
+  const profileImg = document.getElementById('profilePageAvatarImg');
+  const profileInitial = document.getElementById('profilePageAvatarInitial');
+  const mainAvatarImg = document.getElementById('profileAvatarImg');
+  const mainAvatarInit = document.getElementById('profileAvatarInitial');
+  if (picUrl) {
+    if (profileImg) { profileImg.src = picUrl; profileImg.style.display = 'block'; }
+    if (profileInitial) profileInitial.style.display = 'none';
+    if (mainAvatarImg) { mainAvatarImg.src = picUrl; mainAvatarImg.style.display = 'block'; }
+    if (mainAvatarInit) mainAvatarInit.style.display = 'none';
+  }
+  // Cover photo
+  const coverImg = document.getElementById('profileCoverImg');
+  const coverWrap = document.getElementById('profileCoverPhoto');
+  if (coverImg) {
+    if (coverUrl) {
+      coverImg.src = coverUrl;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    } else {
+      coverImg.src = '';
+      coverImg.style.display = 'none';
+      if (coverWrap) coverWrap.style.background = '';
+    }
   }
 }
 
@@ -3380,7 +3424,7 @@ async function showUserProfile(userId) {
           if (noteBubble && noteText) {
             tu.note = data.user.note; // Ensure targetUser gets the freshest note
             const isOwnNote = _isOwnCached;
-            const userNote = tu.note; 
+            const userNote = tu.note;
             if (userNote) {
               noteText.textContent = userNote;
               noteBubble.style.display = 'block';
@@ -3463,6 +3507,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Real User ID Display - only show if viewing own profile
   const userIdEl = document.getElementById('profilePageUserId');
+  const editCoverBtnWrap = document.getElementById('editCoverBtnWrap');
   if (userIdEl) {
     if (isOwn) {
       const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
@@ -3473,24 +3518,32 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     }
   }
 
-  // Avatar — always force correct state so switching between users never shows stale pic
-  if (isOwn) {
-    if (targetUser.profile_pic) {
-      if (avatarImg) {
-        avatarImg.src = targetUser.profile_pic;
-        avatarImg.style.display = 'block';
-        avatarImg.onerror = function () {
-          this.style.display = 'none';
-          if (avatarInitial) avatarInitial.style.display = 'block';
-        };
-      }
-      if (avatarInitial) avatarInitial.style.display = 'none';
-    } else {
-      if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
-      if (avatarInitial) avatarInitial.style.display = 'block';
+  // Show edit cover button on own profile
+  if (editCoverBtnWrap) {
+    editCoverBtnWrap.style.display = isOwn ? 'block' : 'none';
+  }
+
+  // Avatar + cover — for own profile also check localStorage as fallback
+  // in case the server sync failed and targetUser has stale/null photos.
+  const _resolvedPic = isOwn
+    ? (targetUser.profile_pic || (currentUser && currentUser.profile_pic) || null)
+    : (targetUser.profile_pic || null);
+  const _resolvedCover = isOwn
+    ? (targetUser.cover_photo || targetUser.coverPhoto || (currentUser && (currentUser.cover_photo || currentUser.coverPhoto)) || null)
+    : (targetUser.cover_photo || targetUser.coverPhoto || null);
+
+  // Profile picture
+  if (_resolvedPic) {
+    if (avatarImg) {
+      avatarImg.src = _resolvedPic;
+      avatarImg.style.display = 'block';
+      avatarImg.onerror = function () {
+        this.style.display = 'none';
+        if (avatarInitial) avatarInitial.style.display = 'block';
+      };
     }
+    if (avatarInitial) avatarInitial.style.display = 'none';
   } else {
-    // Privacy: do not show profile photo to other users
     if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
@@ -3498,14 +3551,12 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   // Cover photo — render for ALL users (own + others)
   const coverImg = document.getElementById('profileCoverImg');
   const coverWrap = document.getElementById('profileCoverPhoto');
-  const coverUrl = targetUser.cover_photo || targetUser.coverPhoto || null;
   if (coverImg) {
-    if (isOwn && coverUrl) {
-      coverImg.src = coverUrl;
+    if (_resolvedCover) {
+      coverImg.src = _resolvedCover;
       coverImg.style.display = 'block';
       if (coverWrap) coverWrap.style.background = 'none';
     } else {
-      // Privacy: do not show cover photo to other users
       coverImg.src = '';
       coverImg.style.display = 'none';
       if (coverWrap) coverWrap.style.background = '';
@@ -3513,7 +3564,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   }
 
   // Real data from database
-  if (collegeEl) collegeEl.textContent = isOwn ? (targetUser.college || 'No college set') : 'No college set';
+  if (collegeEl) collegeEl.textContent = targetUser.college || 'No college set';
   if (regNoEl) regNoEl.textContent = targetUser.registration_number || targetUser.email || 'No email';
   if (postsStat) postsStat.textContent = targetUser.postCount || 0;
   if (followersStat) followersStat.textContent = targetUser.followersCount || 0;
@@ -3523,7 +3574,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Set bio
   const bioEl = document.getElementById('profileBio');
-  if (bioEl) bioEl.textContent = isOwn ? (targetUser.bio || 'Tell the world about yourself...') : 'Tell the world about yourself...';
+  if (bioEl) bioEl.textContent = targetUser.bio || 'Tell the world about yourself...';
 
   // Render hobbies — pass isOwn explicitly so edit button always shows correctly
   renderProfileHobbies(targetUser, isOwn);
@@ -3616,7 +3667,16 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   // Handle DM Button — show only when viewing someone else's profile
   const dmBtn = document.getElementById('dmBtn');
   if (dmBtn) {
-    dmBtn.style.display = isOwn ? 'none' : 'block';
+    if (isOwn) {
+      dmBtn.style.display = 'none';
+    } else {
+      dmBtn.style.display = 'block';
+      const knownState = _followState[targetUser.id];
+      const isFollowing = (knownState && knownState.isFollowing !== undefined) 
+        ? knownState.isFollowing 
+        : targetUser.isFollowing;
+      _updateDmBtnFollowStateUI(dmBtn, targetUser.username, isFollowing);
+    }
   }
 
   // Messages tab — owner-only inbox, hidden when viewing someone else's profile
@@ -4172,16 +4232,22 @@ function _populateMvDetail(post) {
   setT('mvDetailComments', vibeFmt ? vibeFmt(post.comment_count || 0) : (post.comment_count || 0));
   setT('mvDetailShares', vibeFmt ? vibeFmt(post.share_count || 0) : (post.share_count || 0));
 
-  // Show Edit/Delete ONLY if current user owns this post
-  const isPostOwner = currentUser && (post.user_id === currentUser.id);
-  const editBtn = document.getElementById('mvBtnEdit');
-  const deleteBtn = document.getElementById('mvBtnDelete');
-  if (editBtn) editBtn.style.display = isPostOwner ? '' : 'none';
-  if (deleteBtn) deleteBtn.style.display = isPostOwner ? '' : 'none';
+  // Show 3 Dots ONLY if current user owns this post
+  const isPostOwner = currentUser && (post.user_id == currentUser.id || (post.users && post.users.id == currentUser.id));
+  const optsWrapper = document.getElementById('mvOptsWrapper');
+  if (optsWrapper) optsWrapper.style.display = isPostOwner ? '' : 'none';
 
   // Reset edit mode
   cancelMvEdit();
 
+  // Reset Inline Comments so it doesn't linger from another post
+  const commentsWrap = document.getElementById('mv-comments-wrap');
+  if (commentsWrap) {
+      commentsWrap.style.display = 'none';
+      commentsWrap.style.opacity = '0';
+      commentsWrap.style.maxHeight = '0';
+  }
+  
   // Swipe support for mobile
   _attachMvSwipe(document.getElementById('mvDetailMedia'), media);
 }
@@ -4260,6 +4326,7 @@ function startMvEdit() {
   document.getElementById('mvCaptionWrap')?.style && (document.getElementById('mvCaptionWrap').style.display = 'none');
   document.getElementById('mvEditWrap').style.display = 'block';
   document.getElementById('mvBtnEdit').style.display = 'none';
+  document.getElementById('mvBtnDelete').style.display = 'none';
   editArea?.focus();
 }
 
@@ -4267,9 +4334,21 @@ function cancelMvEdit() {
   const cw = document.getElementById('mvCaptionWrap');
   const ew = document.getElementById('mvEditWrap');
   const eb = document.getElementById('mvBtnEdit');
+  const db = document.getElementById('mvBtnDelete');
   if (cw) cw.style.display = '';
   if (ew) ew.style.display = 'none';
-  if (eb) eb.style.display = '';
+
+  // Always reset to flex since the parent wrapper handles the owner visibility
+  if (eb) eb.style.display = 'flex';
+  if (db) db.style.display = 'flex';
+
+  // Reset Inline Comments so it doesn't linger from another post
+  const commentsWrap = document.getElementById('mv-comments-wrap');
+  if (commentsWrap) {
+      commentsWrap.style.display = 'none';
+      commentsWrap.style.opacity = '0';
+      commentsWrap.style.maxHeight = '0';
+  }
 }
 
 async function saveMvCaption() {
@@ -4350,6 +4429,229 @@ async function deleteMvPost() {
   };
   setTimeout(_tryAttach, 3000);
 })();
+
+// ── Modal specific like toggle & double click animation ────────────
+async function toggleMvLike() {
+  if (!_mvActivePostId) return;
+
+  const numEl = document.getElementById('mvDetailLikes');
+  const statDiv = document.querySelector('.mv-detail-stat[title="Like"]');
+  const svgStat = statDiv ? statDiv.querySelector('svg') : null;
+
+  let currentlyLiked = false;
+  let heartPath = null;
+  if (svgStat) {
+      heartPath = svgStat.querySelector('path');
+      currentlyLiked = svgStat.style.fill === 'rgb(255, 48, 64)' || svgStat.style.fill === '#ff3040';
+  }
+
+  // Optimistic UI update
+  if (svgStat) {
+      if (currentlyLiked) {
+         svgStat.style.fill = 'transparent';
+         if (heartPath) {
+             heartPath.style.fill = ''; 
+             svgStat.style.stroke = 'currentColor';
+         }
+         if (numEl) numEl.textContent = Math.max(0, parseInt(numEl.textContent || 0) - 1);
+      } else {
+         svgStat.style.fill = '#ff3040';
+         svgStat.style.stroke = 'none';
+         if (heartPath) heartPath.style.fill = '#ff3040';
+         if (numEl) numEl.textContent = parseInt(numEl.textContent || 0) + 1;
+      }
+  }
+
+  // Double click heart animation
+  const mediaWrap = document.getElementById('mvDetailMedia');
+  if (mediaWrap && !currentlyLiked) {
+      const heart = document.createElement('div');
+      heart.innerHTML = '❤️';
+      heart.style.position = 'absolute';
+      heart.style.left = '50%';
+      heart.style.top = '50%';
+      heart.style.transform = 'translate(-50%, -50%) scale(0)';
+      heart.style.fontSize = '80px';
+      heart.style.opacity = '0';
+      heart.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      heart.style.zIndex = '100';
+      heart.style.pointerEvents = 'none';
+      heart.style.textShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      mediaWrap.appendChild(heart);
+      
+      requestAnimationFrame(() => {
+          heart.style.transform = 'translate(-50%, -50%) scale(1.2)';
+          heart.style.opacity = '1';
+          setTimeout(() => {
+              heart.style.transform = 'translate(-50%, -50%) scale(1.5)';
+              heart.style.opacity = '0';
+              setTimeout(() => heart.remove(), 400);
+          }, 600);
+      });
+  }
+
+  // Hit the backend
+  try {
+      const resp = await apiCall(`/api/posts/${_mvActivePostId}/like`, 'POST');
+      if (resp && resp.success) {
+          // Sync server exact count
+          const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+          if (post) post.like_count = resp.likeCount;
+          if (numEl) numEl.textContent = vibeFmt ? vibeFmt(resp.likeCount) : resp.likeCount;
+          
+          if (resp.liked && svgStat) {
+             svgStat.style.fill = '#ff3040';
+             svgStat.style.stroke = 'none';
+             if (heartPath) heartPath.style.fill = '#ff3040';
+          } else if (svgStat) {
+             svgStat.style.fill = 'transparent';
+             svgStat.style.stroke = 'currentColor';
+             if (heartPath) heartPath.style.fill = '';
+          }
+      }
+  } catch (e) {
+      console.error('Failed to like in modal:', e);
+      // Revert optimism if failed gracefully
+  }
+}
+
+// ── Inline Modal Comments ──────────────────────────────────────────
+async function toggleMvInlineComments() {
+  if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
+  if (!_mvActivePostId) return;
+
+  const wrap = document.getElementById('mv-comments-wrap');
+  if (!wrap) return;
+
+  if (wrap.style.display !== 'none' && wrap.style.opacity === '1') {
+    wrap.style.maxHeight = '0';
+    wrap.style.opacity = '0';
+    setTimeout(() => wrap.style.display = 'none', 400);
+    return;
+  }
+
+  // Generate Emoji Picker if empty
+  const picker = document.getElementById('mv-emoji-picker');
+  if (picker && !picker.innerHTML.trim()) {
+    picker.innerHTML = ['😊', '😂', '❤️', '🔥', '👍', '🥺', '🎉', '💯', '✨', '😍', '🙏', '😎', '😭', '🤣', '😘', '🥰', '🤔', '😤', '😡', '🤩', '🥳', '🙌', '💪', '🤝', '👋', '👀', '💀', '👽'].map(e => `<span onclick="document.getElementById('mv-comment-input').value += '${e}'; document.getElementById('mv-comment-input').focus();" style="cursor:pointer; font-size:20px; padding:5px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(124,92,252,0.3)'" onmouseout="this.style.background='transparent'">${e}</span>`).join('');
+  }
+
+  wrap.style.display = 'block';
+  setTimeout(() => {
+    wrap.style.maxHeight = '800px';
+    wrap.style.opacity = '1';
+    
+    // Auto scroll the panel to show the input completely
+    setTimeout(() => {
+      const panel = document.querySelector('.mv-detail-panel');
+      if (panel) panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
+      
+      // Auto-focus the input box so the user can type immediately
+      const input = document.getElementById('mv-comment-input');
+      if (input) input.focus();
+    }, 300);
+  }, 10);
+
+  const list = document.getElementById('mv-comments-list');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#8da4d3;font-size:13px;animation:vxFadeIn 0.5s infinite alternate;">⏳ Loading comments...</div>';
+
+  try {
+    const data = await apiCall('/api/posts/' + _mvActivePostId + '/comments', 'GET');
+    if (!data.success || !data.comments || data.comments.length === 0) {
+      list.innerHTML = '<div style="text-align:center;font-size:13px;color:#8da4d3;padding:20px;background:rgba(255,255,255,0.02);border-radius:12px;">✨ No comments yet. Start the conversation!</div>';
+      return;
+    }
+
+    let html = '';
+    data.comments.forEach(c => {
+      const author = c.users?.username || 'User';
+      const pic = c.users?.profile_pic ? '<img src="' + c.users.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
+      html += `
+        <div style="display:flex; gap:12px; animation:vxFadeIn 0.4s ease both;">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#4f74a3,#2d1b8e); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;" onclick="showUserProfile('${c.user_id}')">
+            ${pic}
+          </div>
+          <div style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(79,116,163,0.15); border-radius:0 14px 14px 14px; padding:12px 16px; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #a78bfa, #8b5cf6); border-radius:3px 0 0 3px;"></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
+              <span style="font-weight:700; font-size:13px; color:#c4b5fd; cursor:pointer;" onclick="showUserProfile('${c.user_id}')">@${author}</span>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span id="comment-like-count-mv-${c.id}" style="color:#8da4d3; font-size:12px;">${c.likeCount || 0}</span>
+                <button onclick="toggleCommentLike('${c.id}', this, 'mv')" 
+                  style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
+                  onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                  ${c.liked ? '❤️' : '🤍'}
+                </button>
+              </div>
+            </div>
+            <div style="font-size:13px; color:#e2e8f0; line-height:1.5; word-break:break-word;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center;color:#f87171;font-size:13px;padding:20px;">❌ Error loading comments</div>';
+  }
+}
+
+async function submitMvInlineComment() {
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+  if (!_mvActivePostId) return;
+  const input = document.getElementById('mv-comment-input');
+  const btn = input.nextElementSibling;
+  const text = input.value.trim();
+  if (!text) return;
+
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+
+  try {
+    const data = await apiCall('/api/posts/' + _mvActivePostId + '/comments', 'POST', { content: text });
+    if (data.success) {
+      input.value = '';
+      const countEl = document.getElementById('mvDetailComments');
+      if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+
+      // sync cache
+      const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+      if (post) post.comment_count = data.commentCount || (post.comment_count + 1);
+
+      const emjPicker = document.getElementById('mv-emoji-picker');
+      if (emjPicker) emjPicker.style.display = 'none';
+
+      const list = document.getElementById('mv-comments-list');
+      const author = currentUser.username || 'You';
+      const pic = currentUser.profile_pic ? '<img src="' + currentUser.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
+
+      const newC = document.createElement('div');
+      newC.style.cssText = 'display:flex; gap:12px; animation:vxFadeIn 0.4s ease both;';
+      newC.innerHTML = `
+        <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#7c3aed); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(124,58,237,0.4);" onclick="showUserProfile('${currentUser.id}')">
+          ${pic}
+        </div>
+        <div style="flex:1; background:rgba(124,92,252,0.08); border:1px solid rgba(124,92,252,0.3); border-radius:0 14px 14px 14px; padding:12px 16px; position:relative; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+          <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #d8b4fe, #c084fc); border-radius:3px 0 0 3px;"></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
+            <span style="font-weight:700; font-size:13px; color:#e9d5ff; cursor:pointer;" onclick="showUserProfile('${currentUser.id}')">@${author}</span>
+          </div>
+          <div style="font-size:13px; color:#f8fafc; line-height:1.5; word-break:break-word;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        </div>
+      `;
+
+      if (list.querySelector('div') && list.querySelector('div').textContent.includes('No comments yet')) {
+        list.innerHTML = '';
+      }
+      list.appendChild(newC);
+      list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+    }
+  } catch (e) {
+    showMessage('❌ Error saving comment', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────
 
@@ -4646,37 +4948,57 @@ function uploadProfilePic() {
   document.getElementById('profilePicInput').click();
 }
 
-function handleProfilePicUpload(event) {
+async function handleProfilePicUpload(event) {
   const file = event.target.files[0];
   if (!file || !currentUser) return;
 
+  // Show instant local preview
   const reader = new FileReader();
   reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    currentUser.profile_pic = dataUrl;
-
-    // Update UI components
     const profileImg = document.getElementById('profilePageAvatarImg');
     const profileInitial = document.getElementById('profilePageAvatarInitial');
     const mainAvatarImg = document.getElementById('profileAvatarImg');
     const mainAvatarInitial = document.getElementById('profileAvatarInitial');
-
-    if (profileImg) {
-      profileImg.src = dataUrl;
-      profileImg.style.display = 'block';
-    }
+    if (profileImg) { profileImg.src = e.target.result; profileImg.style.display = 'block'; }
     if (profileInitial) profileInitial.style.display = 'none';
-
-    if (mainAvatarImg) {
-      mainAvatarImg.src = dataUrl;
-      mainAvatarImg.style.display = 'block';
-    }
+    if (mainAvatarImg) { mainAvatarImg.src = e.target.result; mainAvatarImg.style.display = 'block'; }
     if (mainAvatarInitial) mainAvatarInitial.style.display = 'none';
-
-    saveUserToLocal();
-    showMessage('✨ Profile picture updated!', 'success');
   };
   reader.readAsDataURL(file);
+
+  // Upload to server so it persists on reload and shows to other users
+  try {
+    showMessage('📤 Uploading...', 'success');
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+    const data = await apiCall('/api/user/profile-photo', 'POST', formData);
+    if (data && data.success && data.photoUrl) {
+      currentUser.profile_pic = data.photoUrl;
+      saveUserToLocal();
+      const profileImg = document.getElementById('profilePageAvatarImg');
+      const mainAvatarImg = document.getElementById('profileAvatarImg');
+      if (profileImg) profileImg.src = data.photoUrl;
+      if (mainAvatarImg) mainAvatarImg.src = data.photoUrl;
+
+      // Keep window.currentProfileUser in sync
+      if (window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+        window.currentProfileUser.profile_pic = data.photoUrl;
+      }
+
+      // Invalidate cache so other users see fresh DP on next visit
+      if (window._mpcCache && window._mpcCache[currentUser.id]) {
+        window._mpcCache[currentUser.id].profile_pic = data.photoUrl;
+      }
+
+      showMessage('✨ Profile picture updated!', 'success');
+    } else {
+      showMessage('❌ Upload failed: ' + (data && data.error ? data.error : 'Unknown error'), 'error');
+    }
+  } catch (error) {
+    console.error('Profile pic upload error:', error);
+    showMessage('❌ Failed to upload photo: ' + error.message, 'error');
+  }
+  event.target.value = '';
 }
 
 
@@ -5266,7 +5588,7 @@ function buildHomeFeedCard(post) {
       <div id="hf-comments-list-${escapeHtml(postId)}" style="max-height: 320px; overflow-y: auto; padding: 15px 0;"></div>
       <div style="padding: 10px 0 20px 0; border-top: 1px solid rgba(79,116,163,0.1);">
         <div id="hf-emoji-picker-${escapeHtml(postId)}" style="display:none; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding:8px; background:rgba(12,8,32,0.8); border:1px solid rgba(124,92,252,0.2); border-radius:12px; max-height:120px; overflow-y:auto;">
-          ${['😊','😂','❤️','🔥','👍','🥺','🎉','💯','✨','😍','🙏','😎','😭','🤣','😘','🥰','🤔','😤','😡','🤩','🥳','🙌','💪','🤝','👋','👀','💀','👽'].map(e => `<span onclick="document.getElementById('hf-comment-input-${escapeHtml(postId)}').value += '${e}'; document.getElementById('hf-comment-input-${escapeHtml(postId)}').focus();" style="cursor:pointer; font-size:20px; padding:5px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(124,92,252,0.3)'" onmouseout="this.style.background='transparent'">${e}</span>`).join('')}
+          ${['😊', '😂', '❤️', '🔥', '👍', '🥺', '🎉', '💯', '✨', '😍', '🙏', '😎', '😭', '🤣', '😘', '🥰', '🤔', '😤', '😡', '🤩', '🥳', '🙌', '💪', '🤝', '👋', '👀', '💀', '👽'].map(e => `<span onclick="document.getElementById('hf-comment-input-${escapeHtml(postId)}').value += '${e}'; document.getElementById('hf-comment-input-${escapeHtml(postId)}').focus();" style="cursor:pointer; font-size:20px; padding:5px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(124,92,252,0.3)'" onmouseout="this.style.background='transparent'">${e}</span>`).join('')}
         </div>
         <div style="display:flex; gap:10px; align-items:flex-end;">
           <button onclick="document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display = document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display === 'none' ? 'flex' : 'none'" style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 4px 6px 0; opacity:0.7; transition:0.2s; align-self:flex-end;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😀</button>
@@ -5296,13 +5618,13 @@ async function homeFeedToggleComments(postId) {
 
   wrap.style.display = 'block';
   setTimeout(() => {
-    wrap.style.maxHeight = '600px'; 
+    wrap.style.maxHeight = '600px';
     wrap.style.opacity = '1';
   }, 10);
 
   const list = document.getElementById('hf-comments-list-' + postId);
   list.innerHTML = '<div style="text-align:center;padding:20px;color:#8da4d3;font-size:13px;animation:vxFadeIn 0.5s infinite alternate;">⏳ Loading comments...</div>';
-  
+
   try {
     const data = await apiCall('/api/posts/' + postId + '/comments', 'GET');
     if (!data.success || !data.comments || data.comments.length === 0) {
@@ -5313,7 +5635,7 @@ async function homeFeedToggleComments(postId) {
     let html = '';
     data.comments.forEach(c => {
       const author = c.users?.username || 'User';
-      const time = new Date(c.created_at).toLocaleString([], {hour:'2-digit', minute:'2-digit', month:'short', day:'numeric'});
+      const time = new Date(c.created_at).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
       const pic = c.users?.profile_pic ? '<img src="' + c.users.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
       html += `
         <div style="display:flex; gap:12px; margin-bottom:16px; animation:vxFadeIn 0.4s ease both;">
@@ -5324,9 +5646,14 @@ async function homeFeedToggleComments(postId) {
             <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #a78bfa, #8b5cf6); border-radius:3px 0 0 3px;"></div>
             <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
               <span style="font-weight:700; font-size:13px; color:#c4b5fd; cursor:pointer;" onclick="showUserProfile('${c.user_id}')">@${author}</span>
-              <button onclick="this.innerHTML = this.innerHTML === '❤️' ? '🤍' : '❤️'; this.classList.toggle('comment-liked'); event.stopPropagation();" 
-                style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
-                onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🤍</button>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span id="comment-like-count-hf-${c.id}" style="color:#8da4d3; font-size:12px;">${c.likeCount || 0}</span>
+                <button onclick="toggleCommentLike('${c.id}', this, 'hf')" 
+                  style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
+                  onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                  ${c.liked ? '❤️' : '🤍'}
+                </button>
+              </div>
             </div>
             <div style="font-size:13px; color:#e2e8f0; line-height:1.5; word-break:break-word;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
           </div>
@@ -5334,7 +5661,7 @@ async function homeFeedToggleComments(postId) {
       `;
     });
     list.innerHTML = html;
-  } catch(e) {
+  } catch (e) {
     list.innerHTML = '<div style="text-align:center;color:#f87171;font-size:13px;padding:20px;">❌ Error loading comments</div>';
   }
 }
@@ -5345,17 +5672,17 @@ async function homeFeedSubmitComment(postId) {
   const btn = input.nextElementSibling;
   const text = input.value.trim();
   if (!text) return;
-  
+
   btn.disabled = true;
   btn.style.opacity = '0.7';
-  
+
   try {
     const data = await apiCall('/api/posts/' + postId + '/comments', 'POST', { content: text });
-    if(data.success) {
+    if (data.success) {
       input.value = '';
       const countEl = document.getElementById('hf-comment-count-' + postId);
       if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
-      
+
       const emjPicker = document.getElementById('hf-emoji-picker-' + postId);
       if (emjPicker) emjPicker.style.display = 'none';
 
@@ -5363,7 +5690,7 @@ async function homeFeedSubmitComment(postId) {
       const author = currentUser.username || 'You';
       const pic = currentUser.profile_pic ? '<img src="' + currentUser.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
       const time = 'Just now';
-      
+
       const newC = document.createElement('div');
       newC.style.cssText = 'display:flex; gap:12px; margin-bottom:16px; animation:vxFadeIn 0.4s ease both;';
       newC.innerHTML = `
@@ -5381,14 +5708,14 @@ async function homeFeedSubmitComment(postId) {
           <div style="font-size:13px; color:#f8fafc; line-height:1.5; word-break:break-word;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
         </div>
       `;
-      
+
       if (list.querySelector('div') && list.querySelector('div').textContent.includes('No comments')) {
         list.innerHTML = '';
       }
       list.appendChild(newC);
       list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
     }
-  } catch(e) {
+  } catch (e) {
     showMessage('❌ Error posting comment', 'error');
   } finally {
     btn.disabled = false;
@@ -5856,6 +6183,12 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
       stat.textContent = followersCount;
       stat.classList.add('stat-pop');
       setTimeout(() => stat.classList.remove('stat-pop'), 400);
+    }
+    
+    // 1b. Profile page DM button (Follow-Gate)
+    const dmBtn = document.getElementById('dmBtn');
+    if (dmBtn && dmBtn.style.display !== 'none') {
+      _updateDmBtnFollowStateUI(dmBtn, window.currentProfileUser.username, isFollowing);
     }
   }
 
@@ -8216,6 +8549,13 @@ async function selectPlan(planType) {
     return;
   }
 
+  // Check if Cashfree SDK is loaded (may be blocked by ad blockers)
+  if (typeof Cashfree === 'undefined') {
+    showMessage('⚠️ Payment SDK blocked! Please disable your ad blocker and refresh the page.', 'error');
+    showSubView('subscriptionFailed');
+    return;
+  }
+
   const plans = {
     noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 9, posters: 5, videos: 1, days: 15 },
     royal: { name: 'Royal', firstTimePrice: 25, regularPrice: 25, posters: 5, videos: 3, days: 23 }
@@ -8240,102 +8580,58 @@ async function selectPlan(planType) {
     }
 
     // Step 1: Create order on backend
+    const returnUrl = `${window.location.origin}${window.location.pathname}?order_id={order_id}&planType=${planType}`;
+    console.log('📦 Creating payment order...', { amount: price, planType, returnUrl });
+
     const orderRes = await fetch(`${API_URL}/api/payment/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ amount: price, planType, isFirstTime })
+      body: JSON.stringify({ amount: price, planType, isFirstTime, returnUrl })
     });
-    const orderData = await orderRes.json();
 
-    if (!orderRes.ok || !orderData.success) {
-      throw new Error(orderData.error || 'Failed to create order');
+    if (!orderRes.ok) {
+      const errorText = await orderRes.text();
+      console.error('❌ Order creation HTTP error:', orderRes.status, errorText);
+      if (orderRes.status === 404) {
+        throw new Error('Payment endpoint not found. Backend may need redeployment.');
+      }
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || `Server error (${orderRes.status})`);
+      } catch (parseErr) {
+        if (parseErr.message.includes('Payment endpoint') || parseErr.message.includes('Server error')) throw parseErr;
+        throw new Error(`Server error (${orderRes.status}). Please try again.`);
+      }
     }
 
-    // Step 2: Open REAL Razorpay Checkout - money goes to YOUR account
-    showIntroView(); // Hide processing while Razorpay opens
+    const orderData = await orderRes.json();
+    console.log('✅ Order created:', orderData);
 
-    const rzpOptions = {
-      key: orderData.razorpayKeyId,
-      amount: orderData.amount * 100, // Razorpay wants paise
-      currency: 'INR',
-      name: 'VibeXpert',
-      description: `${plan.name} Plan - ${plan.days} Days`,
-      image: 'https://vibexpert.online/assets/logo.png',
-      order_id: orderData.orderId,
-      prefill: {
-        name: currentUser.name || currentUser.username || '',
-        email: currentUser.email || ''
-      },
-      theme: { color: '#FFD700' },
-      handler: async function (response) {
-        // Payment successful on Razorpay's side - now verify on our backend
-        showSubView('subscriptionProcessing');
-        try {
-          const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              planType
-            })
-          });
-          const verifyData = await verifyRes.json();
+    if (!orderData.success || !orderData.payment_session_id) {
+      throw new Error(orderData.error || 'Failed to create order — no payment session received');
+    }
 
-          if (verifyData.success) {
-            // Update local user data
-            currentUser.subscription = {
-              plan: planType,
-              startDate: new Date(),
-              endDate: new Date(verifyData.subscription ? verifyData.subscription.endDate : Date.now() + plan.days * 86400000),
-              posters: plan.posters,
-              videos: plan.videos,
-              postersUsed: 0,
-              videosUsed: 0
-            };
-            currentUser.hasSubscribed = true;
-            currentUser.isPremium = true;
-            localStorage.setItem('user', JSON.stringify(currentUser));
+    // Step 2: Open REAL Cashfree Checkout
+    showIntroView(); // Hide processing while Cashfree prepares
 
-            // Show success in popup
-            const successEl = document.getElementById('successPlanDetails');
-            if (successEl) {
-              successEl.innerHTML = `<strong>${plan.name} Plan</strong> activated!<br>` +
-                `📸 ${plan.posters} Posters + 🎥 ${plan.videos} Video${plan.videos > 1 ? 's' : ''}<br>` +
-                `⏰ Valid for ${plan.days} days<br>` +
-                `<small style="opacity:0.7">Payment ID: ${response.razorpay_payment_id}</small>`;
-            }
-            showSubView('subscriptionSuccess');
-            updatePremiumBadge();
-            showMessage('🎉 Subscription activated!', 'success');
-          } else {
-            throw new Error(verifyData.error || 'Verification failed');
-          }
-        } catch (vErr) {
-          console.error('Payment verification error:', vErr);
-          showSubView('subscriptionFailed');
-          showMessage('❌ Payment verification failed', 'error');
-        }
-      },
-      modal: {
-        ondismiss: function () {
-          showIntroView();
-          showMessage('Payment cancelled', 'error');
-        }
-      }
-    };
+    try {
+      const cashfree = Cashfree({
+        mode: "sandbox"
+      });
 
-    const rzp = new Razorpay(rzpOptions);
-    rzp.on('payment.failed', function (resp) {
-      console.error('Razorpay payment failed:', resp.error);
-      showSubView('subscriptionFailed');
-      showMessage('❌ Payment failed: ' + (resp.error.description || 'Unknown error'), 'error');
-    });
-    rzp.open();
+      console.log('🚀 Launching Cashfree checkout with session:', orderData.payment_session_id);
+
+      await cashfree.checkout({
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_self"
+      });
+    } catch (sdkError) {
+      console.error('❌ Cashfree SDK error:', sdkError);
+      throw new Error('Payment gateway failed to load. Please disable ad blocker and try again.');
+    }
 
   } catch (error) {
-    console.error('Subscription error:', error);
+    console.error('❌ Subscription error:', error);
     showSubView('subscriptionFailed');
     showMessage('❌ ' + (error.message || 'Payment failed. Please try again.'), 'error');
   }
@@ -8444,7 +8740,69 @@ document.addEventListener('DOMContentLoaded', function () {
   if (currentUser) {
     fetchSubscriptionStatus();
   }
+  setTimeout(verifyCashfreePaymentOnLoad, 1500); // Give auth logic a moment to load currentUser
 });
+
+async function verifyCashfreePaymentOnLoad() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('order_id');
+  const planType = urlParams.get('planType');
+
+  if (orderId) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    // If returning from Cashfree, give it a tiny delay to ensure everything is mounted
+    setTimeout(async () => {
+      const token = getToken();
+      if (!token) {
+        showMessage('⚠️ Session expired or not logged in. Could not verify payment.', 'error');
+        return;
+      }
+
+      showMessage('Verifying payment...', 'info');
+      try {
+        const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ order_id: orderId, planType: planType || 'noble' })
+        });
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          const plans = {
+            noble: { name: 'Noble', posters: 5, videos: 1, days: 15 },
+            royal: { name: 'Royal', posters: 5, videos: 3, days: 23 }
+          };
+          const plan = plans[verifyData.subscription.plan] || plans['noble'];
+
+          if (currentUser) {
+            currentUser.subscription = {
+              plan: verifyData.subscription.plan,
+              startDate: new Date(),
+              endDate: new Date(verifyData.subscription.endDate),
+              posters: plan.posters,
+              videos: plan.videos,
+              postersUsed: 0,
+              videosUsed: 0
+            };
+            currentUser.hasSubscribed = true;
+            currentUser.isPremium = true;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            updatePremiumBadge();
+          }
+
+          showMessage('🎉 Subscription activated successfully!', 'success');
+          showSubscriptionSuccessModal(plan);
+        } else {
+          showMessage('❌ Payment verification failed: ' + (verifyData.error || 'Payment may be incomplete'), 'error');
+        }
+      } catch (err) {
+        console.error('Payment verification error OnLoad:', err);
+        showMessage('❌ Error verifying payment', 'error');
+      }
+    }, 1000);
+  }
+}
 
 // TWITTER-STYLE FEED FUNCTIONS
 // ==========================================
@@ -9045,6 +9403,19 @@ async function handleCoverPhotoUpload(event) {
     return;
   }
 
+  // Show instant local preview so user sees it immediately
+  const previewReader = new FileReader();
+  previewReader.onload = (e) => {
+    const coverImg = document.getElementById('profileCoverImg');
+    const coverWrap = document.getElementById('profileCoverPhoto');
+    if (coverImg) {
+      coverImg.src = e.target.result;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    }
+  };
+  previewReader.readAsDataURL(file);
+
   try {
     showMessage('📤 Uploading cover...', 'success');
 
@@ -9053,23 +9424,39 @@ async function handleCoverPhotoUpload(event) {
 
     const data = await apiCall('/api/user/cover-photo', 'POST', formData);
 
-    if (data.success && data.photoUrl) {
+    if (data && data.success && data.photoUrl) {
       currentUser.coverPhoto = data.photoUrl;
       currentUser.cover_photo = data.photoUrl;
       localStorage.setItem('user', JSON.stringify(currentUser));
 
-      const cover = document.getElementById('profileCover');
-      if (cover) {
-        cover.style.backgroundImage = `url('${data.photoUrl}')`;
-        cover.style.backgroundSize = 'cover';
-        cover.style.backgroundPosition = 'center';
+      // Update DOM with permanent Cloudinary URL
+      const coverImg = document.getElementById('profileCoverImg');
+      const coverWrap = document.getElementById('profileCoverPhoto');
+      if (coverImg) {
+        coverImg.src = data.photoUrl;
+        coverImg.style.display = 'block';
+        if (coverWrap) coverWrap.style.background = 'none';
+      }
+
+      // Keep window.currentProfileUser in sync
+      if (window.currentProfileUser && window.currentProfileUser.id === currentUser.id) {
+        window.currentProfileUser.cover_photo = data.photoUrl;
+        window.currentProfileUser.coverPhoto = data.photoUrl;
+      }
+
+      // Invalidate cache so other users see fresh cover on next visit
+      if (window._mpcCache && window._mpcCache[currentUser.id]) {
+        window._mpcCache[currentUser.id].cover_photo = data.photoUrl;
+        window._mpcCache[currentUser.id].coverPhoto = data.photoUrl;
       }
 
       showMessage('✅ Cover updated!', 'success');
+    } else {
+      showMessage('❌ Cover upload failed: ' + (data && (data.details || data.error) ? (data.details || data.error) : 'Unknown error'), 'error');
     }
   } catch (error) {
     console.error('Cover upload error:', error);
-    showMessage('❌ Failed to upload cover', 'error');
+    showMessage('❌ Failed to upload cover: ' + error.message, 'error');
   }
 
   event.target.value = '';
@@ -9381,6 +9768,7 @@ function setupWhatsAppSocketListeners() {
   socket.off('user_stop_typing');
   socket.off('message_deleted');
   socket.off('messages_seen');
+  socket.off('community_reaction_update');
 
   // New message received (only from OTHER users - backend excludes sender)
   socket.on('new_message', (message) => {
@@ -9415,6 +9803,13 @@ function setupWhatsAppSocketListeners() {
     if (messageEl) {
       messageEl.style.animation = 'fadeOut 0.3s ease';
       setTimeout(() => messageEl.remove(), 300);
+    }
+  });
+
+  // Real-time community reaction updates
+  socket.on('community_reaction_update', (data) => {
+    if (data.message_id && data.reactions) {
+      updateReactBarFromData(data.message_id, data.reactions);
     }
   });
 
@@ -9663,6 +10058,11 @@ function appendWhatsAppMessageFixed(msg) {
 
   messagesEl.appendChild(wrapper);
 
+  // Populate reaction bar from server data (if any reactions exist)
+  if (msg.reactions && msg.reactions.length > 0) {
+    updateReactBarFromData(messageId, msg.reactions);
+  }
+
   // If we received someone else's message and we're at the bottom → mark as seen
   if (!isOwn && !isTemp && wasAtBottom) { emitMarkSeen(messageId); }
 
@@ -9864,10 +10264,16 @@ function setupCommunitySocketListeners() {
   socket.off('user_typing');
   socket.off('user_stop_typing');
   socket.off('message_deleted');
+  socket.off('community_reaction_update');
 
   socket.on('new_message', (message) => {
     if (message.sender_id === currentUser?.id) return;
-    appendCommunityMessage(message);
+    // Use the WhatsApp-style renderer which supports reactions, ghost avatars, etc.
+    if (typeof appendWhatsAppMessageFixed === 'function') {
+      appendWhatsAppMessageFixed(message);
+    } else {
+      appendCommunityMessage(message);
+    }
   });
   socket.on('user_typing', (data) => {
     if (data.username && currentUser && data.username !== currentUser.username)
@@ -9879,6 +10285,12 @@ function setupCommunitySocketListeners() {
   socket.on('message_deleted', ({ id }) => {
     const el = document.getElementById(`wa-msg-${id}`) || document.getElementById(`msg-${id}`);
     if (el) { el.style.animation = 'fadeOut 0.3s ease'; setTimeout(() => el.remove(), 300); }
+  });
+  // Real-time reaction updates from other users
+  socket.on('community_reaction_update', (data) => {
+    if (data.message_id && data.reactions) {
+      updateReactBarFromData(data.message_id, data.reactions);
+    }
   });
 
   // Re-join college room and reload messages on every reconnect
@@ -9948,7 +10360,9 @@ function initCommunityChat() {
 
     const messagesArea = document.getElementById('chatMessages') || document.getElementById('whatsappMessages');
     if (messagesArea) {
-      if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
+      // Prefer loadWhatsAppMessages since ghost panel uses whatsappMessages container
+      if (messagesArea.id === 'whatsappMessages' && typeof loadWhatsAppMessages === 'function') loadWhatsAppMessages();
+      else if (typeof loadCommunityMessages === 'function') loadCommunityMessages();
       else if (typeof loadWhatsAppMessages === 'function') loadWhatsAppMessages();
     }
   });
@@ -9959,7 +10373,7 @@ let _ghostChatInitialLoad = false;
 
 async function loadCommunityMessages() {
   try {
-    const messagesArea = document.getElementById('chatMessages');
+    const messagesArea = document.getElementById('chatMessages') || document.getElementById('whatsappMessages');
     if (!messagesArea) return;
 
     // Keep welcome message
@@ -10827,29 +11241,71 @@ function showEmojiReactPicker(msgId, btn) {
   }, 10);
 }
 
-function addMsgReaction(msgId, emoji, btn) {
-  const bar = document.getElementById('reacts-' + msgId);
-  if (!bar) { btn.closest('.emoji-react-picker')?.remove(); return; }
+async function addMsgReaction(msgId, emoji, btn) {
+  btn?.closest('.emoji-react-picker')?.remove();
 
-  // Check if this emoji already exists
-  let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
-  if (existing) {
-    const countEl = existing.querySelector('.react-count');
-    countEl.textContent = parseInt(countEl.textContent || 0) + 1;
-  } else {
-    const pill = document.createElement('button');
-    pill.className = 'react-pill';
-    pill.dataset.emoji = emoji;
-    pill.innerHTML = `${emoji} <span class="react-count">1</span>`;
-    pill.onclick = () => {
-      const c = pill.querySelector('.react-count');
-      const n = parseInt(c.textContent) - 1;
-      if (n <= 0) pill.remove(); else c.textContent = n;
-    };
-    bar.appendChild(pill);
+  // Optimistic UI: update the bar immediately
+  const bar = document.getElementById('reacts-' + msgId);
+  if (bar) {
+    let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
+    if (existing) {
+      const countEl = existing.querySelector('.react-count');
+      if (existing.classList.contains('mine')) {
+        // Toggling off
+        const n = parseInt(countEl.textContent || 1) - 1;
+        if (n <= 0) existing.remove(); else { countEl.textContent = n; existing.classList.remove('mine'); }
+      } else {
+        // Adding
+        countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+        existing.classList.add('mine');
+      }
+    } else {
+      const pill = document.createElement('button');
+      pill.className = 'react-pill mine';
+      pill.dataset.emoji = emoji;
+      pill.innerHTML = `${emoji} <span class="react-count">1</span>`;
+      pill.onclick = () => addMsgReaction(msgId, emoji);
+      bar.appendChild(pill);
+    }
   }
 
-  btn.closest('.emoji-react-picker')?.remove();
+  // Persist to backend
+  try {
+    const result = await apiCall(`/api/community/messages/${msgId}/react`, 'POST', { emoji });
+    if (result && result.reactions) {
+      updateReactBarFromData(msgId, result.reactions);
+    }
+  } catch (err) {
+    console.error('Reaction save failed:', err);
+    // Server returned an error – silently ignored for now (optimistic UI already applied)
+  }
+}
+
+/**
+ * Rebuild the reaction bar for a message from a reactions array.
+ * Each reaction item: { message_id, user_id, emoji }
+ */
+function updateReactBarFromData(msgId, reactions) {
+  const bar = document.getElementById('reacts-' + msgId);
+  if (!bar) return;
+
+  // Group by emoji, count occurrences, track if currentUser reacted
+  const counts = {};
+  const userReacted = {};
+  (reactions || []).forEach(r => {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+    if (currentUser && r.user_id === currentUser.id) userReacted[r.emoji] = true;
+  });
+
+  bar.innerHTML = '';
+  Object.keys(counts).forEach(emoji => {
+    const pill = document.createElement('button');
+    pill.className = 'react-pill' + (userReacted[emoji] ? ' mine' : '');
+    pill.dataset.emoji = emoji;
+    pill.innerHTML = `${emoji} <span class="react-count">${counts[emoji]}</span>`;
+    pill.onclick = () => addMsgReaction(msgId, emoji);
+    bar.appendChild(pill);
+  });
 }
 
 function editChatMsg(msgId) {
@@ -13574,18 +14030,7 @@ function renderActivityHeatmap() {
   container.innerHTML = cells.join('');
 }
 
-// ── Cover Photo Handler ────────────────────────────────────────────
-async function handleCoverPhotoUpload(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = document.getElementById('profileCoverImg');
-    if (img) { img.src = e.target.result; img.style.display = 'block'; }
-  };
-  reader.readAsDataURL(file);
-  showMessage('Cover photo updated locally (backend storage optional)', 'success');
-}
+// ── Cover Photo Handler is defined above ──────────────────────────
 
 // ── Profile tab switcher patch — handle new tabs ───────────────────
 const _origSwitchProfileTab = window.switchProfileTab;
@@ -15029,3 +15474,121 @@ function execGetPanelHTML() {
   }
   return _tpl.innerHTML.replace(/__VX_COLLEGE__/g, college);
 }
+
+// ── FOLLOW-GATED MESSAGING ────────────────────────────────────────────────
+window._updateDmBtnFollowStateUI = function(btn, username, isFollowing) {
+  const dmContent = btn.querySelector('#dmBtnContent') || btn.querySelector('.vx-btn-content') || btn;
+  if (isFollowing) {
+    btn.classList.remove('locked');
+    btn.title = '';
+    // Chat icon
+    dmContent.innerHTML = `
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      Message`;
+  } else {
+    btn.classList.add('locked');
+    btn.title = `You need to follow ${username || 'this user'} to send a message`;
+    // Lock icon inside
+    dmContent.innerHTML = `
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      Message`;
+  }
+};
+
+window.tryOpenMessageModal = function() {
+  const targetUser = window.currentProfileUser;
+  if (!targetUser) return;
+  const knownState = _followState[targetUser.id];
+  const isFollowing = (knownState && knownState.isFollowing !== undefined) ? knownState.isFollowing : targetUser.isFollowing;
+  if (!isFollowing) {
+    showMessage(`Follow ${targetUser.username || 'this user'} to unlock messaging`, 'error');
+    return;
+  }
+  
+  // Follower -> open the built-in advanced DM Drawer!
+  openDmDrawer(targetUser.id);
+};
+
+window.closeFollowGatedModal = function() {
+  const modal = document.getElementById('followGateMessageModal');
+  if (!modal) return;
+  const inner = document.getElementById('fgmInner');
+  modal.style.opacity = '0';
+  if (inner) inner.style.transform = 'translateY(20px)';
+  setTimeout(() => modal.style.display = 'none', 250);
+};
+
+window.submitFollowGatedMessage = async function() {
+  const targetUser = window.currentProfileUser;
+  if (!targetUser) return;
+  const ta = document.getElementById('fgmTextarea');
+  const content = ta.value.trim();
+  if (!content) {
+    showMessage('Please write a message first', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById('fgmSendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  
+  try {
+    const data = await centralDmSend(targetUser.id, content);
+    if (!data) throw new Error('Send failed'); // handled by centralDmSend
+    showMessage('Message sent!', 'success');
+    closeFollowGatedModal();
+  } catch (e) {
+    // Error is handled/shown inside centralDmSend for generic failures
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+};
+
+// Extracted centralized API call for DMs to avoid duplicate logic
+window.centralDmSend = async function(receiverId, content) {
+    try {
+        const data = await apiCall('/api/dm/send', 'POST', { receiverId, content });
+        if (!data || !data.success) throw new Error(data?.error || 'Failed to send message');
+        return data;
+    } catch(e) {
+        showMessage(e.message || 'Error occurred while sending', 'error');
+        return null;
+    }
+};
+
+// ── PERSISTENT COMMENT LIKING ──────────────────────────────────────────────
+window.toggleCommentLike = async function(commentId, btn, prefix = 'mv') {
+  if (!currentUser) return showMessage('Login first', 'error');
+  if (!commentId || commentId === 'undefined') return;
+
+  const isLiked = btn.innerHTML.includes('❤️');
+  
+  // Optimistic UI updates
+  btn.innerHTML = isLiked ? '🤍' : '❤️';
+  const countEl = document.getElementById(`comment-like-count-${prefix}-${commentId}`);
+  if (countEl) {
+      let count = parseInt(countEl.textContent) || 0;
+      count = isLiked ? Math.max(0, count - 1) : count + 1;
+      countEl.textContent = count;
+  }
+  
+  try {
+      const data = await apiCall(`/api/comments/${commentId}/like`, 'POST');
+      if (data && data.success) {
+          btn.innerHTML = data.liked ? '❤️' : '🤍';
+          if (countEl) countEl.textContent = data.likeCount;
+      } else {
+          throw new Error('Failed');
+      }
+  } catch(e) {
+      // Revert optimism on failure
+      btn.innerHTML = isLiked ? '❤️' : '🤍';
+      if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
+  }
+};
