@@ -3398,13 +3398,11 @@ async function showUserProfile(userId) {
             if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
             if (avatarInitial) avatarInitial.style.display = 'block';
           }
-          // Refresh cover photo
+          // Refresh cover photo — always use default
           const coverImg = document.getElementById('profileCoverImg');
-          const coverWrap = document.getElementById('profileCoverPhoto');
-          const coverUrl = tu.cover_photo || tu.coverPhoto || null;
           if (coverImg) {
-            if (coverUrl) { coverImg.src = coverUrl; coverImg.style.display = 'block'; if (coverWrap) coverWrap.style.background = 'none'; }
-            else { coverImg.src = ''; coverImg.style.display = 'none'; if (coverWrap) coverWrap.style.background = ''; }
+            coverImg.src = 'default-cover.png';
+            coverImg.style.display = 'block';
           }
           // Refresh bio
           const bioEl = document.getElementById('profileBio');
@@ -3507,7 +3505,6 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Real User ID Display - only show if viewing own profile
   const userIdEl = document.getElementById('profilePageUserId');
-  const editCoverBtnWrap = document.getElementById('editCoverBtnWrap');
   if (userIdEl) {
     if (isOwn) {
       const shortId = targetUser.id ? targetUser.id.slice(-8).toUpperCase() : '000000';
@@ -3518,19 +3515,10 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     }
   }
 
-  // Show edit cover button on own profile
-  if (editCoverBtnWrap) {
-    editCoverBtnWrap.style.display = isOwn ? 'block' : 'none';
-  }
-
-  // Avatar + cover — for own profile also check localStorage as fallback
-  // in case the server sync failed and targetUser has stale/null photos.
+  // Avatar — for own profile also check localStorage as fallback
   const _resolvedPic = isOwn
     ? (targetUser.profile_pic || (currentUser && currentUser.profile_pic) || null)
     : (targetUser.profile_pic || null);
-  const _resolvedCover = isOwn
-    ? (targetUser.cover_photo || targetUser.coverPhoto || (currentUser && (currentUser.cover_photo || currentUser.coverPhoto)) || null)
-    : (targetUser.cover_photo || targetUser.coverPhoto || null);
 
   // Profile picture
   if (_resolvedPic) {
@@ -3548,19 +3536,13 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
 
-  // Cover photo — render for ALL users (own + others)
+  // Cover photo — always use default cover for ALL users
   const coverImg = document.getElementById('profileCoverImg');
   const coverWrap = document.getElementById('profileCoverPhoto');
   if (coverImg) {
-    if (_resolvedCover) {
-      coverImg.src = _resolvedCover;
-      coverImg.style.display = 'block';
-      if (coverWrap) coverWrap.style.background = 'none';
-    } else {
-      coverImg.src = '';
-      coverImg.style.display = 'none';
-      if (coverWrap) coverWrap.style.background = '';
-    }
+    coverImg.src = 'default-cover.png';
+    coverImg.style.display = 'block';
+    if (coverWrap) coverWrap.style.background = 'none';
   }
 
   // Real data from database
@@ -3672,8 +3654,8 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     } else {
       dmBtn.style.display = 'block';
       const knownState = _followState[targetUser.id];
-      const isFollowing = (knownState && knownState.isFollowing !== undefined) 
-        ? knownState.isFollowing 
+      const isFollowing = (knownState && knownState.isFollowing !== undefined)
+        ? knownState.isFollowing
         : targetUser.isFollowing;
       _updateDmBtnFollowStateUI(dmBtn, targetUser.username, isFollowing);
     }
@@ -4243,11 +4225,11 @@ function _populateMvDetail(post) {
   // Reset Inline Comments so it doesn't linger from another post
   const commentsWrap = document.getElementById('mv-comments-wrap');
   if (commentsWrap) {
-      commentsWrap.style.display = 'none';
-      commentsWrap.style.opacity = '0';
-      commentsWrap.style.maxHeight = '0';
+    commentsWrap.style.display = 'none';
+    commentsWrap.style.opacity = '0';
+    commentsWrap.style.maxHeight = '0';
   }
-  
+
   // Swipe support for mobile
   _attachMvSwipe(document.getElementById('mvDetailMedia'), media);
 }
@@ -4345,9 +4327,9 @@ function cancelMvEdit() {
   // Reset Inline Comments so it doesn't linger from another post
   const commentsWrap = document.getElementById('mv-comments-wrap');
   if (commentsWrap) {
-      commentsWrap.style.display = 'none';
-      commentsWrap.style.opacity = '0';
-      commentsWrap.style.maxHeight = '0';
+    commentsWrap.style.display = 'none';
+    commentsWrap.style.opacity = '0';
+    commentsWrap.style.maxHeight = '0';
   }
 }
 
@@ -4441,77 +4423,77 @@ async function toggleMvLike() {
   let currentlyLiked = false;
   let heartPath = null;
   if (svgStat) {
-      heartPath = svgStat.querySelector('path');
-      currentlyLiked = svgStat.style.fill === 'rgb(255, 48, 64)' || svgStat.style.fill === '#ff3040';
+    heartPath = svgStat.querySelector('path');
+    currentlyLiked = svgStat.style.fill === 'rgb(255, 48, 64)' || svgStat.style.fill === '#ff3040';
   }
 
   // Optimistic UI update
   if (svgStat) {
-      if (currentlyLiked) {
-         svgStat.style.fill = 'transparent';
-         if (heartPath) {
-             heartPath.style.fill = ''; 
-             svgStat.style.stroke = 'currentColor';
-         }
-         if (numEl) numEl.textContent = Math.max(0, parseInt(numEl.textContent || 0) - 1);
-      } else {
-         svgStat.style.fill = '#ff3040';
-         svgStat.style.stroke = 'none';
-         if (heartPath) heartPath.style.fill = '#ff3040';
-         if (numEl) numEl.textContent = parseInt(numEl.textContent || 0) + 1;
+    if (currentlyLiked) {
+      svgStat.style.fill = 'transparent';
+      if (heartPath) {
+        heartPath.style.fill = '';
+        svgStat.style.stroke = 'currentColor';
       }
+      if (numEl) numEl.textContent = Math.max(0, parseInt(numEl.textContent || 0) - 1);
+    } else {
+      svgStat.style.fill = '#ff3040';
+      svgStat.style.stroke = 'none';
+      if (heartPath) heartPath.style.fill = '#ff3040';
+      if (numEl) numEl.textContent = parseInt(numEl.textContent || 0) + 1;
+    }
   }
 
   // Double click heart animation
   const mediaWrap = document.getElementById('mvDetailMedia');
   if (mediaWrap && !currentlyLiked) {
-      const heart = document.createElement('div');
-      heart.innerHTML = '❤️';
-      heart.style.position = 'absolute';
-      heart.style.left = '50%';
-      heart.style.top = '50%';
-      heart.style.transform = 'translate(-50%, -50%) scale(0)';
-      heart.style.fontSize = '80px';
-      heart.style.opacity = '0';
-      heart.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-      heart.style.zIndex = '100';
-      heart.style.pointerEvents = 'none';
-      heart.style.textShadow = '0 10px 30px rgba(0,0,0,0.5)';
-      mediaWrap.appendChild(heart);
-      
-      requestAnimationFrame(() => {
-          heart.style.transform = 'translate(-50%, -50%) scale(1.2)';
-          heart.style.opacity = '1';
-          setTimeout(() => {
-              heart.style.transform = 'translate(-50%, -50%) scale(1.5)';
-              heart.style.opacity = '0';
-              setTimeout(() => heart.remove(), 400);
-          }, 600);
-      });
+    const heart = document.createElement('div');
+    heart.innerHTML = '❤️';
+    heart.style.position = 'absolute';
+    heart.style.left = '50%';
+    heart.style.top = '50%';
+    heart.style.transform = 'translate(-50%, -50%) scale(0)';
+    heart.style.fontSize = '80px';
+    heart.style.opacity = '0';
+    heart.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    heart.style.zIndex = '100';
+    heart.style.pointerEvents = 'none';
+    heart.style.textShadow = '0 10px 30px rgba(0,0,0,0.5)';
+    mediaWrap.appendChild(heart);
+
+    requestAnimationFrame(() => {
+      heart.style.transform = 'translate(-50%, -50%) scale(1.2)';
+      heart.style.opacity = '1';
+      setTimeout(() => {
+        heart.style.transform = 'translate(-50%, -50%) scale(1.5)';
+        heart.style.opacity = '0';
+        setTimeout(() => heart.remove(), 400);
+      }, 600);
+    });
   }
 
   // Hit the backend
   try {
-      const resp = await apiCall(`/api/posts/${_mvActivePostId}/like`, 'POST');
-      if (resp && resp.success) {
-          // Sync server exact count
-          const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
-          if (post) post.like_count = resp.likeCount;
-          if (numEl) numEl.textContent = vibeFmt ? vibeFmt(resp.likeCount) : resp.likeCount;
-          
-          if (resp.liked && svgStat) {
-             svgStat.style.fill = '#ff3040';
-             svgStat.style.stroke = 'none';
-             if (heartPath) heartPath.style.fill = '#ff3040';
-          } else if (svgStat) {
-             svgStat.style.fill = 'transparent';
-             svgStat.style.stroke = 'currentColor';
-             if (heartPath) heartPath.style.fill = '';
-          }
+    const resp = await apiCall(`/api/posts/${_mvActivePostId}/like`, 'POST');
+    if (resp && resp.success) {
+      // Sync server exact count
+      const post = _mvAllPosts.find(p => p.id === _mvActivePostId || p.id == _mvActivePostId);
+      if (post) post.like_count = resp.likeCount;
+      if (numEl) numEl.textContent = vibeFmt ? vibeFmt(resp.likeCount) : resp.likeCount;
+
+      if (resp.liked && svgStat) {
+        svgStat.style.fill = '#ff3040';
+        svgStat.style.stroke = 'none';
+        if (heartPath) heartPath.style.fill = '#ff3040';
+      } else if (svgStat) {
+        svgStat.style.fill = 'transparent';
+        svgStat.style.stroke = 'currentColor';
+        if (heartPath) heartPath.style.fill = '';
       }
+    }
   } catch (e) {
-      console.error('Failed to like in modal:', e);
-      // Revert optimism if failed gracefully
+    console.error('Failed to like in modal:', e);
+    // Revert optimism if failed gracefully
   }
 }
 
@@ -4540,12 +4522,12 @@ async function toggleMvInlineComments() {
   setTimeout(() => {
     wrap.style.maxHeight = '800px';
     wrap.style.opacity = '1';
-    
+
     // Auto scroll the panel to show the input completely
     setTimeout(() => {
       const panel = document.querySelector('.mv-detail-panel');
       if (panel) panel.scrollTo({ top: panel.scrollHeight, behavior: 'smooth' });
-      
+
       // Auto-focus the input box so the user can type immediately
       const input = document.getElementById('mv-comment-input');
       if (input) input.focus();
@@ -6184,7 +6166,7 @@ function _syncAllFollowUI(userId, isFollowing, followersCount) {
       stat.classList.add('stat-pop');
       setTimeout(() => stat.classList.remove('stat-pop'), 400);
     }
-    
+
     // 1b. Profile page DM button (Follow-Gate)
     const dmBtn = document.getElementById('dmBtn');
     if (dmBtn && dmBtn.style.display !== 'none') {
@@ -7483,62 +7465,319 @@ function showContactModal() {
 }
 
 function showFeedbackModal() {
+  // Remove any existing feedback modal
+  document.getElementById('vxFeedbackModal')?.remove();
+
   const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.display = 'flex';
+  modal.id = 'vxFeedbackModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
 
   modal.innerHTML = `
-   <div class="modal-box">
-     <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-     <h2>📢 Feedback</h2>
-     <p style="color:#888;margin-bottom:20px;">We'd love to hear from you!</p>
-     <input type="text" id="feedbackSubject" placeholder="Subject" style="margin-bottom:15px;">
-     <textarea id="feedbackMessage" placeholder="Your feedback..." 
-       style="width:100%;min-height:120px;padding:12px;background:rgba(20,30,50,0.6);
-       border:1px solid rgba(79,116,163,0.3);border-radius:10px;color:white;
-       font-family:inherit;resize:vertical;"></textarea>
-     <button onclick="submitFeedback()" style="width:100%;margin-top:15px;">📤 Send</button>
-   </div>
- `;
+    <div style="background:linear-gradient(145deg,#0d0b1e,#131130);border:1px solid rgba(99,102,241,0.25);
+                border-radius:24px;width:480px;max-width:95vw;max-height:92vh;
+                box-shadow:0 32px 80px rgba(0,0,0,0.9),0 0 0 1px rgba(99,102,241,0.08),0 0 80px rgba(99,102,241,0.06);
+                display:flex;flex-direction:column;overflow:hidden;
+                animation:fbSlideIn 0.25s cubic-bezier(0.22,1,0.36,1) both;">
+
+      <!-- Top gradient bar -->
+      <div style="height:3px;background:linear-gradient(90deg,#6366f1,#8b5cf6,#a78bfa,#8b5cf6,#6366f1);background-size:200%;animation:fbBarShimmer 2.5s linear infinite;flex-shrink:0;"></div>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));
+                      border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:21px;">💬</div>
+          <div>
+            <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.01em;">Share Your Feedback</div>
+            <div style="font-size:11.5px;color:rgba(165,180,252,0.55);margin-top:1px;">Help us make VibeXpert better for you</div>
+          </div>
+        </div>
+        <button onclick="document.getElementById('vxFeedbackModal').remove()"
+          style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);
+                 border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.45);
+                 font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"
+          onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.color='#a5b4fc'"
+          onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.45)'">✕</button>
+      </div>
+
+      <!-- Scrollable body -->
+      <div style="flex:1;overflow-y:auto;padding:0 22px 22px;" id="fbScrollBody">
+
+        <!-- ── Emoji Rating ── -->
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;color:rgba(99,102,241,0.8);text-transform:uppercase;margin-bottom:10px;">How is your experience? *</label>
+          <div style="display:flex;justify-content:space-between;gap:6px;" id="fbRatingRow">
+            ${[['😤', 'Terrible'], ['😕', 'Bad'], ['😐', 'Okay'], ['😊', 'Good'], ['🤩', 'Amazing']].map((r, i) => `
+              <button class="fb-rating-btn" data-val="${i + 1}" onclick="selectFbRating(this)"
+                style="flex:1;padding:10px 4px 8px;border-radius:14px;border:1.5px solid rgba(99,102,241,0.15);
+                       background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <span style="font-size:24px;line-height:1;">${r[0]}</span>
+                <span style="font-size:10px;font-weight:600;color:rgba(165,180,252,0.5);letter-spacing:0.02em;">${r[1]}</span>
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <!-- ── Category chips ── -->
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;color:rgba(99,102,241,0.8);text-transform:uppercase;margin-bottom:8px;">Category *</label>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;" id="fbCatRow">
+            ${[['💡', 'Feature Idea'], ['🐛', 'Bug Report'], ['🎨', 'Design'], ['⚡', 'Performance'], ['💬', 'Chat'], ['🌟', 'General']].map(c => `
+              <button class="fb-cat-btn" data-cat="${c[1]}" onclick="selectFbCat(this)"
+                style="padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;
+                       background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+                       color:rgba(165,180,252,0.6);transition:all 0.18s;">
+                ${c[0]} ${c[1]}
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <!-- ── Subject ── -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;color:rgba(99,102,241,0.8);text-transform:uppercase;margin-bottom:8px;">Subject *</label>
+          <input id="feedbackSubject" type="text" maxlength="80" placeholder="Brief title for your feedback…"
+            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(99,102,241,0.18);
+                   color:#e8e8f0;border-radius:12px;padding:11px 14px;font-size:14px;
+                   box-sizing:border-box;outline:none;transition:border-color 0.2s;font-family:inherit;"
+            onfocus="this.style.borderColor='rgba(99,102,241,0.55)'"
+            onblur="this.style.borderColor='rgba(99,102,241,0.18)'">
+        </div>
+
+        <!-- ── Message ── -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:rgba(99,102,241,0.8);text-transform:uppercase;">Your Feedback *</label>
+            <span id="fbCharCount" style="font-size:11px;color:rgba(165,180,252,0.4);">0 / 500</span>
+          </div>
+          <textarea id="feedbackMessage" maxlength="500"
+            placeholder="Tell us what you think, what you love, or what we can improve…"
+            oninput="document.getElementById('fbCharCount').textContent=this.value.length+' / 500'"
+            style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(99,102,241,0.18);
+                   color:#e8e8f0;border-radius:12px;padding:12px 14px;font-size:14px;
+                   box-sizing:border-box;outline:none;min-height:110px;resize:vertical;
+                   font-family:inherit;line-height:1.55;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='rgba(99,102,241,0.55)'"
+            onblur="this.style.borderColor='rgba(99,102,241,0.18)'"></textarea>
+        </div>
+
+        <!-- ── Would recommend? ── -->
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;color:rgba(99,102,241,0.8);text-transform:uppercase;margin-bottom:8px;">Would you recommend VibeXpert?</label>
+          <div style="display:flex;gap:8px;">
+            <button class="fb-rec-btn" data-rec="yes" onclick="selectFbRec(this)"
+              style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+                     background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#86efac;transition:all 0.18s;">
+              👍 Yes, definitely!
+            </button>
+            <button class="fb-rec-btn" data-rec="maybe" onclick="selectFbRec(this)"
+              style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+                     background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(165,180,252,0.5);transition:all 0.18s;">
+              🤔 Maybe
+            </button>
+            <button class="fb-rec-btn" data-rec="no" onclick="selectFbRec(this)"
+              style="flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+                     background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);color:rgba(252,165,165,0.6);transition:all 0.18s;">
+              👎 Not yet
+            </button>
+          </div>
+        </div>
+
+        <!-- Error msg -->
+        <p id="fbErrMsg" style="min-height:16px;font-size:12px;color:#f87171;text-align:center;margin-bottom:10px;"></p>
+
+        <!-- Submit -->
+        <button id="fbSubmitBtn" onclick="submitFeedback()"
+          style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;
+                 background:linear-gradient(135deg,#4f46e5,#7c3aed,#8b5cf6);
+                 background-size:200%;background-position:0% 0%;
+                 color:#fff;font-size:15px;font-weight:800;letter-spacing:0.02em;
+                 transition:all 0.3s;box-shadow:0 6px 24px rgba(99,102,241,0.45);"
+          onmouseover="this.style.backgroundPosition='100% 0';this.style.transform='translateY(-1px)';this.style.boxShadow='0 10px 32px rgba(99,102,241,0.6)'"
+          onmouseout="this.style.backgroundPosition='0% 0';this.style.transform='';this.style.boxShadow='0 6px 24px rgba(99,102,241,0.45)'">
+          ✨ Send Feedback
+        </button>
+
+        <p style="text-align:center;font-size:11px;color:rgba(165,180,252,0.3);margin-top:12px;">
+          Your feedback helps us build a better VibeXpert 🚀
+        </p>
+      </div>
+    </div>
+
+    <style>
+      @keyframes fbSlideIn { from{opacity:0;transform:translateY(24px) scale(0.97)} to{opacity:1;transform:none} }
+      @keyframes fbBarShimmer { from{background-position:0% 50%} to{background-position:200% 50%} }
+      #fbScrollBody::-webkit-scrollbar { width:4px; }
+      #fbScrollBody::-webkit-scrollbar-thumb { background:rgba(99,102,241,0.25);border-radius:4px; }
+      .fb-rating-btn.active { border-color:rgba(99,102,241,0.6) !important; background:rgba(99,102,241,0.15) !important; transform:scale(1.06); }
+      .fb-rating-btn.active span:first-child { filter:drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
+      .fb-rating-btn:hover:not(.active) { border-color:rgba(99,102,241,0.3) !important; background:rgba(99,102,241,0.07) !important; }
+      .fb-cat-btn.active { background:rgba(99,102,241,0.18) !important; border-color:rgba(99,102,241,0.5) !important; color:#c7d2fe !important; }
+      .fb-cat-btn:hover:not(.active) { background:rgba(99,102,241,0.1) !important; border-color:rgba(99,102,241,0.3) !important; color:#a5b4fc !important; }
+      .fb-rec-btn.active-yes   { background:rgba(34,197,94,0.2) !important; border-color:rgba(34,197,94,0.5) !important; color:#4ade80 !important; }
+      .fb-rec-btn.active-maybe { background:rgba(250,204,21,0.12) !important; border-color:rgba(250,204,21,0.4) !important; color:#fde68a !important; }
+      .fb-rec-btn.active-no    { background:rgba(239,68,68,0.15) !important; border-color:rgba(239,68,68,0.45) !important; color:#fca5a5 !important; }
+    </style>
+  `;
 
   document.body.appendChild(modal);
+  // Close on backdrop click
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
   const hamburger = document.getElementById('hamburgerMenu');
   const options = document.getElementById('optionsMenu');
   if (hamburger) hamburger.style.display = 'none';
   if (options) options.style.display = 'none';
+
+  // Auto-focus subject after animation
+  setTimeout(() => document.getElementById('feedbackSubject')?.focus(), 280);
 }
+
+// ── Feedback modal helpers ──
+window._fbRating = 0;
+window._fbCategory = '';
+window._fbRecommend = '';
+
+window.selectFbRating = function (btn) {
+  document.querySelectorAll('.fb-rating-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window._fbRating = parseInt(btn.dataset.val);
+};
+window.selectFbCat = function (btn) {
+  document.querySelectorAll('.fb-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window._fbCategory = btn.dataset.cat;
+};
+window.selectFbRec = function (btn) {
+  document.querySelectorAll('.fb-rec-btn').forEach(b => {
+    b.classList.remove('active-yes', 'active-maybe', 'active-no');
+  });
+  const rec = btn.dataset.rec;
+  btn.classList.add('active-' + rec);
+  window._fbRecommend = rec;
+};
 
 async function submitFeedback() {
   const subject = document.getElementById('feedbackSubject')?.value.trim();
   const message = document.getElementById('feedbackMessage')?.value.trim();
+  const errEl = document.getElementById('fbErrMsg');
+  const btn = document.getElementById('fbSubmitBtn');
+  const setErr = msg => { if (errEl) errEl.textContent = msg; };
+  setErr('');
 
-  if (!subject || !message) return showMessage('⚠️ Fill all fields', 'error');
+  if (!window._fbRating) { setErr('⚠️ Please rate your experience.'); return; }
+  if (!window._fbCategory) { setErr('⚠️ Please select a category.'); return; }
+  if (!subject) { setErr('⚠️ Please enter a subject.'); document.getElementById('feedbackSubject')?.focus(); return; }
+  if (!message || message.length < 10) { setErr('⚠️ Please write your feedback (min 10 chars).'); document.getElementById('feedbackMessage')?.focus(); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Sending…'; }
 
   try {
-    await apiCall('/api/feedback', 'POST', { subject, message });
-    showMessage('✅ Thank you!', 'success');
-    document.querySelector('.modal')?.remove();
+    await apiCall('/api/feedback', 'POST', {
+      subject,
+      message,
+      rating: window._fbRating,
+      category: window._fbCategory,
+      recommend: window._fbRecommend || 'not_answered'
+    });
+
+    // Success state — replace modal body with celebration
+    const body = document.getElementById('fbScrollBody');
+    if (body) {
+      body.innerHTML = `
+        <div style="text-align:center;padding:40px 20px 30px;">
+          <div style="font-size:64px;margin-bottom:16px;animation:fbPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;">🎉</div>
+          <h3 style="font-size:22px;font-weight:800;color:#fff;margin:0 0 10px;">Thank you so much!</h3>
+          <p style="font-size:14px;color:rgba(165,180,252,0.65);line-height:1.6;margin:0 0 24px;">
+            Your feedback means the world to us.<br>We will use it to make VibeXpert even better for you.
+          </p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;">
+            <div style="padding:8px 16px;border-radius:20px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);font-size:12px;font-weight:600;color:#a5b4fc;">
+              ⭐ Rating: ${'★'.repeat(window._fbRating)}${'☆'.repeat(5 - window._fbRating)}
+            </div>
+            <div style="padding:8px 16px;border-radius:20px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);font-size:12px;font-weight:600;color:#a5b4fc;">
+              🏷️ ${window._fbCategory}
+            </div>
+          </div>
+          <button onclick="document.getElementById('vxFeedbackModal').remove()"
+            style="padding:12px 32px;border-radius:12px;border:none;cursor:pointer;
+                   background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;
+                   font-size:14px;font-weight:700;">Close</button>
+        </div>
+        <style>@keyframes fbPop{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}</style>`;
+    }
+    // Reset state
+    window._fbRating = 0; window._fbCategory = ''; window._fbRecommend = '';
   } catch (error) {
-    showMessage('❌ Failed', 'error');
+    setErr('❌ Failed to send. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Send Feedback'; }
   }
 }
 
 async function submitComplaint() {
+  const subject = document.getElementById('cmpSubject')?.value.trim();
   const text = document.getElementById('complaintText')?.value.trim();
+  const errEl = document.getElementById('cmpErrorMsg');
+  const btn = document.getElementById('cmpSubmitBtn');
 
-  if (text) {
-    try {
-      await apiCall('/api/complaint', 'POST', { text });
-      showMessage('✅ Submitted!', 'success');
-      const input = document.getElementById('complaintText');
-      if (input) input.value = '';
-      closeModal('complaintModal');
-    } catch (error) {
-      showMessage('❌ Failed', 'error');
+  const setErr = (msg) => { if (errEl) { errEl.textContent = msg; } };
+  setErr('');
+
+  if (!subject) { setErr('⚠️ Please enter a subject.'); document.getElementById('cmpSubject')?.focus(); return; }
+  if (!text || text.length < 10) { setErr('⚠️ Please describe your complaint (min 10 chars).'); document.getElementById('complaintText')?.focus(); return; }
+
+  // Disable button
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Submitting…'; }
+
+  try {
+    const category = window._cmpCategory || 'other';
+    const priority = window._cmpPriority || 'low';
+    const images = window._cmpImages || [];
+
+    let imageUrls = [];
+
+    // Upload images if any
+    if (images.length > 0) {
+      for (const file of images) {
+        try {
+          const fd = new FormData();
+          fd.append('file', file);
+          const res = await fetch(`${API_URL}/api/upload`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }, body: fd });
+          if (res.ok) { const d = await res.json(); if (d.url) imageUrls.push(d.url); }
+        } catch (_) { }
+      }
     }
-  } else {
-    showMessage('⚠️ Enter details', 'error');
+
+    // Build payload matching backend schema exactly
+    const payload = {
+      subject,
+      message: text,                           // backend expects 'message' not 'text'
+      type: category,                          // complaint category
+      priority,
+      images: imageUrls,
+      source: 'app',                           // required by backend
+      name: currentUser?.username || currentUser?.name || 'VibeXpert User',
+      email: currentUser?.email || '',
+      userId: currentUser?.id || null
+    };
+    await apiCall('/api/complaints', 'POST', payload);  // fixed: plural endpoint
+
+    // Reset form
+    document.getElementById('cmpSubject').value = '';
+    document.getElementById('complaintText').value = '';
+    document.getElementById('cmpImagePreview').innerHTML = '';
+    document.getElementById('cmpCharCount').textContent = '0 / 500';
+    window._cmpImages = [];
+    window._cmpCategory = 'harassment';
+    window._cmpPriority = 'low';
+    document.querySelectorAll('.cmp-cat').forEach((b, i) => i === 0 ? b.classList.add('active') : b.classList.remove('active'));
+    document.querySelectorAll('.cmp-priority').forEach((b, i) => i === 0 ? b.classList.add('active') : b.classList.remove('active'));
+
+    closeModal('complaintModal');
+    showMessage('✅ Complaint submitted! We will review it within 24-48 hours.', 'success');
+  } catch (error) {
+    setErr('❌ Failed to submit. Please try again.');
+    console.error('Complaint error:', error);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📢 Submit Complaint'; }
   }
 }
 
@@ -9240,15 +9479,11 @@ async function loadEnhancedProfileData() {
     }
   }
 
-  // Cover photo
-  const _coverUrl = currentUser.cover_photo || currentUser.coverPhoto || null;
-  if (_coverUrl) {
-    const cover = document.getElementById('profileCover');
-    if (cover) {
-      cover.style.backgroundImage = `url('${_coverUrl}')`;
-      cover.style.backgroundSize = 'cover';
-      cover.style.backgroundPosition = 'center';
-    }
+  // Cover photo — always use default
+  const coverImg = document.getElementById('profileCoverImg');
+  if (coverImg) {
+    coverImg.src = 'default-cover.png';
+    coverImg.style.display = 'block';
   }
 
   // Stats
@@ -15476,7 +15711,7 @@ function execGetPanelHTML() {
 }
 
 // ── FOLLOW-GATED MESSAGING ────────────────────────────────────────────────
-window._updateDmBtnFollowStateUI = function(btn, username, isFollowing) {
+window._updateDmBtnFollowStateUI = function (btn, username, isFollowing) {
   const dmContent = btn.querySelector('#dmBtnContent') || btn.querySelector('.vx-btn-content') || btn;
   if (isFollowing) {
     btn.classList.remove('locked');
@@ -15500,7 +15735,7 @@ window._updateDmBtnFollowStateUI = function(btn, username, isFollowing) {
   }
 };
 
-window.tryOpenMessageModal = function() {
+window.tryOpenMessageModal = function () {
   const targetUser = window.currentProfileUser;
   if (!targetUser) return;
   const knownState = _followState[targetUser.id];
@@ -15509,12 +15744,12 @@ window.tryOpenMessageModal = function() {
     showMessage(`Follow ${targetUser.username || 'this user'} to unlock messaging`, 'error');
     return;
   }
-  
+
   // Follower -> open the built-in advanced DM Drawer!
   openDmDrawer(targetUser.id);
 };
 
-window.closeFollowGatedModal = function() {
+window.closeFollowGatedModal = function () {
   const modal = document.getElementById('followGateMessageModal');
   if (!modal) return;
   const inner = document.getElementById('fgmInner');
@@ -15523,7 +15758,7 @@ window.closeFollowGatedModal = function() {
   setTimeout(() => modal.style.display = 'none', 250);
 };
 
-window.submitFollowGatedMessage = async function() {
+window.submitFollowGatedMessage = async function () {
   const targetUser = window.currentProfileUser;
   if (!targetUser) return;
   const ta = document.getElementById('fgmTextarea');
@@ -15532,11 +15767,11 @@ window.submitFollowGatedMessage = async function() {
     showMessage('Please write a message first', 'error');
     return;
   }
-  
+
   const btn = document.getElementById('fgmSendBtn');
   btn.disabled = true;
   btn.textContent = 'Sending...';
-  
+
   try {
     const data = await centralDmSend(targetUser.id, content);
     if (!data) throw new Error('Send failed'); // handled by centralDmSend
@@ -15551,44 +15786,44 @@ window.submitFollowGatedMessage = async function() {
 };
 
 // Extracted centralized API call for DMs to avoid duplicate logic
-window.centralDmSend = async function(receiverId, content) {
-    try {
-        const data = await apiCall('/api/dm/send', 'POST', { receiverId, content });
-        if (!data || !data.success) throw new Error(data?.error || 'Failed to send message');
-        return data;
-    } catch(e) {
-        showMessage(e.message || 'Error occurred while sending', 'error');
-        return null;
-    }
+window.centralDmSend = async function (receiverId, content) {
+  try {
+    const data = await apiCall('/api/dm/send', 'POST', { receiverId, content });
+    if (!data || !data.success) throw new Error(data?.error || 'Failed to send message');
+    return data;
+  } catch (e) {
+    showMessage(e.message || 'Error occurred while sending', 'error');
+    return null;
+  }
 };
 
 // ── PERSISTENT COMMENT LIKING ──────────────────────────────────────────────
-window.toggleCommentLike = async function(commentId, btn, prefix = 'mv') {
+window.toggleCommentLike = async function (commentId, btn, prefix = 'mv') {
   if (!currentUser) return showMessage('Login first', 'error');
   if (!commentId || commentId === 'undefined') return;
 
   const isLiked = btn.innerHTML.includes('❤️');
-  
+
   // Optimistic UI updates
   btn.innerHTML = isLiked ? '🤍' : '❤️';
   const countEl = document.getElementById(`comment-like-count-${prefix}-${commentId}`);
   if (countEl) {
-      let count = parseInt(countEl.textContent) || 0;
-      count = isLiked ? Math.max(0, count - 1) : count + 1;
-      countEl.textContent = count;
+    let count = parseInt(countEl.textContent) || 0;
+    count = isLiked ? Math.max(0, count - 1) : count + 1;
+    countEl.textContent = count;
   }
-  
+
   try {
-      const data = await apiCall(`/api/comments/${commentId}/like`, 'POST');
-      if (data && data.success) {
-          btn.innerHTML = data.liked ? '❤️' : '🤍';
-          if (countEl) countEl.textContent = data.likeCount;
-      } else {
-          throw new Error('Failed');
-      }
-  } catch(e) {
-      // Revert optimism on failure
-      btn.innerHTML = isLiked ? '❤️' : '🤍';
-      if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
+    const data = await apiCall(`/api/comments/${commentId}/like`, 'POST');
+    if (data && data.success) {
+      btn.innerHTML = data.liked ? '❤️' : '🤍';
+      if (countEl) countEl.textContent = data.likeCount;
+    } else {
+      throw new Error('Failed');
+    }
+  } catch (e) {
+    // Revert optimism on failure
+    btn.innerHTML = isLiked ? '❤️' : '🤍';
+    if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
   }
 };
