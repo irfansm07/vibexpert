@@ -2751,12 +2751,14 @@
         </div>
         <div class="lp-footer-col">
           <h4>Contact</h4>
-          <p>📧 support@vibexpert.com</p>
+          <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
+              data-cfemail="15666065657a676155637c77706d657067613b767a78">[email&#160;protected]</a></p>
           <p>📱 +91-9347702626</p>
         </div>
       </div>
       <div class="lp-footer-bottom">
         <p>&copy; <span id="footerYear1">2025</span> VibeXpert. All rights reserved.</p>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
         <script>document.getElementById('footerYear1').textContent = new Date().getFullYear();</script>
       </div>
     </footer>
@@ -5291,8 +5293,84 @@
         </div>
         <div id="collegeContainer" class="colleges"></div>
         <div id="pagination" class="pagination"></div>
+
+        <!-- ── Can't find your college? Help Button ── -->
+        <div id="cantFindCollegeRow" style="display:flex;justify-content:center;margin:18px 0 10px;">
+          <button onclick="openCollegeRequestModal()" style="display:flex;align-items:center;gap:9px;padding:11px 22px;border-radius:50px;
+                   background:rgba(124,92,252,0.12);border:1.5px dashed rgba(124,92,252,0.45);
+                   color:rgba(180,160,255,0.9);font-size:13.5px;font-weight:600;cursor:pointer;
+                   transition:all 0.2s;letter-spacing:0.2px;"
+            onmouseover="this.style.background='rgba(124,92,252,0.22)';this.style.borderColor='rgba(167,139,250,0.7)';this.style.color='#c4b5fd'"
+            onmouseout="this.style.background='rgba(124,92,252,0.12)';this.style.borderColor='rgba(124,92,252,0.45)';this.style.color='rgba(180,160,255,0.9)'">
+            <span style="font-size:18px;">🙋</span>
+            Can't find your college? Request it here
+          </button>
+        </div>
+
         <button class="back-btn" onclick="backToUniversities()">← Back</button>
       </section>
+
+      <!-- ── College Request Modal ── -->
+      <div id="collegeRequestModal" style="display:none;position:fixed;inset:0;z-index:50000;background:rgba(0,0,0,0.78);
+               align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+        <div style="background:linear-gradient(145deg,#12102a,#0e0c22);border:1px solid rgba(124,92,252,0.3);
+                    border-radius:22px;padding:34px 30px 28px;width:380px;max-width:93vw;
+                    box-shadow:0 24px 80px rgba(0,0,0,0.85),0 0 0 1px rgba(124,92,252,0.1);
+                    position:relative;animation:vxFadeIn 0.22s ease both;">
+
+          <!-- Close -->
+          <button onclick="closeCollegeRequestModal()" style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,0.07);
+                   border:none;color:rgba(255,255,255,0.5);font-size:17px;width:30px;height:30px;
+                   border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+
+          <!-- Header -->
+          <div style="text-align:center;margin-bottom:22px;">
+            <div style="font-size:40px;margin-bottom:8px;">🏫</div>
+            <h3 style="margin:0 0 5px;color:#a78bfa;font-size:19px;font-weight:700;">Request Your College</h3>
+            <p style="margin:0;font-size:12.5px;color:rgba(255,255,255,0.45);line-height:1.5;">
+              Can't find your college? Tell us and we'll add it soon!
+            </p>
+          </div>
+
+          <!-- College Name -->
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:rgba(167,139,250,0.8);
+                          margin-bottom:6px;letter-spacing:0.4px;">COLLEGE / UNIVERSITY NAME *</label>
+            <input id="reqCollegeName" type="text" maxlength="120"
+              placeholder="e.g. Rajiv Gandhi Proudyogiki Vishwavidyalaya" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(124,92,252,0.25);
+                     color:#e8e8f0;border-radius:11px;padding:12px 14px;font-size:14px;
+                     box-sizing:border-box;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='rgba(167,139,250,0.6)'"
+              onblur="this.style.borderColor='rgba(124,92,252,0.25)'">
+          </div>
+
+          <!-- College Email -->
+          <div style="margin-bottom:8px;">
+            <label style="display:block;font-size:12px;font-weight:600;color:rgba(167,139,250,0.8);
+                          margin-bottom:6px;letter-spacing:0.4px;">YOUR COLLEGE EMAIL ID *</label>
+            <input id="reqCollegeEmail" type="email" maxlength="120" placeholder="e.g. yourname@rgpv.ac.in" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(124,92,252,0.25);
+                     color:#e8e8f0;border-radius:11px;padding:12px 14px;font-size:14px;
+                     box-sizing:border-box;outline:none;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='rgba(167,139,250,0.6)'"
+              onblur="this.style.borderColor='rgba(124,92,252,0.25)'">
+            <p style="margin:5px 0 0;font-size:11.5px;color:rgba(255,255,255,0.35);">
+              We'll use the email domain to verify students of your college.
+            </p>
+          </div>
+
+          <!-- Error / Success msg -->
+          <p id="reqCollegeMsg" style="min-height:18px;font-size:12px;margin:8px 0 12px;text-align:center;"></p>
+
+          <!-- Submit -->
+          <button id="reqCollegeSubmitBtn" onclick="submitCollegeRequest()" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;
+                   background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;
+                   font-size:15px;font-weight:700;letter-spacing:0.3px;transition:opacity 0.2s;">
+            🚀 Submit Request
+          </button>
+
+
+        </div>
+      </div>
 
       <!-- COMMUNITIES - PROFESSIONAL CHAT INTERFACE -->
       <section id="communities" class="page" style="display:none;">
@@ -5918,23 +5996,14 @@
       <section id="profile" class="page" style="display:none;">
         <input type="file" id="profilePicInput" style="display:none" accept="image/*"
           onchange="handleProfilePicUpload(event)">
-        <input type="file" id="coverPhotoInput" style="display:none" accept="image/*"
-          onchange="handleCoverPhotoUpload(event)">
+
 
         <!-- Cover photo hero + floating avatar -->
         <div class="profile-hero-wrap">
           <div class="profile-cover" id="profileCoverPhoto" style="position: relative;">
-            <img id="profileCoverImg" src="" alt="" class="profile-cover-img">
+            <img id="profileCoverImg" src="default-cover.png" alt="VibeXpert Cover" class="profile-cover-img"
+              style="display:block;">
             <div class="profile-cover-overlay"></div>
-
-            <!-- Redesigned Prominent Edit Cover Button -->
-            <div id="editCoverBtnWrap"
-              style="display: none; position: absolute; bottom: 12px; right: 12px; z-index: 25;">
-              <button onclick="openPhotoEditModal('cover'); event.stopPropagation();"
-                style="background: rgba(10, 8, 28, 0.65); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 14px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                <span style="font-size: 14px;">📷</span> Edit Cover
-              </button>
-            </div>
           </div>
 
           <!-- ══ PROFILE HAMBURGER MENU — sits BELOW cover, top-right ══ -->
@@ -5945,6 +6014,148 @@
             <span></span>
             <div class="profile-hamburger-glow"></div>
           </button>
+
+          <!-- ══ OTHER USER 3-DOT MENU ══ -->
+          <button class="profile-hamburger-btn profile-other-menu-btn" id="otherUserMenuBtn"
+            onclick="toggleOtherUserMenu(event)" aria-label="More Options" style="display:none; flex-direction:row;">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="color: #c084fc;">
+              <circle cx="12" cy="5" r="2.2"></circle>
+              <circle cx="12" cy="12" r="2.2"></circle>
+              <circle cx="12" cy="19" r="2.2"></circle>
+            </svg>
+            <div class="profile-hamburger-glow"></div>
+          </button>
+
+          <div class="profile-hamburger-menu" id="otherUserDropdownMenu" style="display:none;">
+            <div class="phm-item phm-blocked-item" onclick="promptBlockUser(); closeOtherUserMenu()">
+              <span class="phm-icon">🚫</span> Block User
+            </div>
+            <div class="phm-item" style="color: #fca5a5;" onclick="promptReportUser(); closeOtherUserMenu()">
+              <span class="phm-icon">🚩</span> Report User
+            </div>
+          </div>
+
+          <script>
+            function toggleOtherUserMenu(e) {
+              e.stopPropagation();
+              const menu = document.getElementById('otherUserDropdownMenu');
+              const isOpen = menu.style.display !== 'none';
+              if (isOpen) {
+                menu.style.display = 'none';
+              } else {
+                menu.style.display = 'block';
+              }
+            }
+
+            function closeOtherUserMenu() {
+              const menu = document.getElementById('otherUserDropdownMenu');
+              if (menu) menu.style.display = 'none';
+            }
+
+            document.addEventListener('click', function (e) {
+              const menu = document.getElementById('otherUserDropdownMenu');
+              const btn = document.getElementById('otherUserMenuBtn');
+              if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+              }
+            });
+
+            function promptBlockUser() {
+              const btn = document.getElementById('otherUserMenuBtn');
+              if (btn) btn.style.display = 'none'; // visual hack optionally
+              const profileId = window.currentProfileUserId;
+              if (!profileId) return;
+
+              const modal = document.createElement('div');
+              modal.style = "position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999999;";
+              modal.innerHTML = `
+                <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(239, 68, 68, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
+                  <div style="font-size:32px;margin-bottom:12px;">🚫</div>
+                  <h3 style="margin:0 0 8px;font-size:20px;color:#fca5a5;">Block this user?</h3>
+                  <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">You will no longer be able to interact with this user.</p>
+                  <div style="display:flex;gap:12px;justify-content:center;">
+                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" id="cancelBlockBtn">Cancel</button>
+                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(239, 68, 68, 0.2);border:1px solid rgba(239, 68, 68, 0.5);color:#fca5a5;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'" id="confirmBlockBtn">Confirm Block</button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(modal);
+
+              document.getElementById('cancelBlockBtn').onclick = () => {
+                document.body.removeChild(modal);
+                if (btn) btn.style.display = 'flex';
+              };
+              document.getElementById('confirmBlockBtn').onclick = async () => {
+                document.body.removeChild(modal);
+                try {
+                  const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+                  const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+                  const res = await fetch(`${B}/api/users/${profileId}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
+                  if (!res.ok) throw new Error('Failed');
+                  if (typeof showMessage === 'function') showMessage('User blocked successfully', 'success');
+                  else alert('User blocked successfully');
+                  setTimeout(() => {
+                    if (typeof window.showPage === 'function') window.showPage('home');
+                    else window.location.reload();
+                  }, 1000);
+                } catch (e) {
+                  if (typeof showMessage === 'function') showMessage('Failed to block user. Please try again.', 'error');
+                  else alert('Failed to block user. Please try again.');
+                }
+              };
+            }
+
+            function promptReportUser() {
+              const profileId = window.currentProfileUserId;
+              if (!profileId) return;
+
+              const modal = document.createElement('div');
+              modal.style = "position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999999;";
+              modal.innerHTML = `
+                <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(168, 85, 247, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
+                  <div style="font-size:32px;margin-bottom:12px;">🚩</div>
+                  <h3 style="margin:0 0 16px;font-size:20px;color:#c084fc;">Report User</h3>
+                  <select id="reportReason" style="width:100%;padding:12px;margin-bottom:12px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(168, 85, 247, 0.3);color:#fff;outline:none;font-family:inherit;">
+                    <option value="" disabled selected>Select a reason...</option>
+                    <option value="Spam" style="color:#000;">Spam</option>
+                    <option value="Harassment" style="color:#000;">Harassment</option>
+                    <option value="Fake Profile" style="color:#000;">Fake Profile</option>
+                    <option value="Inappropriate Content" style="color:#000;">Inappropriate Content</option>
+                    <option value="Other" style="color:#000;">Other</option>
+                  </select>
+                  <textarea id="reportDetails" rows="3" placeholder="Optional details..." style="width:100%;padding:12px;margin-bottom:20px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(168, 85, 247, 0.3);color:#fff;outline:none;font-family:inherit;resize:none;box-sizing:border-box;"></textarea>
+                  <div style="display:flex;gap:12px;justify-content:center;">
+                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" id="cancelReportBtn">Cancel</button>
+                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(168, 85, 247, 0.2);border:1px solid rgba(168, 85, 247, 0.5);color:#e879f9;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(168, 85, 247, 0.3)'" onmouseout="this.style.background='rgba(168, 85, 247, 0.2)'" id="submitReportBtn">Submit</button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(modal);
+
+              document.getElementById('cancelReportBtn').onclick = () => {
+                document.body.removeChild(modal);
+              };
+              document.getElementById('submitReportBtn').onclick = async () => {
+                const reason = document.getElementById('reportReason').value;
+                const details = document.getElementById('reportDetails').value;
+                if (!reason) return;
+
+                document.body.removeChild(modal);
+                try {
+                  const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+                  const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+                  const res = await fetch(`${B}/api/users/${profileId}/report`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason, details })
+                  });
+                  if (typeof showMessage === 'function') showMessage('Report submitted successfully', 'success');
+                } catch (e) {
+                  if (typeof showMessage === 'function') showMessage('Failed to submit report', 'error');
+                }
+              };
+            }
+          </script>
 
           <div class="profile-hamburger-menu" id="profileHamburgerMenu" style="display:none;">
             <div class="phm-item" onclick="showComplaintModal(); closeProfileHamburgerMenu()"><span
@@ -5958,6 +6169,13 @@
             <div class="phm-divider"></div>
             <div class="phm-item phm-id-item" onclick="showMyIdToast(); closeProfileHamburgerMenu()"><span
                 class="phm-icon">🪪</span> My ID</div>
+            <div class="phm-divider"></div>
+            <div class="phm-item phm-blocked-item" onclick="showBlockedUsersModal(); closeProfileHamburgerMenu()">
+              <span class="phm-icon">🚫</span> Blocked Users
+            </div>
+            <div class="phm-item phm-activity-item" onclick="showMyActivityModal(); closeProfileHamburgerMenu()">
+              <span class="phm-icon">⚡</span> My Activity
+            </div>
             <div class="phm-divider"></div>
             <div class="phm-item phm-logout" onclick="logout()"><span class="phm-icon">🚪</span> Logout</div>
           </div>
@@ -6230,6 +6448,504 @@
               background: rgba(168, 85, 247, 0.28);
               color: #e879f9;
             }
+
+            /* ── Blocked Users item ── */
+            .phm-blocked-item {
+              color: rgba(252, 165, 165, 0.85) !important;
+            }
+
+            .phm-blocked-item:hover {
+              background: rgba(239, 68, 68, 0.1) !important;
+              color: #fca5a5 !important;
+            }
+
+            /* ── My Activity item ── */
+            .phm-activity-item {
+              color: rgba(167, 243, 208, 0.85) !important;
+            }
+
+            .phm-activity-item:hover {
+              background: rgba(16, 185, 129, 0.1) !important;
+              color: #6ee7b7 !important;
+            }
+
+            /* ════════════════════════════════════
+               BLOCKED USERS MODAL
+            ════════════════════════════════════ */
+            #blockedUsersModal {
+              display: none;
+              position: fixed;
+              inset: 0;
+              z-index: 100000;
+              background: rgba(0, 0, 0, 0.75);
+              backdrop-filter: blur(5px);
+              align-items: center;
+              justify-content: center;
+            }
+
+            .bum-box {
+              background: linear-gradient(145deg, #0f0d24, #130f2a);
+              border: 1px solid rgba(239, 68, 68, 0.25);
+              border-radius: 22px;
+              width: 400px;
+              max-width: 94vw;
+              max-height: 82vh;
+              display: flex;
+              flex-direction: column;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(239, 68, 68, 0.1);
+              overflow: hidden;
+              animation: phmSlideIn 0.22s ease both;
+            }
+
+            .bum-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 18px 20px 14px;
+              border-bottom: 1px solid rgba(239, 68, 68, 0.12);
+              flex-shrink: 0;
+            }
+
+            .bum-title {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+
+            .bum-title-icon {
+              font-size: 22px;
+            }
+
+            .bum-title-text {
+              font-size: 17px;
+              font-weight: 700;
+              color: #fca5a5;
+            }
+
+            .bum-close {
+              width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              background: rgba(255, 255, 255, 0.06);
+              border: none;
+              color: rgba(255, 255, 255, 0.45);
+              font-size: 16px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: background 0.15s;
+            }
+
+            .bum-close:hover {
+              background: rgba(239, 68, 68, 0.2);
+              color: #fca5a5;
+            }
+
+            .bum-list {
+              flex: 1;
+              overflow-y: auto;
+              padding: 10px 12px;
+            }
+
+            .bum-list::-webkit-scrollbar {
+              width: 4px;
+            }
+
+            .bum-list::-webkit-scrollbar-thumb {
+              background: rgba(239, 68, 68, 0.3);
+              border-radius: 4px;
+            }
+
+            .bum-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 12px 10px;
+              border-radius: 12px;
+              transition: background 0.15s;
+              margin-bottom: 4px;
+            }
+
+            .bum-item:hover {
+              background: rgba(239, 68, 68, 0.07);
+            }
+
+            .bum-avatar {
+              width: 44px;
+              height: 44px;
+              border-radius: 50%;
+              flex-shrink: 0;
+              background: linear-gradient(145deg, #4c1d95, #7c3aed);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 18px;
+              font-weight: 700;
+              color: #fff;
+              border: 2px solid rgba(239, 68, 68, 0.3);
+            }
+
+            .bum-info {
+              flex: 1;
+              min-width: 0;
+            }
+
+            .bum-name {
+              font-size: 14px;
+              font-weight: 600;
+              color: rgba(220, 210, 255, 0.9);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .bum-sub {
+              font-size: 11.5px;
+              color: rgba(180, 160, 220, 0.5);
+              margin-top: 2px;
+            }
+
+            .bum-unblock-btn {
+              padding: 6px 14px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              background: rgba(239, 68, 68, 0.1);
+              border: 1px solid rgba(239, 68, 68, 0.3);
+              color: #fca5a5;
+              transition: all 0.2s;
+              white-space: nowrap;
+              flex-shrink: 0;
+            }
+
+            .bum-unblock-btn:hover {
+              background: rgba(239, 68, 68, 0.25);
+              color: #fff;
+            }
+
+            .bum-empty {
+              text-align: center;
+              padding: 40px 20px;
+              color: rgba(200, 180, 255, 0.4);
+            }
+
+            .bum-empty-icon {
+              font-size: 44px;
+              margin-bottom: 10px;
+            }
+
+            .bum-loading {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 40px;
+            }
+
+            .bum-spinner {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              border: 3px solid rgba(239, 68, 68, 0.15);
+              border-top-color: #ef4444;
+              animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin {
+              to {
+                transform: rotate(360deg);
+              }
+            }
+
+            /* ════════════════════════════════════
+               MY ACTIVITY MODAL
+            ════════════════════════════════════ */
+            #myActivityModal {
+              display: none;
+              position: fixed;
+              inset: 0;
+              z-index: 100000;
+              background: rgba(0, 0, 0, 0.75);
+              backdrop-filter: blur(5px);
+              align-items: center;
+              justify-content: center;
+            }
+
+            .mam-box {
+              background: linear-gradient(145deg, #0a0d1f, #0e1228);
+              border: 1px solid rgba(124, 92, 252, 0.25);
+              border-radius: 22px;
+              width: 420px;
+              max-width: 94vw;
+              max-height: 85vh;
+              display: flex;
+              flex-direction: column;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), 0 0 60px rgba(124, 92, 252, 0.08);
+              overflow: hidden;
+              animation: phmSlideIn 0.22s ease both;
+            }
+
+            .mam-header {
+              padding: 18px 20px 0;
+              flex-shrink: 0;
+            }
+
+            .mam-top-row {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 14px;
+            }
+
+            .mam-title {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+
+            .mam-title-icon {
+              font-size: 22px;
+            }
+
+            .mam-title-text {
+              font-size: 17px;
+              font-weight: 700;
+              color: #a78bfa;
+            }
+
+            .mam-close {
+              width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              background: rgba(255, 255, 255, 0.06);
+              border: none;
+              color: rgba(255, 255, 255, 0.45);
+              font-size: 16px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: background 0.15s;
+            }
+
+            .mam-close:hover {
+              background: rgba(124, 92, 252, 0.2);
+              color: #a78bfa;
+            }
+
+            /* Stats bar */
+            .mam-stats {
+              display: flex;
+              gap: 8px;
+              padding: 0 0 14px;
+              border-bottom: 1px solid rgba(124, 92, 252, 0.1);
+            }
+
+            .mam-stat {
+              flex: 1;
+              background: rgba(124, 92, 252, 0.07);
+              border: 1px solid rgba(124, 92, 252, 0.15);
+              border-radius: 12px;
+              padding: 10px 8px;
+              text-align: center;
+            }
+
+            .mam-stat-num {
+              font-size: 20px;
+              font-weight: 800;
+              color: #a78bfa;
+              line-height: 1;
+            }
+
+            .mam-stat-label {
+              font-size: 10px;
+              color: rgba(180, 160, 220, 0.55);
+              margin-top: 3px;
+              letter-spacing: 0.04em;
+              text-transform: uppercase;
+            }
+
+            /* Filter tabs */
+            .mam-tabs {
+              display: flex;
+              gap: 6px;
+              padding: 12px 20px 0;
+              flex-shrink: 0;
+            }
+
+            .mam-tab {
+              padding: 6px 14px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              color: rgba(180, 160, 220, 0.6);
+              transition: all 0.18s;
+            }
+
+            .mam-tab.active {
+              background: rgba(124, 92, 252, 0.2);
+              border-color: rgba(124, 92, 252, 0.4);
+              color: #c4b5fd;
+            }
+
+            .mam-tab:hover:not(.active) {
+              background: rgba(255, 255, 255, 0.08);
+              color: rgba(200, 180, 255, 0.8);
+            }
+
+            /* List */
+            .mam-list {
+              flex: 1;
+              overflow-y: auto;
+              padding: 10px 12px 16px;
+            }
+
+            .mam-list::-webkit-scrollbar {
+              width: 4px;
+            }
+
+            .mam-list::-webkit-scrollbar-thumb {
+              background: rgba(124, 92, 252, 0.3);
+              border-radius: 4px;
+            }
+
+            /* Activity item */
+            .mam-item {
+              display: flex;
+              align-items: flex-start;
+              gap: 12px;
+              padding: 11px 10px;
+              border-radius: 13px;
+              transition: background 0.15s;
+              margin-bottom: 3px;
+              border: 1px solid transparent;
+              cursor: pointer;
+            }
+
+            .mam-item:hover {
+              background: rgba(124, 92, 252, 0.07);
+              border-color: rgba(124, 92, 252, 0.12);
+            }
+
+            .mam-item-icon {
+              width: 38px;
+              height: 38px;
+              border-radius: 12px;
+              flex-shrink: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 17px;
+            }
+
+            .mam-item-icon.like {
+              background: rgba(239, 68, 68, 0.12);
+              border: 1px solid rgba(239, 68, 68, 0.2);
+            }
+
+            .mam-item-icon.comment {
+              background: rgba(124, 92, 252, 0.12);
+              border: 1px solid rgba(124, 92, 252, 0.2);
+            }
+
+            .mam-item-icon.follow {
+              background: rgba(16, 185, 129, 0.12);
+              border: 1px solid rgba(16, 185, 129, 0.2);
+            }
+
+            .mam-item-body {
+              flex: 1;
+              min-width: 0;
+            }
+
+            .mam-item-text {
+              font-size: 13px;
+              color: rgba(220, 210, 255, 0.85);
+              line-height: 1.4;
+            }
+
+            .mam-item-text strong {
+              color: #c4b5fd;
+              font-weight: 700;
+            }
+
+            .mam-item-time {
+              font-size: 11px;
+              color: rgba(180, 160, 220, 0.45);
+              margin-top: 3px;
+            }
+
+            .mam-item-thumb {
+              width: 40px;
+              height: 40px;
+              border-radius: 8px;
+              object-fit: cover;
+              flex-shrink: 0;
+              border: 1px solid rgba(124, 92, 252, 0.2);
+              background: rgba(124, 92, 252, 0.08);
+            }
+
+            .mam-empty {
+              text-align: center;
+              padding: 40px 20px;
+              color: rgba(200, 180, 255, 0.4);
+            }
+
+            .mam-empty-icon {
+              font-size: 44px;
+              margin-bottom: 10px;
+            }
+
+            .mam-loading {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 40px;
+            }
+
+            .mam-spinner {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              border: 3px solid rgba(124, 92, 252, 0.15);
+              border-top-color: #7c5cfc;
+              animation: spin 0.8s linear infinite;
+            }
+
+            /* Date separator */
+            .mam-date-sep {
+              text-align: center;
+              font-size: 10.5px;
+              font-weight: 700;
+              letter-spacing: 0.06em;
+              color: rgba(167, 139, 250, 0.4);
+              text-transform: uppercase;
+              margin: 10px 0 6px;
+              position: relative;
+            }
+
+            .mam-date-sep::before,
+            .mam-date-sep::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              width: 30%;
+              height: 1px;
+              background: linear-gradient(90deg, transparent, rgba(124, 92, 252, 0.2));
+            }
+
+            .mam-date-sep::before {
+              left: 0;
+            }
+
+            .mam-date-sep::after {
+              right: 0;
+              transform: scaleX(-1);
+            }
           </style>
 
           <script>
@@ -6299,6 +7015,246 @@
             <div class="myid-value" id="myIdValue">#000000</div>
             <button class="myid-copy-btn" onclick="copyMyId()">📋 Copy</button>
           </div>
+          <!-- ════ BLOCKED USERS MODAL ════ -->
+          <div id="blockedUsersModal"
+            style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);align-items:center;justify-content:center;">
+            <div class="bum-box">
+              <div class="bum-header">
+                <div class="bum-title">
+                  <span class="bum-title-icon">🚫</span>
+                  <span class="bum-title-text">Blocked Users</span>
+                </div>
+                <button class="bum-close" onclick="closeBlockedUsersModal()">✕</button>
+              </div>
+              <div class="bum-list" id="bumList">
+                <div class="bum-loading">
+                  <div class="bum-spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ════ MY ACTIVITY MODAL ════ -->
+          <div id="myActivityModal"
+            style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);align-items:center;justify-content:center;">
+            <div class="mam-box">
+              <div class="mam-header">
+                <div class="mam-top-row">
+                  <div class="mam-title">
+                    <span class="mam-title-icon">⚡</span>
+                    <span class="mam-title-text">My Activity</span>
+                  </div>
+                  <button class="mam-close" onclick="closeMyActivityModal()">✕</button>
+                </div>
+                <!-- Stats row -->
+                <div class="mam-stats">
+                  <div class="mam-stat">
+                    <div class="mam-stat-num" id="mamStatLikes">—</div>
+                    <div class="mam-stat-label">❤️ Likes</div>
+                  </div>
+                  <div class="mam-stat">
+                    <div class="mam-stat-num" id="mamStatComments">—</div>
+                    <div class="mam-stat-label">💬 Comments</div>
+                  </div>
+                  <div class="mam-stat">
+                    <div class="mam-stat-num" id="mamStatFollows">—</div>
+                    <div class="mam-stat-label">👤 Follows</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Filter tabs -->
+              <div class="mam-tabs">
+                <button class="mam-tab active" onclick="filterMamTab('all', this)">All</button>
+                <button class="mam-tab" onclick="filterMamTab('like', this)">❤️ Likes</button>
+                <button class="mam-tab" onclick="filterMamTab('comment', this)">💬 Comments</button>
+                <button class="mam-tab" onclick="filterMamTab('follow', this)">👤 Follows</button>
+              </div>
+              <div class="mam-list" id="mamList">
+                <div class="mam-loading">
+                  <div class="mam-spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            /* ════════════════════════════════════════
+               BLOCKED USERS MODAL
+            ════════════════════════════════════════ */
+            function showBlockedUsersModal() {
+              const modal = document.getElementById('blockedUsersModal');
+              modal.style.display = 'flex';
+              loadBlockedUsers();
+            }
+            function closeBlockedUsersModal() {
+              document.getElementById('blockedUsersModal').style.display = 'none';
+            }
+            document.getElementById('blockedUsersModal').addEventListener('click', function (e) {
+              if (e.target === this) closeBlockedUsersModal();
+            });
+
+            async function loadBlockedUsers() {
+              const list = document.getElementById('bumList');
+              list.innerHTML = '<div class="bum-loading"><div class="bum-spinner"></div></div>';
+              try {
+                const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+                const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+                const res = await fetch(`${B}/api/users/blocked`, { headers: { 'Authorization': `Bearer ${tok}` } });
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                const users = data.blocked || data.users || data || [];
+                if (!users.length) {
+                  list.innerHTML = `<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.<br><span style="font-size:12px;opacity:0.6;">You haven't blocked anyone yet.</span></p></div>`;
+                  return;
+                }
+                list.innerHTML = users.map(u => `
+                  <div class="bum-item">
+                    <div class="bum-avatar">${u.profile_pic ? `<img src="${u.profile_pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (u.username || '?').charAt(0).toUpperCase()}</div>
+                    <div class="bum-info">
+                      <div class="bum-name">${u.username || u.name || 'Unknown'}</div>
+                      <div class="bum-sub">${u.college || u.email || 'VibeXpert user'}</div>
+                    </div>
+                    <button class="bum-unblock-btn" onclick="unblockUser('${u.id}', this)">Unblock</button>
+                  </div>`).join('');
+              } catch (err) {
+                list.innerHTML = `<div class="bum-empty"><div class="bum-empty-icon">😕</div><p>Couldn't load blocked users.<br><span style="font-size:12px;opacity:0.6;">Check your connection and try again.</span></p></div>`;
+              }
+            }
+
+            async function unblockUser(uid, btn) {
+              btn.textContent = '…';
+              btn.disabled = true;
+              try {
+                const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+                const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+                await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
+                // Remove the card with animation
+                const item = btn.closest('.bum-item');
+                item.style.transition = 'all 0.25s ease';
+                item.style.opacity = '0'; item.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                  item.remove();
+                  const list = document.getElementById('bumList');
+                  if (!list.querySelector('.bum-item')) {
+                    list.innerHTML = '<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.</p></div>';
+                  }
+                }, 260);
+              } catch (err) { btn.textContent = 'Unblock'; btn.disabled = false; }
+            }
+
+            /* ════════════════════════════════════════
+               MY ACTIVITY MODAL
+            ════════════════════════════════════════ */
+            let _mamAll = [], _mamTab = 'all';
+
+            function showMyActivityModal() {
+              const modal = document.getElementById('myActivityModal');
+              modal.style.display = 'flex';
+              loadMyActivity();
+            }
+            function closeMyActivityModal() {
+              document.getElementById('myActivityModal').style.display = 'none';
+            }
+            document.getElementById('myActivityModal').addEventListener('click', function (e) {
+              if (e.target === this) closeMyActivityModal();
+            });
+
+            window.filterMamTab = function (tab, btn) {
+              _mamTab = tab;
+              document.querySelectorAll('.mam-tab').forEach(t => t.classList.remove('active'));
+              if (btn) btn.classList.add('active');
+              renderMamList(_mamAll, tab);
+            };
+
+            function mamRelTime(d) {
+              if (!d) return '';
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              const s = (Date.now() - dt) / 1000;
+              if (s < 60) return 'just now';
+              if (s < 3600) return Math.floor(s / 60) + 'm ago';
+              if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+              if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+              return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            }
+
+            function mamDateLabel(d) {
+              if (!d) return 'Unknown';
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              const now = new Date(); const diff = (now - dt) / 86400000;
+              if (diff < 1) return 'Today';
+              if (diff < 2) return 'Yesterday';
+              if (diff < 7) return dt.toLocaleDateString('en-IN', { weekday: 'long' });
+              return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            function renderMamList(items, tab) {
+              const list = document.getElementById('mamList');
+              let filtered = tab === 'all' ? items : items.filter(a => (a.type || '').toLowerCase().includes(tab));
+              if (!filtered.length) {
+                list.innerHTML = `<div class="mam-empty"><div class="mam-empty-icon">${tab === 'like' ? '❤️' : tab === 'comment' ? '💬' : tab === 'follow' ? '👤' : '⚡'}</div><p>No ${tab === 'all' ? 'activity' : tab + 's'} yet.</p></div>`;
+                return;
+              }
+              // Group by date
+              const groups = {};
+              filtered.forEach(a => {
+                const label = mamDateLabel(a.created_at || a.timestamp || a.createdAt);
+                if (!groups[label]) groups[label] = [];
+                groups[label].push(a);
+              });
+
+              const cfg = {
+                like: { icon: '❤️', cls: 'like', text: (a) => `You liked <strong>${a.post_title || a.target_name || 'a post'}</strong>` },
+                comment: { icon: '💬', cls: 'comment', text: (a) => `You commented: <strong>"${(a.comment || a.content || '…').slice(0, 60)}"</strong>` },
+                follow: { icon: '👤', cls: 'follow', text: (a) => `You followed <strong>${a.target_name || a.username || 'someone'}</strong>` },
+              };
+
+              list.innerHTML = Object.entries(groups).map(([label, acts]) => `
+                <div class="mam-date-sep">${label}</div>
+                ${acts.map(a => {
+                const type = (a.type || 'like').toLowerCase();
+                const c = cfg[type] || cfg.like;
+                const thumb = a.post_image || a.thumbnail || a.target_pic || '';
+                return `<div class="mam-item">
+                    <div class="mam-item-icon ${c.cls}">${c.icon}</div>
+                    <div class="mam-item-body">
+                      <div class="mam-item-text">${c.text(a)}</div>
+                      <div class="mam-item-time">${mamRelTime(a.created_at || a.timestamp || a.createdAt)}</div>
+                    </div>
+                    ${thumb ? `<img class="mam-item-thumb" src="${thumb}" alt="" onerror="this.style.display='none'">` : ''}
+                  </div>`;
+              }).join('')}`).join('');
+            }
+
+            async function loadMyActivity() {
+              const list = document.getElementById('mamList');
+              list.innerHTML = '<div class="mam-loading"><div class="mam-spinner"></div></div>';
+              // Reset stats
+              ['mamStatLikes', 'mamStatComments', 'mamStatFollows'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.textContent = '—';
+              });
+              try {
+                const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+                const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+                const res = await fetch(`${B}/api/users/activity`, { headers: { 'Authorization': `Bearer ${tok}` } });
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                _mamAll = data.activities || data || [];
+
+                // Update stats
+                const likes = _mamAll.filter(a => (a.type || '').toLowerCase().includes('like')).length;
+                const comments = _mamAll.filter(a => (a.type || '').toLowerCase().includes('comment')).length;
+                const follows = _mamAll.filter(a => (a.type || '').toLowerCase().includes('follow')).length;
+                document.getElementById('mamStatLikes').textContent = likes;
+                document.getElementById('mamStatComments').textContent = comments;
+                document.getElementById('mamStatFollows').textContent = follows;
+
+                renderMamList(_mamAll, _mamTab);
+              } catch (err) {
+                list.innerHTML = `<div class="mam-empty"><div class="mam-empty-icon">😕</div><p>Couldn't load activity.<br><span style="font-size:12px;opacity:0.6;">Try again later.</span></p></div>`;
+              }
+            }
+          </script>
+
           <!-- Floating avatar that overlaps banner -->
           <div class="profile-floating-avatar">
             <!-- Instagram-style Note bubble -->
@@ -6612,8 +7568,7 @@
               </span>
             </button>
 
-            <button id="dmBtn" class="vx-profile-btn vx-msg-btn" style="display:none;"
-              onclick="tryOpenMessageModal()">
+            <button id="dmBtn" class="vx-profile-btn vx-msg-btn" style="display:none;" onclick="tryOpenMessageModal()">
               <span class="vx-btn-bg"></span>
               <span class="vx-btn-shine"></span>
               <span class="vx-btn-border-glow"></span>
@@ -7500,12 +8455,20 @@
 
           <div class="edit-profile-form">
             <div class="form-group">
-              <label>Full Name</label>
-              <input type="text" id="editName" placeholder="Enter your full name">
-            </div>
-            <div class="form-group">
               <label>Username</label>
-              <input type="text" id="editUsername" placeholder="Enter username">
+              <div style="position:relative;">
+                <input type="text" id="editUsername" placeholder="Enter username" autocomplete="off" spellcheck="false"
+                  oninput="checkUsernameAvailability(this.value)"
+                  style="padding-right: 42px; width: 100%; box-sizing: border-box;">
+                <span id="usernameCheckIcon" style="
+                  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+                  font-size:18px; pointer-events:none; transition:opacity 0.2s;
+                "></span>
+              </div>
+              <small id="usernameCheckMsg" style="
+                display:block; margin-top:6px; font-size:12px;
+                font-weight:500; min-height:18px; transition:color 0.2s;
+              "></small>
             </div>
             <div class="form-group">
               <label>Bio</label>
@@ -7766,15 +8729,327 @@
     </div>
   </div>
 
-  <div id="complaintModal" class="modal" style="display:none;">
-    <div class="modal-box">
-      <span class="close" onclick="closeModal('complaintModal')">&times;</span>
-      <h2>Submit Complaint</h2>
-      <textarea id="complaintText" placeholder="Describe your complaint..."
-        style="width:100%; padding:12px; border:1px solid rgba(79, 116, 163, 0.3); border-radius:10px; font-family:inherit; min-height:100px; background:rgba(20,30,50,0.6); color:white; margin-bottom:15px;"></textarea>
-      <button onclick="submitComplaint()">Submit Complaint</button>
+  <!-- ════════════════════════════════════════════
+       COMPLAINT MODAL — REDESIGNED
+  ════════════════════════════════════════════ -->
+  <div id="complaintModal" style="display:none;position:fixed;inset:0;z-index:100001;
+       background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);
+       align-items:center;justify-content:center;">
+    <div style="background:linear-gradient(145deg,#0d0b1e,#12102a);
+                border:1px solid rgba(239,68,68,0.2);border-radius:24px;
+                width:480px;max-width:95vw;max-height:92vh;
+                box-shadow:0 32px 80px rgba(0,0,0,0.9),0 0 0 1px rgba(239,68,68,0.08),0 0 60px rgba(239,68,68,0.06);
+                display:flex;flex-direction:column;overflow:hidden;
+                animation:cmpSlideIn 0.25s cubic-bezier(0.22,1,0.36,1) both;">
+
+      <!-- Top accent bar -->
+      <div style="height:3px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444);flex-shrink:0;"></div>
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:rgba(239,68,68,0.12);
+                      border:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;
+                      justify-content:center;font-size:20px;">📢</div>
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.01em;">Submit a Complaint</div>
+            <div style="font-size:11.5px;color:rgba(200,150,150,0.6);margin-top:1px;">We review every complaint
+              seriously</div>
+          </div>
+        </div>
+        <button onclick="closeModal('complaintModal')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);
+                 border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);
+                 font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+                 transition:all 0.2s;"
+          onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.color='#fca5a5'"
+          onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.5)'">✕</button>
+      </div>
+
+      <!-- Scrollable body -->
+      <div style="flex:1;overflow-y:auto;padding:0 22px 22px;" id="cmpScrollBody">
+
+        <!-- Category selector -->
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;
+                        color:rgba(239,68,68,0.7);text-transform:uppercase;margin-bottom:8px;">
+            Category *
+          </label>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;" id="cmpCategoryRow">
+            <button class="cmp-cat active" data-cat="harassment" onclick="selectCmpCat(this)">😤 Harassment</button>
+            <button class="cmp-cat" data-cat="spam" onclick="selectCmpCat(this)">🚫 Spam</button>
+            <button class="cmp-cat" data-cat="bug" onclick="selectCmpCat(this)">🐛 Bug / Glitch</button>
+            <button class="cmp-cat" data-cat="inappropriate" onclick="selectCmpCat(this)">⚠️ Inappropriate</button>
+            <button class="cmp-cat" data-cat="fake" onclick="selectCmpCat(this)">🎭 Fake Profile</button>
+            <button class="cmp-cat" data-cat="other" onclick="selectCmpCat(this)">💬 Other</button>
+          </div>
+        </div>
+
+        <!-- Subject -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;
+                        color:rgba(239,68,68,0.7);text-transform:uppercase;margin-bottom:8px;">
+            Subject *
+          </label>
+          <input id="cmpSubject" type="text" maxlength="80" placeholder="Brief title for your complaint…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.18);
+                   color:#e8e8f0;border-radius:12px;padding:11px 14px;font-size:14px;
+                   box-sizing:border-box;outline:none;transition:border-color 0.2s;font-family:inherit;"
+            onfocus="this.style.borderColor='rgba(239,68,68,0.5)'"
+            onblur="this.style.borderColor='rgba(239,68,68,0.18)'">
+        </div>
+
+        <!-- Description -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <label style="font-size:11px;font-weight:700;letter-spacing:0.08em;
+                          color:rgba(239,68,68,0.7);text-transform:uppercase;">
+              Description *
+            </label>
+            <span id="cmpCharCount" style="font-size:11px;color:rgba(180,140,140,0.5);">0 / 500</span>
+          </div>
+          <textarea id="complaintText" maxlength="500"
+            placeholder="Describe your complaint in detail. The more info you give, the faster we can help you…"
+            oninput="updateCmpChar(this)" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.18);
+                   color:#e8e8f0;border-radius:12px;padding:12px 14px;font-size:14px;
+                   box-sizing:border-box;outline:none;min-height:120px;resize:vertical;
+                   font-family:inherit;line-height:1.55;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='rgba(239,68,68,0.5)'"
+            onblur="this.style.borderColor='rgba(239,68,68,0.18)'"></textarea>
+        </div>
+
+        <!-- Image upload -->
+        <div style="margin-bottom:18px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;
+                        color:rgba(239,68,68,0.7);text-transform:uppercase;margin-bottom:8px;">
+            Attach Screenshot <span
+              style="font-weight:400;text-transform:none;color:rgba(180,140,140,0.5);font-size:11px;">(optional, max
+              3)</span>
+          </label>
+          <!-- Upload trigger -->
+          <input type="file" id="cmpImageInput" accept="image/*" multiple style="display:none;"
+            onchange="handleCmpImages(event)">
+          <div id="cmpUploadArea" onclick="document.getElementById('cmpImageInput').click()" style="border:1.5px dashed rgba(239,68,68,0.3);border-radius:14px;padding:18px;
+                   text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(239,68,68,0.03);"
+            onmouseover="this.style.borderColor='rgba(239,68,68,0.55)';this.style.background='rgba(239,68,68,0.07)'"
+            onmouseout="this.style.borderColor='rgba(239,68,68,0.3)';this.style.background='rgba(239,68,68,0.03)'">
+            <div style="font-size:28px;margin-bottom:6px;">📎</div>
+            <div style="font-size:13px;font-weight:600;color:rgba(252,165,165,0.8);">Click to attach screenshots</div>
+            <div style="font-size:11px;color:rgba(180,140,140,0.45);margin-top:3px;">PNG, JPG, WEBP — up to 3 images
+            </div>
+          </div>
+          <!-- Preview strip -->
+          <div id="cmpImagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+        </div>
+
+        <!-- Urgency selector -->
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;
+                        color:rgba(239,68,68,0.7);text-transform:uppercase;margin-bottom:8px;">
+            Priority
+          </label>
+          <div style="display:flex;gap:8px;">
+            <button class="cmp-priority active" data-p="low" onclick="selectCmpPriority(this)"
+              style="flex:1;padding:9px 6px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;
+                     background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86efac;transition:all 0.2s;">
+              🟢 Low
+            </button>
+            <button class="cmp-priority" data-p="medium" onclick="selectCmpPriority(this)"
+              style="flex:1;padding:9px 6px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;
+                     background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(200,180,255,0.5);transition:all 0.2s;">
+              🟡 Medium
+            </button>
+            <button class="cmp-priority" data-p="high" onclick="selectCmpPriority(this)"
+              style="flex:1;padding:9px 6px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;
+                     background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(200,180,255,0.5);transition:all 0.2s;">
+              🔴 High
+            </button>
+          </div>
+        </div>
+
+        <!-- Error msg -->
+        <p id="cmpErrorMsg" style="min-height:16px;font-size:12px;color:#f87171;text-align:center;margin-bottom:10px;">
+        </p>
+
+        <!-- Submit button -->
+        <button id="cmpSubmitBtn" onclick="submitComplaint()" style="width:100%;padding:14px;border-radius:14px;border:none;cursor:pointer;
+                 background:linear-gradient(135deg,#dc2626,#ef4444,#f97316);
+                 background-size:200% 100%;background-position:0% 0%;
+                 color:#fff;font-size:15px;font-weight:800;letter-spacing:0.02em;
+                 transition:all 0.3s;box-shadow:0 6px 24px rgba(239,68,68,0.4);"
+          onmouseover="this.style.backgroundPosition='100% 0';this.style.transform='translateY(-1px)';this.style.boxShadow='0 10px 32px rgba(239,68,68,0.55)'"
+          onmouseout="this.style.backgroundPosition='0% 0';this.style.transform='';this.style.boxShadow='0 6px 24px rgba(239,68,68,0.4)'">
+          📢 Submit Complaint
+        </button>
+
+        <p style="text-align:center;font-size:11px;color:rgba(180,140,140,0.4);margin-top:12px;line-height:1.5;">
+          🔒 Your complaint is confidential. Our team will review it within 24–48 hours.
+        </p>
+      </div>
     </div>
   </div>
+
+  <style>
+    @keyframes cmpSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .cmp-cat {
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(200, 180, 220, 0.6);
+      transition: all 0.18s;
+    }
+
+    .cmp-cat:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .cmp-cat.active {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+
+    .cmp-priority.active {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: rgba(239, 68, 68, 0.45) !important;
+      color: #fca5a5 !important;
+    }
+
+    #cmpScrollBody::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #cmpScrollBody::-webkit-scrollbar-thumb {
+      background: rgba(239, 68, 68, 0.25);
+      border-radius: 4px;
+    }
+
+    .cmp-img-thumb {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid rgba(239, 68, 68, 0.3);
+      flex-shrink: 0;
+    }
+
+    .cmp-img-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cmp-img-remove {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.75);
+      border: none;
+      color: #fff;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+  </style>
+
+  <script>
+    /* ── Complaint modal helpers ── */
+    let _cmpImages = [];
+    let _cmpCategory = 'harassment';
+    let _cmpPriority = 'low';
+
+    // Close on backdrop click
+    document.getElementById('complaintModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal('complaintModal');
+    });
+
+    function selectCmpCat(btn) {
+      document.querySelectorAll('.cmp-cat').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _cmpCategory = btn.dataset.cat;
+    }
+
+    function selectCmpPriority(btn) {
+      document.querySelectorAll('.cmp-priority').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,0.05)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+        b.style.color = 'rgba(200,180,255,0.5)';
+      });
+      btn.classList.add('active');
+      _cmpPriority = btn.dataset.p;
+      // colour the active button
+      const colours = { low: '34,197,94', medium: '250,204,21', high: '239,68,68' };
+      const c = colours[_cmpPriority] || '239,68,68';
+      btn.style.background = `rgba(${c},0.15)`;
+      btn.style.borderColor = `rgba(${c},0.45)`;
+      btn.style.color = `rgb(${c})`;
+    }
+
+    function updateCmpChar(ta) {
+      const cc = document.getElementById('cmpCharCount');
+      if (cc) cc.textContent = ta.value.length + ' / 500';
+    }
+
+    function handleCmpImages(e) {
+      const files = Array.from(e.target.files).slice(0, 3 - _cmpImages.length);
+      files.forEach(file => {
+        if (_cmpImages.length >= 3) return;
+        _cmpImages.push(file);
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const preview = document.getElementById('cmpImagePreview');
+          const thumb = document.createElement('div');
+          thumb.className = 'cmp-img-thumb';
+          thumb.dataset.idx = _cmpImages.length - 1;
+          thumb.innerHTML = `<img src="${ev.target.result}" alt="screenshot">
+            <button class="cmp-img-remove" onclick="removeCmpImage(this)" title="Remove">✕</button>`;
+          preview.appendChild(thumb);
+          if (_cmpImages.length >= 3) {
+            document.getElementById('cmpUploadArea').style.opacity = '0.4';
+            document.getElementById('cmpUploadArea').style.pointerEvents = 'none';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    }
+
+    function removeCmpImage(btn) {
+      const thumb = btn.closest('.cmp-img-thumb');
+      const idx = parseInt(thumb.dataset.idx);
+      _cmpImages.splice(idx, 1);
+      // Re-index remaining thumbs
+      const preview = document.getElementById('cmpImagePreview');
+      preview.removeChild(thumb);
+      preview.querySelectorAll('.cmp-img-thumb').forEach((t, i) => t.dataset.idx = i);
+      document.getElementById('cmpUploadArea').style.opacity = '';
+      document.getElementById('cmpUploadArea').style.pointerEvents = '';
+    }
+  </script>
 
   <!-- BIO EDIT MODAL -->
   <div id="bioEditModal" class="modal" style="display:none;">
@@ -7806,13 +9081,25 @@
   </div>
 
   <!-- ══════════ TARGETED FOLLOW-GATED MSG MODAL ══════════ -->
-  <div id="followGateMessageModal" style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;opacity:0;transition:opacity 0.25s ease;">
-    <div style="background:#0d0b1a;border:1px solid #7c3aed;border-radius:18px;width:90%;max-width:400px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 20px rgba(124,58,237,0.15);transform:translateY(20px);transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1);" id="fgmInner">
-      <h3 style="color:#fff;margin:0 0 16px;font-size:18px;font-weight:700;">Message <span id="fgmUsername" style="color:#a78bfa;"></span></h3>
-      <textarea id="fgmTextarea" placeholder="Type your message..." style="width:100%;height:120px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;color:#fff;resize:none;font-family:inherit;font-size:14px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
+  <div id="followGateMessageModal"
+    style="display:none;position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;opacity:0;transition:opacity 0.25s ease;">
+    <div
+      style="background:#0d0b1a;border:1px solid #7c3aed;border-radius:18px;width:90%;max-width:400px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.6), 0 0 20px rgba(124,58,237,0.15);transform:translateY(20px);transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1);"
+      id="fgmInner">
+      <h3 style="color:#fff;margin:0 0 16px;font-size:18px;font-weight:700;">Message <span id="fgmUsername"
+          style="color:#a78bfa;"></span></h3>
+      <textarea id="fgmTextarea" placeholder="Type your message..."
+        style="width:100%;height:120px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;color:#fff;resize:none;font-family:inherit;font-size:14px;outline:none;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
       <div style="display:flex;gap:12px;margin-top:20px;">
-        <button onclick="closeFollowGatedModal()" style="flex:1;background:rgba(255,255,255,0.08);border:none;color:#fff;padding:12px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">Cancel</button>
-        <button onclick="submitFollowGatedMessage()" style="flex:1;background:#7c3aed;border:none;color:#fff;padding:12px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#8b5cf6'" onmouseout="this.style.background='#7c3aed'" id="fgmSendBtn">Send</button>
+        <button onclick="closeFollowGatedModal()"
+          style="flex:1;background:rgba(255,255,255,0.08);border:none;color:#fff;padding:12px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:background 0.2s;"
+          onmouseover="this.style.background='rgba(255,255,255,0.15)'"
+          onmouseout="this.style.background='rgba(255,255,255,0.08)'">Cancel</button>
+        <button onclick="submitFollowGatedMessage()"
+          style="flex:1;background:#7c3aed;border:none;color:#fff;padding:12px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:background 0.2s;"
+          onmouseover="this.style.background='#8b5cf6'" onmouseout="this.style.background='#7c3aed'"
+          id="fgmSendBtn">Send</button>
       </div>
     </div>
   </div>
@@ -7859,23 +9146,29 @@
         </div>
 
         <!-- Actions & Stats row -->
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid rgba(123, 47, 247, 0.15); padding-top: 12px; margin-top: auto;">
+        <div
+          style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid rgba(123, 47, 247, 0.15); padding-top: 12px; margin-top: auto;">
           <!-- Stats row -->
           <div class="mv-detail-stats" style="border:none; padding-top:0; margin-top:0;">
-            <div class="mv-detail-stat" onclick="toggleMvLike()" style="cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Like">
+            <div class="mv-detail-stat" onclick="toggleMvLike()" style="cursor:pointer; transition:transform 0.1s;"
+              onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Like">
               <svg viewBox="0 0 24 24" width="16" height="16">
                 <path
                   d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
               <span id="mvDetailLikes">0</span>
             </div>
-            <div class="mv-detail-stat" onclick="toggleMvInlineComments()" style="cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Comment">
+            <div class="mv-detail-stat" onclick="toggleMvInlineComments()"
+              style="cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.opacity='0.8'"
+              onmouseout="this.style.opacity='1'" title="Comment">
               <svg viewBox="0 0 24 24" width="16" height="16">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
               <span id="mvDetailComments">0</span>
             </div>
-            <div class="mv-detail-stat" onclick="sharePost(_mvActivePostId, '', '')" style="cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Share">
+            <div class="mv-detail-stat" onclick="sharePost(_mvActivePostId, '', '')"
+              style="cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.opacity='0.8'"
+              onmouseout="this.style.opacity='1'" title="Share">
               <svg viewBox="0 0 24 24" width="16" height="16">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -7886,20 +9179,32 @@
 
           <!-- New 3 Dot Options -->
           <div id="mvOptsWrapper" class="mv-opts-wrapper" style="position:relative;">
-            <button onclick="document.getElementById('mvOptsDropdown').style.display = document.getElementById('mvOptsDropdown').style.display === 'none' ? 'block' : 'none'; event.stopPropagation();" style="background:none; border:none; color:rgba(255,255,255,0.7); cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'">
+            <button
+              onclick="document.getElementById('mvOptsDropdown').style.display = document.getElementById('mvOptsDropdown').style.display === 'none' ? 'block' : 'none'; event.stopPropagation();"
+              style="background:none; border:none; color:rgba(255,255,255,0.7); cursor:pointer; padding:5px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <circle cx="12" cy="6" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="18" r="2.2"/>
+                <circle cx="12" cy="6" r="2.2" />
+                <circle cx="12" cy="12" r="2.2" />
+                <circle cx="12" cy="18" r="2.2" />
               </svg>
             </button>
-            <div id="mvOptsDropdown" style="display:none; position:absolute; right:0; bottom:100%; margin-bottom:10px; background:rgba(18,14,35,0.98); border:1px solid rgba(130,90,250,0.3); border-radius:14px; padding:6px; min-width:160px; box-shadow:0 8px 24px rgba(0,0,0,0.6); z-index:100; backdrop-filter:blur(14px);">
-              <button id="mvBtnEdit" onclick="startMvEdit(); document.getElementById('mvOptsDropdown').style.display='none'" style="display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:12px 14px; border:none; background:none; color:#e2e0ff; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(130,90,250,0.15)'" onmouseout="this.style.background='none'">
+            <div id="mvOptsDropdown"
+              style="display:none; position:absolute; right:0; bottom:100%; margin-bottom:10px; background:rgba(18,14,35,0.98); border:1px solid rgba(130,90,250,0.3); border-radius:14px; padding:6px; min-width:160px; box-shadow:0 8px 24px rgba(0,0,0,0.6); z-index:100; backdrop-filter:blur(14px);">
+              <button id="mvBtnEdit"
+                onclick="startMvEdit(); document.getElementById('mvOptsDropdown').style.display='none'"
+                style="display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:12px 14px; border:none; background:none; color:#e2e0ff; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:10px; transition:all 0.2s;"
+                onmouseover="this.style.background='rgba(130,90,250,0.15)'" onmouseout="this.style.background='none'">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
                 Edit Caption
               </button>
-              <button id="mvBtnDelete" onclick="deleteMvPost(); document.getElementById('mvOptsDropdown').style.display='none'" style="display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:12px 14px; border:none; background:none; color:#ff5555; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:10px; transition:all 0.2s; margin-top:4px;" onmouseover="this.style.background='rgba(255,85,85,0.12)'" onmouseout="this.style.background='none'">
+              <button id="mvBtnDelete"
+                onclick="deleteMvPost(); document.getElementById('mvOptsDropdown').style.display='none'"
+                style="display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:12px 14px; border:none; background:none; color:#ff5555; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:10px; transition:all 0.2s; margin-top:4px;"
+                onmouseover="this.style.background='rgba(255,85,85,0.12)'" onmouseout="this.style.background='none'">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6l-1 14H6L5 6m5 0V4h4v2" />
@@ -7908,7 +9213,7 @@
               </button>
             </div>
             <script>
-              document.addEventListener('click', function(e) {
+              document.addEventListener('click', function (e) {
                 if (!e.target.closest('.mv-opts-wrapper')) {
                   const dropdown = document.getElementById('mvOptsDropdown');
                   if (dropdown) dropdown.style.display = 'none';
@@ -7919,19 +9224,28 @@
         </div>
 
         <!-- Inline Comments Section for Modal -->
-        <div id="mv-comments-wrap" style="display:none; transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease; opacity: 0; max-height: 0; overflow: hidden; margin-top: 10px; border-top: 1px solid rgba(123, 47, 247, 0.15); padding-top: 15px;">
-          <div id="mv-comments-list" style="max-height: 250px; overflow-y: auto; padding-bottom: 15px; display:flex; flex-direction:column; gap:12px;"></div>
+        <div id="mv-comments-wrap"
+          style="display:none; transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease; opacity: 0; max-height: 0; overflow: hidden; margin-top: 10px; border-top: 1px solid rgba(123, 47, 247, 0.15); padding-top: 15px;">
+          <div id="mv-comments-list"
+            style="max-height: 250px; overflow-y: auto; padding-bottom: 15px; display:flex; flex-direction:column; gap:12px;">
+          </div>
           <div style="padding-top: 10px; border-top: 1px solid rgba(123,47,247,0.1);">
-            <div id="mv-emoji-picker" style="display:none; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding:8px; background:rgba(12,8,32,0.8); border:1px solid rgba(124,92,252,0.2); border-radius:12px; max-height:100px; overflow-y:auto;">
+            <div id="mv-emoji-picker"
+              style="display:none; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding:8px; background:rgba(12,8,32,0.8); border:1px solid rgba(124,92,252,0.2); border-radius:12px; max-height:100px; overflow-y:auto;">
             </div>
             <div style="display:flex; gap:10px; align-items:flex-end;">
-              <button onclick="document.getElementById('mv-emoji-picker').style.display = document.getElementById('mv-emoji-picker').style.display === 'none' ? 'flex' : 'none'" style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 4px 6px 0; opacity:0.7; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😀</button>
-              <textarea id="mv-comment-input" placeholder="Write a comment..." 
+              <button
+                onclick="document.getElementById('mv-emoji-picker').style.display = document.getElementById('mv-emoji-picker').style.display === 'none' ? 'flex' : 'none'"
+                style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 4px 6px 0; opacity:0.7; transition:0.2s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😀</button>
+              <textarea id="mv-comment-input" placeholder="Write a comment..."
                 style="flex:1; min-height:44px; max-height:100px; border-radius:22px; padding:12px 18px; background:rgba(20,30,50,0.6); border:1px solid rgba(123,47,247,0.3); color:white; font-family:inherit; resize:vertical; font-size:14px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.2); outline:none; transition:border 0.2s;"
-                onfocus="this.style.borderColor='rgba(124,92,252,0.6)'" onblur="this.style.borderColor='rgba(123,47,247,0.3)'"></textarea>
-              <button onclick="submitMvInlineComment()" 
+                onfocus="this.style.borderColor='rgba(124,92,252,0.6)'"
+                onblur="this.style.borderColor='rgba(123,47,247,0.3)'"></textarea>
+              <button onclick="submitMvInlineComment()"
                 style="background:linear-gradient(135deg,#7c3aed,#a855f7); border:none; border-radius:22px; padding:0 24px; height:44px; color:white; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(124,58,237,0.3); transition:all 0.2s;"
-                onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">Post</button>
+                onmouseenter="this.style.transform='scale(1.05)'"
+                onmouseleave="this.style.transform='scale(1)'">Post</button>
             </div>
           </div>
         </div>
@@ -8290,6 +9604,15 @@
             const isOwn = (window.currentProfileUserId === null || window.currentProfileUserId === undefined) &&
               (!window.currentProfileUser || !window.currentUser ||
                 window.currentProfileUser.id === window.currentUser.id);
+
+            const otherUserMenuBtn = document.getElementById('otherUserMenuBtn');
+            const profileHamburgerBtn = document.getElementById('profileHamburgerBtn');
+            if (otherUserMenuBtn) {
+              otherUserMenuBtn.style.display = isOwn ? 'none' : 'flex';
+            }
+            if (profileHamburgerBtn) {
+              profileHamburgerBtn.style.display = isOwn ? 'flex' : 'none';
+            }
 
             const ownOnlyTabs = ['messagesTabBtn', 'cartTabBtn', 'shippingTabBtn', 'ordersTabBtn'];
             ownOnlyTabs.forEach(function (id) {
@@ -11493,12 +12816,51 @@
             <div class="vx-chat-user-status" id="vxChatUserStatus">● Online</div>
           </div>
         </div>
-        <button class="vx-panel-close" onclick="closeVxDmPanel()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        <!-- 3-dot menu -->
+        <div style="position:relative;">
+          <button id="vxChatMenuBtn" onclick="vxToggleChatMenu(event)" title="More options" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.06);
+                   border:1px solid rgba(255,255,255,0.1);cursor:pointer;display:flex;align-items:center;
+                   justify-content:center;gap:3px;flex-direction:column;transition:background 0.2s;"
+            onmouseenter="this.style.background='rgba(124,92,252,0.2)'"
+            onmouseleave="this.style.background='rgba(255,255,255,0.06)'">
+            <span style="width:4px;height:4px;background:rgba(200,180,255,0.8);border-radius:50%;display:block;"></span>
+            <span style="width:4px;height:4px;background:rgba(200,180,255,0.8);border-radius:50%;display:block;"></span>
+            <span style="width:4px;height:4px;background:rgba(200,180,255,0.8);border-radius:50%;display:block;"></span>
+          </button>
+          <!-- Dropdown menu -->
+          <div id="vxChatMenu" style="display:none;position:absolute;top:40px;right:0;width:200px;
+                   background:linear-gradient(145deg,#12102a,#0e0c22);
+                   border:1px solid rgba(124,92,252,0.25);border-radius:14px;
+                   box-shadow:0 12px 40px rgba(0,0,0,0.8);z-index:99999;
+                   overflow:hidden;animation:vxFadeIn 0.15s ease;">
+            <!-- Delete selected messages -->
+            <button onclick="vxDeleteSelectedMsgs()" id="vxMenuDeleteBtn" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;
+                     background:none;border:none;color:rgba(200,180,255,0.7);font-size:13px;
+                     font-weight:500;cursor:pointer;text-align:left;transition:background 0.15s;"
+              onmouseenter="this.style.background='rgba(239,68,68,0.12)';this.style.color='#fca5a5'"
+              onmouseleave="this.style.background='none';this.style.color='rgba(200,180,255,0.7)'">
+              <span style="font-size:16px;">🗑️</span> Delete Messages
+            </button>
+            <div style="height:1px;background:rgba(124,92,252,0.12);margin:0 12px;"></div>
+            <!-- Clear chat -->
+            <button onclick="vxClearChat()" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;
+                     background:none;border:none;color:rgba(200,180,255,0.7);font-size:13px;
+                     font-weight:500;cursor:pointer;text-align:left;transition:background 0.15s;"
+              onmouseenter="this.style.background='rgba(250,204,21,0.1)';this.style.color='#fde68a'"
+              onmouseleave="this.style.background='none';this.style.color='rgba(200,180,255,0.7)'">
+              <span style="font-size:16px;">🧹</span> Clear Chat
+            </button>
+            <div style="height:1px;background:rgba(124,92,252,0.12);margin:0 12px;"></div>
+            <!-- Block user -->
+            <button onclick="vxBlockUser()" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;
+                     background:none;border:none;color:rgba(200,180,255,0.7);font-size:13px;
+                     font-weight:500;cursor:pointer;text-align:left;transition:background 0.15s;"
+              onmouseenter="this.style.background='rgba(239,68,68,0.12)';this.style.color='#fca5a5'"
+              onmouseleave="this.style.background='none';this.style.color='rgba(200,180,255,0.7)'">
+              <span style="font-size:16px;">🚫</span> Block User
+            </button>
+          </div>
+        </div>
       </div>
       <!-- Chat messages -->
       <div class="vx-chat-messages" id="vxChatMessages">
@@ -11603,7 +12965,7 @@
 
   <!-- Emoji Picker Popover -->
   <div id="vxEmojiPicker"
-    style="display:none;position:fixed;z-index:9999;bottom:80px;right:16px;width:280px;background:linear-gradient(160deg,#100e28,#0c0a1e);border:1px solid rgba(139,92,246,0.3);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(139,92,246,0.1);padding:10px;animation:vxFadeIn 0.18s ease;">
+    style="display:none;position:fixed;z-index:9999;bottom:80px;right:108px;width:280px;background:linear-gradient(160deg,#100e28,#0c0a1e);border:1px solid rgba(139,92,246,0.3);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(139,92,246,0.1);padding:10px;animation:vxFadeIn 0.18s ease;">
     <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:200px;overflow-y:auto;">
     </div>
   </div>
@@ -12262,11 +13624,15 @@
     /* Panels */
     .vx-panel-backdrop {
       position: fixed;
-      inset: 0;
-      background: rgba(4, 3, 14, 0.65);
-      backdrop-filter: blur(4px);
+      top: 65px;
+      left: 0;
+      right: 96px;
+      bottom: 0;
+      background: rgba(4, 3, 14, 0.45);
+      backdrop-filter: blur(3px);
       z-index: 8900;
       animation: vxFadeIn 0.2s ease;
+      border-radius: 0;
     }
 
     @keyframes vxFadeIn {
@@ -12281,14 +13647,15 @@
 
     .vx-panel {
       position: fixed;
-      top: 0;
-      right: 0;
+      top: 65px;
+      right: 96px;
       width: 360px;
-      max-width: 100vw;
-      height: 100vh;
+      max-width: calc(100vw - 112px);
+      height: calc(100vh - 80px);
       background: linear-gradient(160deg, #0c0a1e, #100e28 60%, #0a0a1a);
-      border-left: 1px solid rgba(129, 140, 248, 0.15);
-      box-shadow: -12px 0 60px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(129, 140, 248, 0.18);
+      border-radius: 18px;
+      box-shadow: -8px 8px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(129, 140, 248, 0.08);
       z-index: 9000;
       display: flex;
       flex-direction: column;
@@ -12298,8 +13665,8 @@
 
     @keyframes vxSlideIn {
       from {
-        transform: translateX(100%);
-        opacity: 0.5;
+        transform: translateX(40px);
+        opacity: 0;
       }
 
       to {
@@ -13242,7 +14609,19 @@
       }
 
       .vx-panel {
+        top: 0;
+        right: 0;
         width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+
+      .vx-panel-backdrop {
+        top: 0;
+        right: 0;
+        inset: 0;
       }
     }
   </style>
@@ -14099,6 +15478,154 @@
         input.setSelectionRange(newPos, newPos);
       };
 
+      /* ── 3-dot Chat Menu ── */
+      window.vxToggleChatMenu = function (e) {
+        e.stopPropagation();
+        const menu = document.getElementById('vxChatMenu');
+        if (!menu) return;
+        const isOpen = menu.style.display === 'block';
+        menu.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+          // highlight delete btn only if messages are selected
+          setTimeout(() => {
+            document.addEventListener('click', function _close(ev) {
+              if (!menu.contains(ev.target)) { menu.style.display = 'none'; document.removeEventListener('click', _close); }
+            });
+          }, 10);
+        }
+      };
+
+      /* Delete selected messages — puts chat into select mode */
+      let _vxSelectMode = false;
+      let _vxSelectedMsgIds = new Set();
+
+      window.vxDeleteSelectedMsgs = function () {
+        document.getElementById('vxChatMenu').style.display = 'none';
+        if (!_vxSelectMode) {
+          // Enter selection mode
+          _vxSelectMode = true;
+          _vxSelectedMsgIds.clear();
+          const msgs = document.querySelectorAll('#vxChatMessages .vx-msg');
+          msgs.forEach(m => {
+            m.style.cursor = 'pointer';
+            m.style.outline = '2px solid transparent';
+            m.style.borderRadius = '10px';
+            m.style.transition = 'outline 0.15s, background 0.15s';
+            m.addEventListener('click', _vxToggleMsgSelect);
+          });
+          // Show a confirm-delete bar at bottom
+          let bar = document.getElementById('vxDeleteBar');
+          if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'vxDeleteBar';
+            bar.style.cssText = 'flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(239,68,68,0.1);border-top:1px solid rgba(239,68,68,0.25);gap:10px;';
+            bar.innerHTML = `
+              <span id="vxDeleteCount" style="font-size:12.5px;color:rgba(252,165,165,0.85);font-weight:600;">0 selected</span>
+              <div style="display:flex;gap:8px;">
+                <button onclick="vxCancelDeleteMode()" style="padding:6px 14px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(200,180,255,0.7);font-size:12px;cursor:pointer;">Cancel</button>
+                <button onclick="vxConfirmDeleteMsgs()" style="padding:6px 14px;border-radius:8px;background:rgba(239,68,68,0.75);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">🗑️ Delete</button>
+              </div>`;
+            const inputBar = document.querySelector('.vx-chat-input-bar');
+            if (inputBar) inputBar.parentNode.insertBefore(bar, inputBar);
+          }
+          bar.style.display = 'flex';
+          const inputBar = document.querySelector('.vx-chat-input-bar');
+          if (inputBar) inputBar.style.display = 'none';
+        }
+      };
+
+      function _vxToggleMsgSelect(e) {
+        const msg = e.currentTarget;
+        const id = msg.dataset.msgId || msg.id;
+        if (_vxSelectedMsgIds.has(id)) {
+          _vxSelectedMsgIds.delete(id);
+          msg.style.outline = '2px solid transparent';
+          msg.style.background = '';
+        } else {
+          _vxSelectedMsgIds.add(id);
+          msg.style.outline = '2px solid rgba(239,68,68,0.7)';
+          msg.style.background = 'rgba(239,68,68,0.08)';
+        }
+        const countEl = document.getElementById('vxDeleteCount');
+        if (countEl) countEl.textContent = _vxSelectedMsgIds.size + ' selected';
+      }
+
+      window.vxCancelDeleteMode = function () {
+        _vxSelectMode = false;
+        _vxSelectedMsgIds.clear();
+        document.querySelectorAll('#vxChatMessages .vx-msg').forEach(m => {
+          m.style.cursor = ''; m.style.outline = ''; m.style.background = '';
+          m.removeEventListener('click', _vxToggleMsgSelect);
+        });
+        const bar = document.getElementById('vxDeleteBar');
+        if (bar) bar.style.display = 'none';
+        const inputBar = document.querySelector('.vx-chat-input-bar');
+        if (inputBar) inputBar.style.display = '';
+      };
+
+      window.vxConfirmDeleteMsgs = async function () {
+        if (_vxSelectedMsgIds.size === 0) { vxCancelDeleteMode(); return; }
+        const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+        const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+        const ids = [..._vxSelectedMsgIds];
+        try {
+          await Promise.all(ids.map(id =>
+            fetch(`${B}/api/dm/messages/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } })
+          ));
+          ids.forEach(id => {
+            const el = document.getElementById(id) || document.querySelector(`[data-msg-id="${id}"]`);
+            if (el) el.remove();
+          });
+        } catch (err) { console.error('Delete failed:', err); }
+        vxCancelDeleteMode();
+      };
+
+      /* Clear Chat */
+      window.vxClearChat = async function () {
+        document.getElementById('vxChatMenu').style.display = 'none';
+        const uid = window._vxCurrentDmUid;
+        if (!uid) return;
+        // Confirm dialog
+        const confirmed = window.confirm('Clear all messages in this chat? This cannot be undone.');
+        if (!confirmed) return;
+        const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+        const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+        try {
+          await fetch(`${B}/api/dm/conversations/${uid}/clear`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } });
+          const area = document.getElementById('vxChatMessages');
+          if (area) {
+            area.innerHTML = `<div class="vx-chat-welcome" id="vxChatWelcome">
+              <div class="vx-chat-welcome-avatar" id="vxChatWelcomeAvatar"></div>
+              <div class="vx-chat-welcome-name" id="vxChatWelcomeName"></div>
+              <p class="vx-chat-welcome-text">Chat cleared. Say hello again!</p>
+            </div>`;
+          }
+        } catch (err) { alert('Could not clear chat. Try again.'); }
+      };
+
+      /* Block User */
+      window.vxBlockUser = async function () {
+        document.getElementById('vxChatMenu').style.display = 'none';
+        const uid = window._vxCurrentDmUid;
+        const name = document.getElementById('vxChatUserName')?.textContent || 'this user';
+        if (!uid) return;
+        const confirmed = window.confirm(`Block ${name}? They won't be able to message you.`);
+        if (!confirmed) return;
+        const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+        const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+        try {
+          await fetch(`${B}/api/users/${uid}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' } });
+          // Go back to DM list
+          window.vxCloseDmChat();
+          // Show brief toast
+          const toast = document.createElement('div');
+          toast.textContent = `🚫 ${name} has been blocked.`;
+          toast.style.cssText = 'position:fixed;bottom:90px;right:108px;background:rgba(239,68,68,0.9);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;animation:vxFadeIn 0.2s ease;';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        } catch (err) { alert('Could not block user. Try again.'); }
+      };
+
       window.vxCloseDmChat = function () {
         vxStopMsgPoll();
         window._vxCurrentDmUid = null;
@@ -14122,7 +15649,7 @@
       /* ── Notifications ── */
       let _notifs = [], _tab = 'all';
       async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com'; const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || []; renderNotif(_notifs, _tab); setTimeout(() => { markRead(); setBadge('vxNotifBadge', 0); }, 1500); } catch (e) { const l = document.getElementById('vxNotifList'); if (l) l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No notifications yet.</p></div>`; } }
-      function renderNotif(notifs, tab) { const l = document.getElementById('vxNotifList'); if (!l) return; let f = notifs; if (tab && tab !== 'all') f = notifs.filter(n => (n.type || '').toLowerCase().includes(tab.replace('s', ''))); if (!f || !f.length) { l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No ${tab === 'all' ? '' : tab + ' '}notifications yet</p></div>`; return; } const cfg = { follow: { icon: '👤', cls: 'follow' }, like: { icon: '❤️', cls: 'like' }, comment: { icon: '💬', cls: 'comment' }, mention: { icon: '@', cls: 'other', style: 'font-size:14px;font-weight:700;color:#a78bfa;' }, default: { icon: '🔔', cls: 'other' } }; l.innerHTML = f.map(n => { const type = (n.type || 'default').toLowerCase(); const c = cfg[type] || cfg.default; const actor = n.actor_name || n.from_name || n.username || 'Someone'; let text = n.message || n.text || ''; if (!text) { if (type === 'follow') text = `<strong>${actor}</strong> started following you`; else if (type === 'like') text = `<strong>${actor}</strong> liked your post`; else if (type === 'comment') text = `<strong>${actor}</strong> commented on your post`; else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`; } return `<div class="vx-notif-item ${!n.read && !n.seen ? 'unread' : ''}" onclick="vxHandleNotifClick('${n.id || n._id || ''}','${type}')"><div class="vx-notif-icon-wrap ${c.cls}" ${c.style ? `style="${c.style}"` : ''}>${c.icon}</div><div class="vx-notif-body"><div class="vx-notif-text">${text}</div><div class="vx-notif-time">${relTime(n.created_at || n.timestamp || n.createdAt)}</div></div></div>`; }).join(''); }
+      function renderNotif(notifs, tab) { const l = document.getElementById('vxNotifList'); if (!l) return; const myId = String((typeof currentUser !== 'undefined' && currentUser ? currentUser.id : null) || (() => { try { const u = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'); return u.id || u.user_id || ''; } catch (e) { return ''; } })()); let f = notifs.filter(n => { if ((n.actor_id && String(n.actor_id) === myId) || (n.from_id && String(n.from_id) === myId)) return false; const txt = (n.message || n.text || '').trim(); if (txt.startsWith('You liked') || txt.startsWith('You started following') || txt.startsWith('You commented')) return false; return true; }); if (tab && tab !== 'all') f = f.filter(n => (n.type || '').toLowerCase().includes(tab.replace('s', ''))); if (!f || !f.length) { l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No ${tab === 'all' ? '' : tab + ' '}notifications yet</p></div>`; return; } const cfg = { follow: { icon: '👤', cls: 'follow' }, like: { icon: '❤️', cls: 'like' }, comment: { icon: '💬', cls: 'comment' }, mention: { icon: '@', cls: 'other', style: 'font-size:14px;font-weight:700;color:#a78bfa;' }, default: { icon: '🔔', cls: 'other' } }; l.innerHTML = f.map(n => { const type = (n.type || 'default').toLowerCase(); const c = cfg[type] || cfg.default; const actor = n.actor_name || n.from_name || n.username || 'Someone'; let text = n.message || n.text || ''; if (!text) { if (type === 'follow') text = `<strong>${actor}</strong> started following you`; else if (type === 'like') text = `<strong>${actor}</strong> liked your post`; else if (type === 'comment') text = `<strong>${actor}</strong> commented on your post`; else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`; } return `<div class="vx-notif-item ${!n.read && !n.seen ? 'unread' : ''}" onclick="vxHandleNotifClick('${n.id || n._id || ''}','${type}')"><div class="vx-notif-icon-wrap ${c.cls}" ${c.style ? `style="${c.style}"` : ''}>${c.icon}</div><div class="vx-notif-body"><div class="vx-notif-text">${text}</div><div class="vx-notif-time">${relTime(n.created_at || n.timestamp || n.createdAt)}</div></div></div>`; }).join(''); }
       window.switchVxNotifTab = function (tab, btn) { document.querySelectorAll('.vx-notif-tab').forEach(t => t.classList.remove('active')); if (btn) btn.classList.add('active'); renderNotif(_notifs, tab); };
       window.clearAllVxNotifs = function () { _notifs = _notifs.map(n => ({ ...n, read: true, seen: true })); renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); markRead(); };
       async function markRead() { try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; await fetch((window.API_URL || 'https://vibexpert-backend-main.onrender.com') + '/api/notifications/read-all', { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } }); } catch (e) { } }
@@ -14424,12 +15951,10 @@
         let tries = 0;
         const t = setInterval(() => {
           if (window.socket || ++tries > 60) { clearInterval(t); if (window.socket) _patchDrawerSocket(); }
-        }, 500);
+        }, 300);
       }
     }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _bootDmUpgrade);
-    else _bootDmUpgrade();
+    document.addEventListener('DOMContentLoaded', _bootDmUpgrade);
   </script>
 </body>
 
