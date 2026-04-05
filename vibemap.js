@@ -8855,7 +8855,7 @@ async function selectPlan(planType) {
 
     try {
       const cashfree = Cashfree({
-        mode: "sandbox"
+        mode: "production"
       });
 
       console.log('🚀 Launching Cashfree checkout with session:', orderData.payment_session_id);
@@ -12942,7 +12942,7 @@ async function submitVibePost() {
 
   if (!currentUser) return showMessage('⚠️ Login first', 'error');
 
-  if (!vibeSelectedFiles.length) {
+  if (!vibeSelectedFiles.length && !caption) {
     // Shake the post area to indicate required media
     const sheet = document.querySelector('.vibe-upload-sheet');
     if (sheet) { sheet.style.animation = 'shakePost 0.4s ease'; setTimeout(() => sheet.style.animation = '', 400); }
@@ -13053,7 +13053,7 @@ async function submitVibePost() {
     console.error('❌ Post err:', e);
     const userMsg = e.status === 401 ? 'Session expired — please log in again'
       : e.status === 400 ? (e.message || 'Invalid post data')
-        : e.status === 500 ? 'Server error — please try again in a moment'
+        : e.status === 500 ? (e.message || 'Server error — please try again in a moment')
           : (e.message || 'Connection failed');
     showMessage('❌ ' + userMsg, 'error');
     if (postingOverlay) postingOverlay.style.display = 'none';
