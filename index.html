@@ -12813,7 +12813,6 @@
           <div class="vx-chat-avatar" id="vxChatAvatar"></div>
           <div class="vx-chat-user-info">
             <div class="vx-chat-user-name" id="vxChatUserName">User</div>
-            <div class="vx-chat-user-status" id="vxChatUserStatus">● Online</div>
           </div>
         </div>
         <!-- 3-dot menu -->
@@ -14166,6 +14165,177 @@
       color: #fff;
     }
 
+    /* 2-dot button */
+    .vx-msg-dot-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vx-msg-dot-btn span {
+      display: block;
+      width: 3.5px;
+      height: 3.5px;
+      border-radius: 50%;
+      background: rgba(200, 180, 255, 0.75);
+      transition: background .15s;
+    }
+
+    .vx-msg-dot-btn:hover span {
+      background: #fff;
+    }
+
+    /* Message context popup */
+    .vx-msg-ctx-popup {
+      position: fixed;
+      z-index: 2147483647;
+      background: linear-gradient(145deg, #13102e, #0d0b22);
+      border: 1px solid rgba(124, 92, 252, 0.3);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(124, 92, 252, 0.08);
+      animation: vxCtxFadeUp .16s cubic-bezier(.22, .68, 0, 1.2) both;
+      min-width: 170px;
+    }
+
+    @keyframes vxCtxFadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .vx-msg-ctx-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 11px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      transition: background .15s, color .15s;
+      letter-spacing: .01em;
+    }
+
+    .vx-msg-ctx-btn .vx-ctx-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+
+    .vx-msg-ctx-btn:hover .vx-ctx-icon {
+      transform: scale(1.12);
+    }
+
+    .vx-msg-ctx-edit {
+      color: rgba(196, 181, 253, 0.75);
+    }
+
+    .vx-msg-ctx-edit:hover {
+      background: rgba(124, 92, 252, 0.14);
+      color: #c4b5fd;
+    }
+
+    .vx-msg-ctx-edit .vx-ctx-icon {
+      background: rgba(124, 92, 252, 0.12);
+    }
+
+    .vx-msg-ctx-divider {
+      height: 1px;
+      background: rgba(124, 92, 252, 0.1);
+      margin: 0 12px;
+    }
+
+    .vx-msg-ctx-delete {
+      color: rgba(252, 165, 165, 0.75);
+    }
+
+    .vx-msg-ctx-delete:hover {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+    }
+
+    .vx-msg-ctx-delete .vx-ctx-icon {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Inline edit input inside bubble */
+    .vx-msg-edit-input {
+      background: rgba(124, 92, 252, 0.12);
+      border: 1.5px solid rgba(124, 92, 252, 0.45);
+      border-radius: 12px;
+      color: #ece6ff;
+      font-size: 13.5px;
+      padding: 8px 12px;
+      width: 100%;
+      outline: none;
+      resize: none;
+      min-height: 38px;
+      max-height: 120px;
+      box-sizing: border-box;
+      font-family: inherit;
+      line-height: 1.45;
+      transition: border-color .2s;
+    }
+
+    .vx-msg-edit-input:focus {
+      border-color: rgba(167, 139, 250, 0.8);
+    }
+
+    .vx-msg-edit-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 5px;
+      justify-content: flex-end;
+    }
+
+    .vx-msg-edit-save,
+    .vx-msg-edit-cancel {
+      border: none;
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .vx-msg-edit-save {
+      background: linear-gradient(135deg, #6d28d9, #7c3aed);
+      color: #fff;
+    }
+
+    .vx-msg-edit-save:hover {
+      filter: brightness(1.15);
+    }
+
+    .vx-msg-edit-cancel {
+      background: rgba(255, 255, 255, 0.07);
+      color: rgba(200, 180, 255, 0.7);
+    }
+
+    .vx-msg-edit-cancel:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
     /* Reply quote inside bubble */
     .vx-reply-quote {
       font-size: 11px;
@@ -15020,6 +15190,112 @@
       }
       vxPatchWhenReady();
 
+      /* ── Message 2-dot context menu (Delete / Edit) ──────── */
+      window.vxToggleMsgMenu = function (e, msgId, currentText) {
+        e.stopPropagation();
+        // Close any existing
+        document.querySelectorAll('.vx-msg-ctx-popup').forEach(p => p.remove());
+        const popup = document.createElement('div');
+        popup.className = 'vx-msg-ctx-popup';
+        popup.innerHTML = `
+          <button class="vx-msg-ctx-btn vx-msg-ctx-edit" onclick="vxStartEditMsg('${msgId}','${currentText.replace(/'/g, "&#39;")}');this.closest('.vx-msg-ctx-popup').remove();">
+            <span class="vx-ctx-icon">✏️</span> Edit Message
+          </button>
+          <div class="vx-msg-ctx-divider"></div>
+          <button class="vx-msg-ctx-btn vx-msg-ctx-delete" onclick="vxDeleteMsg('${msgId}');this.closest('.vx-msg-ctx-popup').remove();">
+            <span class="vx-ctx-icon">🗑️</span> Delete Message
+          </button>`;
+        document.body.appendChild(popup);
+        // Position near button
+        const r = e.currentTarget.getBoundingClientRect();
+        const pw = popup.offsetWidth || 175, ph = popup.offsetHeight || 90;
+        let left = r.right - pw, top = r.top - ph - 6;
+        if (left < 8) left = 8;
+        if (top < 8) top = r.bottom + 6;
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+        setTimeout(() => {
+          document.addEventListener('click', function _close(ev) {
+            if (!popup.contains(ev.target)) { popup.remove(); document.removeEventListener('click', _close); }
+          });
+        }, 50);
+      };
+
+      window.vxDeleteMsg = async function (msgId) {
+        const bubble = document.getElementById('vxmsg-' + msgId);
+        if (!bubble) return;
+        // Optimistic UI
+        bubble.style.transition = 'opacity .25s, transform .25s';
+        bubble.style.opacity = '0';
+        bubble.style.transform = 'scale(.92)';
+        try {
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
+            sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
+          const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+          const r = await fetch(`${B}/api/dm/messages/${msgId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } });
+          if (r.ok) {
+            setTimeout(() => bubble.remove(), 260);
+          } else {
+            bubble.style.opacity = '1'; bubble.style.transform = '';
+            const d = await r.json().catch(() => ({}));
+            showMessage('❌ ' + (d.error || 'Could not delete'), 'error');
+          }
+        } catch {
+          bubble.style.opacity = '1'; bubble.style.transform = '';
+          showMessage('❌ Network error', 'error');
+        }
+      };
+
+      window.vxStartEditMsg = function (msgId, currentText) {
+        const bubble = document.getElementById('vxmsg-' + msgId);
+        if (!bubble) return;
+        const textEl = bubble.querySelector('.vx-msg-text');
+        if (!textEl) return;
+        const decoded = currentText.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'");
+        textEl.innerHTML = `
+          <textarea class="vx-msg-edit-input" id="vxEditInput_${msgId}" rows="1">${decoded}</textarea>
+          <div class="vx-msg-edit-actions">
+            <button class="vx-msg-edit-cancel" onclick="vxCancelEditMsg('${msgId}','${currentText.replace(/'/g, "&#39;")}')">Cancel</button>
+            <button class="vx-msg-edit-save" onclick="vxSaveEditMsg('${msgId}')">Save</button>
+          </div>`;
+        const ta = document.getElementById('vxEditInput_' + msgId);
+        if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }); ta.dispatchEvent(new Event('input')); }
+      };
+
+      window.vxCancelEditMsg = function (msgId, originalHtml) {
+        const bubble = document.getElementById('vxmsg-' + msgId);
+        if (!bubble) return;
+        const textEl = bubble.querySelector('.vx-msg-text');
+        if (textEl) textEl.innerHTML = originalHtml.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      };
+
+      window.vxSaveEditMsg = async function (msgId) {
+        const ta = document.getElementById('vxEditInput_' + msgId);
+        if (!ta) return;
+        const newText = ta.value.trim();
+        if (!newText) { showMessage('⚠️ Message cannot be empty', 'error'); return; }
+        const bubble = document.getElementById('vxmsg-' + msgId);
+        const textEl = bubble ? bubble.querySelector('.vx-msg-text') : null;
+        // Optimistic
+        if (textEl) textEl.innerHTML = newText.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' <span style="font-size:10px;opacity:0.5;font-style:italic;">edited</span>';
+        try {
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
+            sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
+          const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+          const r = await fetch(`${B}/api/dm/messages/${msgId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+            body: JSON.stringify({ content: newText })
+          });
+          if (!r.ok) {
+            const d = await r.json().catch(() => ({}));
+            showMessage('❌ ' + (d.error || 'Could not edit'), 'error');
+          }
+        } catch {
+          showMessage('❌ Network error', 'error');
+        }
+      };
+
       /* ── Reply state for vx panel ──────────────────────── */
       let _vxReplyToId = null, _vxReplyToText = '';
       window.vxSetReply = function (msgId, text) {
@@ -15203,11 +15479,13 @@
           reactsHtml = `<div class="vx-msg-reacts" data-vx-reacts="${msgId}"></div>`;
         }
 
-        /* Action buttons (reply + react) */
+        /* Action buttons (reply + react + 2-dot menu for own messages) */
         const safeTxt = (m.content || '').replace(/'/g, "&#39;").replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 80);
+        const safeContent = (m.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
         const actionsHtml = msgId ? `<div class="vx-msg-actions">
           <button class="vx-msg-act-btn" title="Reply" onclick="vxSetReply('${msgId}','${safeTxt}')">↩</button>
           <button class="vx-msg-act-btn" title="React" onclick="vxShowReactPicker('${msgId}',this)">😊</button>
+          ${isSent && !m.media_url ? `<button class="vx-msg-act-btn vx-msg-dot-btn" title="Options" onclick="vxToggleMsgMenu(event,'${msgId}','${safeContent}')"><span></span><span></span></button>` : ''}
         </div>` : '';
 
         return `<div class="vx-msg-bubble ${side}" id="vxmsg-${msgId}">
@@ -15232,13 +15510,7 @@
         document.getElementById('vxDmListView').style.display = 'none';
         document.getElementById('vxDmChatView').style.display = 'flex';
 
-        /* ── Online / Offline status ── */
-        const statusEl = document.getElementById('vxChatUserStatus');
-        const isOnline = !lastSeen; /* null last_seen = currently online */
-        if (statusEl) {
-          statusEl.textContent = isOnline ? '● Online' : '● Offline';
-          statusEl.className = 'vx-chat-user-status ' + (isOnline ? 'vx-status-online' : 'vx-status-offline');
-        }
+        /* ── Online / Offline status removed ── */
 
         /* Fill header */
         document.getElementById('vxChatUserName').textContent = name;
@@ -15273,21 +15545,7 @@
           }, 120);
         }
 
-        /* ── Also update status in real-time via socket ─── */
-        if (window.socket) {
-          window.socket.on('user_online_broadcast', function (data) {
-            if (data.userId === uid && window._vxCurrentDmUid === uid && statusEl) {
-              statusEl.textContent = '● Online';
-              statusEl.className = 'vx-chat-user-status vx-status-online';
-            }
-          });
-          window.socket.on('user_offline', function (data) {
-            if (data.userId === uid && window._vxCurrentDmUid === uid && statusEl) {
-              statusEl.textContent = '● Offline';
-              statusEl.className = 'vx-chat-user-status vx-status-offline';
-            }
-          });
-        }
+        /* ── Online/Offline socket status removed ── */
 
         vxStartMsgPoll(uid);
       };
