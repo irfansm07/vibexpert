@@ -5529,7 +5529,8 @@ function buildHomeFeedCard(post) {
   const isLiked = post.is_liked;
   const isOwn = currentUser && (userId === currentUser.id);
   const isFollowing = post.is_following_author || (_followState[userId] && _followState[userId].isFollowing);
-  const isRealVibe = !!post.is_real_vibe;
+  // Detect RealVibe posts: server flag OR auto-post content marker
+  const isRealVibe = !!(post.is_real_vibe || post.isRealVibe || (post.content === "2726 RealVibe"));
 
   const followBtn = (!isOwn && userId)
     ? `<button class="hf-follow-btn ${isFollowing ? 'hf-following' : ''}" data-uid="${escapeHtml(userId)}" data-username="${escapeHtml(username)}" onclick="homeFeedToggleFollow('${escapeHtml(userId)}', this)">
@@ -5542,6 +5543,7 @@ function buildHomeFeedCard(post) {
   const authorForShare = (authorRaw || '').replace(/'/g, "\\'");
 
   return `<div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}')">
+    ${isRealVibe ? '<span class="vx-sparkle-tl"></span><span class="vx-sparkle-tr"></span>' : ''}
     <div class="hf-card-header">
       ${avatar}
       <div class="hf-user-info">
@@ -9831,10 +9833,8 @@ function appendWhatsAppMessage(msg) {
   let messageHTML = '';
 
   if (!isOwn) {
-    const senderId = msg.sender_id || (msg.users && msg.users.id) || '';
-    const clickableClass = senderId ? 'clickable-username' : '';
-    const onclickHandler = senderId ? `onclick="showUserProfile('${senderId}')"` : '';
-    messageHTML += `<div class="message-sender-name ${clickableClass}" ${onclickHandler} style="cursor:pointer;">${escapeHtml(sender)}</div>`;
+    // Ghost chat: sender name is NOT clickable — clicking it would reveal real identity
+    messageHTML += `<div class="message-sender-name" style="cursor:default;">${escapeHtml(sender)}</div>`;
   }
 
   // ✅ FIX: Render media in the base appendWhatsAppMessage function
@@ -10195,7 +10195,7 @@ function appendWhatsAppMessageFixed(msg) {
           font-size:14px;line-height:1;border:1.5px solid rgba(255,255,255,0.12);">
           👻
         </div>
-        <span class="message-sender-name ${msg.sender_id ? 'clickable-username' : ''}" style="color:${nameColor};font-size:12px;font-weight:600;${msg.sender_id ? 'cursor:pointer;' : ''}" ${msg.sender_id ? `onclick="showUserProfile('${msg.sender_id}')"` : ''}>${safeSender}</span>
+        <span class="message-sender-name" style="color:${nameColor};font-size:12px;font-weight:600;cursor:default;">${safeSender}</span>
       </div>`;
   }
 
