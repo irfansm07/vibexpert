@@ -20768,13 +20768,16 @@ body.light-theme .mv-detail-stat {
 }
 
 /* Royal tier gets an extra golden accent */
-.rv-card-royal {
+.rv-card-royal, .rv-card-noble {
   border-top: 1px solid rgba(255, 215, 0, .18);
   box-shadow: 0 12px 48px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 215, 0, .07);
 }
 
-.rv-card-noble {
-  /* Noble tier — default card styling, no extra rules needed */
+.rv-card {
+  background: linear-gradient(160deg, #161510 0%, #121010 50%, #0c0b0a 100%);
+  border-left: none;
+  border-right: none;
+  border-bottom: 4px solid rgba(255, 215, 0, .1);
 }
 
 /* Thin shimmer stripe at the very top of Royal cards */
@@ -20925,9 +20928,9 @@ body.light-theme .mv-detail-stat {
 }
 
 .rv-card-plan-badge.noble {
-  background: rgba(192, 192, 192, .1);
-  color: #c8c8c8;
-  border: 1px solid rgba(192, 192, 192, .22);
+  background: rgba(255, 215, 0, .10);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, .20);
 }
 
 /* Header right — delete button */
@@ -46537,11 +46540,11 @@ body.light-theme .mv-detail-stat {
    CARD  — the centrepiece
    ========================================================================== */
 .rv-card {
-  background: linear-gradient(160deg, #131120 0%, #111020 50%, #0f0e1d 100%);
+  background: linear-gradient(160deg, #161510 0%, #121010 50%, #0c0b0a 100%);
   border-left: none;
   border-right: none;
   border-top: 1px solid rgba(255, 255, 255, .055);
-  border-bottom: 4px solid rgba(255, 215, 0, .04);
+  border-bottom: 4px solid rgba(255, 215, 0, .1);
   overflow: hidden;
   margin-bottom: 1.4rem;
   animation: rvCardIn .35s ease both;
@@ -46562,13 +46565,9 @@ body.light-theme .mv-detail-stat {
 }
 
 /* Royal tier gets an extra golden accent */
-.rv-card-royal {
+.rv-card-royal, .rv-card-noble {
   border-top: 1px solid rgba(255, 215, 0, .18);
   box-shadow: 0 12px 48px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 215, 0, .07);
-}
-
-.rv-card-noble {
-  /* Noble tier — default card styling, no extra rules needed */
 }
 
 /* Thin shimmer stripe at the very top of Royal cards */
@@ -46719,9 +46718,9 @@ body.light-theme .mv-detail-stat {
 }
 
 .rv-card-plan-badge.noble {
-  background: rgba(192, 192, 192, .1);
-  color: #c8c8c8;
-  border: 1px solid rgba(192, 192, 192, .22);
+  background: rgba(255, 215, 0, .10);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, .20);
 }
 
 /* Header right — delete button */
