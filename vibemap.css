@@ -20743,11 +20743,11 @@ body.light-theme .mv-detail-stat {
    CARD  — the centrepiece
    ========================================================================== */
 .rv-card {
-  background: linear-gradient(160deg, #131120 0%, #111020 50%, #0f0e1d 100%);
+  background: linear-gradient(160deg, #111111 0%, #0a0a0a 50%, #050505 100%);
+  border-bottom: 4px solid #FFA500;
+  border-top: 1px solid rgba(255, 255, 255, .055);
   border-left: none;
   border-right: none;
-  border-top: 1px solid rgba(255, 255, 255, .055);
-  border-bottom: 4px solid rgba(255, 215, 0, .04);
   overflow: hidden;
   margin-bottom: 1.4rem;
   animation: rvCardIn .35s ease both;
@@ -20756,28 +20756,14 @@ body.light-theme .mv-detail-stat {
 }
 
 @keyframes rvCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Royal tier gets an extra golden accent */
+/* Royal/Noble tier gets an extra golden accent */
 .rv-card-royal, .rv-card-noble {
-  border-top: 1px solid rgba(255, 215, 0, .18);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 215, 0, .07);
-}
-
-.rv-card {
-  background: linear-gradient(160deg, #161510 0%, #121010 50%, #0c0b0a 100%);
-  border-left: none;
-  border-right: none;
-  border-bottom: 4px solid rgba(255, 215, 0, .1);
+  border-top: 2px solid #FFD700;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 165, 0, .3);
 }
 
 /* Thin shimmer stripe at the very top of Royal cards */
@@ -20798,6 +20784,7 @@ body.light-theme .mv-detail-stat {
 
 .rv-card-author {
   display: flex;
+
   align-items: center;
   gap: .8rem;
   cursor: pointer;
@@ -46540,11 +46527,11 @@ body.light-theme .mv-detail-stat {
    CARD  — the centrepiece
    ========================================================================== */
 .rv-card {
-  background: linear-gradient(160deg, #161510 0%, #121010 50%, #0c0b0a 100%);
+  background: linear-gradient(160deg, #111111 0%, #0a0a0a 50%, #050505 100%);
+  border-bottom: 4px solid #FFA500;
+  border-top: 1px solid rgba(255, 255, 255, .055);
   border-left: none;
   border-right: none;
-  border-top: 1px solid rgba(255, 255, 255, .055);
-  border-bottom: 4px solid rgba(255, 215, 0, .1);
   overflow: hidden;
   margin-bottom: 1.4rem;
   animation: rvCardIn .35s ease both;
@@ -46553,21 +46540,14 @@ body.light-theme .mv-detail-stat {
 }
 
 @keyframes rvCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Royal tier gets an extra golden accent */
+/* Royal/Noble tier gets an extra golden accent */
 .rv-card-royal, .rv-card-noble {
-  border-top: 1px solid rgba(255, 215, 0, .18);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 215, 0, .07);
+  border-top: 2px solid #FFD700;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 165, 0, .3);
 }
 
 /* Thin shimmer stripe at the very top of Royal cards */
