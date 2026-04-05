@@ -20756,12 +20756,20 @@ body.light-theme .mv-detail-stat {
 }
 
 @keyframes rvCardIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Royal/Noble tier gets an extra golden accent */
-.rv-card-royal, .rv-card-noble {
+.rv-card-royal,
+.rv-card-noble {
   border-top: 2px solid #FFD700;
   box-shadow: 0 12px 48px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 165, 0, .3);
 }
@@ -46540,12 +46548,20 @@ body.light-theme .mv-detail-stat {
 }
 
 @keyframes rvCardIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Royal/Noble tier gets an extra golden accent */
-.rv-card-royal, .rv-card-noble {
+.rv-card-royal,
+.rv-card-noble {
   border-top: 2px solid #FFD700;
   box-shadow: 0 12px 48px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 165, 0, .3);
 }
