@@ -8196,6 +8196,10 @@ function closeRvCreatorModal() {
   const modal = document.getElementById('realVibeCreatorModal');
   if (modal) modal.style.display = 'none';
   clearRvPreview();
+  const rvEmojiPicker = document.getElementById('rvEmojiPicker');
+  if (rvEmojiPicker) rvEmojiPicker.style.display = 'none';
+  const rvEmojiBtn = document.getElementById('rvEmojiToggleBtn');
+  if (rvEmojiBtn) rvEmojiBtn.classList.remove('active');
 }
 
 function closeRvGate(e) {
@@ -8267,6 +8271,63 @@ function updateRvCounter() {
   const cap = document.getElementById('rvCaption');
   const cnt = document.getElementById('rvCaptionCount');
   if (cap && cnt) cnt.textContent = cap.value.length;
+}
+
+// ── RealVibe Emoji Picker ──────────────────────────────────────
+function toggleRvEmojiPicker() {
+  const picker = document.getElementById('rvEmojiPicker');
+  const btn = document.getElementById('rvEmojiToggleBtn');
+  if (!picker || !btn) return;
+
+  const isOpen = picker.style.display !== 'none';
+  if (isOpen) {
+    picker.style.display = 'none';
+    btn.classList.remove('active');
+  } else {
+    picker.style.display = 'block';
+    btn.classList.add('active');
+    const activeTab = document.querySelector('#rvEmojiPicker .vep-tab.active');
+    const cat = activeTab?.dataset.cat || 'smileys';
+    _renderRvEmojiGrid(cat);
+  }
+}
+
+function switchRvEmojiTab(cat, tabBtn) {
+  document.querySelectorAll('#rvEmojiPicker .vep-tab').forEach(t => t.classList.remove('active'));
+  if (tabBtn) tabBtn.classList.add('active');
+  _renderRvEmojiGrid(cat);
+}
+
+function _renderRvEmojiGrid(category) {
+  const grid = document.getElementById('rvEmojiGrid');
+  if (!grid) return;
+  // Fallback to standard app-wide emoji data structure
+  const emojis = (typeof _vibeEmojiData !== 'undefined' && _vibeEmojiData[category])
+    ? _vibeEmojiData[category]
+    : (_vibeEmojiData?.smileys || ['😀', '😂', '😊', '😍', '🥺', '🔥', '✨', '❤️', '👍', '🙌']);
+
+  grid.innerHTML = emojis.map(e =>
+    `<button class="vep-emoji" type="button" onclick="insertRvEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function insertRvEmoji(emoji) {
+  const textarea = document.getElementById('rvCaption');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const maxLen = parseInt(textarea.getAttribute('maxlength') || '300');
+
+  if (text.length + emoji.length > maxLen) return;
+
+  textarea.value = text.substring(0, start) + emoji + text.substring(end);
+  const newPos = start + emoji.length;
+  textarea.setSelectionRange(newPos, newPos);
+  textarea.focus();
+
+  updateRvCounter();
 }
 
 // ── Publish ────────────────────────────────────────────────────
@@ -12137,8 +12198,9 @@ function startVibeProgress(idx, vid) {
     };
     vibeProgressTimers[idx] = setInterval(tick, 150);
     vid.addEventListener('ended', () => {
-      stopVibeProgress(idx);
-      scrollToVibeCard(idx + 1);
+      vid.currentTime = 0;
+      vid.play().catch(e => console.warn('Replay blocked:', e));
+      startVibeProgress(idx, vid);
     }, { once: true });
   } else {
     // Text/image: auto-advance after 6 seconds
@@ -12146,10 +12208,10 @@ function startVibeProgress(idx, vid) {
     vibeProgressTimers[idx] = setInterval(() => {
       pct += 100 / 60; // 6s at 100ms ticks
       if (pct >= 100) {
-        pct = 100;
-        bar.style.width = pct + '%';
+        pct = 0;
+        bar.style.width = '0%';
         stopVibeProgress(idx);
-        scrollToVibeCard(idx + 1);
+        startVibeProgress(idx); // restart interval for looping
         return;
       }
       bar.style.width = pct + '%';
@@ -12300,10 +12362,12 @@ async function vibeOpenComments(postId, idx) {
         <div class="vibe-comment-body">
           <div class="vibe-comment-username" ${clickAttr}>@${u.username || 'User'}</div>
           <div class="vibe-comment-text">${c.content || ''}</div>
-          <div class="vibe-comment-meta">
-            <span class="vibe-comment-time">${vibeTimeAgo(c.created_at)}</span>
-            <button class="vibe-comment-like">❤️ Like</button>
-          </div>
+        </div>
+        <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
+          <button onclick="toggleCommentLike('${c.id}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
+            ${c.is_liked ? '❤️' : '🤍'}
+          </button>
+          <span id="comment-like-count-vibe-${c.id}" style="font-size:11px; color:rgba(255,255,255,0.45);">${c.likes || c.likes_count || c.likeCount || c.like_count || 0}</span>
         </div>
       </div>`;
     }).join('');
@@ -12337,10 +12401,12 @@ async function submitVibeComment() {
       <div class="vibe-comment-body">
         <div class="vibe-comment-username" ${ownClickAttr}>@${u.username}</div>
         <div class="vibe-comment-text">${content}</div>
-        <div class="vibe-comment-meta">
-          <span class="vibe-comment-time">just now</span>
-          <button class="vibe-comment-like">❤️ Like</button>
-        </div>
+      </div>
+      <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
+        <button onclick="toggleCommentLike('temp', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
+          🤍
+        </button>
+        <span id="comment-like-count-vibe-temp" style="font-size:11px; color:rgba(255,255,255,0.45);">0</span>
       </div>`;
 
     const list = document.getElementById('vibeCommentsList');
@@ -12528,10 +12594,12 @@ function openVibeUpload() {
   document.getElementById('destRadioCommunity').classList.remove('active');
 
   // Hide panels
-  ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel', 'vibePollBuilder'].forEach(id => {
+  ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel', 'vibePollBuilder', 'vibeEmojiPicker'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
+  const emojiBtn = document.getElementById('vibeEmojiToggleBtn');
+  if (emojiBtn) emojiBtn.classList.remove('active');
   document.getElementById('vibeActiveTags').style.display = 'none';
   document.getElementById('vibeActiveTags').innerHTML = '';
 
@@ -12648,6 +12716,131 @@ function updateVibeCharCount(textarea) {
   cnt.textContent = remaining;
   cnt.className = 'vibe-char-pill' + (remaining < 20 ? ' limit' : remaining < 60 ? ' warn' : '');
 }
+
+// ── Emoji Picker ──────────────────────────────────────────────
+const _vibeEmojiData = {
+  smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🫡', '🤐', '🤨', '😐', '😑', '😶', '🫥', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '🫤', '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '🥹', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖'],
+  gestures: ['👋', '🤚', '🖐️', '✋', '🖖', '🫱', '🫲', '🫳', '🫴', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🫵', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '🫶', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🫀', '🫁', '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '🫦', '👶', '🧒', '👦', '👧', '🧑', '👱', '👨', '🧔', '👩', '🧓', '👴', '👵'],
+  hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '♥️', '🫶', '😍', '🥰', '😘', '💋', '💏', '💑', '🌹', '🏩', '💒', '💌', '💐', '🎀', '🎁', '💍', '💎', '🦋', '🌸', '🌺', '🌷', '🌻', '✨', '💫', '⭐', '🌟', '🔥', '💥', '🎆', '🎇'],
+  animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐻‍❄️', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🪱', '🐛', '🦋', '🐌', '🐞', '🐜', '🪰', '🪲', '🪳', '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒'],
+  food: ['🍕', '🍔', '🍟', '🌭', '🍿', '🧂', '🥓', '🥚', '🍳', '🧇', '🥞', '🧈', '🍞', '🥐', '🥖', '🫓', '🥨', '🥯', '🧀', '🥗', '🥙', '🥪', '🌮', '🌯', '🫔', '🥫', '🍝', '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍩', '🍪', '🌰', '🥜', '🍯', '🥛', '🍼', '🫖', '☕', '🍵', '🧋', '🥤', '🧃', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍾', '🫗'],
+  travel: ['✈️', '🛫', '🛬', '🪂', '💺', '🚁', '🛸', '🚀', '🛰️', '🗺️', '🧭', '⛰️', '🏔️', '🌋', '🗻', '🏕️', '🏖️', '🏜️', '🏝️', '🏞️', '🌅', '🌄', '🌠', '🎇', '🎆', '🌇', '🌆', '🏙️', '🌃', '🌌', '🌉', '🌁', '🗾', '🏗️', '🧱', '🪨', '🛖', '🏘️', '🏚️', '🏠', '🏡', '🏢', '🏣', '🏤', '🏥', '🏦', '🏨', '🏩', '🏪', '🏫', '🏬', '🏭', '🏯', '🏰', '💒', '🗼', '🗽', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋', '⛲', '⛺', '🌁', '🗿', '🚂', '🚃', '🚄', '🚅', '🚆', '🚇', '🚈', '🚉', '🚊', '🚝', '🚞'],
+  objects: ['💡', '🔦', '🕯️', '🪔', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '💾', '💿', '📀', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱️', '⏲️', '⏰', '🕰️', '⌛', '⏳', '📡', '🔋', '🪫', '🔌', '🧲', '🔗', '⛓️', '🧰', '🔧', '🔨', '⚒️', '🛠️', '⛏️', '🪚', '🔩', '⚙️', '🗜️', '⚖️', '🦯', '🔑', '🗝️', '🛡️', '🏹', '⚔️', '💣', '🪃', '🏺', '🔮', '📿', '🧿', '🪬', '💈', '⚗️', '🔭', '🔬', '🕳️', '🩹', '🩺', '💊', '💉', '🩸'],
+  symbols: ['⭐', '🌟', '✨', '💫', '⚡', '🔥', '💥', '❄️', '🌈', '☀️', '🌤️', '⛅', '🌥️', '☁️', '🌦️', '🌧️', '⛈️', '🌩️', '🌪️', '🌫️', '🌬️', '🌀', '🌊', '💧', '💦', '☔', '☂️', '❤️', '💯', '💢', '💬', '💭', '🗯️', '💤', '💮', '♨️', '💈', '🛑', '🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚', '🎵', '🎶', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟️', '🎯', '🎳', '🎮', '🕹️', '🎰', '🧩', '♠️', '♥️', '♦️', '♣️', '🃏', '🀄', '🎴', '🔇', '🔈', '🔉', '🔊', '📢', '📣', '📯', '🔔', '🔕', '🎵', '🎶', '🏆', '🥇', '🥈', '🥉', '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🏒']
+};
+
+function toggleVibeEmojiPicker() {
+  const picker = document.getElementById('vibeEmojiPicker');
+  const btn = document.getElementById('vibeEmojiToggleBtn');
+  if (!picker || !btn) return;
+
+  const isOpen = picker.style.display !== 'none';
+  if (isOpen) {
+    picker.style.display = 'none';
+    btn.classList.remove('active');
+  } else {
+    // Close other panels first
+    ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    picker.style.display = 'block';
+    btn.classList.add('active');
+    // Render default tab (smileys)
+    const activeTab = document.querySelector('.vep-tab.active');
+    const cat = activeTab?.dataset.cat || 'smileys';
+    _renderEmojiGrid(cat);
+  }
+}
+
+function switchEmojiTab(cat, tabBtn) {
+  document.querySelectorAll('.vep-tab').forEach(t => t.classList.remove('active'));
+  if (tabBtn) tabBtn.classList.add('active');
+  _renderEmojiGrid(cat);
+}
+
+function _renderEmojiGrid(category) {
+  const grid = document.getElementById('vepGrid');
+  if (!grid) return;
+  const emojis = _vibeEmojiData[category] || _vibeEmojiData.smileys;
+  grid.innerHTML = emojis.map(e =>
+    `<button class="vep-emoji" type="button" onclick="insertVibeEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function insertVibeEmoji(emoji) {
+  const textarea = document.getElementById('vibeCaptionInput');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const maxLen = parseInt(textarea.getAttribute('maxlength') || '500');
+
+  // Check max length
+  if (text.length + emoji.length > maxLen) return;
+
+  // Insert at cursor position
+  textarea.value = text.substring(0, start) + emoji + text.substring(end);
+
+  // Move cursor after the emoji
+  const newPos = start + emoji.length;
+  textarea.setSelectionRange(newPos, newPos);
+  textarea.focus();
+
+  // Update char count
+  updateVibeCharCount(textarea);
+}
+
+// ── Comment Emoji Picker ──────────────────────────────────────
+function toggleCommentEmojiMenu() {
+  const menu = document.getElementById('vibeCommentEmojiMenu');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  if (isOpen) {
+    menu.style.display = 'none';
+  } else {
+    menu.style.display = 'block';
+    const activeTab = menu.querySelector('.vep-tab.active');
+    const cat = activeTab?.dataset.cat || 'smileys';
+    _renderCommentEmojiGrid(cat);
+  }
+}
+
+function switchCommentEmojiTab(category, tabBtn) {
+  const menu = document.getElementById('vibeCommentEmojiMenu');
+  if (!menu) return;
+  menu.querySelectorAll('.vep-tab').forEach(t => t.classList.remove('active'));
+  if (tabBtn) tabBtn.classList.add('active');
+  _renderCommentEmojiGrid(category);
+}
+
+function _renderCommentEmojiGrid(category) {
+  const grid = document.getElementById('vcEmojiGrid');
+  if (!grid) return;
+  const emojis = _vibeEmojiData[category] || _vibeEmojiData.smileys;
+  grid.innerHTML = emojis.map(e =>
+    `<button class="vep-emoji" type="button" onclick="insertCommentEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function insertCommentEmoji(emoji) {
+  const input = document.getElementById('vibeCommentInput');
+  if (!input) return;
+
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const text = input.value;
+  const maxLen = parseInt(input.getAttribute('maxlength') || '500');
+
+  if (text.length + emoji.length > maxLen) return;
+
+  input.value = text.substring(0, start) + emoji + text.substring(end);
+  const newPos = start + emoji.length;
+  input.setSelectionRange(newPos, newPos);
+  input.focus();
+}
+
 
 // ── Mood picker ───────────────────────────────────────────────
 function openVibeMoodPicker() {
@@ -12928,6 +13121,12 @@ function toggleVibePanel(panelId) {
       if (el) el.style.display = 'none';
     }
   });
+  // Also close emoji picker if it was open
+  const emojiPicker = document.getElementById('vibeEmojiPicker');
+  if (emojiPicker) emojiPicker.style.display = 'none';
+  const emojiBtn = document.getElementById('vibeEmojiToggleBtn');
+  if (emojiBtn) emojiBtn.classList.remove('active');
+
   const target = document.getElementById(panelId);
   if (!target) return;
   target.style.display = target.style.display === 'none' ? 'block' : 'none';
