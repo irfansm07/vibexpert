@@ -5372,6 +5372,75 @@
         </div>
       </div>
 
+      <script>
+        function openCollegeRequestModal() {
+          const modal = document.getElementById('collegeRequestModal');
+          const nameInput = document.getElementById('reqCollegeName');
+          const emailInput = document.getElementById('reqCollegeEmail');
+          const msg = document.getElementById('reqCollegeMsg');
+
+          if (nameInput) nameInput.value = '';
+          if (emailInput) emailInput.value = '';
+          if (msg) {
+            msg.textContent = '';
+            msg.style.color = '';
+          }
+          if (modal) {
+            modal.style.display = 'flex';
+          }
+        }
+
+        function closeCollegeRequestModal() {
+          const modal = document.getElementById('collegeRequestModal');
+          if (modal) {
+            modal.style.display = 'none';
+          }
+        }
+
+        function submitCollegeRequest() {
+          const nameInput = document.getElementById('reqCollegeName');
+          const emailInput = document.getElementById('reqCollegeEmail');
+          const msg = document.getElementById('reqCollegeMsg');
+          const btn = document.getElementById('reqCollegeSubmitBtn');
+
+          const name = nameInput ? nameInput.value.trim() : '';
+          const email = emailInput ? emailInput.value.trim() : '';
+
+          if (!name || !email) {
+            if (msg) {
+              msg.textContent = 'Please fill out both your college name and email.';
+              msg.style.color = '#fca5a5';
+            }
+            return;
+          }
+          if (!email.includes('@')) {
+            if (msg) {
+              msg.textContent = 'Please enter a valid email address.';
+              msg.style.color = '#fca5a5';
+            }
+            return;
+          }
+
+          if (btn) btn.innerHTML = '⏳ Submitting...';
+          if (btn) btn.disabled = true;
+
+          // Simulate API call delay
+          setTimeout(() => {
+            if (msg) {
+              msg.textContent = '🎉 Request sent! We will reach out soon.';
+              msg.style.color = '#a78bfa';
+            }
+            if (btn) {
+              btn.innerHTML = '🚀 Submit Request';
+              btn.disabled = false;
+            }
+            setTimeout(() => {
+              closeCollegeRequestModal();
+            }, 1800);
+          }, 1200);
+        }
+      </script>
+
       <!-- COMMUNITIES - PROFESSIONAL CHAT INTERFACE -->
       <section id="communities" class="page" style="display:none;">
         <div id="communitiesContainer"></div>
@@ -5398,13 +5467,6 @@
                         background:rgba(255,215,0,.1);color:rgba(255,215,0,.75);
                         border:1px solid rgba(255,215,0,.2);">
             </span>
-            <button class="rv-add-btn" onclick="openRealVibeCreator()" title="Add RealVibe">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              <span>Add RealVibe</span>
-            </button>
           </div>
         </div>
 
@@ -5415,6 +5477,16 @@
             <p>Loading RealVibes…</p>
           </div>
         </div>
+
+        <!-- Floating Action Button -->
+        <button class="rv-add-btn" onclick="openRealVibeCreator()" title="Add RealVibe"
+          style="position: fixed; bottom: 35px; right: 25px; z-index: 9999; box-shadow: 0 6px 24px rgba(255, 165, 0, 0.45); border: 2px solid rgba(255, 215, 0, 0.45);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span style="font-size: 1.05rem; padding-left: 2px;">Add RealVibe</span>
+        </button>
 
       </section>
 
@@ -5499,7 +5571,28 @@
           <div class="rv-caption-wrap">
             <textarea class="rv-caption-input" id="rvCaption" placeholder="Write a caption… (optional)" maxlength="300"
               oninput="updateRvCounter()"></textarea>
+            <button type="button" class="rv-emoji-toggle-btn" id="rvEmojiToggleBtn" onclick="toggleRvEmojiPicker()"
+              title="Add Emoji">
+              😊
+            </button>
             <span class="rv-caption-counter"><span id="rvCaptionCount">0</span>/300</span>
+
+            <!-- EMOJI PICKER PANEL (RealVibe specific) -->
+            <div class="vibe-emoji-picker" id="rvEmojiPicker"
+              style="display:none; position: absolute; top: 100%; left: 0; right: 0; z-index: 150; margin-top: 8px;">
+              <div class="vep-tabs">
+                <button class="vep-tab active" data-cat="smileys"
+                  onclick="switchRvEmojiTab('smileys', this)">😊</button>
+                <button class="vep-tab" data-cat="gestures" onclick="switchRvEmojiTab('gestures', this)">👋</button>
+                <button class="vep-tab" data-cat="hearts" onclick="switchRvEmojiTab('hearts', this)">❤️</button>
+                <button class="vep-tab" data-cat="animals" onclick="switchRvEmojiTab('animals', this)">🐾</button>
+                <button class="vep-tab" data-cat="food" onclick="switchRvEmojiTab('food', this)">🍕</button>
+                <button class="vep-tab" data-cat="travel" onclick="switchRvEmojiTab('travel', this)">✈️</button>
+                <button class="vep-tab" data-cat="objects" onclick="switchRvEmojiTab('objects', this)">💡</button>
+                <button class="vep-tab" data-cat="symbols" onclick="switchRvEmojiTab('symbols', this)">⭐</button>
+              </div>
+              <div class="vep-grid" id="rvEmojiGrid"></div>
+            </div>
           </div>
 
           <!-- Visibility -->
@@ -5631,10 +5724,25 @@
           <div class="vibe-comments-list" id="vibeCommentsList">
             <div class="vibe-drawer-loading">Loading comments…</div>
           </div>
-          <div class="vibe-comment-input-row">
-            <div class="vibe-comment-avatar-wrap">
+          <div class="vibe-comment-input-row" style="position:relative;">
+            <div class="vibe-comment-avatar-wrap" onclick="toggleCommentEmojiMenu()" style="cursor:pointer;"
+              title="Add Emoji">
               <span id="vibeCommentMyAvatar">😊</span>
             </div>
+
+            <div id="vibeCommentEmojiMenu" class="vibe-emoji-picker"
+              style="display:none; position:absolute; top:auto; bottom:60px; left:10px; right:auto; width:280px; height:auto; z-index:9999; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+              <div class="vep-tabs">
+                <button type="button" class="vep-tab active" data-cat="smileys"
+                  onclick="switchCommentEmojiTab('smileys', this)">😀</button>
+                <button type="button" class="vep-tab" data-cat="gestures"
+                  onclick="switchCommentEmojiTab('gestures', this)">👋</button>
+                <button type="button" class="vep-tab" data-cat="hearts"
+                  onclick="switchCommentEmojiTab('hearts', this)">❤️</button>
+              </div>
+              <div class="vep-grid" id="vcEmojiGrid"></div>
+            </div>
+
             <input type="text" id="vibeCommentInput" placeholder="Add a comment…" maxlength="500"
               onkeydown="if(event.key==='Enter')submitVibeComment()">
             <button class="vibe-comment-send-btn" onclick="submitVibeComment()">
@@ -5756,7 +5864,26 @@
           <div class="vibe-caption-area">
             <textarea id="vibeCaptionInput" class="vibe-caption-input" placeholder="What's your vibe? Add #hashtags 🔥"
               maxlength="500" rows="3" oninput="updateVibeCharCount(this)"></textarea>
+            <button type="button" class="vibe-emoji-toggle-btn" id="vibeEmojiToggleBtn"
+              onclick="toggleVibeEmojiPicker()" title="Add Emoji">
+              😊
+            </button>
             <div class="vibe-char-pill" id="vibeCharCount">500</div>
+
+            <!-- ══ EMOJI PICKER PANEL ══ -->
+            <div class="vibe-emoji-picker" id="vibeEmojiPicker" style="display:none;">
+              <div class="vep-tabs" id="vepTabs">
+                <button class="vep-tab active" data-cat="smileys" onclick="switchEmojiTab('smileys', this)">😊</button>
+                <button class="vep-tab" data-cat="gestures" onclick="switchEmojiTab('gestures', this)">👋</button>
+                <button class="vep-tab" data-cat="hearts" onclick="switchEmojiTab('hearts', this)">❤️</button>
+                <button class="vep-tab" data-cat="animals" onclick="switchEmojiTab('animals', this)">🐾</button>
+                <button class="vep-tab" data-cat="food" onclick="switchEmojiTab('food', this)">🍕</button>
+                <button class="vep-tab" data-cat="travel" onclick="switchEmojiTab('travel', this)">✈️</button>
+                <button class="vep-tab" data-cat="objects" onclick="switchEmojiTab('objects', this)">💡</button>
+                <button class="vep-tab" data-cat="symbols" onclick="switchEmojiTab('symbols', this)">⭐</button>
+              </div>
+              <div class="vep-grid" id="vepGrid"></div>
+            </div>
           </div>
 
           <!-- ══ MEDIA PREVIEW (multi-grid) ══ -->
