@@ -5846,11 +5846,18 @@
             </div>
             <div class="vibe-author-meta">
               <span class="vibe-author-name" id="vibePostUserName">You</span>
-              <div class="vibe-dest-pills">
-                <button class="vibe-dest-pill active" id="destRadioProfile" onclick="setVibeDest('profile', this)">
-                  👤 Profile
+              <!-- Zero Velocity (home) pills -->
+              <div class="vibe-dest-pills" id="zvDestPills" style="display:none;">
+                <button class="vibe-dest-pill active" id="destRadioBoth" onclick="setVibeDest('both', this)">
+                  🎓+👤 Profile+College
                 </button>
-                <button class="vibe-dest-pill" id="destRadioCommunity" onclick="setVibeDest('community', this)">
+                <button class="vibe-dest-pill" id="destRadioProfile" onclick="setVibeDest('profile', this)">
+                  👤 Profile Only
+                </button>
+              </div>
+              <!-- Vibers (posts) pills -->
+              <div class="vibe-dest-pills" id="vibersDestPills" style="display:none;">
+                <button class="vibe-dest-pill active" id="destRadioCommunity" onclick="setVibeDest('community', this)">
                   🎓 College
                 </button>
               </div>
@@ -8737,7 +8744,7 @@
       </script>
     </main>
 
-    <footer id="mainFooter">
+    <footer id="mainFooter" style="display:none;">
       <p>&copy; <span id="footerYear2">2025</span> VibeXpert. All rights reserved. | <span id="footerUsers">0</span>
         Users Online</p>
       <script>document.getElementById('footerYear2').textContent = new Date().getFullYear();</script>
@@ -15086,10 +15093,13 @@
           /* ── Build conversation map, keyed by OTHER user's uid ── */
           const convMap = {};
           convs.forEach(c => {
+            /* Server returns otherUser (camelCase), handle both casings */
+            const otherUser = c.otherUser || c.other_user || null;
+
             /* Try every possible field for the other user's id */
             const uid = String(
               c.other_user_id || c.user_id ||
-              (c.other_user && c.other_user.id) ||
+              (otherUser && otherUser.id) ||
               c.id || ''
             );
 
@@ -15099,7 +15109,7 @@
             /* Enrich username from following list if API returned blank */
             const followingProfile = followingMap[uid];
             const rawName = c.other_username || c.username ||
-              (c.other_user && c.other_user.username) ||
+              (otherUser && otherUser.username) ||
               (followingProfile && (followingProfile.username || followingProfile.name)) || '';
 
 
@@ -15109,23 +15119,28 @@
             const isSentByMe = String(c.last_sender_id || c.sender_id || '') === myId ||
               c.last_sender_is_me === true;
 
+            /* ✅ Online status: use otherUser.last_seen from server */
+            const otherLastSeen = (otherUser && otherUser.last_seen) || c.last_seen ||
+              (followingProfile && followingProfile.last_seen) || null;
+            const otherIsOnline = c.is_online ||
+              (otherUser && otherUser.is_online) ||
+              (followingProfile && (followingProfile.is_online || followingProfile.online)) || false;
+
             convMap[uid] = {
               id: uid,
               username: rawName || (followingProfile && (followingProfile.username || followingProfile.name)) || 'User',
               profile_pic: c.other_profile_pic || c.profile_pic ||
-                (c.other_user && c.other_user.profile_pic) ||
+                (otherUser && otherUser.profile_pic) ||
                 (followingProfile && (followingProfile.profile_pic || followingProfile.avatar)) || '',
               college: c.other_college || c.college ||
-                (c.other_user && c.other_user.college) ||
+                (otherUser && otherUser.college) ||
                 (followingProfile && followingProfile.college) || '',
               last_message: c.last_message || c.last_message_content || c.content || '',
               last_message_at: c.last_message_at || c.updated_at || c.created_at || '',
               last_sender_is_me: isSentByMe,
-              unread_count: isSentByMe ? 0 : (c.unread_count || c.unread || 0),
-              is_online: c.is_online || (c.other_user && !c.other_user.last_seen) ||
-                (followingProfile && (followingProfile.is_online || followingProfile.online)) || false,
-              last_seen: c.last_seen || (c.other_user && c.other_user.last_seen) ||
-                (followingProfile && followingProfile.last_seen) || null,
+              unread_count: isSentByMe ? 0 : (c.unreadCount || c.unread_count || c.unread || 0),
+              is_online: otherIsOnline,
+              last_seen: otherLastSeen,
               _hasConversation: true
             };
           });
@@ -15231,8 +15246,8 @@
             }
           }
 
-          /* ✅ Green = online (no last_seen), Red = offline (has last_seen) */
-          const isOnline = !u.last_seen && (u.is_online !== false);
+          /* ✅ Green = online, Red = offline. Use explicit is_online flag when available, else check last_seen */
+          const isOnline = u.is_online === true || (!u.last_seen && u.is_online !== false);
           const onlineDot = `<div class="vx-dm-online" style="background:${isOnline ? '#22c55e' : '#ef4444'};box-shadow:0 0 6px ${isOnline ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.5)'};"></div>`;
 
           const avH = av
@@ -15273,6 +15288,35 @@
 
       /* Expose so openVxDmPanel and poll can refresh the list */
       window.loadVxDmList = loadVxDmList;
+
+      /* ── Real-time online status updates for FAB DM list ── */
+      function _hookDmOnlineSocket() {
+        if (!window.socket) { setTimeout(_hookDmOnlineSocket, 2000); return; }
+        window.socket.on('user_online_broadcast', function (data) {
+          const uid = String(data.userId || data.user_id || '');
+          if (!uid) return;
+          const user = _users.find(u => String(u.id || u.user_id) === uid);
+          if (user) { user.is_online = true; user.last_seen = null; }
+          /* Update the dot in-place without full re-render */
+          const itemEl = document.querySelector('#vxDmList [data-uid="' + uid + '"] .vx-dm-online');
+          if (itemEl) {
+            itemEl.style.background = '#22c55e';
+            itemEl.style.boxShadow = '0 0 6px rgba(34,197,94,0.6)';
+          }
+        });
+        window.socket.on('user_offline', function (data) {
+          const uid = String(data.userId || data.user_id || '');
+          if (!uid) return;
+          const user = _users.find(u => String(u.id || u.user_id) === uid);
+          if (user) { user.is_online = false; user.last_seen = new Date().toISOString(); }
+          const itemEl = document.querySelector('#vxDmList [data-uid="' + uid + '"] .vx-dm-online');
+          if (itemEl) {
+            itemEl.style.background = '#ef4444';
+            itemEl.style.boxShadow = '0 0 6px rgba(239,68,68,0.5)';
+          }
+        });
+      }
+      _hookDmOnlineSocket();
 
       /* ══════════════════════════════════════════════════════
          FAB DM Panel — inline chat powered by vibemap.js
@@ -16037,7 +16081,7 @@
       function renderNotif(notifs, tab) { const l = document.getElementById('vxNotifList'); if (!l) return; const myId = String((typeof currentUser !== 'undefined' && currentUser ? currentUser.id : null) || (() => { try { const u = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'); return u.id || u.user_id || ''; } catch (e) { return ''; } })()); let f = notifs.filter(n => { if ((n.actor_id && String(n.actor_id) === myId) || (n.from_id && String(n.from_id) === myId)) return false; const txt = (n.message || n.text || '').trim(); if (txt.startsWith('You liked') || txt.startsWith('You started following') || txt.startsWith('You commented')) return false; return true; }); if (tab && tab !== 'all') f = f.filter(n => (n.type || '').toLowerCase().includes(tab.replace('s', ''))); if (!f || !f.length) { l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No ${tab === 'all' ? '' : tab + ' '}notifications yet</p></div>`; return; } const cfg = { follow: { icon: '👤', cls: 'follow' }, like: { icon: '❤️', cls: 'like' }, comment: { icon: '💬', cls: 'comment' }, mention: { icon: '@', cls: 'other', style: 'font-size:14px;font-weight:700;color:#a78bfa;' }, default: { icon: '🔔', cls: 'other' } }; l.innerHTML = f.map(n => { const type = (n.type || 'default').toLowerCase(); const c = cfg[type] || cfg.default; const actor = n.actor_name || n.from_name || n.username || 'Someone'; let text = n.message || n.text || ''; if (!text) { if (type === 'follow') text = `<strong>${actor}</strong> started following you`; else if (type === 'like') text = `<strong>${actor}</strong> liked your post`; else if (type === 'comment') text = `<strong>${actor}</strong> commented on your post`; else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`; } return `<div class="vx-notif-item ${!n.read && !n.seen ? 'unread' : ''}" onclick="vxHandleNotifClick('${n.id || n._id || ''}','${type}')"><div class="vx-notif-icon-wrap ${c.cls}" ${c.style ? `style="${c.style}"` : ''}>${c.icon}</div><div class="vx-notif-body"><div class="vx-notif-text">${text}</div><div class="vx-notif-time">${relTime(n.created_at || n.timestamp || n.createdAt)}</div></div></div>`; }).join(''); }
       window.switchVxNotifTab = function (tab, btn) { document.querySelectorAll('.vx-notif-tab').forEach(t => t.classList.remove('active')); if (btn) btn.classList.add('active'); renderNotif(_notifs, tab); };
       window.clearAllVxNotifs = function () { _notifs = _notifs.map(n => ({ ...n, read: true, seen: true })); renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); markRead(); };
-      async function markRead() { try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; await fetch((window.API_URL || 'https://vibexpert-backend-main.onrender.com') + '/api/notifications/read-all', { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } }); } catch (e) { } }
+      async function markRead() { try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; await fetch((window.API_URL || 'https://vibexpert-backend-main.onrender.com') + '/api/notifications/read', { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } }); } catch (e) { } }
       window.vxHandleNotifClick = function (id, type) { window.closeVxNotifPanel(); if (type === 'follow') { if (typeof window.showProfilePage === 'function') window.showProfilePage(); } else if (['like', 'comment'].includes(type)) { if (typeof window.showPage === 'function') window.showPage('home'); } };
 
       /* ── Badge polling ── */
