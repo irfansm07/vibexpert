@@ -970,8 +970,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof loadCommunities === 'function') loadCommunities();
           }
         });
-        // Load home feed on startup
-        setTimeout(() => loadHomeFeed(), 300);
+        // Load home feed on startup via showPage so display:flex + all
+        // layout state is set identically to navigating to home manually.
+        setTimeout(() => showPage('home'), 100);
       } else {
         // Invalid user data, show login
         showAboutUsPage();
@@ -5366,9 +5367,18 @@ function _headerTouchStart(e) {
 function showPage(name, e) {
   if (e) e.preventDefault();
 
-  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  // Hide ALL pages: both inline style AND remove .active class so CSS
+  // #home.page:not(.active) { display:none !important } fires correctly.
+  // This prevents Zero Velocity (position:fixed) from bleeding over other pages.
+  document.querySelectorAll('.page').forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('active');
+  });
   const page = document.getElementById(name);
-  if (page) page.style.display = 'block';
+  if (page) {
+    page.style.display = name === 'home' ? 'flex' : 'block';
+    page.classList.add('active');
+  }
 
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   if (e?.target) e.target.classList.add('active');
@@ -5556,6 +5566,7 @@ function buildHomeFeedCard(post) {
     ${content}
     ${mediaHtml}
     <div class="hf-actions">
+      <button class="hf-action-btn hf-card-scroll-arrow" onclick="homeFeedScrollCard(-1)" title="Previous post">▲</button>
       <button class="hf-action-btn hf-like-btn ${isLiked ? 'hf-liked' : ''}" onclick="homeFeedToggleLike('${escapeHtml(postId)}', this)">
         <span class="hf-like-icon">${isLiked ? '❤️' : '🤍'}</span>
         <span class="hf-like-count">${likes}</span>
@@ -5566,87 +5577,187 @@ function buildHomeFeedCard(post) {
       <button class="hf-action-btn" onclick="sharePost('${escapeHtml(postId)}', '${postContentForShare}', '${authorForShare}')">
         🔄 <span>${shares}</span> Share
       </button>
-    </div>
-    <!-- Inline Comments Section -->
-    <div id="hf-comments-wrap-${escapeHtml(postId)}" style="display:none; transition: max-height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease; opacity: 0; max-height: 0; overflow: hidden; margin-top: 10px; border-top: 1px solid rgba(79,116,163,0.15); padding: 0 15px;">
-      <div id="hf-comments-list-${escapeHtml(postId)}" style="max-height: 320px; overflow-y: auto; padding: 15px 0;"></div>
-      <div style="padding: 10px 0 20px 0; border-top: 1px solid rgba(79,116,163,0.1);">
-        <div id="hf-emoji-picker-${escapeHtml(postId)}" style="display:none; flex-wrap:wrap; gap:5px; margin-bottom:10px; padding:8px; background:rgba(12,8,32,0.8); border:1px solid rgba(124,92,252,0.2); border-radius:12px; max-height:120px; overflow-y:auto;">
-          ${['😊', '😂', '❤️', '🔥', '👍', '🥺', '🎉', '💯', '✨', '😍', '🙏', '😎', '😭', '🤣', '😘', '🥰', '🤔', '😤', '😡', '🤩', '🥳', '🙌', '💪', '🤝', '👋', '👀', '💀', '👽'].map(e => `<span onclick="document.getElementById('hf-comment-input-${escapeHtml(postId)}').value += '${e}'; document.getElementById('hf-comment-input-${escapeHtml(postId)}').focus();" style="cursor:pointer; font-size:20px; padding:5px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(124,92,252,0.3)'" onmouseout="this.style.background='transparent'">${e}</span>`).join('')}
-        </div>
-        <div style="display:flex; gap:10px; align-items:flex-end;">
-          <button onclick="document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display = document.getElementById('hf-emoji-picker-${escapeHtml(postId)}').style.display === 'none' ? 'flex' : 'none'" style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 4px 6px 0; opacity:0.7; transition:0.2s; align-self:flex-end;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">😀</button>
-          <textarea id="hf-comment-input-${escapeHtml(postId)}" placeholder="Write a comment..." 
-            style="flex:1; min-height:44px; max-height:100px; border-radius:22px; padding:12px 18px; background:rgba(20,30,50,0.6); border:1px solid rgba(79,116,163,0.3); color:white; font-family:inherit; resize:vertical; font-size:14px; box-shadow:inset 0 2px 6px rgba(0,0,0,0.2); outline:none; transition:border 0.2s;"
-            onfocus="this.style.borderColor='rgba(124,92,252,0.6)'" onblur="this.style.borderColor='rgba(79,116,163,0.3)'"></textarea>
-          <button onclick="homeFeedSubmitComment('${escapeHtml(postId)}')" 
-            style="background:linear-gradient(135deg,#7c3aed,#a855f7); border:none; border-radius:22px; padding:0 24px; height:44px; color:white; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(124,58,237,0.3); transition:all 0.2s; align-self:flex-end;"
-            onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">Post</button>
-        </div>
-      </div>
+      <button class="hf-action-btn hf-card-scroll-arrow" onclick="homeFeedScrollCard(1)" title="Next post">▼</button>
     </div>
   </div>`;
 }
 
+// ── Zero Velocity: global scroll helper (called by in-card ▲/▼ arrow buttons) ──
+window.homeFeedScrollCard = function(dir) {
+  var container = document.getElementById('homeFeedContainer');
+  if (!container) return;
+  var card = container.querySelector('.hf-card');
+  var step = card
+    ? (card.offsetHeight + parseInt(getComputedStyle(card).marginBottom || '0', 10))
+    : Math.round(container.clientHeight * 0.80);
+  container.scrollBy({ top: dir * step, behavior: 'smooth' });
+};
+
+// ── Zero Velocity: close left comment panel helper ──
+function _hfCloseCommentPanel() {
+  var panel = document.getElementById('hf-left-comment-panel');
+  if (!panel) return;
+  panel.classList.remove('hf-lcp-open');
+  setTimeout(function() { if (panel) panel.style.display = 'none'; }, 320);
+}
+
 async function homeFeedToggleComments(postId) {
   if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
-  const wrap = document.getElementById('hf-comments-wrap-' + postId);
-  if (!wrap) return;
 
-  if (wrap.style.display !== 'none' && wrap.style.opacity === '1') {
-    wrap.style.maxHeight = '0';
-    wrap.style.opacity = '0';
-    setTimeout(() => wrap.style.display = 'none', 400);
+  let panel = document.getElementById('hf-left-comment-panel');
+
+  // Toggle close if same post is already open
+  if (panel && panel.dataset.postId === postId && panel.classList.contains('hf-lcp-open')) {
+    _hfCloseCommentPanel();
     return;
   }
 
-  wrap.style.display = 'block';
-  setTimeout(() => {
-    wrap.style.maxHeight = '600px';
-    wrap.style.opacity = '1';
-  }, 10);
+  // Build panel once
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'hf-left-comment-panel';
+    panel.innerHTML = `
+      <div class="hf-lcp-inner">
+        <div class="hf-lcp-header">
+          <span>💬 Comments</span>
+          <button class="hf-lcp-close-btn" onclick="_hfCloseCommentPanel()" title="Close">✕</button>
+        </div>
+        <div id="hf-lcp-list" class="hf-lcp-list"></div>
+        <div class="hf-lcp-input-area">
+          <div id="hf-lcp-emoji-picker" class="hf-lcp-emoji-grid">
+            ${['😊','😂','❤️','🔥','👍','🥺','🎉','💯','✨','😍','🙏','😎','😭','🤣','😘','🥰','🤔','😤','😡','🤩','🥳','🙌','💪','🤝'].map(e =>
+              `<span onclick="document.getElementById('hf-lcp-input').value+='${e}';document.getElementById('hf-lcp-input').focus();" class="hf-lcp-emoji-btn">${e}</span>`
+            ).join('')}
+          </div>
+          <div class="hf-lcp-row">
+            <button onclick="var p=document.getElementById('hf-lcp-emoji-picker');p.style.display=p.style.display==='none'?'flex':'none';" class="hf-lcp-emoji-toggle">😀</button>
+            <textarea id="hf-lcp-input" placeholder="Write a comment…" class="hf-lcp-textarea"
+              onfocus="this.style.borderColor='rgba(124,92,252,0.6)'"
+              onblur="this.style.borderColor='rgba(79,116,163,0.3)'"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();homeFeedSubmitCommentPanel();}"></textarea>
+            <button onclick="homeFeedSubmitCommentPanel()" class="hf-lcp-post-btn">Post</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(panel);
 
-  const list = document.getElementById('hf-comments-list-' + postId);
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:#8da4d3;font-size:13px;animation:vxFadeIn 0.5s infinite alternate;">⏳ Loading comments...</div>';
+    // Close only on significant scroll (card navigation), not micro trackpad nudges
+    const container = document.getElementById('homeFeedContainer');
+    if (container) {
+      let _lcpScrollOrigin = 0;
+      container.addEventListener('scroll', function() {
+        const p = document.getElementById('hf-left-comment-panel');
+        if (!p || !p.classList.contains('hf-lcp-open')) { _lcpScrollOrigin = container.scrollTop; return; }
+        if (Math.abs(container.scrollTop - _lcpScrollOrigin) > 80) {
+          _hfCloseCommentPanel();
+          _lcpScrollOrigin = container.scrollTop;
+        }
+      }, { passive: true });
+      panel._updateScrollOrigin = function() { _lcpScrollOrigin = container.scrollTop; };
+    }
+  }
+
+  // Position panel flush to left edge of feed container, same vertical span
+  const feedRect = document.getElementById('homeFeedContainer')?.getBoundingClientRect();
+  if (feedRect) {
+    panel.style.top    = feedRect.top + 'px';
+    panel.style.height = feedRect.height + 'px';
+    // On desktop: sit to the left of the card; on mobile: slide over from left edge
+    const panelW = window.innerWidth <= 768 ? 280 : 300;
+    const leftPos = Math.max(0, feedRect.left - panelW - 4);
+    panel.style.width = panelW + 'px';
+    panel.style.left  = leftPos + 'px';
+  }
+
+  panel.dataset.postId = postId;
+  panel.style.display = 'flex';
+  if (typeof panel._updateScrollOrigin === 'function') panel._updateScrollOrigin();
+
+  // Load comments
+  const list = document.getElementById('hf-lcp-list');
+  list.innerHTML = '<div class="hf-lcp-loading">⏳ Loading comments…</div>';
+
+  setTimeout(() => panel.classList.add('hf-lcp-open'), 10);
 
   try {
     const data = await apiCall('/api/posts/' + postId + '/comments', 'GET');
     if (!data.success || !data.comments || data.comments.length === 0) {
-      list.innerHTML = '<div style="text-align:center;font-size:13px;color:#8da4d3;padding:20px;background:rgba(255,255,255,0.02);border-radius:12px;">✨ No comments yet. Start the conversation!</div>';
+      list.innerHTML = '<div class="hf-lcp-empty">✨ No comments yet. Be the first!</div>';
       return;
     }
-
     let html = '';
     data.comments.forEach(c => {
       const author = c.users?.username || 'User';
-      const time = new Date(c.created_at).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
-      const pic = c.users?.profile_pic ? '<img src="' + c.users.profile_pic + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤';
+      const pic = c.users?.profile_pic
+        ? `<img src="${c.users.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+        : '👤';
       html += `
-        <div style="display:flex; gap:12px; margin-bottom:16px; animation:vxFadeIn 0.4s ease both;">
-          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#4f74a3,#2d1b8e); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;" onclick="showUserProfile('${c.user_id}')">
-            ${pic}
-          </div>
-          <div style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(79,116,163,0.15); border-radius:0 14px 14px 14px; padding:12px 16px; position:relative; overflow:hidden;">
-            <div style="position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(to bottom, #a78bfa, #8b5cf6); border-radius:3px 0 0 3px;"></div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:center;">
-              <span style="font-weight:700; font-size:13px; color:#c4b5fd; cursor:pointer;" onclick="showUserProfile('${c.user_id}')">@${author}</span>
-              <div style="display:flex; align-items:center; gap:4px;">
-                <span id="comment-like-count-hf-${c.id}" style="color:#8da4d3; font-size:12px;">${c.likeCount || 0}</span>
-                <button onclick="toggleCommentLike('${c.id}', this, 'hf')" 
-                  style="background:none;border:none;cursor:pointer;font-size:15px;padding:0;outline:none;transition:transform 0.2s;" 
-                  onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                  ${c.liked ? '❤️' : '🤍'}
-                </button>
+        <div class="hf-lcp-comment">
+          <div class="hf-lcp-avatar" onclick="showUserProfile('${c.user_id}')">${pic}</div>
+          <div class="hf-lcp-bubble">
+            <div class="hf-lcp-accent"></div>
+            <div class="hf-lcp-meta">
+              <span class="hf-lcp-author" onclick="showUserProfile('${c.user_id}')">@${author}</span>
+              <div class="hf-lcp-like-wrap">
+                <span id="comment-like-count-hflcp-${c.id}" class="hf-lcp-like-count">${c.likeCount || 0}</span>
+                <button onclick="toggleCommentLike('${c.id}',this,'hflcp')" class="hf-lcp-like-btn">${c.liked ? '❤️' : '🤍'}</button>
               </div>
             </div>
-            <div style="font-size:13px; color:#e2e8f0; line-height:1.5; word-break:break-word;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+            <div class="hf-lcp-text">${c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
           </div>
-        </div>
-      `;
+        </div>`;
     });
     list.innerHTML = html;
   } catch (e) {
-    list.innerHTML = '<div style="text-align:center;color:#f87171;font-size:13px;padding:20px;">❌ Error loading comments</div>';
+    list.innerHTML = '<div class="hf-lcp-error">❌ Error loading comments</div>';
+  }
+}
+
+async function homeFeedSubmitCommentPanel() {
+  if (!currentUser) return showMessage('⚠️ Login first', 'error');
+  const panel  = document.getElementById('hf-left-comment-panel');
+  const postId = panel?.dataset.postId;
+  if (!postId) return;
+  const input = document.getElementById('hf-lcp-input');
+  const btn   = input?.nextElementSibling;
+  const text  = input?.value.trim();
+  if (!text) return;
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+
+  try {
+    const data = await apiCall('/api/posts/' + postId + '/comments', 'POST', { content: text });
+    if (data.success) {
+      input.value = '';
+      const countEl = document.getElementById('hf-comment-count-' + postId);
+      if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+      document.getElementById('hf-lcp-emoji-picker').style.display = 'none';
+
+      const list   = document.getElementById('hf-lcp-list');
+      const author = currentUser.username || 'You';
+      const pic    = currentUser.profile_pic
+        ? `<img src="${currentUser.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+        : '👤';
+      const newC = document.createElement('div');
+      newC.className = 'hf-lcp-comment';
+      newC.style.animation = 'vxFadeIn 0.4s ease both';
+      newC.innerHTML = `
+        <div class="hf-lcp-avatar hf-lcp-avatar-own" onclick="showUserProfile('${currentUser.id}')">${pic}</div>
+        <div class="hf-lcp-bubble hf-lcp-bubble-own">
+          <div class="hf-lcp-accent hf-lcp-accent-own"></div>
+          <div class="hf-lcp-meta">
+            <span class="hf-lcp-author hf-lcp-author-own" onclick="showUserProfile('${currentUser.id}')">@${author}</span>
+          </div>
+          <div class="hf-lcp-text">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>`;
+      if (list.firstChild?.textContent?.includes('No comments') || list.firstChild?.textContent?.includes('first')) list.innerHTML = '';
+      list.appendChild(newC);
+      list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+    }
+  } catch (e) {
+    showMessage('❌ Error posting comment', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
   }
 }
 
@@ -9939,7 +10050,7 @@ function appendWhatsAppMessage(msg) {
   }
 
   if (!isOwn && !msg.isTemp) {
-    playMessageSound('receive');
+    // Sound intentionally removed from ghost/community chat
   }
 }
 
@@ -10372,9 +10483,7 @@ function appendWhatsAppMessageFixed(msg) {
     }
   }
 
-  if (!isOwn && !isTemp) {
-    if (typeof playMessageSound === 'function') playMessageSound('receive');
-  }
+  // Sound intentionally removed from ghost/community chat
 }
 
 /**
@@ -10420,7 +10529,7 @@ async function sendWhatsAppMessageFixed() {
     const response = await apiCall('/api/community/messages', 'POST', { content, anon_name: ghostName });
 
     if (response.success && response.message) {
-      playMessageSound('send');
+      // Sound intentionally removed from ghost/community chat
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
       if (tempEl) tempEl.remove();
       appendWhatsAppMessageFixed(response.message);
@@ -10428,7 +10537,7 @@ async function sendWhatsAppMessageFixed() {
       // ✅ FIX: success but no message object — keep temp visible, mark sent
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
       if (tempEl) { tempEl.classList.remove('sending'); tempEl.classList.add('sent'); }
-      playMessageSound('send');
+      // Sound intentionally removed from ghost/community chat
     } else if (response.code === 'GHOST_NAME_TAKEN') {
       showMessage(`👻 ${response.error}`, 'error');
       const tempEl = document.getElementById(`wa-msg-${tempMsg.id}`);
@@ -10564,6 +10673,22 @@ function setupCommunitySocketListeners() {
 
   socket.on('new_message', (message) => {
     if (message.sender_id === currentUser?.id) return;
+
+    // ── WhatsApp-style unread badge for ghost chat ─────────────────────────
+    const ghostPanelVisible = execActiveChat === 'ghost' &&
+      document.getElementById('ghostChatPanel')?.style.display !== 'none' &&
+      document.getElementById('communities')?.style.display !== 'none';
+
+    if (!ghostPanelVisible) {
+      const badge = document.getElementById('unreadCount');
+      if (badge) {
+        const count = parseInt(badge.textContent || '0') + 1;
+        badge.textContent = count;
+        badge.style.display = 'inline';
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Use the WhatsApp-style renderer which supports reactions, ghost avatars, etc.
     if (typeof appendWhatsAppMessageFixed === 'function') {
       appendWhatsAppMessageFixed(message);
@@ -11537,35 +11662,83 @@ function showEmojiReactPicker(msgId, btn) {
   }, 10);
 }
 
+// ── Ghost-chat reaction persistence helpers ────────────────────────────────
+// Stores { [msgId]: emoji } per user in localStorage so selections survive reload.
+function _gcReactKey() {
+  // Try live currentUser first; fall back to the persisted user object so
+  // reads/writes work even while currentUser is still null during page load.
+  const uid = (currentUser && currentUser.id) || (function() {
+    try { var u = JSON.parse(localStorage.getItem('user') || '{}'); return u.id || null; } catch(e) { return null; }
+  })();
+  return uid ? ('vx_my_reactions_' + uid) : 'vx_my_reactions_anon';
+}
+function _gcReactLoad() {
+  try {
+    return JSON.parse(localStorage.getItem(_gcReactKey()) || '{}');
+  } catch(e) { return {}; }
+}
+function _gcReactSave(map) {
+  try { localStorage.setItem(_gcReactKey(), JSON.stringify(map)); } catch(e) {}
+}
+function _gcReactSet(msgId, emoji) {
+  const m = _gcReactLoad();
+  if (emoji === null) { delete m[msgId]; } else { m[msgId] = emoji; }
+  _gcReactSave(m);
+}
+function _gcReactGet(msgId) {
+  return _gcReactLoad()[msgId] || null;
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 async function addMsgReaction(msgId, emoji, btn) {
   btn?.closest('.emoji-react-picker')?.remove();
 
-  // Optimistic UI: update the bar immediately
   const bar = document.getElementById('reacts-' + msgId);
+  const prevEmoji = _gcReactGet(msgId); // user's current reaction for this message
+  const isSameEmoji = prevEmoji === emoji;
+
+  // ── Optimistic UI ──────────────────────────────────────────────────────────
   if (bar) {
-    let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
-    if (existing) {
-      const countEl = existing.querySelector('.react-count');
-      if (existing.classList.contains('mine')) {
-        // Toggling off
-        const n = parseInt(countEl.textContent || 1) - 1;
-        if (n <= 0) existing.remove(); else { countEl.textContent = n; existing.classList.remove('mine'); }
-      } else {
-        // Adding
-        countEl.textContent = parseInt(countEl.textContent || 0) + 1;
-        existing.classList.add('mine');
+    // 1. Remove previous reaction pill (if any and different)
+    if (prevEmoji && !isSameEmoji) {
+      const prevPill = bar.querySelector(`[data-emoji="${CSS.escape(prevEmoji)}"]`);
+      if (prevPill) {
+        const prevCount = prevPill.querySelector('.react-count');
+        const n = parseInt(prevCount?.textContent || 1) - 1;
+        if (n <= 0) prevPill.remove();
+        else { if (prevCount) prevCount.textContent = n; prevPill.classList.remove('mine'); }
       }
+    }
+
+    if (isSameEmoji) {
+      // 2a. Same emoji clicked → toggle OFF
+      const existing = bar.querySelector(`[data-emoji="${CSS.escape(emoji)}"]`);
+      if (existing) {
+        const countEl = existing.querySelector('.react-count');
+        const n = parseInt(countEl?.textContent || 1) - 1;
+        if (n <= 0) existing.remove(); else { if (countEl) countEl.textContent = n; existing.classList.remove('mine'); }
+      }
+      _gcReactSet(msgId, null); // clear local record
     } else {
-      const pill = document.createElement('button');
-      pill.className = 'react-pill mine';
-      pill.dataset.emoji = emoji;
-      pill.innerHTML = `${emoji} <span class="react-count">1</span>`;
-      pill.onclick = () => addMsgReaction(msgId, emoji);
-      bar.appendChild(pill);
+      // 2b. New emoji → add / increment
+      let existing = bar.querySelector(`[data-emoji="${CSS.escape(emoji)}"]`);
+      if (existing) {
+        const countEl = existing.querySelector('.react-count');
+        if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+        existing.classList.add('mine');
+      } else {
+        const pill = document.createElement('button');
+        pill.className = 'react-pill mine';
+        pill.dataset.emoji = emoji;
+        pill.innerHTML = `${emoji} <span class="react-count">1</span>`;
+        pill.onclick = () => addMsgReaction(msgId, emoji);
+        bar.appendChild(pill);
+      }
+      _gcReactSet(msgId, emoji); // persist selection locally
     }
   }
 
-  // Persist to backend
+  // ── Persist to backend ────────────────────────────────────────────────────
   try {
     const result = await apiCall(`/api/community/messages/${msgId}/react`, 'POST', { emoji });
     if (result && result.reactions) {
@@ -11573,7 +11746,6 @@ async function addMsgReaction(msgId, emoji, btn) {
     }
   } catch (err) {
     console.error('Reaction save failed:', err);
-    // Server returned an error – silently ignored for now (optimistic UI already applied)
   }
 }
 
@@ -11592,6 +11764,24 @@ function updateReactBarFromData(msgId, reactions) {
     counts[r.emoji] = (counts[r.emoji] || 0) + 1;
     if (currentUser && r.user_id === currentUser.id) userReacted[r.emoji] = true;
   });
+
+  // ── Fallback: if server didn't return user_id for this user's reaction,
+  //    check our localStorage backup so the 'mine' highlight survives reload.
+  const localEmoji = _gcReactGet(msgId);
+  if (localEmoji && counts[localEmoji]) {
+    userReacted[localEmoji] = true;
+  }
+
+  // ── FIX: Never wipe localStorage from server data.
+  // Ghost chat reactions are anonymous — the server does NOT return user_id, so
+  // userReacted is always empty from server alone. Clearing localStorage here caused
+  // the selected reaction to vanish on every reload.
+  // Instead: trust localStorage as the source of truth for "did I react",
+  // and only discover + cache from server data when nothing is stored locally yet.
+  if (!localEmoji) {
+    const myServerEmoji = Object.keys(userReacted)[0];
+    if (myServerEmoji) _gcReactSet(msgId, myServerEmoji);
+  }
 
   bar.innerHTML = '';
   Object.keys(counts).forEach(emoji => {
@@ -12579,19 +12769,42 @@ function openVibeUpload() {
 
   // Reset all state
   vibeSelectedFiles = [];
-  vibeDestination = 'profile';
   vibeMoodTag = null;
   vibeLocationTag = null;
   vibePollData = null;
   vibeGifUrl = null;
+
+  // Detect which page is active to set correct dest pills
+  const activePage = document.querySelector('.page.active');
+  const activePageId = activePage ? activePage.id : 'home';
+  window._vibePageContext = activePageId; // 'home' = Zero Velocity, 'posts' = Vibers
+
+  const zvPills = document.getElementById('zvDestPills');
+  const vibersPills = document.getElementById('vibersDestPills');
+
+  if (activePageId === 'posts') {
+    // Vibers: college only
+    vibeDestination = 'community';
+    if (zvPills) zvPills.style.display = 'none';
+    if (vibersPills) vibersPills.style.display = 'flex';
+    const commBtn = document.getElementById('destRadioCommunity');
+    if (commBtn) commBtn.classList.add('active');
+  } else {
+    // Zero Velocity (home): profile+college default
+    vibeDestination = 'both';
+    if (zvPills) zvPills.style.display = 'flex';
+    if (vibersPills) vibersPills.style.display = 'none';
+    const bothBtn = document.getElementById('destRadioBoth');
+    const profBtn = document.getElementById('destRadioProfile');
+    if (bothBtn) bothBtn.classList.add('active');
+    if (profBtn) profBtn.classList.remove('active');
+  }
 
   document.getElementById('vibeCaptionInput').value = '';
   document.getElementById('vibeMediaPreview').style.display = 'none';
   document.getElementById('vibeMediaZone').style.display = 'flex';
   document.getElementById('vibeCharCount').textContent = '500';
   document.getElementById('vibeCharCount').className = 'vibe-char-pill';
-  document.getElementById('destRadioProfile').classList.add('active');
-  document.getElementById('destRadioCommunity').classList.remove('active');
 
   // Hide panels
   ['vibeMoodPanel', 'vibeLocPanel', 'vibeGifPanel', 'vibePollBuilder', 'vibeEmojiPicker'].forEach(id => {
@@ -12705,8 +12918,12 @@ function clearVibeMedia() {
 
 function setVibeDest(dest, row) {
   vibeDestination = dest;
-  document.getElementById('destRadioProfile').classList.toggle('active', dest === 'profile');
-  document.getElementById('destRadioCommunity').classList.toggle('active', dest === 'community');
+  const bothBtn = document.getElementById('destRadioBoth');
+  const profBtn = document.getElementById('destRadioProfile');
+  const commBtn = document.getElementById('destRadioCommunity');
+  if (bothBtn) bothBtn.classList.toggle('active', dest === 'both');
+  if (profBtn) profBtn.classList.toggle('active', dest === 'profile');
+  if (commBtn) commBtn.classList.toggle('active', dest === 'community');
 }
 
 function updateVibeCharCount(textarea) {
@@ -13151,7 +13368,7 @@ async function submitVibePost() {
 
   // Fix: treat null/undefined communityJoined as false only when explicitly checking community post
   const isJoined = currentUser.communityJoined || currentUser.community_joined || false;
-  if (vibeDestination === 'community' && !isJoined) {
+  if ((vibeDestination === 'community' || vibeDestination === 'both') && !isJoined) {
     return showMessage('⚠️ Join your college community first to post there', 'error');
   }
 
@@ -13159,32 +13376,34 @@ async function submitVibePost() {
   if (postingOverlay) postingOverlay.style.display = 'flex';
 
   try {
-    const formData = new FormData();
-    formData.append('content', caption || '');
-    formData.append('postTo', vibeDestination);
-
-    // Include music/stickers from existing selectors if they were used
-    if (typeof selectedMusic !== 'undefined' && selectedMusic) {
-      formData.append('music', JSON.stringify(selectedMusic));
-    }
-    if (typeof selectedStickers !== 'undefined' && selectedStickers?.length) {
-      formData.append('stickers', JSON.stringify(selectedStickers));
-    }
-
-    // New features: mood, location, poll, gif
-    if (vibeMoodTag) formData.append('mood', JSON.stringify(vibeMoodTag));
-    if (vibeLocationTag) formData.append('location', vibeLocationTag);
-    if (vibeGifUrl) formData.append('gifUrl', vibeGifUrl);
-    if (vibePollData) {
-      const pd = getVibePollData();
-      if (pd) formData.append('poll', JSON.stringify(pd));
+    // Helper to build FormData for a given postTo value
+    function buildFormData(postTo) {
+      const fd = new FormData();
+      fd.append('content', caption || '');
+      fd.append('postTo', postTo);
+      if (typeof selectedMusic !== 'undefined' && selectedMusic) fd.append('music', JSON.stringify(selectedMusic));
+      if (typeof selectedStickers !== 'undefined' && selectedStickers?.length) fd.append('stickers', JSON.stringify(selectedStickers));
+      if (vibeMoodTag) fd.append('mood', JSON.stringify(vibeMoodTag));
+      if (vibeLocationTag) fd.append('location', vibeLocationTag);
+      if (vibeGifUrl) fd.append('gifUrl', vibeGifUrl);
+      if (vibePollData) { const pd = getVibePollData(); if (pd) fd.append('poll', JSON.stringify(pd)); }
+      for (const file of vibeSelectedFiles) fd.append('media', file);
+      return fd;
     }
 
-    for (const file of vibeSelectedFiles) {
-      formData.append('media', file);
+    let data;
+    if (vibeDestination === 'both') {
+      // Post to profile first, then to community
+      const [profileRes, communityRes] = await Promise.all([
+        apiCall('/api/posts', 'POST', buildFormData('profile')),
+        apiCall('/api/posts', 'POST', buildFormData('community'))
+      ]);
+      // Use profile post as the "primary" result for UI feedback
+      data = profileRes && profileRes.success ? profileRes : communityRes;
+    } else {
+      const formData = buildFormData(vibeDestination);
+      data = await apiCall('/api/posts', 'POST', formData);
     }
-
-    const data = await apiCall('/api/posts', 'POST', formData);
 
     if (data && data.success) {
       // ── Success overlay ─────────────────────────────────────────────────
@@ -14807,6 +15026,11 @@ function openCommunityChat() {
   if (ghostPanel) ghostPanel.style.display = 'flex';
   if (execPanel) execPanel.style.display = 'none';
 
+  // ── Clear ghost chat unread badge (WhatsApp logic) ─────────────────────
+  const unreadBadge = document.getElementById('unreadCount');
+  if (unreadBadge) { unreadBadge.textContent = '0'; unreadBadge.style.display = 'none'; }
+  // ────────────────────────────────────────────────────────────────────────
+
   // ── Scroll to correct position every time ghost chat is opened ────
   // Must run AFTER display:flex so offsetTop / scrollHeight are valid.
   requestAnimationFrame(() => {
@@ -15318,26 +15542,80 @@ function execShowReactionPickerById(messageId, event) { execShowReactionPicker(e
 
 async function execToggleReaction(messageId, emoji) {
   try {
+    const el = document.getElementById('exec-msg-' + messageId);
+
+    // ── Detect any existing reaction this user already placed ─────────────
+    const prevPill = el ? el.querySelector('.exec-reaction-mine') : null;
+    const prevEmoji = prevPill ? prevPill.textContent.trim().split(' ')[0] : null;
+    const isSame = prevEmoji === emoji;
+
+    // ── Optimistic UI ────────────────────────────────────────────────────
+    if (el) {
+      const bar = el.querySelector('.exec-reactions-bar');
+      if (bar) {
+        // Remove old mine highlight
+        if (prevPill && !isSame) {
+          prevPill.classList.remove('exec-reaction-mine');
+          const prevCountMatch = prevPill.textContent.match(/\d+/);
+          const prevCount = prevCountMatch ? parseInt(prevCountMatch[0]) - 1 : 0;
+          if (prevCount <= 0) prevPill.remove();
+          else prevPill.textContent = prevEmoji + ' ' + prevCount;
+        }
+        if (isSame) {
+          // Toggle off
+          const countMatch = prevPill.textContent.match(/\d+/);
+          const n = countMatch ? parseInt(countMatch[0]) - 1 : 0;
+          if (n <= 0) prevPill.remove();
+          else { prevPill.textContent = emoji + ' ' + n; prevPill.classList.remove('exec-reaction-mine'); }
+        } else {
+          // Add / increment new
+          const existing = Array.from(bar.querySelectorAll('.exec-reaction-pill')).find(p => p.textContent.trim().startsWith(emoji));
+          if (existing) {
+            const m = existing.textContent.match(/\d+/);
+            existing.textContent = emoji + ' ' + ((m ? parseInt(m[0]) : 0) + 1);
+            existing.classList.add('exec-reaction-mine');
+          } else {
+            const pill = document.createElement('button');
+            pill.className = 'exec-reaction-pill exec-reaction-mine';
+            pill.textContent = emoji + ' 1';
+            pill.onclick = function() { execToggleReaction(messageId, emoji); };
+            bar.appendChild(pill);
+          }
+        }
+      }
+    }
+
+    // ── If replacing, remove old reaction from server first ──────────────
+    if (prevEmoji && !isSame) {
+      await apiCall('/api/executive/reactions', 'POST', { message_id: messageId, emoji: prevEmoji });
+    }
+
+    // ── Now add/toggle the selected emoji ────────────────────────────────
     const data = await apiCall('/api/executive/reactions', 'POST', { message_id: messageId, emoji });
     if (!data) return;
-    const msg = execMessages.find(m => m.id === messageId);
+
+    const msg = execMessages.find(function(m) { return m.id === messageId; });
     if (msg) msg.reactions = data.reactions || [];
-    const el = document.getElementById(`exec-msg-${messageId}`);
-    if (!el) return;
-    let bar = el.querySelector('.exec-reactions-bar');
-    if (!bar) {
-      bar = document.createElement('div');
-      bar.className = 'exec-reactions-bar';
-      el.querySelector('.exec-msg-col')?.appendChild(bar);
+
+    // Re-render bar from server truth
+    if (el) {
+      let bar = el.querySelector('.exec-reactions-bar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.className = 'exec-reactions-bar';
+        const col = el.querySelector('.exec-msg-col');
+        if (col) col.appendChild(bar);
+      }
+      if (data.reactions && data.reactions.length > 0) {
+        bar.innerHTML = execBuildReactionsHTML(messageId, data.reactions);
+        bar.style.display = '';
+      } else {
+        bar.innerHTML = '';
+        bar.style.display = 'none';
+      }
     }
-    if (data.reactions?.length > 0) {
-      bar.innerHTML = execBuildReactionsHTML(messageId, data.reactions);
-      bar.style.display = '';
-    } else {
-      bar.innerHTML = '';
-      bar.style.display = 'none';
-    }
-    if (socket && currentUser?.college) {
+
+    if (socket && currentUser && currentUser.college) {
       socket.emit('exec_reaction_update', { message_id: messageId, reactions: data.reactions, collegeName: currentUser.college });
     }
   } catch (err) { console.error('Reaction error:', err); }
@@ -16026,3 +16304,178 @@ window.toggleCommentLike = async function (commentId, btn, prefix = 'mv') {
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
   }
 };
+/* ============================================================
+   ZERO VELOCITY — HOME FEED SCROLL ARROWS
+   Injects ▲ / ▼ buttons on the right outer edge of the feed
+   panel. Uses position:fixed tracked to the container's rect.
+   No new colours — uses existing design-system CSS vars.
+   ============================================================ */
+(function initHomeFeedArrows() {
+  'use strict';
+
+  var _injected = false;
+  var _upBtn    = null;
+  var _downBtn  = null;
+  var _rafId    = null;
+
+  /* ── Scroll the container by exactly one card height ── */
+  function scrollOneCard(direction) {
+    var container = document.getElementById('homeFeedContainer');
+    if (!container) return;
+    var card = container.querySelector('.hf-card');
+    /* card height + margin-bottom (10px) */
+    var step = card
+      ? (card.offsetHeight + parseInt(getComputedStyle(card).marginBottom || '0', 10))
+      : Math.round(container.clientHeight * 0.80);
+    container.scrollBy({ top: direction * step, behavior: 'smooth' });
+  }
+
+  /* ── Create one arrow button ── */
+  function makeArrow(id, symbol, direction) {
+    var btn = document.createElement('button');
+    btn.id        = id;
+    btn.className = 'hf-feed-arrow';
+    btn.setAttribute('aria-label', direction > 0 ? 'Next post' : 'Previous post');
+    btn.innerHTML = symbol;
+    btn.style.visibility = 'hidden'; /* hide until correctly positioned */
+    btn.addEventListener('click', function () { scrollOneCard(direction); });
+    /* prevent any default focus ring that might look off */
+    btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    return btn;
+  }
+
+  /* ── Re-position both arrows to track the panel's right edge ── */
+  function positionArrows() {
+    if (!_upBtn || !_downBtn) return;
+    var container = document.getElementById('homeFeedContainer');
+    if (!container) return;
+
+    var rect   = container.getBoundingClientRect();
+
+    /* Guard: container not rendered yet — skip to avoid placing at 0,0 */
+    if (rect.width === 0 && rect.height === 0) return;
+
+    var midY   = (rect.top + rect.bottom) / 2;
+    var arrowX = rect.right + 8; /* 8 px gap between panel border and arrow */
+
+    /* Only show on desktop (arrow buttons are display:none on mobile via CSS) */
+    var visible = window.innerWidth > 768;
+    _upBtn.style.display   = visible ? 'flex' : 'none';
+    _downBtn.style.display = visible ? 'flex' : 'none';
+
+    if (!visible) return;
+
+    /* Up arrow: centred 44px above mid-point */
+    _upBtn.style.left = arrowX + 'px';
+    _upBtn.style.top  = (midY - 48) + 'px';
+
+    /* Down arrow: centred 8px below mid-point */
+    _downBtn.style.left = arrowX + 'px';
+    _downBtn.style.top  = (midY + 10) + 'px';
+
+    /* Reveal now that they are correctly placed */
+    _upBtn.style.visibility   = 'visible';
+    _downBtn.style.visibility = 'visible';
+  }
+
+  /* ── Inject arrows into document body ── */
+  function injectArrows() {
+    if (_injected) { positionArrows(); return; }
+
+    var container = document.getElementById('homeFeedContainer');
+    if (!container) return;
+
+    /* Clean up any stale buttons from a previous injection attempt */
+    var stale = document.querySelectorAll('.hf-feed-arrow');
+    stale.forEach(function (el) { el.parentNode && el.parentNode.removeChild(el); });
+
+    _upBtn   = makeArrow('hf-arrow-up',   '▲', -1);
+    _downBtn = makeArrow('hf-arrow-down', '▼',  1);
+
+    document.body.appendChild(_upBtn);
+    document.body.appendChild(_downBtn);
+
+    _injected = true;
+
+    /* Initial placement */
+    positionArrows();
+
+    /* Keep arrows aligned on resize and scroll */
+    window.addEventListener('resize', positionArrows, { passive: true });
+    /* Also track panel scroll (panel position doesn't change on scroll,
+       but container.getBoundingClientRect() may shift if header hides) */
+    container.addEventListener('scroll', positionArrows, { passive: true });
+  }
+
+  /* ── Continuous rAF tracker while home page is active ──
+     Handles any CSS transitions that shift the panel. */
+  function startTracking() {
+    if (_rafId) return;
+    (function tick() {
+      positionArrows();
+      _rafId = requestAnimationFrame(tick);
+    }());
+  }
+
+  function stopTracking() {
+    if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+  }
+
+  /* ── Observe class changes on .page elements to detect navigation ── */
+  function onNavigate() {
+    var home = document.getElementById('home');
+    /* On initial load, home has class="page active" but no inline style yet.
+       showPage() later sets style.display='flex'. Check BOTH conditions. */
+    var isHomeVisible = home && (
+      home.classList.contains('active') ||
+      (home.style.display !== 'none' && home.style.display !== '')
+    );
+    if (isHomeVisible) {
+      injectArrows();
+      startTracking();
+    } else {
+      stopTracking();
+    }
+  }
+
+  /* ── Boot ── */
+  function boot() {
+    /* Patch showPage so arrows are injected/refreshed on every home visit */
+    var _origShowPage = window.showPage;
+    if (typeof _origShowPage === 'function') {
+      window.showPage = function (name) {
+        var result = _origShowPage.apply(this, arguments);
+        if (name === 'home') {
+          /* slight delay so the page is visible before we measure */
+          setTimeout(function () { injectArrows(); startTracking(); }, 80);
+        } else {
+          stopTracking();
+        }
+        return result;
+      };
+    }
+
+    /* MutationObserver as fallback for programmatic navigation */
+    var observer = new MutationObserver(onNavigate);
+    observer.observe(document.body, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    /* If home is already visible on load (class-based active, no inline style yet).
+       Retry at 300ms and 800ms to catch the home feed after it finishes rendering. */
+    onNavigate();
+    setTimeout(function () { onNavigate(); }, 300);
+    setTimeout(function () { onNavigate(); }, 800);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+}());
+/* ============================================================
+   END — ZERO VELOCITY HOME FEED SCROLL ARROWS
+   ============================================================ */
