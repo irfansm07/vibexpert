@@ -2242,63 +2242,8 @@ function handleChatKeypress(e) {
   }
 }
 
-async function sendWhatsAppMessage() {
-  const input = document.getElementById('whatsappInput');
-  const content = input.value.trim();
-
-  if (!content) return;
-
-  try {
-    // 1. Clear input immediately
-    input.value = '';
-
-    // 2. Create unique temp ID
-    const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-
-    // 3. Show optimistic message
-    const tempMessage = {
-      id: tempId,
-      content: content,
-      user_id: currentUser.id,
-      users: {
-        username: currentUser.username,
-        avatar_url: currentUser.avatar_url
-      },
-      created_at: new Date().toISOString(),
-      isTemp: true // Mark as temporary
-    };
-
-    appendWhatsAppMessage(tempMessage, true); // true = own message
-
-    // 4. Send to server
-    const response = await apiCall('/api/community/messages', 'POST', {
-      content: content
-    });
-
-    if (response.success) {
-      // 5. Remove temp message
-      const tempElement = document.getElementById(`wa-msg-${tempId}`);
-      if (tempElement) {
-        tempElement.remove();
-      }
-
-      // 6. Add real message from API response
-      appendWhatsAppMessage(response.message, true);
-
-      console.log('✅ Message sent successfully');
-    }
-
-  } catch (error) {
-    console.error('❌ Failed to send message:', error);
-    showMessage('Failed to send message', 'error');
-
-    // Remove temp message on error
-    const tempElement = document.getElementById(`wa-msg-temp-${tempId}`);
-    if (tempElement) {
-      tempElement.remove();
-    }
-  }
-}
+// BUG FIX (DUP-1): Removed first duplicate definition of sendWhatsAppMessage.
+// The authoritative version is defined below (line ~2496) and used everywhere.
 function handleWhatsAppKeypress(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -2434,6 +2379,7 @@ function loadCommunities() {
 // ==========================================
 
 let isLoadingWhatsAppMessages = false;
+// BUG FIX (BUG-2): Removed duplicate isLoadingMessages — use isLoadingWhatsAppMessages consistently.
 
 async function loadWhatsAppMessages() {
   if (isLoadingWhatsAppMessages) return;
@@ -2507,8 +2453,19 @@ async function sendWhatsAppMessage() {
     return;
   }
 
+  // ── Ghost name gate ──────────────────────────────────────────────────
+  if (!hasGhostName()) {
+    requireGhostName(() => sendWhatsAppMessage());
+    return;
+  }
+
+  // ── Bad-word safety check ────────────────────────────────────────────
+  if (!communitySafetyCheck(content)) return;
+  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
+
   // ✅ Clear input IMMEDIATELY
   const originalContent = content;
+  const ghostName = getGhostName();
   input.value = '';
   input.style.height = 'auto';
 
@@ -2543,7 +2500,8 @@ async function sendWhatsAppMessage() {
 
     // ✅ Send to server
     const response = await apiCall('/api/community/messages', 'POST', {
-      content: originalContent
+      content: originalContent,
+      anon_name: ghostName
     });
 
     if (response.success && response.message) {
@@ -3537,13 +3495,20 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     if (avatarInitial) avatarInitial.style.display = 'block';
   }
 
-  // Cover photo — always use default cover for ALL users
+  // Cover photo — use user's custom cover if set, else default
   const coverImg = document.getElementById('profileCoverImg');
   const coverWrap = document.getElementById('profileCoverPhoto');
   if (coverImg) {
-    coverImg.src = 'default-cover.png';
-    coverImg.style.display = 'block';
-    if (coverWrap) coverWrap.style.background = 'none';
+    const resolvedCover = targetUser.cover_photo || (isOwn && currentUser && currentUser.cover_photo) || null;
+    if (resolvedCover) {
+      coverImg.src = resolvedCover;
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    } else {
+      coverImg.src = 'default-cover.png';
+      coverImg.style.display = 'block';
+      if (coverWrap) coverWrap.style.background = 'none';
+    }
   }
 
   // Real data from database
@@ -5165,41 +5130,55 @@ function editProfileBio() {
   }
 }
 
-function saveBioFromModal() {
+async function saveBioFromModal() {
   const textarea = document.getElementById('modalBioText');
   const userInput = document.getElementById('modalUsernameText');
 
-  if (currentUser) {
-    let changed = false;
+  if (!currentUser) return;
 
-    if (textarea) {
-      const newBio = textarea.value;
-      if (currentUser.bio !== newBio) {
-        currentUser.bio = newBio;
-        changed = true;
-      }
-    }
+  const newBio = textarea ? textarea.value : (currentUser.bio || '');
+  const newUsername = userInput ? (userInput.value.trim() || currentUser.username) : currentUser.username;
 
-    if (userInput) {
-      const newUsername = userInput.value.trim();
-      if (newUsername && currentUser.username !== newUsername) {
-        currentUser.username = newUsername;
-        changed = true;
+  const bioChanged = currentUser.bio !== newBio;
+  const usernameChanged = newUsername && currentUser.username !== newUsername;
 
-        // Update global UI elements for username
-        const navUsername = document.getElementById('userName');
-        if (navUsername) navUsername.textContent = newUsername;
-      }
-    }
+  if (!bioChanged && !usernameChanged) {
+    closeModal('bioEditModal');
+    return;
+  }
 
-    if (changed) {
+  try {
+    showMessage('Saving...', 'info');
+
+    const result = await apiCall('/api/profile/update', 'PUT', {
+      username: newUsername,
+      bio: newBio,
+      college: currentUser.college || '',
+      registration_number: currentUser.registration_number || ''
+    });
+
+    if (result.success) {
+      // Sync local state from server response
+      currentUser = result.user;
       saveUserToLocal();
+
+      // Update global UI elements for username
+      if (usernameChanged) {
+        const navUsername = document.getElementById('userName');
+        if (navUsername) navUsername.textContent = currentUser.username;
+      }
+
       showProfilePage(currentUser);
       showMessage('🚀 Profile updated! Looking fresh.', 'success');
+    } else {
+      showMessage('❌ Failed to save profile', 'error');
     }
-
-    closeModal('bioEditModal');
+  } catch (err) {
+    console.error('saveBioFromModal error:', err);
+    showMessage('❌ ' + (err.message || 'Failed to save'), 'error');
   }
+
+  closeModal('bioEditModal');
 }
 
 function editShippingAddress() {
@@ -5480,10 +5459,13 @@ async function loadHomeFeed() {
   try {
     const data = await apiCall('/api/posts', 'GET');
     const allPosts = data.posts || [];
-    // Only show OTHER people's posts on home feed
+    // Zero Velocity: exclude own posts AND exclude community posts
+    // Community posts belong in Vibers only (postedTo === 'community')
     const posts = allPosts.filter(p => {
       const ownerId = (p.users && p.users.id) || p.user_id;
-      return !currentUser || ownerId !== currentUser.id;
+      const isOwn = currentUser && ownerId === currentUser.id;
+      const isCommunity = p.postedTo === 'community';
+      return !isOwn && !isCommunity;
     });
 
     if (!posts.length) {
@@ -5552,32 +5534,36 @@ function buildHomeFeedCard(post) {
   const postContentForShare = (post.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
   const authorForShare = (authorRaw || '').replace(/'/g, "\\'");
 
-  return `<div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}')">
-    ${isRealVibe ? '<span class="vx-sparkle-tl"></span><span class="vx-sparkle-tr"></span>' : ''}
-    <div class="hf-card-header">
-      ${avatar}
-      <div class="hf-user-info">
-        <span class="hf-username" onclick="showUserProfile('${escapeHtml(userId)}')">${username}</span>
-        ${college}
-        <span class="hf-time">${time}</span>
-      </div>
-      ${followBtn}
+  return `<div class="hf-card-wrap">
+    <div class="hf-card-nav">
+      <button class="hf-nav-arrow" onclick="homeFeedScrollCard(-1)" title="Previous post">&#9650;</button>
+      <button class="hf-nav-arrow" onclick="homeFeedScrollCard(1)" title="Next post">&#9660;</button>
     </div>
-    ${content}
-    ${mediaHtml}
-    <div class="hf-actions">
-      <button class="hf-action-btn hf-card-scroll-arrow" onclick="homeFeedScrollCard(-1)" title="Previous post">▲</button>
-      <button class="hf-action-btn hf-like-btn ${isLiked ? 'hf-liked' : ''}" onclick="homeFeedToggleLike('${escapeHtml(postId)}', this)">
-        <span class="hf-like-icon">${isLiked ? '❤️' : '🤍'}</span>
-        <span class="hf-like-count">${likes}</span>
-      </button>
-      <button class="hf-action-btn" onclick="homeFeedToggleComments('${escapeHtml(postId)}')">
-        💬 <span id="hf-comment-count-${escapeHtml(postId)}">${comments}</span>
-      </button>
-      <button class="hf-action-btn" onclick="sharePost('${escapeHtml(postId)}', '${postContentForShare}', '${authorForShare}')">
-        🔄 <span>${shares}</span> Share
-      </button>
-      <button class="hf-action-btn hf-card-scroll-arrow" onclick="homeFeedScrollCard(1)" title="Next post">▼</button>
+    <div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}')">
+      ${isRealVibe ? '<span class="vx-sparkle-tl"></span><span class="vx-sparkle-tr"></span>' : ''}
+      <div class="hf-card-header">
+        ${avatar}
+        <div class="hf-user-info">
+          <span class="hf-username" onclick="showUserProfile('${escapeHtml(userId)}')">${username}</span>
+          ${college}
+          <span class="hf-time">${time}</span>
+        </div>
+        ${followBtn}
+      </div>
+      ${content}
+      ${mediaHtml}
+      <div class="hf-actions">
+        <button class="hf-action-btn hf-like-btn ${isLiked ? 'hf-liked' : ''}" onclick="homeFeedToggleLike('${escapeHtml(postId)}', this)">
+          <span class="hf-like-icon">${isLiked ? '&#10084;&#65039;' : '&#129293;'}</span>
+          <span class="hf-like-count">${likes}</span>
+        </button>
+        <button class="hf-action-btn" onclick="homeFeedToggleComments('${escapeHtml(postId)}')">
+          &#128172; <span id="hf-comment-count-${escapeHtml(postId)}">${comments}</span>
+        </button>
+        <button class="hf-action-btn" onclick="sharePost('${escapeHtml(postId)}', '${postContentForShare}', '${authorForShare}')">
+          &#128260; <span>${shares}</span> Share
+        </button>
+      </div>
     </div>
   </div>`;
 }
@@ -6719,10 +6705,16 @@ async function loadComments(postId) {
                <div style="font-weight:600;color:#4f74a3;">@${author}</div>
              </div>
            </div>
-           <div style="display:flex; align-items:center; gap:8px;">
-             <button onclick="this.innerHTML = this.innerHTML === '❤️' ? '🤍' : '❤️'; this.classList.toggle('comment-liked'); event.stopPropagation();" 
-              style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;outline:none;transition:transform 0.2s;" 
-              onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🤍</button>
+           <div style="display:flex; align-items:center; gap:6px;">
+             <button onclick="toggleCommentLike('${comment.id}', this, 'cml')"
+              style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;outline:none;transition:transform 0.2s;line-height:1;"
+              onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+               ${comment.is_liked || comment.liked ? '❤️' : '🤍'}
+             </button>
+             <span id="comment-like-count-cml-${comment.id}"
+               style="font-size:12px;color:rgba(255,255,255,0.4);min-width:14px;">
+               ${comment.like_count || comment.likeCount || comment.likes || 0}
+             </span>
              ${isOwn ?
           `<button onclick="deleteComment('${comment.id}','${postId}')" 
                style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:none;
@@ -6945,6 +6937,243 @@ function openCamera() {
 
   input.click();
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  POST IMAGE PREVIEW & CROP MODAL
+//  Intercepts image selection in Zero Velocity and Vibers upload flows.
+//  Shows a crop editor + live side-by-side previews of how the image will
+//  look in both sections BEFORE it gets added to the post.
+// ══════════════════════════════════════════════════════════════════════════════
+
+function showPostImagePreviewModal(files, onConfirm) {
+  const imageFiles = [];
+  const otherFiles = [];
+  files.forEach(f => (f.type.startsWith('image/') ? imageFiles : otherFiles).push(f));
+
+  // No images → skip straight through (videos/audio pass unchanged)
+  if (!imageFiles.length) { onConfirm(files); return; }
+
+  // Remove any stale instance
+  document.getElementById('vxPostPreviewModal')?.remove();
+  if (window._vxActiveCropper) { window._vxActiveCropper.destroy(); window._vxActiveCropper = null; }
+
+  const modal = document.createElement('div');
+  modal.id = 'vxPostPreviewModal';
+  modal.style.cssText = [
+    'position:fixed;inset:0;z-index:99999;',
+    'background:rgba(0,0,0,0.93);',
+    'display:flex;align-items:center;justify-content:center;',
+    'padding:16px;'
+  ].join('');
+
+  modal.innerHTML = `
+    <div style="background:#0f0d1e;border:1px solid rgba(124,92,252,0.3);border-radius:20px;
+                width:100%;max-width:720px;max-height:92vh;overflow-y:auto;padding:24px;
+                box-shadow:0 32px 80px rgba(0,0,0,0.95);">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0;color:#fff;font-size:17px;font-weight:700;">📸 Preview &amp; Crop Before Posting</h3>
+          <p id="vxPrvPageIndicator" style="margin:4px 0 0;color:rgba(255,255,255,0.4);font-size:12px;">
+            Image 1 of ${imageFiles.length}
+          </p>
+        </div>
+        <button onclick="document.getElementById('vxPostPreviewModal')?.remove();if(window._vxActiveCropper){window._vxActiveCropper.destroy();window._vxActiveCropper=null;}"
+          style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:24px;cursor:pointer;line-height:1;">✕</button>
+      </div>
+
+      <!-- Crop area -->
+      <div style="background:#07061a;border-radius:12px;overflow:hidden;margin-bottom:14px;max-height:300px;display:flex;align-items:center;justify-content:center;">
+        <img id="vxPrvCropImg" style="max-width:100%;display:block;">
+      </div>
+
+      <!-- Aspect ratio pills -->
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:11px;color:rgba(255,255,255,0.35);margin-right:2px;">Crop ratio:</span>
+        ${[['Free','free'],['1:1','1'],['4:5','0.8'],['16:9','1.7778'],['4:3','1.3333']]
+          .map(([label, val]) =>
+            `<button class="vxPrvRatioBtn" data-ratio="${val}" onclick="vxPrvSetRatio('${val}',this)"
+              style="padding:5px 14px;border-radius:20px;border:1px solid rgba(124,92,252,0.35);
+                     background:${val==='free'?'rgba(124,92,252,0.25)':'rgba(124,92,252,0.07)'};
+                     color:rgba(210,190,255,${val==='free'?'1':'0.65'});
+                     font-size:12px;cursor:pointer;transition:.15s;font-weight:${val==='free'?'700':'400'};"
+            >${label}</button>`
+          ).join('')}
+        <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.3);">Drag to reposition · Pinch/scroll to zoom</span>
+      </div>
+
+      <!-- Live section previews -->
+      <p style="font-size:12px;color:rgba(255,255,255,0.35);margin:0 0 10px;font-weight:600;letter-spacing:.3px;">
+        LIVE PREVIEW — how your post will look:
+      </p>
+      <div style="display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;">
+
+        <!-- Zero Velocity -->
+        <div style="flex:1;min-width:180px;">
+          <p style="font-size:11px;color:rgba(120,160,255,0.9);margin:0 0 6px;font-weight:600;">⚡ Zero Velocity</p>
+          <div style="width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;
+                      background:#111;border:1px solid rgba(120,160,255,0.2);">
+            <img id="vxPrvZeroVel" style="width:100%;height:100%;object-fit:cover;display:block;transition:.1s;">
+          </div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.25);margin:5px 0 0;">Wide landscape strip</p>
+        </div>
+
+        <!-- Vibers -->
+        <div style="flex:0 0 auto;">
+          <p style="font-size:11px;color:rgba(200,80,255,0.9);margin:0 0 6px;font-weight:600;">🎵 Vibers</p>
+          <div style="width:140px;height:140px;border-radius:10px;overflow:hidden;
+                      background:#111;border:1px solid rgba(200,80,255,0.2);">
+            <img id="vxPrvVibers" style="width:100%;height:100%;object-fit:cover;display:block;transition:.1s;">
+          </div>
+          <p style="font-size:10px;color:rgba(255,255,255,0.25);margin:5px 0 0;">Square format</p>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('vxPostPreviewModal')?.remove();if(window._vxActiveCropper){window._vxActiveCropper.destroy();window._vxActiveCropper=null;}"
+          style="padding:11px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);
+                 background:transparent;color:rgba(255,255,255,0.45);cursor:pointer;font-size:14px;">
+          Cancel
+        </button>
+        <button id="vxPrvConfirmBtn" onclick="vxPrvConfirmCurrent()"
+          style="padding:11px 26px;border-radius:10px;border:none;
+                 background:linear-gradient(135deg,#7c3aed,#a78bfa);
+                 color:#fff;font-weight:700;cursor:pointer;font-size:14px;
+                 box-shadow:0 4px 20px rgba(124,58,237,0.4);">
+          ${imageFiles.length > 1 ? 'Next Image →' : '✅ Use This Crop'}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Store state directly on the modal node
+  modal._imageFiles      = imageFiles;
+  modal._otherFiles      = otherFiles;
+  modal._onConfirm       = onConfirm;
+  modal._processedImages = [];
+  modal._currentIdx      = 0;
+
+  _vxLoadPreviewImage(0);
+}
+
+/* ── Load one image into the cropper ── */
+function _vxLoadPreviewImage(idx) {
+  const modal = document.getElementById('vxPostPreviewModal');
+  if (!modal) return;
+
+  modal._currentIdx = idx;
+  const total = modal._imageFiles.length;
+
+  const indicator = document.getElementById('vxPrvPageIndicator');
+  if (indicator) indicator.textContent = `Image ${idx + 1} of ${total}`;
+
+  const confirmBtn = document.getElementById('vxPrvConfirmBtn');
+  if (confirmBtn) confirmBtn.textContent = idx < total - 1 ? 'Next Image →' : '✅ Use This Crop';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const imgEl = document.getElementById('vxPrvCropImg');
+    if (!imgEl) return;
+
+    // Teardown previous cropper
+    if (window._vxActiveCropper) { window._vxActiveCropper.destroy(); window._vxActiveCropper = null; }
+
+    imgEl.src = e.target.result;
+    imgEl.onload = () => {
+      window._vxActiveCropper = new Cropper(imgEl, {
+        aspectRatio: NaN,
+        viewMode: 1,
+        autoCropArea: 0.92,
+        responsive: true,
+        background: false,
+        crop: _vxThrottledPreviewUpdate
+      });
+      // Trigger first preview render after cropper settles
+      setTimeout(_vxUpdateLivePreviews, 400);
+    };
+  };
+  reader.readAsDataURL(modal._imageFiles[idx]);
+}
+
+/* ── Throttled live preview updater (fires on every crop move) ── */
+let _vxPreviewThrottleTimer = null;
+function _vxThrottledPreviewUpdate() {
+  clearTimeout(_vxPreviewThrottleTimer);
+  _vxPreviewThrottleTimer = setTimeout(_vxUpdateLivePreviews, 90);
+}
+
+function _vxUpdateLivePreviews() {
+  if (!window._vxActiveCropper) return;
+  try {
+    const canvas = window._vxActiveCropper.getCroppedCanvas({ maxWidth: 900, maxHeight: 900 });
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const zv = document.getElementById('vxPrvZeroVel');
+    const vb = document.getElementById('vxPrvVibers');
+    if (zv) zv.src = dataUrl;
+    if (vb) vb.src = dataUrl;
+  } catch (err) { /* cropper not ready yet */ }
+}
+
+/* ── Set aspect ratio from pill buttons ── */
+window.vxPrvSetRatio = function(val, btn) {
+  document.querySelectorAll('.vxPrvRatioBtn').forEach(b => {
+    b.style.background = 'rgba(124,92,252,0.07)';
+    b.style.color = 'rgba(210,190,255,0.65)';
+    b.style.fontWeight = '400';
+  });
+  if (btn) {
+    btn.style.background = 'rgba(124,92,252,0.28)';
+    btn.style.color = 'rgba(220,200,255,1)';
+    btn.style.fontWeight = '700';
+  }
+  if (!window._vxActiveCropper) return;
+  if (val === 'free') window._vxActiveCropper.setAspectRatio(NaN);
+  else window._vxActiveCropper.setAspectRatio(parseFloat(val));
+};
+
+/* ── Confirm current crop; advance to next image or finish ── */
+window.vxPrvConfirmCurrent = function() {
+  const modal = document.getElementById('vxPostPreviewModal');
+  if (!modal || !window._vxActiveCropper) return;
+
+  const btn = document.getElementById('vxPrvConfirmBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing…'; }
+
+  try {
+    const canvas = window._vxActiveCropper.getCroppedCanvas({ maxWidth: 1400, maxHeight: 1400 });
+    if (!canvas) { if (btn) { btn.disabled = false; btn.textContent = '✅ Use This Crop'; } return; }
+
+    canvas.toBlob((blob) => {
+      const idx = modal._currentIdx;
+      const origFile = modal._imageFiles[idx];
+      // Name the file with original name but always jpeg (canvas output)
+      const croppedFile = new File([blob], origFile.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+      modal._processedImages.push(croppedFile);
+
+      window._vxActiveCropper.destroy();
+      window._vxActiveCropper = null;
+
+      const nextIdx = idx + 1;
+      if (nextIdx < modal._imageFiles.length) {
+        _vxLoadPreviewImage(nextIdx);
+      } else {
+        // All images done — pass processed images + original non-image files to callback
+        const allFiles = [...modal._processedImages, ...modal._otherFiles];
+        modal._onConfirm(allFiles);
+        modal.remove();
+      }
+    }, 'image/jpeg', 0.93);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Use This Crop'; }
+  }
+};
+
+// ── END POST IMAGE PREVIEW MODAL ──────────────────────────────────────────────
 
 function handleMediaFiles(files) {
   if (!files || files.length === 0) return;
@@ -8256,6 +8485,13 @@ let rvMediaFile = null;
 let rvMediaType = null;
 let rvActiveCommentVibeId = null;
 let _rvAllVibes = [];
+// Cached quota usage (populated when creator modal opens)
+let _rvUsedPhotos = 0;
+let _rvUsedVideos = 0;
+let _rvPlan = 'noble';
+// Cropper.js instance
+let _rvCropper = null;
+let _rvCropRawSrc = null;
 
 // ── Open creator — gate check ──────────────────────────────────
 async function openRealVibeCreator() {
@@ -8289,6 +8525,40 @@ async function openRealVibeCreator() {
   const expiryDays = document.getElementById('rvExpiryDays');
   if (expiryDays) expiryDays.textContent = days;
 
+  // Fetch quota usage, cache it, and display remaining slots
+  const photoLimit = 5;
+  const videoLimit = plan === 'royal' ? 3 : 1;
+  _rvPlan = plan;
+  _rvUsedPhotos = 0;
+  _rvUsedVideos = 0;
+  const quotaEl = document.getElementById('rvQuotaInfo');
+  if (quotaEl) {
+    quotaEl.innerHTML = `<span class="rv-quota-loading">Checking quota…</span>`;
+    quotaEl.style.display = 'flex';
+  }
+  try {
+    const myData = await apiCall('/api/realvibes/my-submissions', 'GET');
+    const myVibes = myData.vibes || [];
+    _rvUsedPhotos = myVibes.filter(v => v.mediaType === 'image').length;
+    _rvUsedVideos = myVibes.filter(v => v.mediaType === 'video').length;
+    const photosLeft = Math.max(0, photoLimit - _rvUsedPhotos);
+    const videosLeft = Math.max(0, videoLimit - _rvUsedVideos);
+    if (quotaEl) {
+      quotaEl.innerHTML =
+        `<span class="${photosLeft === 0 ? 'rv-quota-full' : 'rv-quota-ok'}">📸 ${photosLeft}/${photoLimit} photos left</span>` +
+        `<span class="rv-quota-dot">·</span>` +
+        `<span class="${videosLeft === 0 ? 'rv-quota-full' : 'rv-quota-ok'}">🎥 ${videosLeft}/${videoLimit} video${videoLimit > 1 ? 's' : ''} left</span>`;
+    }
+    // If both slots exhausted, warn user and disable the file input
+    if (photosLeft === 0 && videosLeft === 0) {
+      showMessage('⚠️ All your RealVibe slots are used for this subscription period.', 'error');
+      const dropZone = document.getElementById('rvDropZone');
+      if (dropZone) dropZone.style.opacity = '0.4';
+    }
+  } catch (e) {
+    if (quotaEl) quotaEl.innerHTML = '';
+  }
+
   clearRvPreview();
   const captionEl = document.getElementById('rvCaption');
   if (captionEl) captionEl.value = '';
@@ -8307,6 +8577,8 @@ function closeRvCreatorModal() {
   const modal = document.getElementById('realVibeCreatorModal');
   if (modal) modal.style.display = 'none';
   clearRvPreview();
+  rvCloseCropModal();
+  closeRvPreviewOverlay();
   const rvEmojiPicker = document.getElementById('rvEmojiPicker');
   if (rvEmojiPicker) rvEmojiPicker.style.display = 'none';
   const rvEmojiBtn = document.getElementById('rvEmojiToggleBtn');
@@ -8330,50 +8602,176 @@ function rvTriggerFilePick() {
 function handleRvFile(e) {
   const file = e.target.files?.[0];
   if (!file) return;
-  if (file.size > 50 * 1024 * 1024) { showMessage('⚠️ File too large (max 50MB)', 'error'); return; }
 
-  rvMediaFile = file;
-  rvMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+  const isVideo = file.type.startsWith('video/');
+  const videoLimit = _rvPlan === 'royal' ? 3 : 1;
+  const photoLimit = 5;
 
-  const reader = new FileReader();
-  reader.onload = (ev) => {
+  // ── Instant quota check at file selection ──
+  if (isVideo) {
+    if (_rvUsedVideos >= videoLimit) {
+      showMessage(`🚫 Video limit reached — ${_rvPlan === 'royal' ? 'Royal' : 'Noble'} plan allows ${videoLimit} video${videoLimit > 1 ? 's' : ''} per subscription period.`, 'error');
+      e.target.value = '';
+      return;
+    }
+  } else {
+    if (_rvUsedPhotos >= photoLimit) {
+      showMessage(`🚫 Photo limit reached — you've used all ${photoLimit} photo slots for this subscription period.`, 'error');
+      e.target.value = '';
+      return;
+    }
+  }
+
+  if (file.size > 50 * 1024 * 1024) { showMessage('⚠️ File too large (max 50MB)', 'error'); e.target.value = ''; return; }
+
+  rvMediaType = isVideo ? 'video' : 'image';
+
+  if (isVideo) {
+    // Videos: show directly in drop zone (no crop needed)
+    rvMediaFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const vid = document.getElementById('rvPreviewVideo');
+      const img = document.getElementById('rvPreviewImg');
+      const badge = document.getElementById('rvVideoBadge');
+      const idle = document.getElementById('rvDropIdle');
+      const prev = document.getElementById('rvDropPreview');
+      if (vid) { vid.src = ev.target.result; vid.style.display = 'block'; }
+      if (img) img.style.display = 'none';
+      if (badge) badge.style.display = 'flex';
+      if (idle) idle.style.display = 'none';
+      if (prev) prev.style.display = 'flex';
+      const btn = document.getElementById('rvPublishBtn');
+      if (btn) btn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Photos: open crop & adjust modal first
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      _rvCropRawSrc = ev.target.result;
+      openRvCropModal(_rvCropRawSrc);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// ── Crop Modal ─────────────────────────────────────────────────
+function openRvCropModal(src) {
+  const modal = document.getElementById('rvCropModal');
+  if (!modal) return;
+
+  // Destroy previous cropper if any
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
+
+  const cropImg = document.getElementById('rvCropImage');
+  if (!cropImg) return;
+  cropImg.src = src;
+
+  // Reset ratio buttons to Square (default)
+  document.querySelectorAll('.rv-ratio-btn').forEach(b => b.classList.remove('active'));
+  const squareBtn = document.querySelector('.rv-ratio-btn[data-label="1:1"]');
+  if (squareBtn) squareBtn.classList.add('active');
+
+  modal.style.display = 'flex';
+
+  // Init Cropper after image loads
+  cropImg.onload = () => {
+    if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} }
+    _rvCropper = new Cropper(cropImg, {
+      aspectRatio: 1,        // default: Square (same as rv-card)
+      viewMode: 1,           // crop box stays inside canvas
+      dragMode: 'move',      // user moves image, not the box
+      autoCropArea: 1,       // fill all available space by default
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: false, // box is fixed; user moves image
+      cropBoxResizable: false,
+      toggleDragModeOnDblclick: false,
+      background: true,
+    });
+  };
+  // If image already loaded (cached)
+  if (cropImg.complete && cropImg.naturalWidth) cropImg.onload();
+}
+
+function setRvAspect(ratio, btn) {
+  document.querySelectorAll('.rv-ratio-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (_rvCropper) {
+    _rvCropper.setAspectRatio(isNaN(ratio) ? NaN : ratio);
+    // For free ratio, enable movable crop box
+    _rvCropper.setCropBoxData({ left: 0, top: 0,
+      width: _rvCropper.getCanvasData().width,
+      height: _rvCropper.getCanvasData().height });
+  }
+}
+
+function rvApplyCrop() {
+  if (!_rvCropper) return;
+  const canvas = _rvCropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1920, imageSmoothingQuality: 'high' });
+  if (!canvas) return;
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    // Store as the file to upload
+    rvMediaFile = new File([blob], 'realvibe.jpg', { type: 'image/jpeg' });
+    rvMediaType = 'image';
+
+    // Show cropped result in drop zone
+    const croppedURL = canvas.toDataURL('image/jpeg', 0.92);
     const img = document.getElementById('rvPreviewImg');
     const vid = document.getElementById('rvPreviewVideo');
     const badge = document.getElementById('rvVideoBadge');
     const idle = document.getElementById('rvDropIdle');
     const prev = document.getElementById('rvDropPreview');
 
-    if (rvMediaType === 'video') {
-      if (vid) { vid.src = ev.target.result; vid.style.display = 'block'; }
-      if (img) img.style.display = 'none';
-      if (badge) badge.style.display = 'flex';
-    } else {
-      if (img) { img.src = ev.target.result; img.style.display = 'block'; }
-      if (vid) vid.style.display = 'none';
-      if (badge) badge.style.display = 'none';
-    }
+    if (img) { img.src = croppedURL; img.style.display = 'block'; }
+    if (vid) vid.style.display = 'none';
+    if (badge) badge.style.display = 'none';
     if (idle) idle.style.display = 'none';
     if (prev) prev.style.display = 'flex';
 
     const btn = document.getElementById('rvPublishBtn');
     if (btn) btn.disabled = false;
-  };
-  reader.readAsDataURL(file);
+
+    // Close crop modal
+    rvCloseCropModal();
+  }, 'image/jpeg', 0.92);
+}
+
+function rvCancelCrop() {
+  rvCloseCropModal();
+  // Clear file input so user can re-pick
+  const fi = document.getElementById('rvFileInput');
+  if (fi) fi.value = '';
+}
+
+function rvCloseCropModal() {
+  const modal = document.getElementById('rvCropModal');
+  if (modal) modal.style.display = 'none';
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
 }
 
 function clearRvPreview() {
   rvMediaFile = null;
   rvMediaType = null;
+  _rvCropRawSrc = null;
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
   const idle = document.getElementById('rvDropIdle');
   const prev = document.getElementById('rvDropPreview');
   const img = document.getElementById('rvPreviewImg');
   const vid = document.getElementById('rvPreviewVideo');
   const fi = document.getElementById('rvFileInput');
+  const dropZone = document.getElementById('rvDropZone');
   if (idle) idle.style.display = 'flex';
   if (prev) prev.style.display = 'none';
   if (img) { img.src = ''; img.style.display = 'none'; }
   if (vid) { vid.src = ''; vid.style.display = 'none'; }
   if (fi) fi.value = '';
+  if (dropZone) dropZone.style.opacity = '';
   const btn = document.getElementById('rvPublishBtn');
   if (btn) btn.disabled = true;
 }
@@ -8441,21 +8839,80 @@ function insertRvEmoji(emoji) {
   updateRvCounter();
 }
 
-// ── Publish ────────────────────────────────────────────────────
+// ── Preview before publishing ──────────────────────────────────
+function previewRealVibe() {
+  if (!rvMediaFile) { showVibeSelectFirst(); return; }
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
+
+  const caption = document.getElementById('rvCaption')?.value.trim() || '';
+  const sub = checkSubscriptionStatus();
+  const plan = (sub && sub.plan) || 'noble';
+  const isVideo = rvMediaType === 'video';
+  const mediaURL = isVideo
+    ? document.getElementById('rvPreviewVideo')?.src
+    : document.getElementById('rvPreviewImg')?.src;
+
+  // Build the preview card
+  const username = currentUser.username || 'You';
+  const avatar = currentUser.profile_pic
+    ? `<img src="${currentUser.profile_pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : `<span style="font-size:1.1rem;font-weight:700;color:#fff;">${username.charAt(0).toUpperCase()}</span>`;
+  const planBadgeHtml = plan === 'royal'
+    ? `<span style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;font-size:.6rem;font-weight:800;padding:.2rem .55rem;border-radius:20px;letter-spacing:.06em;">👑 ROYAL</span>`
+    : `<span style="background:linear-gradient(135deg,#c0c0c0,#8a8a8a);color:#fff;font-size:.6rem;font-weight:800;padding:.2rem .55rem;border-radius:20px;letter-spacing:.06em;">🥈 NOBLE</span>`;
+
+  const mediaHtml = isVideo
+    ? `<video src="${mediaURL}" autoplay muted loop playsinline style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block;"></video>`
+    : `<img src="${mediaURL}" style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block;">`;
+
+  const captionHtml = caption
+    ? `<p style="margin:.6rem 0 0;font-size:.88rem;color:rgba(220,210,255,.85);line-height:1.45;">${caption}</p>`
+    : '';
+
+  const overlay = document.getElementById('rvPreviewOverlay');
+  const content = document.getElementById('rvPreviewContent');
+  if (!overlay || !content) return;
+
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;">
+      <span style="font-size:.8rem;font-weight:700;color:rgba(180,160,255,.7);letter-spacing:.08em;text-transform:uppercase;">Preview</span>
+      ${planBadgeHtml}
+    </div>
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(124,92,252,.18);border-radius:16px;overflow:hidden;">
+      ${mediaHtml}
+      <div style="padding:.75rem 1rem .9rem;">
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#a855f7);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${avatar}</div>
+          <div>
+            <span style="font-size:.82rem;font-weight:700;color:#e0d8ff;">@${username}</span>
+          </div>
+        </div>
+        ${captionHtml}
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:rgba(160,150,200,.55);margin:.7rem 0 0;text-align:center;">This is how your RealVibe will appear to others.</p>
+  `;
+
+  overlay.style.display = 'flex';
+}
+
+function closeRvPreviewOverlay() {
+  const overlay = document.getElementById('rvPreviewOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+// ── Publish (called from preview confirm button) ────────────────
 async function publishRealVibe() {
   if (!rvMediaFile) { showVibeSelectFirst(); return; }
   if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
 
-  const btn = document.getElementById('rvPublishBtn');
-  const originalBtnHTML = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `
-      <span style="display:flex;align-items:center;gap:.45rem;">
-        <span style="width:13px;height:13px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;
-          border-radius:50%;animation:rvSpin .65s linear infinite;display:inline-block;flex-shrink:0;"></span>
-        Publishing…
-      </span>`;
+  closeRvPreviewOverlay();
+
+  const publishBtn = document.getElementById('rvConfirmPublishBtn');
+  const originalHtml = publishBtn ? publishBtn.innerHTML : '';
+  if (publishBtn) {
+    publishBtn.disabled = true;
+    publishBtn.innerHTML = `<span style="display:flex;align-items:center;gap:.4rem;"><span style="width:13px;height:13px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:rvSpin .65s linear infinite;display:inline-block;"></span>Publishing…</span>`;
   }
 
   try {
@@ -8476,7 +8933,6 @@ async function publishRealVibe() {
     const data = await res.json();
 
     if (!res.ok) {
-      // Handle specific premium/quota errors gracefully
       if (data.code === 'PREMIUM_REQUIRED' || res.status === 403) {
         closeRvCreatorModal();
         const gate = document.getElementById('rvPremiumGate');
@@ -8491,7 +8947,7 @@ async function publishRealVibe() {
       }
       if (data.code === 'QUOTA_EXCEEDED') {
         showMessage('⚠️ ' + data.error, 'error');
-        if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+        if (publishBtn) { publishBtn.disabled = false; publishBtn.innerHTML = originalHtml; }
         return;
       }
       throw new Error(data.error || `Server error (${res.status})`);
@@ -8501,7 +8957,6 @@ async function publishRealVibe() {
     closeRvCreatorModal();
     showVibeOnlineToast();
 
-    // Prepend to feed immediately
     if (data.vibe) {
       _rvAllVibes.unshift(data.vibe);
       renderRvFeed(_rvAllVibes);
@@ -8512,7 +8967,7 @@ async function publishRealVibe() {
   } catch (err) {
     console.error('❌ Publish RealVibe error:', err);
     showMessage('❌ ' + (err.message || 'Failed to publish. Try again.'), 'error');
-    if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+    if (publishBtn) { publishBtn.disabled = false; publishBtn.innerHTML = originalHtml; }
   }
 }
 
@@ -8971,7 +9426,7 @@ async function selectPlan(planType) {
 
   const plans = {
     noble: { name: 'Noble', firstTimePrice: 9, regularPrice: 9, posters: 5, videos: 1, days: 15 },
-    royal: { name: 'Royal', firstTimePrice: 25, regularPrice: 25, posters: 5, videos: 3, days: 23 }
+    royal: { name: 'Royal', firstTimePrice: 25, regularPrice: 25, posters: 5, videos: 3, days: 25 }
   };
 
   const plan = plans[planType];
@@ -9184,7 +9639,7 @@ async function verifyCashfreePaymentOnLoad() {
         if (verifyData.success) {
           const plans = {
             noble: { name: 'Noble', posters: 5, videos: 1, days: 15 },
-            royal: { name: 'Royal', posters: 5, videos: 3, days: 23 }
+            royal: { name: 'Royal', posters: 5, videos: 3, days: 25 }
           };
           const plan = plans[verifyData.subscription.plan] || plans['noble'];
 
@@ -9367,6 +9822,159 @@ async function toggleTwitterLike(postId) {
   }
 }
 
+// ── Zero Velocity: Comment drawer with likes ──────────────────────────────────
+async function openTwitterComments(postId) {
+  if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
+
+  // Remove stale drawer
+  document.getElementById('zvCommentDrawer')?.remove();
+
+  const drawer = document.createElement('div');
+  drawer.id = 'zvCommentDrawer';
+  drawer.style.cssText = [
+    'position:fixed;bottom:0;left:0;right:0;z-index:9999;',
+    'background:#0d0b1e;border-top:1px solid rgba(79,116,163,0.25);',
+    'border-radius:20px 20px 0 0;',
+    'max-height:72vh;display:flex;flex-direction:column;',
+    'box-shadow:0 -8px 40px rgba(0,0,0,0.7);',
+    'animation:zvDrawerUp .22s ease;'
+  ].join('');
+
+  drawer.innerHTML = `
+    <style>
+      @keyframes zvDrawerUp { from{transform:translateY(100%)} to{transform:none} }
+      .zv-comment-item { display:flex;gap:10px;padding:12px 0;border-bottom:1px solid rgba(79,116,163,0.1); }
+      .zv-comment-avatar { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#4f74a3,#8da4d3);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:16px; }
+      .zv-comment-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%; }
+      .zv-comment-body { flex:1;min-width:0; }
+      .zv-comment-username { font-size:13px;font-weight:700;color:#8da4d3;margin-bottom:3px; }
+      .zv-comment-text { font-size:14px;color:rgba(255,255,255,0.85);line-height:1.45;word-break:break-word; }
+      .zv-comment-time { font-size:11px;color:rgba(255,255,255,0.3);margin-top:4px; }
+      .zv-like-btn { background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px;transition:transform .15s;line-height:1;flex-shrink:0; }
+      .zv-like-btn:hover { transform:scale(1.25); }
+      .zv-like-count { font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;text-align:center; }
+      .zv-comment-send { background:linear-gradient(135deg,#4f74a3,#8da4d3);border:none;color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;flex-shrink:0;font-size:14px; }
+      .zv-comment-send:disabled { opacity:.5;cursor:default; }
+    </style>
+
+    <!-- Handle bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;">
+      <span style="font-size:15px;font-weight:700;color:#fff;">💬 Comments</span>
+      <button onclick="document.getElementById('zvCommentDrawer')?.remove()"
+        style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <!-- Comments list -->
+    <div id="zvCommentsList" style="flex:1;overflow-y:auto;padding:0 18px;">
+      <div style="text-align:center;padding:28px;color:rgba(255,255,255,0.35);">⏳ Loading…</div>
+    </div>
+
+    <!-- Input bar -->
+    <div style="padding:12px 18px 20px;border-top:1px solid rgba(79,116,163,0.15);display:flex;gap:10px;align-items:flex-end;background:#0d0b1e;">
+      <textarea id="zvCommentInput" placeholder="Write a comment…" rows="1"
+        style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(79,116,163,0.25);
+               color:#fff;border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit;
+               resize:none;outline:none;max-height:100px;overflow-y:auto;line-height:1.4;"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();zvSubmitComment('${postId}');}">
+      </textarea>
+      <button class="zv-comment-send" id="zvCommentSendBtn" onclick="zvSubmitComment('${postId}')">Send</button>
+    </div>
+  `;
+
+  document.body.appendChild(drawer);
+  zvLoadComments(postId);
+  setTimeout(() => drawer.querySelector('#zvCommentInput')?.focus(), 200);
+}
+
+async function zvLoadComments(postId) {
+  const list = document.getElementById('zvCommentsList');
+  if (!list) return;
+
+  try {
+    const data = await apiCall(`/api/posts/${postId}/comments`, 'GET');
+
+    if (!data.success || !data.comments?.length) {
+      list.innerHTML = '<div style="text-align:center;padding:28px;color:rgba(255,255,255,0.3);">💬 No comments yet — be the first!</div>';
+      return;
+    }
+
+    list.innerHTML = data.comments.map(c => {
+      const author = c.users?.username || 'User';
+      const time = formatTimeAgo(new Date(c.created_at));
+      const isOwn = currentUser && c.user_id === currentUser.id;
+      const likeCount = c.like_count || c.likeCount || c.likes || 0;
+      const isLiked = c.is_liked || c.liked || false;
+      const avatar = c.users?.profile_pic
+        ? `<img src="${c.users.profile_pic}">`
+        : '👤';
+
+      return `
+        <div class="zv-comment-item" id="zv-comment-${c.id}">
+          <div class="zv-comment-avatar">${avatar}</div>
+          <div class="zv-comment-body">
+            <div class="zv-comment-username">@${author}</div>
+            <div class="zv-comment-text">${c.content}</div>
+            <div class="zv-comment-time">${time}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+            <button class="zv-like-btn" onclick="toggleCommentLike('${c.id}', this, 'zv')">${isLiked ? '❤️' : '🤍'}</button>
+            <div class="zv-like-count" id="comment-like-count-zv-${c.id}">${likeCount || ''}</div>
+          </div>
+          ${isOwn ? `
+          <button onclick="zvDeleteComment('${c.id}','${postId}')"
+            style="background:none;border:none;color:rgba(255,80,80,0.5);cursor:pointer;font-size:15px;flex-shrink:0;align-self:flex-start;padding:2px;">🗑️</button>` : ''}
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    console.error('❌ ZV load comments:', err);
+    if (list) list.innerHTML = '<div style="text-align:center;padding:24px;color:#ff6b6b;">❌ Failed to load</div>';
+  }
+}
+
+async function zvSubmitComment(postId) {
+  const input = document.getElementById('zvCommentInput');
+  const btn = document.getElementById('zvCommentSendBtn');
+  const content = input?.value.trim();
+  if (!content) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  try {
+    const data = await apiCall(`/api/posts/${postId}/comments`, 'POST', { content });
+    if (data.success) {
+      if (input) { input.value = ''; input.style.height = 'auto'; }
+      checkAndUpdateRewards('comment');
+      zvLoadComments(postId);
+      // Update comment count badge on the card
+      const card = document.getElementById(`twitter-post-${postId}`);
+      if (card) {
+        const countBtn = card.querySelector('.twitter-action-btn:nth-child(2) span:last-child');
+        if (countBtn) countBtn.textContent = (parseInt(countBtn.textContent) || 0) + 1;
+      }
+    } else {
+      showMessage('❌ Failed to post', 'error');
+    }
+  } catch (err) {
+    showMessage('❌ Error posting comment', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+  }
+}
+
+async function zvDeleteComment(commentId, postId) {
+  if (!confirm('Delete this comment?')) return;
+  try {
+    await apiCall(`/api/posts/${postId}/comments/${commentId}`, 'DELETE');
+    document.getElementById(`zv-comment-${commentId}`)?.remove();
+    showMessage('🗑️ Deleted', 'success');
+  } catch (err) {
+    showMessage('❌ Failed to delete', 'error');
+  }
+}
+// ── END Zero Velocity comment drawer ─────────────────────────────────────────
+
 function openCreatePostModal() {
   const modal = document.createElement('div');
   modal.className = 'modal';
@@ -9409,8 +10017,11 @@ function selectPostMedia() {
   input.multiple = true;
   input.onchange = (e) => {
     const files = Array.from(e.target.files);
-    newPostMediaFiles = files;
-    previewNewPostMedia(files);
+    // Show preview/crop modal before committing files to the post
+    showPostImagePreviewModal(files, (processedFiles) => {
+      newPostMediaFiles = processedFiles;
+      previewNewPostMedia(processedFiles);
+    });
   };
   input.click();
 }
@@ -10177,35 +10788,33 @@ function setupWhatsAppSocketListeners() {
   socket.off('messages_seen');
   socket.off('community_reaction_update');
 
-  // New message received (only from OTHER users - backend excludes sender)
+  // DUP FIX (DUP-1): Use the full-featured fixed version instead of the old stub.
   socket.on('new_message', (message) => {
     console.log('📨 New message received:', message);
-
-    // ✅ Double-check it's not from current user (shouldn't happen with backend fix)
     if (message.sender_id === currentUser?.id) {
       console.log('⚠️ Ignoring own message from socket');
       return;
     }
-
-    appendWhatsAppMessage(message);
+    appendWhatsAppMessageFixed(message);
   });
 
+  // DUP FIX (DUP-2): socket.off already called in bulk above; removed redundant individual calls.
   // User started typing
-  socket.off('user_typing').on('user_typing', (data) => {
+  socket.on('user_typing', (data) => {
     if (data.username && currentUser && data.username !== currentUser.username) {
       showWhatsAppTypingIndicator(data.username);
     }
   });
 
   // User stopped typing
-  socket.off('user_stop_typing').on('user_stop_typing', (data) => {
+  socket.on('user_stop_typing', (data) => {
     if (data.username) {
       hideWhatsAppTypingIndicator(data.username);
     }
   });
 
   // Message deleted
-  socket.off('message_deleted').on('message_deleted', ({ id }) => {
+  socket.on('message_deleted', ({ id }) => {
     const messageEl = document.getElementById(`wa-msg-${id}`);
     if (messageEl) {
       messageEl.style.animation = 'fadeOut 0.3s ease';
@@ -12024,8 +12633,14 @@ function leaveGroup() {
 }
 
 function toggleNotifications() {
+  // BUG FIX (BUG-9): Persist the preference and actually suppress notifications.
   const status = document.getElementById('notifStatus');
-  if (status) status.textContent = status.textContent === 'On' ? 'Off' : 'On';
+  const isOn = (status ? status.textContent : (localStorage.getItem('vx_notif_enabled') !== 'false')) ;
+  const turningOff = isOn === 'On' || isOn === true;
+  const newState = turningOff ? 'Off' : 'On';
+  if (status) status.textContent = newState;
+  localStorage.setItem('vx_notif_enabled', newState === 'On' ? 'true' : 'false');
+  window._vxNotifsEnabled = (newState === 'On');
 }
 
 function muteChat() {
@@ -12111,9 +12726,14 @@ async function initVibeFeed() {
   vibeProgressTimers = {};
 
   try {
+    // 'community' → college-only feed
+    // 'all'       → personalised "For You" feed (separate from Zero Velocity /api/posts)
+    // any other value falls back to the community feed for safety
     const endpoint = vibeActiveTab === 'community'
       ? '/api/posts/community'
-      : '/api/posts';
+      : vibeActiveTab === 'all'
+        ? '/api/posts/foryou'
+        : '/api/posts/community';
 
     const data = await apiCall(endpoint, 'GET');
 
@@ -12837,15 +13457,21 @@ function closeVibeUpload() {
 function handleVibeFileSelect(e) {
   const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'));
   if (!files.length) return;
-  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
-  showVibeMediaGridPreview();
+  // Show preview/crop modal before committing to the post
+  showPostImagePreviewModal(files, (processedFiles) => {
+    vibeSelectedFiles = [...vibeSelectedFiles, ...processedFiles];
+    showVibeMediaGridPreview();
+  });
 }
 
 function handleVibeCameraCapture(e) {
   const files = Array.from(e.target.files).filter(f => f.type.startsWith('video/') || f.type.startsWith('image/'));
   if (!files.length) return;
-  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
-  showVibeMediaGridPreview();
+  // Show preview/crop modal before committing to the post
+  showPostImagePreviewModal(files, (processedFiles) => {
+    vibeSelectedFiles = [...vibeSelectedFiles, ...processedFiles];
+    showVibeMediaGridPreview();
+  });
 }
 
 function handleVibeDrop(e) {
@@ -12854,8 +13480,11 @@ function handleVibeDrop(e) {
   const files = Array.from(e.dataTransfer.files).filter(f =>
     f.type.startsWith('video/') || f.type.startsWith('image/'));
   if (!files.length) return;
-  vibeSelectedFiles = [...vibeSelectedFiles, ...files];
-  showVibeMediaGridPreview();
+  // Show preview/crop modal before committing to the post
+  showPostImagePreviewModal(files, (processedFiles) => {
+    vibeSelectedFiles = [...vibeSelectedFiles, ...processedFiles];
+    showVibeMediaGridPreview();
+  });
 }
 
 function showVibeMediaGridPreview() {
@@ -13392,7 +14021,14 @@ async function submitVibePost() {
     }
 
     let data;
-    if (vibeDestination === 'both') {
+    // `vibeDestination` is always set authoritatively by openVibeUpload() based on
+    // the active page at the moment the modal opens:
+    //   • Vibers page  → 'community'
+    //   • Zero Velocity → 'both' (or 'profile' if the user switches the pill)
+    // We no longer cross-check _vibePageContext here; doing so caused conflicts when
+    // context was stale or vibeDestination had been manually overridden by the user.
+    const effectiveDest = vibeDestination;
+    if (effectiveDest === 'both') {
       // Post to profile first, then to community
       const [profileRes, communityRes] = await Promise.all([
         apiCall('/api/posts', 'POST', buildFormData('profile')),
@@ -13401,7 +14037,7 @@ async function submitVibePost() {
       // Use profile post as the "primary" result for UI feedback
       data = profileRes && profileRes.success ? profileRes : communityRes;
     } else {
-      const formData = buildFormData(vibeDestination);
+      const formData = buildFormData(effectiveDest);
       data = await apiCall('/api/posts', 'POST', formData);
     }
 
@@ -13650,9 +14286,9 @@ async function openDmDrawer(userId) {
       const statusSpan = statusEl.querySelector('span:last-child');
       if (statusSpan) statusSpan.textContent = online ? 'Online' : (profile.status_text || 'Offline');
       else statusEl.textContent = online ? '● Online' : '● ' + (profile.status_text || 'Offline');
-      statusEl.style.color = online ? '#22c55e' : '#a78bfa';
+      statusEl.style.color = online ? '#22c55e' : '#ef4444'; // BUG FIX (BUG-18): was #a78bfa (purple) for offline
       const ring = document.getElementById('dmOnlineRing');
-      if (ring) ring.style.background = online ? '#22c55e' : '#a78bfa';
+      if (ring) ring.style.background = online ? '#22c55e' : '#ef4444';
     }
     if (profile.profile_pic && avatarImg) {
       avatarImg.src = profile.profile_pic;
@@ -13684,7 +14320,9 @@ async function openDmDrawer(userId) {
     } else {
       renderDmMessages(msgs, area);
     }
-    updateDmBadge(-1, true);
+    // BUG FIX (BUG-16): Don't reset entire badge to 0. Just decrement by this conversation's unread.
+    const thisUnread = msgs.filter(m => !m.is_read && String(m.sender_id) !== String(currentUser?.id)).length;
+    updateDmBadge(-thisUnread, false);
 
   } catch (e) {
     console.error('DM load error:', e);
@@ -13861,13 +14499,13 @@ function _buildDmBubble(m, isOptimistic) {
   const hasReactions = Object.keys(reactions).length > 0;
   const msgId = m.id || '';
 
-  // Tick indicator for own messages
+  // BUG FIX (BUG-20): Use distinct symbols so user can tell sent vs read apart.
   let tickHtml = '';
   if (own && !isOptimistic) {
     if (m.is_read) {
-      tickHtml = `<span class="dm-tick dm-tick-read" title="Seen">✓✓</span>`;
+      tickHtml = `<span class="dm-tick dm-tick-read" title="Seen" style="color:#a89dfc;">✓✓</span>`;
     } else {
-      tickHtml = `<span class="dm-tick dm-tick-sent" title="Sent">✓✓</span>`;
+      tickHtml = `<span class="dm-tick dm-tick-sent" title="Sent" style="color:rgba(255,255,255,0.45);">✓</span>`;
     }
   }
 
@@ -14131,7 +14769,9 @@ async function dmToggleReact(msgId, emoji) {
 async function sendDm() {
   const input = document.getElementById('dmInput');
   const text = input?.value.trim();
-  if (!text) return;
+  const pendingFile = window._dmPendingFile || null;
+  // BUG FIX (BUG-15): Guard against sending with no content AND no file.
+  if (!text && !pendingFile) return;
   if (!_dmCurrentReceiverId) {
     showMessage('\u26a0\ufe0f No conversation open', 'error');
     return;
@@ -14176,10 +14816,29 @@ async function sendDm() {
 
   // Step 2: Send to server
   try {
-    const body = { receiverId: _dmCurrentReceiverId, content: text };
-    if (replyToId) body.replyToId = replyToId;
-
-    const data = await apiCall('/api/dm/send', 'POST', body);
+    // BUG FIX (BUG-15): Send pending file as multipart if one is attached.
+    let data;
+    const tok = (typeof window.apiCall === 'function') ? null : ''; // apiCall handles auth
+    if (pendingFile) {
+      const fd = new FormData();
+      fd.append('receiverId', _dmCurrentReceiverId);
+      if (text) fd.append('content', text);
+      if (replyToId) fd.append('replyToId', replyToId);
+      fd.append('media', pendingFile, pendingFile.name);
+      const BASE = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+      const authTok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
+        sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
+      const r = await fetch(`${BASE}/api/dm/send`, { method: 'POST', headers: { 'Authorization': `Bearer ${authTok}` }, body: fd });
+      data = await r.json();
+    } else {
+      const body = { receiverId: _dmCurrentReceiverId, content: text };
+      if (replyToId) body.replyToId = replyToId;
+      data = await apiCall('/api/dm/send', 'POST', body);
+    }
+    // Clear pending file after attempt
+    window._dmPendingFile = null;
+    const input2 = document.getElementById('dmInput');
+    if (input2) input2.placeholder = 'Type a message…';
     if (!data || !data.success) throw new Error(data?.error || 'Send failed');
 
     // Step 3: Upgrade optimistic bubble to confirmed (in-place, no replaceWith)
@@ -14294,16 +14953,8 @@ function handleDmTyping() {
   } else {
     attach();
   }
-  // Also attach when drawer opens
-  const origOpen = window.openDmDrawer;
-  if (origOpen) {
-    // Defer re-attachment after drawer opens
-    const _waitAttach = () => setTimeout(attach, 200);
-    document.addEventListener('click', function (e) {
-      if (e.target.closest && e.target.closest('[onclick*="openDmDrawer"]')) _waitAttach();
-    });
-  }
-  // Re-attach on any drawer open
+  // BUG FIX (BUG-21): Removed leaking global document click listener.
+  // Re-attachment is handled via window._dmScrollAttach which is called by openDmDrawer.
   window._dmScrollAttach = attach;
 })();
 
@@ -14498,10 +15149,13 @@ async function loadDmConversations() {
           </div>`;
       }).join('');
 
-      updateDmBadge(total, true);
-      _dmTotalUnread = total;
-      updateDmBadge(0, false);
     }
+
+    // BUG FIX (BUG-7 & BUG-8): Update badge AFTER building both sections,
+    // regardless of whether there are conversations. Also fixed argument order:
+    // set _dmTotalUnread directly then call updateDmBadge to repaint.
+    _dmTotalUnread = total;
+    updateDmBadge(0, false);
 
     // ── Section: Mutual Follows — not yet messaged ─────────────────
     if (newContacts.length) {
@@ -14783,6 +15437,17 @@ function wireNewSocketEvents() {
   const sock = window.socket;
   if (!sock) return;
 
+  // BUG FIX (BUG-17): Remove all listeners before re-adding to prevent stacking on reconnect.
+  sock.off('new_dm');
+  sock.off('dm_read');
+  sock.off('dm_reaction');
+  sock.off('dm_typing');
+  sock.off('dm_stop_typing');
+  sock.off('user_offline');
+  sock.off('user_online_broadcast');
+  sock.off('new_follow');
+  sock.off('lost_follow');
+
   sock.on('new_dm', (msg) => handleIncomingDm(msg));
 
   // Blue ticks: mark all visible sent messages as read when other person opens the chat
@@ -14841,10 +15506,11 @@ function wireNewSocketEvents() {
       const status = document.getElementById('dmDrawerStatus');
       if (status) {
         const sp = status.querySelector('span:last-child');
+        // BUG FIX (BUG-18): was #a78bfa (purple), corrected to red #ef4444
         if (sp) sp.textContent = 'Offline'; else status.textContent = '● Offline';
-        status.style.color = '#a78bfa';
+        status.style.color = '#ef4444';
         const ring = document.getElementById('dmOnlineRing');
-        if (ring) ring.style.background = '#a78bfa';
+        if (ring) ring.style.background = '#ef4444';
       }
     }
     // Invalidate cache so presence updates next load
@@ -16304,178 +16970,3 @@ window.toggleCommentLike = async function (commentId, btn, prefix = 'mv') {
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
   }
 };
-/* ============================================================
-   ZERO VELOCITY — HOME FEED SCROLL ARROWS
-   Injects ▲ / ▼ buttons on the right outer edge of the feed
-   panel. Uses position:fixed tracked to the container's rect.
-   No new colours — uses existing design-system CSS vars.
-   ============================================================ */
-(function initHomeFeedArrows() {
-  'use strict';
-
-  var _injected = false;
-  var _upBtn    = null;
-  var _downBtn  = null;
-  var _rafId    = null;
-
-  /* ── Scroll the container by exactly one card height ── */
-  function scrollOneCard(direction) {
-    var container = document.getElementById('homeFeedContainer');
-    if (!container) return;
-    var card = container.querySelector('.hf-card');
-    /* card height + margin-bottom (10px) */
-    var step = card
-      ? (card.offsetHeight + parseInt(getComputedStyle(card).marginBottom || '0', 10))
-      : Math.round(container.clientHeight * 0.80);
-    container.scrollBy({ top: direction * step, behavior: 'smooth' });
-  }
-
-  /* ── Create one arrow button ── */
-  function makeArrow(id, symbol, direction) {
-    var btn = document.createElement('button');
-    btn.id        = id;
-    btn.className = 'hf-feed-arrow';
-    btn.setAttribute('aria-label', direction > 0 ? 'Next post' : 'Previous post');
-    btn.innerHTML = symbol;
-    btn.style.visibility = 'hidden'; /* hide until correctly positioned */
-    btn.addEventListener('click', function () { scrollOneCard(direction); });
-    /* prevent any default focus ring that might look off */
-    btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
-    return btn;
-  }
-
-  /* ── Re-position both arrows to track the panel's right edge ── */
-  function positionArrows() {
-    if (!_upBtn || !_downBtn) return;
-    var container = document.getElementById('homeFeedContainer');
-    if (!container) return;
-
-    var rect   = container.getBoundingClientRect();
-
-    /* Guard: container not rendered yet — skip to avoid placing at 0,0 */
-    if (rect.width === 0 && rect.height === 0) return;
-
-    var midY   = (rect.top + rect.bottom) / 2;
-    var arrowX = rect.right + 8; /* 8 px gap between panel border and arrow */
-
-    /* Only show on desktop (arrow buttons are display:none on mobile via CSS) */
-    var visible = window.innerWidth > 768;
-    _upBtn.style.display   = visible ? 'flex' : 'none';
-    _downBtn.style.display = visible ? 'flex' : 'none';
-
-    if (!visible) return;
-
-    /* Up arrow: centred 44px above mid-point */
-    _upBtn.style.left = arrowX + 'px';
-    _upBtn.style.top  = (midY - 48) + 'px';
-
-    /* Down arrow: centred 8px below mid-point */
-    _downBtn.style.left = arrowX + 'px';
-    _downBtn.style.top  = (midY + 10) + 'px';
-
-    /* Reveal now that they are correctly placed */
-    _upBtn.style.visibility   = 'visible';
-    _downBtn.style.visibility = 'visible';
-  }
-
-  /* ── Inject arrows into document body ── */
-  function injectArrows() {
-    if (_injected) { positionArrows(); return; }
-
-    var container = document.getElementById('homeFeedContainer');
-    if (!container) return;
-
-    /* Clean up any stale buttons from a previous injection attempt */
-    var stale = document.querySelectorAll('.hf-feed-arrow');
-    stale.forEach(function (el) { el.parentNode && el.parentNode.removeChild(el); });
-
-    _upBtn   = makeArrow('hf-arrow-up',   '▲', -1);
-    _downBtn = makeArrow('hf-arrow-down', '▼',  1);
-
-    document.body.appendChild(_upBtn);
-    document.body.appendChild(_downBtn);
-
-    _injected = true;
-
-    /* Initial placement */
-    positionArrows();
-
-    /* Keep arrows aligned on resize and scroll */
-    window.addEventListener('resize', positionArrows, { passive: true });
-    /* Also track panel scroll (panel position doesn't change on scroll,
-       but container.getBoundingClientRect() may shift if header hides) */
-    container.addEventListener('scroll', positionArrows, { passive: true });
-  }
-
-  /* ── Continuous rAF tracker while home page is active ──
-     Handles any CSS transitions that shift the panel. */
-  function startTracking() {
-    if (_rafId) return;
-    (function tick() {
-      positionArrows();
-      _rafId = requestAnimationFrame(tick);
-    }());
-  }
-
-  function stopTracking() {
-    if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
-  }
-
-  /* ── Observe class changes on .page elements to detect navigation ── */
-  function onNavigate() {
-    var home = document.getElementById('home');
-    /* On initial load, home has class="page active" but no inline style yet.
-       showPage() later sets style.display='flex'. Check BOTH conditions. */
-    var isHomeVisible = home && (
-      home.classList.contains('active') ||
-      (home.style.display !== 'none' && home.style.display !== '')
-    );
-    if (isHomeVisible) {
-      injectArrows();
-      startTracking();
-    } else {
-      stopTracking();
-    }
-  }
-
-  /* ── Boot ── */
-  function boot() {
-    /* Patch showPage so arrows are injected/refreshed on every home visit */
-    var _origShowPage = window.showPage;
-    if (typeof _origShowPage === 'function') {
-      window.showPage = function (name) {
-        var result = _origShowPage.apply(this, arguments);
-        if (name === 'home') {
-          /* slight delay so the page is visible before we measure */
-          setTimeout(function () { injectArrows(); startTracking(); }, 80);
-        } else {
-          stopTracking();
-        }
-        return result;
-      };
-    }
-
-    /* MutationObserver as fallback for programmatic navigation */
-    var observer = new MutationObserver(onNavigate);
-    observer.observe(document.body, {
-      attributes: true,
-      subtree: true,
-      attributeFilter: ['style', 'class']
-    });
-
-    /* If home is already visible on load (class-based active, no inline style yet).
-       Retry at 300ms and 800ms to catch the home feed after it finishes rendering. */
-    onNavigate();
-    setTimeout(function () { onNavigate(); }, 300);
-    setTimeout(function () { onNavigate(); }, 800);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-}());
-/* ============================================================
-   END — ZERO VELOCITY HOME FEED SCROLL ARROWS
-   ============================================================ */
