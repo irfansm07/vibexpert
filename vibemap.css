@@ -225,14 +225,14 @@ h6 {
   display: inline-block;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 20px var(--accent66);
+  box-shadow: 0 0 20px rgba(108, 99, 255, 0.4);
   transition: all 0.3s ease;
   opacity: 0;
   animation: fadeIn 1s ease 1s forwards;
 }
 
 .hero-cta:hover {
-  box-shadow: 0 0 40px var(--accentaa);
+  box-shadow: 0 0 40px rgba(108, 99, 255, 0.67);
   transform: translateY(-3px);
 }
 
@@ -32515,20 +32515,20 @@ body.light-theme .mv-detail-stat {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem 0.9rem;
+  padding: 0.8rem 1.5rem 0rem;
   background: linear-gradient(180deg, rgba(13, 11, 20, 0.98) 0%, rgba(11, 10, 18, 0.96) 100%);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 215, 0, 0.12);
+  border-bottom: 4px solid rgba(255, 215, 0, 0.12);
 }
 
 .rv-topbar-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.4rem;
 }
 
 .rv-logo-icon {
-  font-size: 1.7rem;
+  font-size: 2.7rem;
   color: #FFD700;
   filter: drop-shadow(0 0 8px rgba(255, 215, 0, .7));
   animation: rvStarPulse 3s ease-in-out infinite;
@@ -33354,6 +33354,29 @@ video.rv-card-media {
   display: flex;
   align-items: center;
   gap: .3rem;
+}
+
+/* ── RealVibe Crop Modal overrides (Cropper.js) ── */
+#rvCropModal .cropper-container {
+  max-height: 320px !important;
+}
+#rvCropModal .cropper-view-box,
+#rvCropModal .cropper-face {
+  border-radius: 0;
+}
+#rvCropModal .cropper-modal {
+  background: rgba(0,0,0,.55);
+}
+#rvCropModal .cropper-line,
+#rvCropModal .cropper-point {
+  background: rgba(124,92,252,.8);
+}
+#rvCropModal .cropper-dashed {
+  border-color: rgba(124,92,252,.5);
+}
+#rvCropModal .cropper-center::before,
+#rvCropModal .cropper-center::after {
+  background: rgba(255,215,0,.7);
 }
 
 .rv-caption-wrap {
@@ -39616,37 +39639,9 @@ body.light-theme .mv-skeleton-cell {
   cursor: pointer !important;
 }
 
-/* Spinning gradient ring around avatar */
+/* Clean static ring — no animation */
 .profile-avatar-container::before {
-  content: '' !important;
-  position: absolute !important;
-  inset: -2.5px !important;
-  border-radius: 50% !important;
-  background: conic-gradient(from 0deg,
-      #7c3aed,
-      #4f46e5,
-      #2563eb,
-      #a78bfa,
-      #e879f9,
-      #7c3aed) !important;
-  animation: avatarRingSpin 4s linear infinite !important;
-  z-index: 0 !important;
-  opacity: 0.9 !important;
-}
-
-@keyframes avatarRingSpin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.profile-avatar-container:hover::before {
-  opacity: 1 !important;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.65) !important;
+  display: none !important;
 }
 
 .profile-avatar {
@@ -39657,17 +39652,19 @@ body.light-theme .mv-skeleton-cell {
   position: relative !important;
   z-index: 1 !important;
   background: linear-gradient(145deg, #0d0b28, #1c1060) !important;
-  border: 2.5px solid #0d0b28 !important;
+  border: 2px solid rgba(167,139,250,0.38) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s, box-shadow 0.2s !important;
   color: #c4b5fd !important;
   object-fit: cover !important;
 }
 
 .profile-avatar-container:hover .profile-avatar {
   transform: scale(1.07) !important;
+  border-color: rgba(167,139,250,0.75) !important;
+  box-shadow: 0 0 10px rgba(139,92,246,0.32) !important;
 }
 
 /* ── Online dot (if you have one) ── */
@@ -40228,16 +40225,77 @@ body.light-theme .mv-skeleton-cell {
   display: none !important;
 }
 
+/* ── Zero Velocity: card wrapper — snap target + left-nav layout ── */
+.hf-card-wrap {
+  display: block !important;
+  width: calc(100% - 24px) !important;
+  margin: 0 auto 10px auto !important;
+  scroll-snap-align: center !important;
+  scroll-snap-stop: always !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Zero Velocity: fixed nav — stays put, posts scroll under it ── */
+.hf-card-nav {
+  position: fixed !important;
+  left: calc(50% + 360px) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 14px !important;
+  z-index: 200 !important;
+  pointer-events: auto !important;
+}
+
+/* Tablet: feed narrows to 520px, shift nav in */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .hf-card-nav {
+    left: calc(50% + 268px) !important;
+  }
+}
+
+.hf-nav-arrow {
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  background: rgba(0,0,0,0.50) !important;
+  color: #e8e8f0 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: background 0.18s, transform 0.15s !important;
+  pointer-events: auto !important;
+}
+
+.hf-nav-arrow:hover {
+  background: rgba(255,255,255,0.15) !important;
+  transform: scale(1.12) !important;
+}
+
+.hf-nav-arrow:active {
+  transform: scale(0.95) !important;
+}
+
 /* ── 4. Cards — snap items, Instagram layout ── */
 .hf-card {
   height: 82vh !important;
   min-height: 82vh !important;
   max-height: 82vh !important;
-  width: calc(100% - 24px) !important;
-  margin: 0 auto 10px auto !important;
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
-  scroll-snap-align: center !important;
-  scroll-snap-stop: always !important;
+  scroll-snap-align: none !important;
+  scroll-snap-stop: normal !important;
   position: relative !important;
   overflow: hidden !important;
   display: flex !important;
@@ -40373,6 +40431,15 @@ body.light-theme .mv-skeleton-cell {
     padding: 4vh 0 !important;
   }
 
+  .hf-card-wrap {
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .hf-card-nav {
+    display: none !important;
+  }
+
   .hf-card {
     width: calc(100% - 16px) !important;
     height: 80vh !important;
@@ -40409,19 +40476,7 @@ body.light-theme .mv-skeleton-cell {
     margin-right: -12px !important;
   }
 }
-/* ── 13. In-card scroll arrow buttons (▲/▼ inside .hf-actions column) ── */
-.hf-card-scroll-arrow {
-  font-size: 12px !important;
-  padding: 7px 12px !important;
-  min-width: 44px !important;
-  opacity: 0.65 !important;
-  letter-spacing: 0 !important;
-  line-height: 1 !important;
-}
-.hf-card-scroll-arrow:hover {
-  opacity: 1 !important;
-  transform: scale(1.12) !important;
-}
+/* ── 13. (scroll arrows moved to .hf-card-nav outside card) ── */
 
 /* ── 14. Left comment panel ── */
 #hf-left-comment-panel {
@@ -40647,9 +40702,6 @@ body.light-theme .mv-skeleton-cell {
 .hf-lcp-post-btn:disabled { opacity: 0.5; transform: none; }
 
 /* Mobile: panel overlays left side of card */
-@media (max-width: 768px) {
-  .hf-card-scroll-arrow { display: flex !important; }
-}
 /* ============================================================
    END — ZERO VELOCITY DEFINITIVE LAYOUT
    ============================================================ */
