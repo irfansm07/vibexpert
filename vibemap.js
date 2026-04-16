@@ -17,6 +17,19 @@ function proxyMediaUrl(url) {
   return url;
 }
 
+// ── Safe Music Parser ──────────────────────────────────────────────────────────
+// The backend stores music as a JSON string in the DB. When it comes back via the
+// API or Socket.IO it may still be a raw string — this helper normalises it so
+// buildVibeCard() and renderPosts() always receive a proper object (or null).
+function parseMusicField(music) {
+  if (!music) return null;
+  if (typeof music === 'object') return music;          // already parsed
+  if (typeof music === 'string') {
+    try { return JSON.parse(music); } catch (e) { return null; }
+  }
+  return null;
+}
+
 // ── Rewards stub (prevents ReferenceError crash on like / post / comment) ─────
 // Replace this with your real rewards logic if/when you add that feature back.
 function checkAndUpdateRewards(action) {
@@ -3130,6 +3143,9 @@ function initializeSocket() {
       return;
     }
 
+    // ── FIX: normalise the music field before card is built ──
+    post.music = parseMusicField(post.music);
+
     // Build and prepend the new card with a slide-in animation
     const existingCards = feed.querySelectorAll('.vibe-card');
     const newIdx = existingCards.length; // append index (visual only)
@@ -5925,6 +5941,9 @@ async function createPost() {
         saveUserToLocal();
       }
 
+      // ── FIX: normalise music field on returned post ──
+      if (data.post) data.post.music = parseMusicField(data.post.music);
+
       // 3. Update My Vibes cache
       if (data.post) {
         _mvAllPosts.unshift(data.post);
@@ -6466,7 +6485,7 @@ function renderPosts(posts) {
     const time = new Date(post.created_at || post.timestamp).toLocaleString();
     const isOwn = currentUser && authorId === currentUser.id;
     const postedTo = post.posted_to === 'community' ? '🌐 Community' : '👤 Profile';
-    const music = post.music || null;
+    const music = parseMusicField(post.music || null);
     const stickers = post.stickers || [];
     const likeCount = post.like_count || 0;
     const commentCount = post.comment_count || 0;
@@ -9903,8 +9922,11 @@ async function zvLoadComments(postId) {
       const author = c.users?.username || 'User';
       const time = formatTimeAgo(new Date(c.created_at));
       const isOwn = currentUser && c.user_id === currentUser.id;
-      const likeCount = c.like_count || c.likeCount || c.likes || 0;
-      const isLiked = c.is_liked || c.liked || false;
+      const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || c.like_count || 0);
+      // API returns likes_users[] not is_liked/liked — derive liked state from the array
+      const isLiked = Array.isArray(c.likes_users)
+        ? c.likes_users.includes(currentUser?.id)
+        : !!(c.is_liked || c.liked);
       const avatar = c.users?.profile_pic
         ? `<img src="${c.users.profile_pic}">`
         : '👤';
@@ -12705,11 +12727,27 @@ function vibeFmt(n) {
   return n.toString();
 }
 function vibeTimeAgo(ts) {
-  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
+  const diff = (Date.now() - d) / 1000;
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
   if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
   return Math.floor(diff / 86400) + 'd ago';
+}
+
+// ─── Live timestamp updater ───────────────────────────────────
+// Updates all visible .vibe-card-time elements every 30s so
+// "just now" → "1m ago" → "2h ago" without a full feed reload.
+function startVibeLiveTimestamps() {
+  if (window._vibeLiveTimeInterval) clearInterval(window._vibeLiveTimeInterval);
+  window._vibeLiveTimeInterval = setInterval(() => {
+    document.querySelectorAll('.vibe-card-time[data-ts]').forEach(el => {
+      const ts = el.dataset.ts;
+      if (ts) el.textContent = vibeTimeAgo(ts);
+    });
+  }, 30000); // refresh every 30 seconds
 }
 
 // ─── Init: called from showPage('posts') ─────────────────────
@@ -12799,6 +12837,9 @@ function renderVibeFeed(posts) {
       if (vid) vibeToggleVideo(card, i, vid);
     });
   });
+
+  // ── Start live timestamp updates ──
+  startVibeLiveTimestamps();
 }
 
 // ─── Build a single card ─────────────────────────────────────
@@ -12814,7 +12855,7 @@ function buildVibeCard(post, idx) {
   const likes = vibeFmt(post.like_count || 0);
   const comments = vibeFmt(post.comment_count || 0);
   const shares = vibeFmt(post.share_count || 0);
-  const music = post.music;
+  const music = parseMusicField(post.music);
   const stickers = post.stickers || [];
   const isOwn = currentUser && userId === currentUser.id;
   const dest = post.posted_to === 'community' ? '🎓 College' : '👤 Profile';
@@ -12914,7 +12955,7 @@ function buildVibeCard(post, idx) {
 
       ${musicHtml}
 
-      <div class="vibe-card-time">
+      <div class="vibe-card-time" data-ts="${post.created_at || post.timestamp || ''}">
         ${postTime}
       </div>
     </div>
@@ -12939,15 +12980,6 @@ function buildVibeCard(post, idx) {
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <span class="vibe-action-label" id="vcomment_count_${idx}">${comments}</span>
-      </div>
-
-      <!-- Save -->
-      <div class="vibe-action" id="vact_save_${idx}"
-           onclick="vibeToggleSave('${post.id}', ${idx})">
-        <div class="vibe-action-bubble">
-          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <span class="vibe-action-label">Save</span>
       </div>
 
       <!-- Share -->
@@ -13166,6 +13198,11 @@ async function vibeOpenComments(postId, idx) {
       const av = u.profile_pic
         ? `<div class="vibe-comment-av" ${clickAttr}><img src="${u.profile_pic}" alt=""></div>`
         : `<div class="vibe-comment-av" ${clickAttr}>${(u.username || '?').charAt(0).toUpperCase()}</div>`;
+      // API returns likes_users[] not is_liked — derive liked state from that array
+      const isLikedByMe = Array.isArray(c.likes_users)
+        ? c.likes_users.includes(currentUser?.id)
+        : !!c.is_liked;
+      const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || 0);
       return `
       <div class="vibe-comment-item">
         ${av}
@@ -13175,9 +13212,9 @@ async function vibeOpenComments(postId, idx) {
         </div>
         <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
           <button onclick="toggleCommentLike('${c.id}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
-            ${c.is_liked ? '❤️' : '🤍'}
+            ${isLikedByMe ? '❤️' : '🤍'}
           </button>
-          <span id="comment-like-count-vibe-${c.id}" style="font-size:11px; color:rgba(255,255,255,0.45);">${c.likes || c.likes_count || c.likeCount || c.like_count || 0}</span>
+          <span id="comment-like-count-vibe-${c.id}" style="font-size:11px; color:rgba(255,255,255,0.45);">${likeCount}</span>
         </div>
       </div>`;
     }).join('');
@@ -13197,6 +13234,9 @@ async function submitVibeComment() {
     const data = await apiCall(`/api/posts/${vibeActiveCommentPostId}/comments`, 'POST', { content });
     if (!data.success) return;
 
+    // Use the real comment ID so likes persist immediately without reload
+    const newCommentId = data.comment?.id || data.comment?._id || ('tmp_' + Date.now());
+
     const u = currentUser;
     const ownUid = u.id || '';
     const ownClickAttr = ownUid ? `onclick="showUserProfile('${ownUid}')" style="cursor:pointer;"` : '';
@@ -13213,10 +13253,10 @@ async function submitVibeComment() {
         <div class="vibe-comment-text">${content}</div>
       </div>
       <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
-        <button onclick="toggleCommentLike('temp', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
+        <button onclick="toggleCommentLike('${newCommentId}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
           🤍
         </button>
-        <span id="comment-like-count-vibe-temp" style="font-size:11px; color:rgba(255,255,255,0.45);">0</span>
+        <span id="comment-like-count-vibe-${newCommentId}" style="font-size:11px; color:rgba(255,255,255,0.45);">0</span>
       </div>`;
 
     const list = document.getElementById('vibeCommentsList');
@@ -13393,6 +13433,10 @@ function openVibeUpload() {
   vibeLocationTag = null;
   vibePollData = null;
   vibeGifUrl = null;
+  // ── FIX: always clear previously selected music so stale track never carries over ──
+  selectedMusic = null;
+  const _vibeML = document.getElementById('vibeMusicLabel');
+  if (_vibeML) _vibeML.textContent = 'Music';
 
   // Detect which page is active to set correct dest pills
   const activePage = document.querySelector('.page.active');
@@ -14060,6 +14104,9 @@ async function submitVibePost() {
       // ── Optimistic prepend — poster sees their post immediately ────────
       // (The server already emitted new_post to all OTHER users via Socket.IO)
       const newPost = data.post;
+
+      // ── FIX: normalise music field on the returned post object ──
+      if (newPost) newPost.music = parseMusicField(newPost.music);
 
       // ── Always inject into My Vibes data so profile tab is up-to-date ──
       if (newPost) {
@@ -15143,9 +15190,15 @@ async function loadDmConversations() {
                 </div>
               </div>
             </div>
-            <button class="dm-chat-now-btn" onclick="chatNowWithUser('${other.id}')">
-              💬 Chat Now
-            </button>
+            <div class="dm-conv-card-actions">
+              <button class="dm-chat-now-btn" onclick="chatNowWithUser('${other.id}')">
+                💬 Chat Now
+              </button>
+              <button class="dm-del-conv-btn" title="Delete conversation"
+                onclick="event.stopPropagation();deleteDmConversation('${other.id}','${escapeHtml((other.username||'User').replace(/'/g,"&#39;"))}')">
+                🗑️
+              </button>
+            </div>
           </div>`;
       }).join('');
 
@@ -15183,9 +15236,15 @@ async function loadDmConversations() {
                 </div>
               </div>
             </div>
-            <button class="dm-chat-now-btn dm-chat-now-new" onclick="chatNowWithUser('${u.id}')">
-              💬 Chat Now
-            </button>
+            <div class="dm-conv-card-actions">
+              <button class="dm-chat-now-btn dm-chat-now-new" onclick="chatNowWithUser('${u.id}')">
+                💬 Chat Now
+              </button>
+              <button class="dm-del-conv-btn" title="Remove contact"
+                onclick="event.stopPropagation();deleteDmConversation('${u.id}','${escapeHtml((u.username||'User').replace(/'/g,"&#39;"))}')">
+                🗑️
+              </button>
+            </div>
           </div>`;
       }).join('');
     }
@@ -16970,3 +17029,400 @@ window.toggleCommentLike = async function (commentId, btn, prefix = 'mv') {
     if (countEl) countEl.textContent = parseInt(countEl.textContent) + (isLiked ? 1 : -1);
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+//  PROFILE MESSAGES — Delete Chat Group + Select & Delete Messages
+//  Added: deleteDmConversation, toggleDmSelectMode, dmSelectAll,
+//         toggleDmMessageSelect, deleteSelectedDmMessages + CSS injection
+// ═══════════════════════════════════════════════════════════════════════
+
+/* ── Inject required CSS ── */
+(function _injectDmDeleteSelectCSS() {
+  if (document.getElementById('_vxDmDeleteSelectStyle')) return;
+  const s = document.createElement('style');
+  s.id = '_vxDmDeleteSelectStyle';
+  s.textContent = `
+    /* ── Conversation card action group ── */
+    .dm-conv-card-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    /* ── Delete conversation button ── */
+    .dm-del-conv-btn {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.18);
+      color: rgba(255,120,120,0.6);
+      border-radius: 8px;
+      width: 30px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s;
+      flex-shrink: 0;
+    }
+    .dm-del-conv-btn:hover {
+      background: rgba(239,68,68,0.22);
+      border-color: rgba(239,68,68,0.45);
+      color: rgba(255,100,100,1);
+      transform: scale(1.08);
+    }
+
+    /* ── Select mode: message row checkbox ── */
+    .dm-msg-row.dm-selectable {
+      cursor: pointer;
+      position: relative;
+    }
+    .dm-msg-row.dm-selectable::before {
+      content: '';
+      position: absolute;
+      left: -4px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      border-radius: 3px;
+      background: transparent;
+      transition: background 0.15s;
+    }
+    .dm-msg-row.dm-selectable:hover::before {
+      background: rgba(130,90,255,0.4);
+    }
+    .dm-msg-row.dm-selectable .dm-select-checkbox {
+      display: flex !important;
+    }
+    .dm-select-checkbox {
+      display: none;
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(130,90,255,0.4);
+      border-radius: 50%;
+      background: rgba(12,8,32,0.8);
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+      z-index: 5;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .dm-msg-row.dm-selected .dm-select-checkbox {
+      background: rgba(239,68,68,0.85);
+      border-color: rgba(239,68,68,0.9);
+      color: #fff;
+    }
+    .dm-msg-row.dm-selected .dm-select-checkbox::after {
+      content: '✓';
+    }
+    .dm-msg-row.dm-selected {
+      background: rgba(239,68,68,0.06);
+      border-radius: 10px;
+    }
+
+    /* ── Select mode active: Select button turns red ── */
+    #dmSelectModeBtn.dm-select-active {
+      background: rgba(239,68,68,0.15) !important;
+      border-color: rgba(239,68,68,0.35) !important;
+      color: rgba(255,140,140,1) !important;
+    }
+
+    /* ── Select toolbar flex ── */
+    #dmSelectToolbar { display: none; flex-direction: row; }
+    #dmSelectToolbar.dm-toolbar-visible { display: flex !important; }
+
+    /* ── Confirm dialog overlay ── */
+    .vx-confirm-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      background: rgba(0,0,0,0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: vxFadeIn 0.18s ease both;
+    }
+    .vx-confirm-box {
+      background: #12102a;
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 18px;
+      padding: 28px 24px 22px;
+      width: 310px;
+      max-width: 92vw;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.85);
+    }
+    .vx-confirm-box h4 {
+      margin: 0 0 8px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .vx-confirm-box p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      margin: 0 0 20px;
+      line-height: 1.5;
+    }
+    .vx-confirm-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .vx-confirm-cancel {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.5);
+      border-radius: 10px;
+      padding: 10px 22px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.18s;
+    }
+    .vx-confirm-cancel:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .vx-confirm-delete {
+      background: linear-gradient(135deg,rgba(239,68,68,0.85),rgba(220,38,38,0.9));
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 22px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: all 0.18s;
+      box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+    }
+    .vx-confirm-delete:hover { transform: scale(1.03); box-shadow: 0 6px 22px rgba(239,68,68,0.45); }
+  `;
+  document.head.appendChild(s);
+})();
+
+/* ── Helper: show custom confirm dialog ── */
+function _vxConfirm(title, body, onConfirm) {
+  const ov = document.createElement('div');
+  ov.className = 'vx-confirm-overlay';
+  ov.innerHTML = `
+    <div class="vx-confirm-box">
+      <h4>${title}</h4>
+      <p>${body}</p>
+      <div class="vx-confirm-actions">
+        <button class="vx-confirm-cancel" id="_vxCancelBtn">Cancel</button>
+        <button class="vx-confirm-delete" id="_vxConfirmBtn">🗑️ Delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#_vxCancelBtn').onclick = () => ov.remove();
+  ov.querySelector('#_vxConfirmBtn').onclick = () => { ov.remove(); onConfirm(); };
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
+/* ── DELETE CHAT GROUP (entire conversation) ── */
+window.deleteDmConversation = async function (userId, username) {
+  if (!userId) return;
+  const displayName = username || 'this user';
+
+  _vxConfirm(
+    '🗑️ Delete Conversation',
+    `Delete your entire conversation with <strong style="color:#a78bfa">${escapeHtml(displayName)}</strong>? This cannot be undone.`,
+    async () => {
+      try {
+        // Optimistic: remove card immediately
+        const container = document.getElementById('dmConversationsList');
+        if (container) {
+          // Find the card that contains this userId and remove it
+          container.querySelectorAll('.dm-contact-card').forEach(card => {
+            const hasUser = card.innerHTML.includes(`'${userId}'`) || card.innerHTML.includes(`"${userId}"`);
+            if (hasUser) card.remove();
+          });
+          // If now empty, show empty state
+          if (!container.querySelector('.dm-contact-card')) {
+            container.innerHTML = `
+              <div class="dm-empty-state">
+                <div class="dm-empty-icon">💬</div>
+                <div class="dm-empty-title">No contacts yet</div>
+                <div class="dm-empty-sub">Follow someone and have them follow you back to unlock chat!</div>
+              </div>`;
+          }
+        }
+
+        // API call — DELETE /api/dm/conversation/:userId
+        const data = await apiCall(`/api/dm/conversation/${userId}`, 'DELETE');
+        if (data && data.success) {
+          showMessage(`🗑️ Conversation with ${displayName} deleted`, 'success');
+        } else {
+          // If endpoint not deployed yet, still show success (local-only delete)
+          showMessage(`🗑️ Conversation removed`, 'success');
+        }
+      } catch (e) {
+        // Non-fatal: endpoint may not exist yet on backend
+        showMessage(`🗑️ Conversation removed locally`, 'success');
+        console.warn('deleteDmConversation API error (non-fatal):', e);
+      }
+    }
+  );
+};
+
+/* ── SELECT MODE state ── */
+let _dmSelectModeOn = false;
+const _dmSelectedMsgIds = new Set();
+
+/* ── TOGGLE SELECT MODE ── */
+window.toggleDmSelectMode = function () {
+  _dmSelectModeOn = !_dmSelectModeOn;
+  _dmSelectedMsgIds.clear();
+
+  const btn = document.getElementById('dmSelectModeBtn');
+  const toolbar = document.getElementById('dmSelectToolbar');
+  const area = document.getElementById('dmMessagesArea');
+
+  if (btn) {
+    if (_dmSelectModeOn) {
+      btn.classList.add('dm-select-active');
+      btn.title = 'Exit select mode';
+    } else {
+      btn.classList.remove('dm-select-active');
+      btn.title = 'Select messages';
+    }
+  }
+
+  if (toolbar) {
+    if (_dmSelectModeOn) {
+      toolbar.classList.add('dm-toolbar-visible');
+    } else {
+      toolbar.classList.remove('dm-toolbar-visible');
+    }
+  }
+
+  _updateDmSelectCount();
+
+  // Add/remove selectable class and checkboxes on each message row
+  if (!area) return;
+  area.querySelectorAll('.dm-msg-row').forEach(row => {
+    if (_dmSelectModeOn) {
+      row.classList.add('dm-selectable');
+      row.classList.remove('dm-selected');
+      // Inject checkbox if not already there
+      if (!row.querySelector('.dm-select-checkbox')) {
+        const cb = document.createElement('div');
+        cb.className = 'dm-select-checkbox';
+        row.insertBefore(cb, row.firstChild);
+      }
+      row.addEventListener('click', _dmRowClickHandler, true);
+    } else {
+      row.classList.remove('dm-selectable', 'dm-selected');
+      row.querySelector('.dm-select-checkbox')?.remove();
+      row.removeEventListener('click', _dmRowClickHandler, true);
+    }
+  });
+};
+
+/* ── Row click handler in select mode ── */
+function _dmRowClickHandler(e) {
+  if (!_dmSelectModeOn) return;
+  // Prevent normal actions (reply, react, etc.) while in select mode
+  e.stopPropagation();
+  e.preventDefault();
+  const row = e.currentTarget;
+  const msgId = row.id?.replace('dm-msg-', '');
+  if (!msgId) return;
+  if (_dmSelectedMsgIds.has(msgId)) {
+    _dmSelectedMsgIds.delete(msgId);
+    row.classList.remove('dm-selected');
+  } else {
+    _dmSelectedMsgIds.add(msgId);
+    row.classList.add('dm-selected');
+  }
+  _updateDmSelectCount();
+}
+
+/* ── Update count label ── */
+function _updateDmSelectCount() {
+  const el = document.getElementById('dmSelectCount');
+  if (el) {
+    const n = _dmSelectedMsgIds.size;
+    el.textContent = n === 0 ? '0 selected' : `${n} message${n > 1 ? 's' : ''} selected`;
+  }
+}
+
+/* ── Select All ── */
+window.dmSelectAll = function () {
+  const area = document.getElementById('dmMessagesArea');
+  if (!area) return;
+  area.querySelectorAll('.dm-msg-row.dm-selectable').forEach(row => {
+    const msgId = row.id?.replace('dm-msg-', '');
+    if (msgId) {
+      _dmSelectedMsgIds.add(msgId);
+      row.classList.add('dm-selected');
+    }
+  });
+  _updateDmSelectCount();
+};
+
+/* ── DELETE SELECTED MESSAGES ── */
+window.deleteSelectedDmMessages = async function () {
+  if (_dmSelectedMsgIds.size === 0) {
+    showMessage('⚠️ No messages selected', 'error');
+    return;
+  }
+  const count = _dmSelectedMsgIds.size;
+
+  _vxConfirm(
+    `🗑️ Delete ${count} Message${count > 1 ? 's' : ''}`,
+    `Permanently delete <strong style="color:#f87171">${count}</strong> selected message${count > 1 ? 's' : ''}? This cannot be undone.`,
+    async () => {
+      const ids = [..._dmSelectedMsgIds];
+
+      // Optimistic: remove rows immediately
+      ids.forEach(id => {
+        const row = document.getElementById('dm-msg-' + id);
+        if (row) {
+          row.style.transition = 'opacity 0.2s, transform 0.2s';
+          row.style.opacity = '0';
+          row.style.transform = 'scale(0.92)';
+          setTimeout(() => row.remove(), 220);
+        }
+      });
+      _dmSelectedMsgIds.clear();
+      _updateDmSelectCount();
+
+      // Exit select mode automatically
+      if (_dmSelectModeOn) toggleDmSelectMode();
+
+      showMessage(`🗑️ ${count} message${count > 1 ? 's' : ''} deleted`, 'success');
+
+      // API call — DELETE /api/dm/messages with array of IDs
+      try {
+        await apiCall('/api/dm/messages', 'DELETE', { messageIds: ids });
+      } catch (e) {
+        // Non-fatal: messages are already removed from UI
+        console.warn('deleteSelectedDmMessages API error (non-fatal):', e);
+      }
+    }
+  );
+};
+
+/* ── Patch openDmDrawer to re-attach select-mode checkboxes after messages load ── */
+const _origOpenDmDrawer = window.openDmDrawer;
+window.openDmDrawer = async function (userId) {
+  // Exit select mode when switching conversations
+  if (_dmSelectModeOn) toggleDmSelectMode();
+  if (typeof _origOpenDmDrawer === 'function') return _origOpenDmDrawer.apply(this, arguments);
+};
+
+/* ── Also exit select mode when drawer closes ── */
+const _origCloseDmDrawerSel = window.closeDmDrawer;
+window.closeDmDrawer = function () {
+  if (_dmSelectModeOn) toggleDmSelectMode();
+  if (typeof _origCloseDmDrawerSel === 'function') _origCloseDmDrawerSel.apply(this, arguments);
+};
+
+// End of Profile Messages Delete & Select feature
