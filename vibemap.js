@@ -779,7 +779,7 @@ function handleInputChange(inputId) {
 let currentUser = null;
 let currentType = null;
 let currentPage = 1;
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 20;
 let currentVerifyCollege = null;
 let allColleges = [];
 let socket = null;
@@ -1002,7 +1002,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
           // Hide login/about page and show main page
           if (aboutPage) aboutPage.style.display = 'none';
-          if (mainPage) mainPage.style.display = 'block';
+          if (mainPage) {
+           mainPage.style.display = 'block';
+           // Resize Vanta NET background after mainPage becomes visible
+           setTimeout(() => {
+             if (window.vantaNetEffect) {
+             window.vantaNetEffect.resize();
+            } else if (typeof VANTA !== 'undefined' && typeof initNetBackground === 'function') {
+            initNetBackground();
+            }
+           }, 100);
+          }
           if (authPopup) authPopup.style.display = 'none';
 
           const userName = document.getElementById('userName');
@@ -2375,6 +2385,72 @@ function loadCommunities() {
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">VIT Bhopal & Other Campuses</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
+          <div class="card" onclick="selectUniversity('iiser')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔬</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">IISER</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Research Institutes</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('bits')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">⚙️</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">BITS</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Pilani & Campuses</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('amrita')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌸</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Amrita</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Vishwa Vidyapeetham</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('symbiosis')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🤝</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Symbiosis</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Institutes</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('top_universities')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏆</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Top Universities</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Premier Institutions</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('delhi_colleges')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏙️</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Delhi Colleges</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">University of Delhi</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('engineering')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔧</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Engineering</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Engineering Colleges</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('private_universities')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">💼</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Private Universities</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Top Private Institutions</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('agricultural')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌾</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Agricultural</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Agricultural Universities</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('medical')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">⚕️</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Medical</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Medical Colleges</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
+          <div class="card" onclick="selectUniversity('research')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+            <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔭</div>
+            <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Research</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Research Institutes</p>
+            <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
+          </div>
           <div class="card" onclick="selectUniversity('other')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌟</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Other Universities</h3>
@@ -2919,7 +2995,18 @@ function selectUniversity(type) {
   const titles = {
     nit: 'National Institutes of Technology',
     iit: 'Indian Institutes of Technology',
+    iiser: 'IISERs & Research Institutes',
+    bits: 'BITS Pilani & Campuses',
+    amrita: 'Amrita University',
+    symbiosis: 'Symbiosis Institutes',
     vit: 'VIT Colleges',
+    top_universities: 'Top Universities',
+    delhi_colleges: 'Delhi Colleges',
+    engineering: 'Engineering Colleges',
+    private_universities: 'Private Universities',
+    agricultural: 'Agricultural Universities',
+    medical: 'Medical Colleges',
+    research: 'Research Institutes',
     other: 'Other Universities'
   };
 
@@ -2937,6 +3024,7 @@ function showColleges() {
   const start = (currentPage - 1) * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE;
   const page = list.slice(start, end);
+  const totalPages = Math.ceil(list.length / ITEMS_PER_PAGE);
 
   let html = '';
   page.forEach(c => {
@@ -2955,6 +3043,28 @@ function showColleges() {
 
   const container = document.getElementById('collegeContainer');
   if (container) container.innerHTML = html;
+
+  // ✅ Render pagination controls
+  const pagination = document.getElementById('pagination');
+  if (pagination) {
+    let pagHtml = '';
+    if (totalPages > 1) {
+      pagHtml += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        pagHtml += `<button onclick="changePage(${i})" class="${i === currentPage ? 'active-page' : ''}">${i}</button>`;
+      }
+      pagHtml += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+    }
+    pagination.innerHTML = pagHtml;
+  }
+}
+
+function changePage(page) {
+  const totalPages = Math.ceil(allColleges.length / ITEMS_PER_PAGE);
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  showColleges();
+  document.getElementById('collegeContainer')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function searchColleges() {
@@ -5482,12 +5592,22 @@ function goHome() {
 // ══════════════════════════════════════════════════════════════
 let _homeFeedLoading = false;
 
+// ── Zero Velocity endless loop state ──────────────────────────────────────────
+let _hfAllPosts = [];          // master list of fetched posts
+let _hfLoopScrolling = false;  // debounce flag for silent jump-back
+
 async function loadHomeFeed() {
   if (_homeFeedLoading) return;
   _homeFeedLoading = true;
 
   const container = document.getElementById('homeFeedContainer');
   if (!container) { _homeFeedLoading = false; return; }
+
+  // Remove any previous infinite-scroll listener to avoid duplicates
+  if (container._hfScrollHandler) {
+    container.removeEventListener('scroll', container._hfScrollHandler);
+    container._hfScrollHandler = null;
+  }
 
   // Always clear and show skeletons fresh on every visit
   container.innerHTML = '';
@@ -5531,7 +5651,9 @@ async function loadHomeFeed() {
       return;
     }
 
-    container.innerHTML = posts.map(post => buildHomeFeedCard(post)).join('');
+    _hfAllPosts = posts;
+    _renderHomeFeedLoop(container, posts);
+    _attachHomeFeedLoopScroll(container, posts);
   } catch (err) {
     container.innerHTML = `<div class="home-feed-empty">
       <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
@@ -5542,6 +5664,54 @@ async function loadHomeFeed() {
   } finally {
     _homeFeedLoading = false;
   }
+}
+
+// Render posts × 3 copies so there is always content ahead and behind
+function _renderHomeFeedLoop(container, posts) {
+  // 3 copies: [copy A][copy B][copy C] — start viewport in copy B (middle)
+  const triple = [...posts, ...posts, ...posts];
+  container.innerHTML = triple.map(post => buildHomeFeedCard(post)).join('');
+
+  // Jump silently to the middle copy so the user starts there
+  requestAnimationFrame(() => {
+    const cards = container.querySelectorAll('.hf-card-wrap');
+    const perCopy = posts.length;
+    if (cards.length >= perCopy * 2) {
+      const midCard = cards[perCopy];
+      container.scrollTop = midCard.offsetTop;
+    }
+  });
+}
+
+// Attach scroll listener that silently re-centres when approaching an edge
+function _attachHomeFeedLoopScroll(container, posts) {
+  const handler = () => {
+    if (_hfLoopScrolling) return;
+    const perCopy = posts.length;
+    const cards = container.querySelectorAll('.hf-card-wrap');
+    if (!cards.length || cards.length < perCopy * 3) return;
+
+    const firstCopyBottom = cards[perCopy - 1].offsetTop + cards[perCopy - 1].offsetHeight;
+    const lastCopyTop = cards[perCopy * 2].offsetTop;
+
+    // Approaching end of last copy → jump to equivalent position in middle copy
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 40) {
+      _hfLoopScrolling = true;
+      const offset = container.scrollTop - lastCopyTop + cards[perCopy].offsetTop;
+      container.scrollTop = offset;
+      setTimeout(() => { _hfLoopScrolling = false; }, 50);
+    }
+    // Approaching top of first copy → jump to equivalent position in middle copy
+    else if (container.scrollTop <= 40) {
+      _hfLoopScrolling = true;
+      const offset = cards[perCopy * 2 - 1].offsetTop - (firstCopyBottom - container.scrollTop) + container.clientHeight;
+      container.scrollTop = Math.max(0, offset);
+      setTimeout(() => { _hfLoopScrolling = false; }, 50);
+    }
+  };
+
+  container._hfScrollHandler = handler;
+  container.addEventListener('scroll', handler, { passive: true });
 }
 
 function buildHomeFeedCard(post) {
@@ -5631,6 +5801,7 @@ window.homeFeedScrollCard = function(dir) {
     ? (card.offsetHeight + parseInt(getComputedStyle(card).marginBottom || '0', 10))
     : Math.round(container.clientHeight * 0.80);
   container.scrollBy({ top: dir * step, behavior: 'smooth' });
+  // The scroll listener (_attachHomeFeedLoopScroll) will handle wrapping at edges automatically
 };
 
 // ── Zero Velocity: close left comment panel helper ──
@@ -12843,10 +13014,21 @@ async function initVibeFeed() {
   }
 }
 
+// ─── Vibers endless loop state ──────────────────────────────────
+let _vfMasterPosts = [];      // master list (original fetch)
+let _vfLoopScrolling = false; // debounce silent-jump flag
+
 // ─── Render all cards ─────────────────────────────────────────
 function renderVibeFeed(posts) {
   const feed = document.getElementById('vibeFeed');
   if (!feed) return;
+
+  // Remove previous loop scroll listener to avoid duplicates
+  if (feed._vfScrollHandler) {
+    feed.removeEventListener('scroll', feed._vfScrollHandler);
+    feed._vfScrollHandler = null;
+  }
+
   // Seed follow state from post data so cards render with correct follow status
   posts.forEach(p => {
     const uid = p.users?.id || p.user_id;
@@ -12856,9 +13038,15 @@ function renderVibeFeed(posts) {
       }
     }
   });
-  feed.innerHTML = posts.map((p, i) => buildVibeCard(p, i)).join('');
 
-  // Attach tap / double-tap listeners
+  _vfMasterPosts = posts;
+
+  // Build 3× copies so there is always content above and below
+  const triple = [...posts, ...posts, ...posts];
+  const perCopy = posts.length;
+  feed.innerHTML = triple.map((p, i) => buildVibeCard(p, i)).join('');
+
+  // Attach tap / double-tap listeners (use global index i for IDs)
   feed.querySelectorAll('.vibe-card').forEach((card, i) => {
     let lastTap = 0;
     card.addEventListener('click', e => {
@@ -12870,14 +13058,54 @@ function renderVibeFeed(posts) {
         vibeDoubleTapLike(card, i);
       }
       lastTap = now;
-      // tap to play/pause video
       const vid = card.querySelector('.vibe-card-bg-video');
       if (vid) vibeToggleVideo(card, i, vid);
     });
   });
 
+  // Jump silently to middle copy so user starts in the centre
+  requestAnimationFrame(() => {
+    const cards = feed.querySelectorAll('.vibe-card');
+    if (cards.length >= perCopy * 2) {
+      feed.scrollTop = cards[perCopy].offsetTop;
+    }
+  });
+
+  // Attach endless-scroll loop listener
+  _attachVibeFeedLoopScroll(feed, perCopy);
+
   // ── Start live timestamp updates ──
   startVibeLiveTimestamps();
+}
+
+// Silently re-centre when user approaches either edge of the triple buffer
+function _attachVibeFeedLoopScroll(feed, perCopy) {
+  const handler = () => {
+    if (_vfLoopScrolling) return;
+    const cards = feed.querySelectorAll('.vibe-card');
+    if (cards.length < perCopy * 3) return;
+
+    const lastCopyTop = cards[perCopy * 2].offsetTop;
+    const firstCopyBottom = cards[perCopy - 1].offsetTop + cards[perCopy - 1].offsetHeight;
+
+    // Near end of last copy → jump to same relative position in middle copy
+    if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 80) {
+      _vfLoopScrolling = true;
+      const relOffset = feed.scrollTop - lastCopyTop;
+      feed.scrollTop = cards[perCopy].offsetTop + relOffset;
+      setTimeout(() => { _vfLoopScrolling = false; }, 50);
+    }
+    // Near top of first copy → jump to same relative position in middle copy
+    else if (feed.scrollTop <= 80) {
+      _vfLoopScrolling = true;
+      const relOffset = feed.scrollTop;
+      feed.scrollTop = cards[perCopy * 2 - perCopy].offsetTop + relOffset;
+      setTimeout(() => { _vfLoopScrolling = false; }, 50);
+    }
+  };
+
+  feed._vfScrollHandler = handler;
+  feed.addEventListener('scroll', handler, { passive: true });
 }
 
 // ─── Build a single card ─────────────────────────────────────
@@ -12906,7 +13134,7 @@ function buildVibeCard(post, idx) {
   if (firstMedia?.type === 'video') {
     const proxiedUrl = proxyMediaUrl(firstMedia.url);
     bgLayer = `<video class="vibe-card-bg-video" src="${proxiedUrl}"
-      playsinline muted loop preload="metadata"></video>`;
+      playsinline muted loop autoplay preload="auto"></video>`;
   } else if (firstMedia?.type === 'image' || (firstMedia?.url && !firstMedia?.type)) {
     const proxiedUrl = proxyMediaUrl(firstMedia.url || firstMedia);
     bgLayer = `<img class="vibe-card-bg-blur" src="${proxiedUrl}" alt="" aria-hidden="true">
@@ -13017,7 +13245,7 @@ function buildVibeCard(post, idx) {
         <div class="vibe-action-bubble">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
-        <span class="vibe-action-label" id="vcomment_count_${idx}">${comments}</span>
+       <span class="vibe-action-label" id="vcomment_count_${idx}" data-post-id="${post.id}">${comments}</span>
       </div>
 
       <!-- Share -->
@@ -13045,23 +13273,35 @@ function buildVibeCard(post, idx) {
 }
 
 // ─── Intersection Observer: auto-play / progress ──────────────
+let _vibeObserver = null;
+
 function setupVibeObserver() {
-  const obs = new IntersectionObserver(entries => {
+  // Disconnect previous observer if any
+  if (_vibeObserver) { _vibeObserver.disconnect(); _vibeObserver = null; }
+
+  const feed = document.getElementById('vibeFeed');
+  const root = feed || null; // observe within the feed scroll container
+
+  _vibeObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       const idx = parseInt(entry.target.dataset.idx);
       const vid = entry.target.querySelector('.vibe-card-bg-video');
       if (entry.isIntersecting) {
         vibeCurrentCard = idx;
-        if (vid) vid.play().catch(() => { });
+        if (vid) {
+          vid.muted = true;
+          vid.loop = true;
+          vid.play().catch(() => { });
+        }
         startVibeProgress(idx, vid);
       } else {
         if (vid) { vid.pause(); vid.currentTime = 0; }
         stopVibeProgress(idx);
       }
     });
-  }, { threshold: 0.65 });
+  }, { root, threshold: 0.65 });
 
-  document.querySelectorAll('.vibe-card').forEach(c => obs.observe(c));
+  document.querySelectorAll('.vibe-card').forEach(c => _vibeObserver.observe(c));
 }
 
 // ─── Progress bar ─────────────────────────────────────────────
@@ -13077,11 +13317,11 @@ function startVibeProgress(idx, vid) {
       bar.style.width = (vid.currentTime / vid.duration * 100) + '%';
     };
     vibeProgressTimers[idx] = setInterval(tick, 150);
+    vid.loop = true;
     vid.addEventListener('ended', () => {
       vid.currentTime = 0;
       vid.play().catch(e => console.warn('Replay blocked:', e));
-      startVibeProgress(idx, vid);
-    }, { once: true });
+    });
   } else {
     // Text/image: auto-advance after 6 seconds
     let pct = 0;
@@ -13153,6 +13393,17 @@ async function vibeToggleLike(postId, idx) {
     if (ico) { ico.style.fill = data.liked ? '#ff3040' : 'none'; ico.style.stroke = data.liked ? '#ff3040' : '#fff'; }
     if (cnt) cnt.textContent = vibeFmt(data.likeCount);
     if (data.liked) checkAndUpdateRewards?.('like');
+
+    // ── Sync liked state across ALL cards showing this post ──
+    document.querySelectorAll(`.vibe-card[data-id="${postId}"]`).forEach(card => {
+      const i = card.dataset.idx;
+      const likeEl = document.getElementById('vact_like_' + i);
+      const likeIco = likeEl?.querySelector('path');
+      const likeCnt = document.getElementById('vlike_count_' + i);
+      if (likeEl) likeEl.classList.toggle('vibe-liked', data.liked);
+      if (likeIco) { likeIco.style.fill = data.liked ? '#ff3040' : 'none'; likeIco.style.stroke = data.liked ? '#ff3040' : '#fff'; }
+      if (likeCnt) likeCnt.textContent = vibeFmt(data.likeCount);
+    });
   } catch (e) { console.error('Like err', e); }
 }
 
@@ -13302,6 +13553,19 @@ async function submitVibeComment() {
       if (list.querySelector('.vibe-drawer-loading')) list.innerHTML = '';
       list.prepend(newItem);
     }
+
+    // ── Update comment count on every matching card in the feed ──
+    document.querySelectorAll('.vibe-card').forEach(card => {
+      if (card.dataset.id == vibeActiveCommentPostId) {
+        const idx = card.dataset.idx;
+        const cntEl = document.getElementById('vcomment_count_' + idx);
+        if (cntEl) cntEl.textContent = vibeFmt((parseInt(cntEl.textContent) || 0) + 1);
+        // Update drawer title too
+        const title = document.getElementById('vibeCommentTitle');
+        if (title && cntEl) title.textContent = `Comments (${cntEl.textContent})`;
+      }
+    });
+
     checkAndUpdateRewards?.('comment');
   } catch (e) { showMessage('❌ ' + e.message, 'error'); }
 }
