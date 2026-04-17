@@ -15041,6 +15041,31 @@
     .vx-notif-redirect-hint.comment { color: rgba(99,102,241,0.6); }
     .vx-notif-redirect-hint.message { color: rgba(14,165,233,0.6); }
 
+    .vx-notif-followback-btn {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(168,85,247,0.55);
+      background: transparent;
+      color: #a855f7;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      line-height: 1.4;
+    }
+    .vx-notif-followback-btn:hover:not(:disabled) {
+      background: rgba(168,85,247,0.14);
+    }
+    .vx-notif-followback-btn.vx-notif-followback-done {
+      border-color: rgba(34,197,94,0.5);
+      color: #22c55e;
+    }
+    .vx-notif-followback-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     .vx-notif-arrow {
       font-size: 13px;
       color: rgba(168,85,247,0.4);
@@ -16330,9 +16355,9 @@
           return;
         }
         const cfg = {
-          follow:  { badge: '➕', cls: 'follow',  hint: 'View profile' },
-          like:    { badge: '♥',  cls: 'like',    hint: 'View profile' },
-          comment: { badge: '💬', cls: 'comment', hint: 'View profile' },
+          follow:  { badge: '➕', cls: 'follow',  hint: 'Follow back' },
+          like:    { badge: '♥',  cls: 'like',    hint: 'View my vibes' },
+          comment: { badge: '💬', cls: 'comment', hint: 'View my vibes' },
           message: { badge: '✉', cls: 'message', hint: 'Messages' },
           dm:      { badge: '✉', cls: 'message', hint: 'Messages' },
           mention: { badge: '@',  cls: 'other',   hint: '' },
@@ -16359,6 +16384,9 @@
           // Sanitize IDs so single-quotes never break the inline onclick attribute
           const safeNotifId = String(n.id || n._id || '').replace(/['"]/g, '');
           const safeActorId = String(actorId || '').replace(/['"]/g, '');
+          const followBackBtn = (type === 'follow' && safeActorId)
+            ? `<button class="vx-notif-followback-btn" onclick="event.stopPropagation();vxNotifFollowBack(this,'${safeActorId}')" title="Follow back">Follow back</button>`
+            : '';
           return `<div class="vx-notif-item ${!n.read && !n.seen ? 'unread' : ''}" style="animation-delay:${delay}s" onclick="vxHandleNotifClick('${safeNotifId}','${type}','${safeActorId}')">
             <div class="vx-notif-avatar-wrap">
               <div class="vx-notif-avatar">${avatarHtml}${!avatarUrl ? `<span>${initials}</span>` : ''}</div>
@@ -16367,11 +16395,36 @@
             <div class="vx-notif-body">
               <div class="vx-notif-text">${text}</div>
               <div class="vx-notif-time">🕐 ${timeStr}${c.hint ? ` · <span class="vx-notif-redirect-hint ${c.cls}">${c.hint} ›</span>` : ''}</div>
+              ${followBackBtn}
             </div>
-            <span class="vx-notif-arrow">›</span>
+            ${type !== 'follow' ? '<span class="vx-notif-arrow">›</span>' : ''}
           </div>`;
         }).join('');
       }
+      window.vxNotifFollowBack = async function (btn, actorId) {
+        if (!actorId) return;
+        btn.disabled = true;
+        btn.textContent = 'Following…';
+        try {
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
+                      sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
+          const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+          const r = await fetch(`${B}/api/follow/${actorId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' }
+          });
+          if (r.ok) {
+            btn.textContent = '✓ Following';
+            btn.classList.add('vx-notif-followback-done');
+          } else {
+            btn.textContent = 'Follow back';
+            btn.disabled = false;
+          }
+        } catch (e) {
+          btn.textContent = 'Follow back';
+          btn.disabled = false;
+        }
+      };
       window.switchVxNotifTab = function (tab, btn) { document.querySelectorAll('.vx-notif-tab').forEach(t => t.classList.remove('active')); if (btn) btn.classList.add('active'); renderNotif(_notifs, tab); };
       window.clearAllVxNotifs = function () { _notifs = _notifs.map(n => ({ ...n, read: true, seen: true })); renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); markRead(); };
       async function markRead() { try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; await fetch((window.API_URL || 'https://vibexpert-backend-main.onrender.com') + '/api/notifications/read', { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } }); } catch (e) { } }
@@ -16387,13 +16440,17 @@
           }
           // No actorId → nothing useful to show; avoid wrongly redirecting to own profile
         } else if (type === 'like' || type === 'comment') {
-          // ── Go to the profile of the person who liked / commented ──
-          if (actorId && typeof window.showUserProfile === 'function') {
-            window.showUserProfile(actorId);
-          } else if (actorId && typeof window.showProfilePage === 'function') {
-            window.showProfilePage({ id: actorId });
-          } else if (typeof window.showPage === 'function') {
+          // ── Go to own profile → My Vibes tab ──
+          if (typeof window.showPage === 'function') {
             window.showPage('profile');
+            setTimeout(function () {
+              if (typeof window.switchProfileTab === 'function') {
+                window.switchProfileTab('vibes');
+              } else {
+                var vibesBtn = document.querySelector('.myvibes-tab-btn');
+                if (vibesBtn) vibesBtn.click();
+              }
+            }, 280);
           }
         } else if (type === 'message' || type === 'dm' || type === 'new_dm') {
           // BUG FIX (BUG-11): Open the FAB DM panel, not the old dmDrawer.
@@ -17085,7 +17142,7 @@
 
     // ── Config ──────────────────────────────────────────────────────────────
     // API key is now secure on the backend. Frontend calls /api/vxai/chat only.
-    const VXAI_ENDPOINT = '/api/vxai/chat';
+    const VXAI_ENDPOINT = 'https://vibexpert-backend-main.onrender.com/api/vxai/chat';
     const MAX_HISTORY_TURNS = 10; // keep last 10 user+model pairs (20 messages)
 
     // ── Client-side rate limit: max 15 messages per minute ───────────────────
