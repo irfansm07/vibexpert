@@ -913,33 +913,69 @@ const stickerLibrary = {
   ]
 };
 
-const colleges = {
-  nit: [
-    { name: 'NIT Bhopal', email: '@stu.manit.ac.in', location: 'Bhopal' },
-    { name: 'NIT Bhopal', email: '@gmail.com', location: 'Bhopal' },
-    { name: 'NIT Rourkela', email: '@nitrkl.ac.in', location: 'Rourkela' },
-    { name: 'NIT Warangal', email: '@nitw.ac.in', location: 'Warangal' },
-    { name: 'NIT Trichy', email: '@nitt.edu', location: 'Trichy' },
-    { name: 'NIT Surathkal', email: '@nitk.edu.in', location: 'Surathkal' }
-  ],
-  iit: [
-    { name: 'IIT Delhi', email: '@iitd.ac.in', location: 'New Delhi' },
-    { name: 'IIT Bombay', email: '@iitb.ac.in', location: 'Mumbai' },
-    { name: 'IIT Madras', email: '@iitm.ac.in', location: 'Chennai' },
-    { name: 'IIT Kharagpur', email: '@kgp.iitkgp.ac.in', location: 'Kharagpur' },
-    { name: 'IIT Kanpur', email: '@iitk.ac.in', location: 'Kanpur' }
-  ],
-  vit: [
-    { name: 'VIT Bhopal', email: '@vitbhopal.ac.in', location: 'Bhopal' },
-    { name: 'VIT Vellore', email: '@vit.ac.in', location: 'Vellore' },
-    { name: 'VIT Chennai', email: '@vit.ac.in', location: 'Chennai' }
-  ],
-  other: [
-    { name: 'Delhi University', email: '@du.ac.in', location: 'New Delhi' },
-    { name: 'Mumbai University', email: '@mu.ac.in', location: 'Mumbai' },
-    { name: 'BITS Pilani', email: '@pilani.bits-pilani.ac.in', location: 'Pilani' }
-  ]
-};
+// ========================================
+// COLLEGES DATA - Load from JSON file
+// ========================================
+
+let colleges = {};
+
+// Load colleges on startup
+async function loadColleges() {
+  try {
+    const response = await fetch('/colleges.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    colleges = await response.json();
+    console.log('✅ Colleges loaded successfully', Object.keys(colleges).length, 'categories found');
+    return colleges;
+  } catch (error) {
+    console.error('❌ Failed to load colleges:', error);
+    // Fallback to empty categories — shows empty list gracefully
+    colleges = {
+      nit: [], iit: [], iiser: [], bits: [], amrita: [], symbiosis: [], vit: [],
+      top_universities: [], delhi_colleges: [], engineering: [], private_universities: [],
+      agricultural: [], medical: [], research: [], other: []
+    };
+    return colleges;
+  }
+}
+
+// ── College helper utilities ────────────────────────────────────────────────
+
+function getCollegesByCategory(category) {
+  return colleges[category] || [];
+}
+
+function getAllCategories() {
+  return Object.keys(colleges);
+}
+
+function getAllColleges() {
+  let allCollegesList = [];
+  for (const category in colleges) {
+    allCollegesList = allCollegesList.concat(colleges[category]);
+  }
+  return allCollegesList;
+}
+
+function populateCollegeDropdown(selectElement, selectedCollege = null) {
+  selectElement.innerHTML = '<option value="">Select College</option>';
+  for (const [category, collegeList] of Object.entries(colleges)) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = category.toUpperCase().replace(/_/g, ' ');
+    collegeList.forEach(college => {
+      const option = document.createElement('option');
+      option.value = college.name;
+      option.textContent = college.name + ' (' + college.location + ')';
+      if (selectedCollege && selectedCollege === college.name) {
+        option.selected = true;
+      }
+      optgroup.appendChild(option);
+    });
+    selectElement.appendChild(optgroup);
+  }
+}
 
 // ========================================
 // INITIALIZATION
@@ -948,56 +984,58 @@ const colleges = {
 document.addEventListener('DOMContentLoaded', function () {
   console.log('🚀 VibeXpert initializing...');
 
-  const token = getToken();
-  const saved = localStorage.getItem('user');
+  // Load colleges from JSON first, then initialize the rest of the app
+  loadColleges().then(() => {
+    const token = getToken();
+    const saved = localStorage.getItem('user');
 
-  if (token && saved) {
-    try {
-      currentUser = JSON.parse(saved);
+    if (token && saved) {
+      try {
+        currentUser = JSON.parse(saved);
 
-      // Only show main page if user is properly authenticated
-      if (currentUser && currentUser.username) {
-        document.body.classList.add('logged-in');
-        const aboutPage = document.getElementById('aboutUsPage');
-        const mainPage = document.getElementById('mainPage');
-        const authPopup = document.getElementById('authPopup');
+        // Only show main page if user is properly authenticated
+        if (currentUser && currentUser.username) {
+          document.body.classList.add('logged-in');
+          const aboutPage = document.getElementById('aboutUsPage');
+          const mainPage = document.getElementById('mainPage');
+          const authPopup = document.getElementById('authPopup');
 
-        // Hide login/about page and show main page
-        if (aboutPage) aboutPage.style.display = 'none';
-        if (mainPage) mainPage.style.display = 'block';
-        if (authPopup) authPopup.style.display = 'none';
+          // Hide login/about page and show main page
+          if (aboutPage) aboutPage.style.display = 'none';
+          if (mainPage) mainPage.style.display = 'block';
+          if (authPopup) authPopup.style.display = 'none';
 
-        const userName = document.getElementById('userName');
-        if (userName) userName.textContent = 'Hi, ' + currentUser.username;
+          const userName = document.getElementById('userName');
+          if (userName) userName.textContent = 'Hi, ' + currentUser.username;
 
-        if (currentUser.college) {
-          // Removed updateLiveNotif
-          initializeSocket();
-        }
-        // Sync latest user data from server on every refresh.
-        // After sync, if college/communityJoined were restored from the server,
-        // re-render the communities page so chat shows without requiring re-login.
-        refreshCurrentUser().then(() => {
-          const activePage = document.querySelector('.page.active, .page[style*="display: block"]');
-          if (activePage && activePage.id === 'communities') {
-            if (typeof loadCommunities === 'function') loadCommunities();
+          if (currentUser.college) {
+            initializeSocket();
           }
-        });
-        // Load home feed on startup via showPage so display:flex + all
-        // layout state is set identically to navigating to home manually.
-        setTimeout(() => showPage('home'), 100);
-      } else {
-        // Invalid user data, show login
+          // Sync latest user data from server on every refresh.
+          // After sync, if college/communityJoined were restored from the server,
+          // re-render the communities page so chat shows without requiring re-login.
+          refreshCurrentUser().then(() => {
+            const activePage = document.querySelector('.page.active, .page[style*="display: block"]');
+            if (activePage && activePage.id === 'communities') {
+              if (typeof loadCommunities === 'function') loadCommunities();
+            }
+          });
+          // Load home feed on startup via showPage so display:flex + all
+          // layout state is set identically to navigating to home manually.
+          setTimeout(() => showPage('home'), 100);
+        } else {
+          // Invalid user data, show login
+          showAboutUsPage();
+        }
+      } catch (e) {
+        console.error('Parse error:', e);
+        localStorage.clear();
         showAboutUsPage();
       }
-    } catch (e) {
-      console.error('Parse error:', e);
-      localStorage.clear();
+    } else {
       showAboutUsPage();
     }
-  } else {
-    showAboutUsPage();
-  }
+  });
 
   setupEventListeners();
   initializeMusicPlayer();
