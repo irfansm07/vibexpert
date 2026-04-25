@@ -2893,6 +2893,21 @@ function openEmojiPicker() {
   html += '</div>';
   picker.innerHTML = html;
   document.body.appendChild(picker);
+
+  // Close when clicking outside
+  setTimeout(() => {
+    document.addEventListener('click', function closePicker(e) {
+      const p = document.getElementById('emojiPickerPopup');
+      if (!p) {
+        document.removeEventListener('click', closePicker);
+        return;
+      }
+      if (!p.contains(e.target) && !e.target.closest('[onclick="openEmojiPicker()"]') && !e.target.closest('.vibe-emoji-toggle-btn')) {
+        p.remove();
+        document.removeEventListener('click', closePicker);
+      }
+    });
+  }, 100);
 }
 
 function closeEmojiPicker() {
@@ -2906,7 +2921,7 @@ function insertEmoji(emoji) {
     input.value += emoji;
     input.focus();
   }
-  closeEmojiPicker();
+  // DO NOT close the picker here so user can add multiple emojis at a single time
 }
 
 function searchEmojis(query) {
@@ -3498,6 +3513,18 @@ function hideSearchResults() {
 
 async function showUserProfile(userId) {
   hideSearchResults();
+
+  // Close any potentially open comment drawers/panels so they don't block the profile view
+  if (typeof closeAllVibeDrawers === 'function') closeAllVibeDrawers();
+  if (typeof closeRvComments === 'function') closeRvComments();
+  if (typeof closeCommentModal === 'function') closeCommentModal();
+  if (typeof _hfCloseCommentPanel === 'function') _hfCloseCommentPanel();
+  const zvDrawer = document.getElementById('zvCommentsDrawer');
+  if (zvDrawer) {
+    zvDrawer.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   const searchBox = document.getElementById('searchBox');
   if (searchBox) searchBox.value = '';
 
@@ -11445,6 +11472,15 @@ function appendWhatsAppMessageFixed(msg) {
   const contentRaw = msg.text || msg.content || '';
   const contentText = linkifyUrls(typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw);
 
+  let isOnlyEmoji = false;
+  if (contentRaw && contentRaw.trim()) {
+    const stripped = contentRaw.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+    const nonEmoji = stripped.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}\uFE0F\u20E3]/gu, '');
+    if (stripped.length > 0 && nonEmoji.length === 0) {
+      isOnlyEmoji = true;
+    }
+  }
+
   // Reply quote (shown if this message is a reply)
   let replyQuoteHTML = '';
   if (msg.reply_to) {
@@ -11508,7 +11544,7 @@ function appendWhatsAppMessageFixed(msg) {
       <div class="message-bubble" id="bubble-${messageId}">
         ${replyQuoteHTML}
         ${mediaHTML}
-        <div class="message-text">${contentText}</div>
+        <div class="message-text" ${isOnlyEmoji ? 'style="font-size: 2.2em !important; line-height: 1.2 !important; padding-top: 4px; padding-bottom: 4px;"' : ''}>${contentText}</div>
         <div class="message-meta">
           <span class="message-time">${timeLabel}</span>
           ${isOwn ? `<span class="message-status" id="status-${messageId}" style="margin-left:auto;">${isTemp ? '<span class="tick tick-sending" style="font-size:10px;">⏳</span>' : '<span class="tick tick-sent" style="font-size:10px;">✓</span>'}</span>` : ''}
@@ -15192,14 +15228,27 @@ function _buildDmBubble(m, isOptimistic) {
     avatarHtml = `<div class="dm-avatar-indicator">${initial}</div>`;
   }
 
+  // Check for emoji-only message
+  const rawContent = m.content || '';
+  let isOnlyEmoji = false;
+  if (!m.media_url && rawContent.trim()) {
+    const stripped = rawContent.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+    const nonEmoji = stripped.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}\uFE0F\u20E3]/gu, '');
+    if (stripped.length > 0 && nonEmoji.length === 0) {
+      isOnlyEmoji = true;
+    }
+  }
+
+  const contentText = m.media_url ? renderDmMedia(m) : linkifyUrls(escapeHtml(rawContent));
+
   return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="' + msgId + '"' : ''}>
     ${avatarHtml}
     <div class="dm-msg-wrap">
       ${replyHtml}
       <div class="dm-bubble-row">
         ${own ? dotsBtn : ''}
-        <div class="dm-bubble ${own ? 'dm-bubble-own' : 'dm-bubble-other'}">
-          ${m.media_url ? renderDmMedia(m) : linkifyUrls(escapeHtml(m.content || ''))}
+        <div class="dm-bubble ${own ? 'dm-bubble-own' : 'dm-bubble-other'}" ${isOnlyEmoji ? 'style="font-size: 2.2em !important; line-height: 1.2 !important; padding-top: 4px; padding-bottom: 4px;"' : ''}>
+          ${contentText}
         </div>
         ${!own ? dotsBtn : ''}
       </div>
@@ -17165,9 +17214,19 @@ function execAppendMessage(msg, isInitial = false) {
     : '';
 
   // Text
+  const rawContent = msg.content || '';
+  let isOnlyEmoji = false;
+  if (!msg.is_deleted && rawContent.trim()) {
+    const stripped = rawContent.replace(/[\s\u200B-\u200D\uFEFF]/g, '');
+    const nonEmoji = stripped.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}\uFE0F\u20E3]/gu, '');
+    if (stripped.length > 0 && nonEmoji.length === 0) {
+      isOnlyEmoji = true;
+    }
+  }
+
   const textContent = msg.is_deleted
     ? '<em class="exec-deleted-text">🚫 This message was deleted</em>'
-    : linkifyUrls(escapeHtml(msg.content || ''));
+    : linkifyUrls(escapeHtml(rawContent));
 
   // Seen-by (own messages only) — show names inline, click for full popup
   const readers = msg.read_by || [];
@@ -17197,7 +17256,7 @@ function execAppendMessage(msg, isInitial = false) {
       <div class="exec-bubble-wrap">
         <div class="exec-bubble ${isOwn ? 'exec-bubble-own' : 'exec-bubble-other'} ${msg.is_deleted ? 'exec-deleted' : ''}">
           ${replyHTML}${mediaHTML}${pollHTML}
-          ${textContent ? `<div class="exec-msg-text">${textContent}</div>` : ''}
+          ${textContent ? `<div class="exec-msg-text" ${isOnlyEmoji ? 'style="font-size: 2.2em !important; line-height: 1.2 !important; padding-top: 4px; padding-bottom: 4px;"' : ''}>${textContent}</div>` : ''}
           <div class="exec-msg-meta">
             ${msg.is_edited ? '<span class="exec-edited-label">edited</span>' : ''}
             <span class="exec-msg-time">${timeStr}</span>
@@ -17394,7 +17453,10 @@ function execShowMessageMenu(event, messageId, isOwn) {
   ).join('');
 
   const rect = event.currentTarget.getBoundingClientRect();
-  menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:9999;`;
+  const menuHeight = items.length * 40 + 10;
+  let top = rect.bottom + 4;
+  if (top + menuHeight > window.innerHeight) top = rect.top - menuHeight - 4;
+  menu.style.cssText = `position:fixed;top:${top}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:9999;`;
   document.body.appendChild(menu);
   setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 100);
 }
@@ -17426,7 +17488,10 @@ window.ghostShowMessageMenu = function (event, messageId, isOwn) {
   ).join('');
 
   const rect = event.currentTarget.getBoundingClientRect();
-  menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:99999;`;
+  const menuHeight = items.length * 40 + 10;
+  let top = rect.bottom + 4;
+  if (top + menuHeight > window.innerHeight) top = rect.top - menuHeight - 4;
+  menu.style.cssText = `position:fixed;top:${top}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:99999;`;
   document.body.appendChild(menu);
 
   // Close menu automatically on any outside click
