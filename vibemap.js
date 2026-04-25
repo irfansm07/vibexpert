@@ -5955,6 +5955,17 @@ async function homeFeedToggleComments(postId) {
       </div>`;
     document.body.appendChild(panel);
 
+    // Close panel when clicking outside it
+    document.addEventListener('click', function _hfLcpOutsideClick(e) {
+      const p = document.getElementById('hf-left-comment-panel');
+      if (!p || !p.classList.contains('hf-lcp-open')) return;
+      // If click is inside the panel, do nothing
+      if (p.contains(e.target)) return;
+      // If click is on the comment button itself, let toggle handle it
+      if (e.target.closest('.hf-action-btn') || e.target.closest('[onclick*="homeFeedToggleComments"]')) return;
+      _hfCloseCommentPanel();
+    });
+
     // Close only on significant scroll (card navigation), not micro trackpad nudges
     const container = document.getElementById('homeFeedContainer');
     if (container) {
