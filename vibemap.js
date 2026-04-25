@@ -1003,15 +1003,15 @@ document.addEventListener('DOMContentLoaded', function () {
           // Hide login/about page and show main page
           if (aboutPage) aboutPage.style.display = 'none';
           if (mainPage) {
-           mainPage.style.display = 'block';
-           // Resize Vanta NET background after mainPage becomes visible
-           setTimeout(() => {
-             if (window.vantaNetEffect) {
-             window.vantaNetEffect.resize();
-            } else if (typeof VANTA !== 'undefined' && typeof initNetBackground === 'function') {
-            initNetBackground();
-            }
-           }, 100);
+            mainPage.style.display = 'block';
+            // Resize Vanta NET background after mainPage becomes visible
+            setTimeout(() => {
+              if (window.vantaNetEffect) {
+                window.vantaNetEffect.resize();
+              } else if (typeof VANTA !== 'undefined' && typeof initNetBackground === 'function') {
+                initNetBackground();
+              }
+            }, 100);
           }
           if (authPopup) authPopup.style.display = 'none';
 
@@ -1584,6 +1584,25 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
         return null;
       }
 
+      // ── Expired / invalid token — auto-logout & redirect to login ──
+      if ((response.status === 401 || response.status === 403) &&
+          /token|expired|unauthorized/i.test(data.error || data.message || '')) {
+        console.warn('🔒 Session expired — logging out automatically.');
+        // Clear stale credentials
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('token');
+        currentUser = null;
+        showMessage('⏳ Your session has expired. Please log in again.', 'error', 5000);
+        // Small delay so the toast is visible before redirect
+        setTimeout(() => {
+          if (typeof showAboutUsPage === 'function') showAboutUsPage();
+        }, 1500);
+        return null;
+      }
+
       throw err;
     }
 
@@ -1786,8 +1805,7 @@ async function sendEnhancedMessage() {
 
   // ── SAFETY CHECKS ──
   if (!hasGhostName()) { requireGhostName(() => sendEnhancedMessage()); return; }
-  if (!communitySafetyCheck(content)) return;
-  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
+  // Ghost mode bypasses rules and mutes!
   // ───────────────────
 
   const ghostName = getGhostName();
@@ -1849,7 +1867,7 @@ function appendMessageToChat(msg) {
   if (!isOwn) messageHTML += `<div class="sender">@${escapeHtml(sender)}</div>`;
 
   messageHTML += `
-   <div class="text">${escapeHtml(msg.text || msg.content || '')}</div>
+   <div class="text">${linkifyUrls(escapeHtml(msg.text || msg.content || ''))}</div>
    <div class="message-footer">
      <span class="message-time">${timeLabel}</span>
      <div class="message-actions">
@@ -1876,6 +1894,14 @@ function escapeHtml(unsafe) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function linkifyUrls(text) {
+  if (!text) return '';
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function (url) {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline; word-break: break-all;">${url}</a>`;
+  });
 }
 
 function createReactionBar(messageId, reactions) {
@@ -2586,9 +2612,7 @@ async function sendWhatsAppMessage() {
     return;
   }
 
-  // ── Bad-word safety check ────────────────────────────────────────────
-  if (!communitySafetyCheck(content)) return;
-  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
+  // Ghost mode has no rules for content and bypasses mutes!
 
   // ✅ Clear input IMMEDIATELY
   const originalContent = content;
@@ -3317,6 +3341,13 @@ function initializeSocket() {
       const vid = card.querySelector('.vibe-card-bg-video');
       if (vid) vibeToggleVideo(card, newIdx, vid);
     });
+    // Explicit dblclick for desktop
+    card.addEventListener('dblclick', e => {
+      if (e.target.closest('.vibe-card-actions') ||
+        e.target.closest('.vibe-card-info') ||
+        e.target.closest('.vibe-card-delete-btn')) return;
+      vibeDoubleTapLike(card, newIdx);
+    });
   });
 
   setupEnhancedSocketListeners();
@@ -3752,6 +3783,14 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   // (overrides any fallback inside renderProfileHobbies that might compute isOwn incorrectly)
   const editHobbiesBtn = document.getElementById('editHobbiesBtn');
   if (editHobbiesBtn) editHobbiesBtn.style.display = isOwn ? 'flex' : 'none';
+
+  // Toggle inline edit buttons in the About Me card
+  const editBioInlineBtn = document.getElementById('editBioInlineBtn');
+  const editEduInlineBtn = document.getElementById('editEduInlineBtn');
+  const editHobbiesInlineBtn = document.getElementById('editHobbiesInlineBtn');
+  if (editBioInlineBtn) editBioInlineBtn.style.display = isOwn ? 'flex' : 'none';
+  if (editEduInlineBtn) editEduInlineBtn.style.display = isOwn ? 'flex' : 'none';
+  if (editHobbiesInlineBtn) editHobbiesInlineBtn.style.display = isOwn ? 'flex' : 'none';
 
   // Handle Follow Button
   if (followBtn) {
@@ -5199,12 +5238,6 @@ function renderProfileHobbies(targetUser, isOwn) {
   const editBtn = document.getElementById('editHobbiesBtn');
   if (editBtn) editBtn.style.display = isOwn ? 'flex' : 'none';
 
-  // Privacy: do not show hobbies list to other users
-  if (!isOwn) {
-    wrap.innerHTML = '<span class="vx-hobbies-empty">No hobbies added yet.</span>';
-    return;
-  }
-
   const rawHobbies = targetUser.hobbies || '';
   const list = typeof rawHobbies === 'string'
     ? rawHobbies.split(',').map(h => h.trim()).filter(Boolean)
@@ -5252,9 +5285,6 @@ async function saveHobbies() {
     showMessage('Saving hobbies...', 'info');
     const result = await apiCall('/api/profile/update', 'PUT', {
       username: currentUser.username,
-      bio: currentUser.bio || '',
-      college: currentUser.college || '',
-      registration_number: currentUser.registration_number || '',
       hobbies: hobbiesStr
     });
     if (result.success) {
@@ -5316,9 +5346,7 @@ async function saveBioFromModal() {
 
     const result = await apiCall('/api/profile/update', 'PUT', {
       username: newUsername,
-      bio: newBio,
-      college: currentUser.college || '',
-      registration_number: currentUser.registration_number || ''
+      bio: newBio
     });
 
     if (result.success) {
@@ -5343,6 +5371,65 @@ async function saveBioFromModal() {
   }
 
   closeModal('bioEditModal');
+}
+
+function openEditEducationModal() {
+  if (!currentUser) return;
+  const modal = document.getElementById('educationEditModal');
+  const collegeInput = document.getElementById('modalCollegeText');
+  const mailInput = document.getElementById('modalMailText');
+
+  if (modal) {
+    if (collegeInput) collegeInput.value = currentUser.college || '';
+    if (mailInput) mailInput.value = currentUser.registration_number || '';
+    modal.style.display = 'flex';
+  }
+}
+
+async function saveEducationFromModal() {
+  const collegeInput = document.getElementById('modalCollegeText');
+  const mailInput = document.getElementById('modalMailText');
+
+  if (!currentUser) return;
+
+  const newCollege = collegeInput ? collegeInput.value.trim() : (currentUser.college || '');
+  const newMail = mailInput ? mailInput.value.trim() : (currentUser.registration_number || '');
+
+  const collegeChanged = currentUser.college !== newCollege;
+  const mailChanged = currentUser.registration_number !== newMail;
+
+  if (!collegeChanged && !mailChanged) {
+    closeModal('educationEditModal');
+    return;
+  }
+
+  try {
+    showMessage('Saving...', 'info');
+
+    const updatePayload = {
+      username: currentUser.username || ''
+    };
+    // Only send college if it actually changed (server manages college via verification)
+    if (collegeChanged) updatePayload.college = newCollege;
+    // Only send registration_number if it actually changed (server locks it after college join)
+    if (mailChanged) updatePayload.registration_number = newMail;
+
+    const result = await apiCall('/api/profile/update', 'PUT', updatePayload);
+
+    if (result.success) {
+      currentUser = result.user;
+      saveUserToLocal();
+      showProfilePage(currentUser);
+      showMessage('🚀 Education & Contact updated!', 'success');
+    } else {
+      showMessage('❌ Failed to save details', 'error');
+    }
+  } catch (err) {
+    console.error('saveEducationFromModal error:', err);
+    showMessage('❌ ' + (err.message || 'Failed to save'), 'error');
+  }
+
+  closeModal('educationEditModal');
 }
 
 function editShippingAddress() {
@@ -5632,6 +5719,8 @@ async function loadHomeFeed() {
 
   try {
     const data = await apiCall('/api/posts', 'GET');
+    // apiCall returns null when the session has expired (auto-logout in progress)
+    if (!data) { _homeFeedLoading = false; return; }
     const allPosts = data.posts || [];
     // Zero Velocity: exclude own posts AND exclude community posts
     // Community posts belong in Vibers only (postedTo === 'community')
@@ -5732,7 +5821,7 @@ function buildHomeFeedCard(post) {
   if (media.length > 0) {
     const m = media[0];
     if (m.type === 'video') {
-      mediaHtml = `<video class="hf-media" src="${escapeHtml(m.url)}" controls playsinline></video>`;
+      mediaHtml = `<video class="hf-media" src="${escapeHtml(m.url)}" controls controlsList="nodownload" oncontextmenu="return false;" playsinline></video>`;
     } else if (m.type === 'image') {
       mediaHtml = `<img class="hf-media" src="${escapeHtml(m.url)}" loading="lazy">`;
     }
@@ -5763,7 +5852,7 @@ function buildHomeFeedCard(post) {
       <button class="hf-nav-arrow" onclick="homeFeedScrollCard(-1)" title="Previous post">&#9650;</button>
       <button class="hf-nav-arrow" onclick="homeFeedScrollCard(1)" title="Next post">&#9660;</button>
     </div>
-    <div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}')">
+    <div class="hf-card${isRealVibe ? ' vx-realvibe-premium' : ''}" id="hf-post-${escapeHtml(postId)}" ondblclick="homeFeedDoubleLike('${escapeHtml(postId)}', this)">
       ${isRealVibe ? '<span class="vx-sparkle-tl"></span><span class="vx-sparkle-tr"></span>' : ''}
       <div class="hf-card-header">
         ${avatar}
@@ -5778,14 +5867,25 @@ function buildHomeFeedCard(post) {
       ${mediaHtml}
       <div class="hf-actions">
         <button class="hf-action-btn hf-like-btn ${isLiked ? 'hf-liked' : ''}" onclick="homeFeedToggleLike('${escapeHtml(postId)}', this)">
-          <span class="hf-like-icon">${isLiked ? '&#10084;&#65039;' : '&#129293;'}</span>
+          <span class="hf-like-icon" style="display:flex; align-items:center; justify-content:center;">
+            ${isLiked
+      ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="#fc3052" stroke="#fc3052" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>'
+      : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>'
+    }
+          </span>
           <span class="hf-like-count">${likes}</span>
         </button>
         <button class="hf-action-btn" onclick="homeFeedToggleComments('${escapeHtml(postId)}')">
-          &#128172; <span id="hf-comment-count-${escapeHtml(postId)}">${comments}</span>
+          <span style="display:flex; align-items:center; justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          </span>
+          <span id="hf-comment-count-${escapeHtml(postId)}">${comments}</span>
         </button>
         <button class="hf-action-btn" onclick="sharePost('${escapeHtml(postId)}', '${postContentForShare}', '${authorForShare}')">
-          &#128260; <span>${shares}</span> Share
+          <span style="display:flex; align-items:center; justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          </span>
+          <span>${shares > 0 ? shares : 'Share'}</span>
         </button>
       </div>
     </div>
@@ -5793,7 +5893,7 @@ function buildHomeFeedCard(post) {
 }
 
 // ── Zero Velocity: global scroll helper (called by in-card ▲/▼ arrow buttons) ──
-window.homeFeedScrollCard = function(dir) {
+window.homeFeedScrollCard = function (dir) {
   var container = document.getElementById('homeFeedContainer');
   if (!container) return;
   var card = container.querySelector('.hf-card');
@@ -5809,7 +5909,7 @@ function _hfCloseCommentPanel() {
   var panel = document.getElementById('hf-left-comment-panel');
   if (!panel) return;
   panel.classList.remove('hf-lcp-open');
-  setTimeout(function() { if (panel) panel.style.display = 'none'; }, 320);
+  setTimeout(function () { if (panel) panel.style.display = 'none'; }, 320);
 }
 
 async function homeFeedToggleComments(postId) {
@@ -5830,15 +5930,18 @@ async function homeFeedToggleComments(postId) {
     panel.innerHTML = `
       <div class="hf-lcp-inner">
         <div class="hf-lcp-header">
-          <span>💬 Comments</span>
+          <span style="display:flex; align-items:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            Comments
+          </span>
           <button class="hf-lcp-close-btn" onclick="_hfCloseCommentPanel()" title="Close">✕</button>
         </div>
         <div id="hf-lcp-list" class="hf-lcp-list"></div>
         <div class="hf-lcp-input-area">
           <div id="hf-lcp-emoji-picker" class="hf-lcp-emoji-grid">
-            ${['😊','😂','❤️','🔥','👍','🥺','🎉','💯','✨','😍','🙏','😎','😭','🤣','😘','🥰','🤔','😤','😡','🤩','🥳','🙌','💪','🤝'].map(e =>
-              `<span onclick="document.getElementById('hf-lcp-input').value+='${e}';document.getElementById('hf-lcp-input').focus();" class="hf-lcp-emoji-btn">${e}</span>`
-            ).join('')}
+            ${['😊', '😂', '❤️', '🔥', '👍', '🥺', '🎉', '💯', '✨', '😍', '🙏', '😎', '😭', '🤣', '😘', '🥰', '🤔', '😤', '😡', '🤩', '🥳', '🙌', '💪', '🤝'].map(e =>
+      `<span onclick="document.getElementById('hf-lcp-input').value+='${e}';document.getElementById('hf-lcp-input').focus();" class="hf-lcp-emoji-btn">${e}</span>`
+    ).join('')}
           </div>
           <div class="hf-lcp-row">
             <button onclick="var p=document.getElementById('hf-lcp-emoji-picker');p.style.display=p.style.display==='none'?'flex':'none';" class="hf-lcp-emoji-toggle">😀</button>
@@ -5856,7 +5959,7 @@ async function homeFeedToggleComments(postId) {
     const container = document.getElementById('homeFeedContainer');
     if (container) {
       let _lcpScrollOrigin = 0;
-      container.addEventListener('scroll', function() {
+      container.addEventListener('scroll', function () {
         const p = document.getElementById('hf-left-comment-panel');
         if (!p || !p.classList.contains('hf-lcp-open')) { _lcpScrollOrigin = container.scrollTop; return; }
         if (Math.abs(container.scrollTop - _lcpScrollOrigin) > 80) {
@@ -5864,20 +5967,21 @@ async function homeFeedToggleComments(postId) {
           _lcpScrollOrigin = container.scrollTop;
         }
       }, { passive: true });
-      panel._updateScrollOrigin = function() { _lcpScrollOrigin = container.scrollTop; };
+      panel._updateScrollOrigin = function () { _lcpScrollOrigin = container.scrollTop; };
     }
   }
 
-  // Position panel flush to left edge of feed container, same vertical span
+  // Position panel flush to left edge of feed container, shifted down to keep VibeXpert logo visible
   const feedRect = document.getElementById('homeFeedContainer')?.getBoundingClientRect();
   if (feedRect) {
-    panel.style.top    = feedRect.top + 'px';
-    panel.style.height = feedRect.height + 'px';
+    const topShift = Math.max(88, feedRect.top); // Require at least 88px clearance for the top header logo
+    panel.style.top = topShift + 'px';
+    panel.style.height = (feedRect.height - (topShift - feedRect.top)) - 20 + 'px'; // -20px gives a bit of bottom clearance
     // On desktop: sit to the left of the card; on mobile: slide over from left edge
     const panelW = window.innerWidth <= 768 ? 280 : 300;
     const leftPos = Math.max(0, feedRect.left - panelW - 4);
     panel.style.width = panelW + 'px';
-    panel.style.left  = leftPos + 'px';
+    panel.style.left = leftPos + 'px';
   }
 
   panel.dataset.postId = postId;
@@ -5902,19 +6006,36 @@ async function homeFeedToggleComments(postId) {
       const pic = c.users?.profile_pic
         ? `<img src="${c.users.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
         : '👤';
+      const isOwn = currentUser && (c.userId || c.user_id || c.users?.id) === currentUser.id;
+      let actionHtml = '';
+      if (isOwn) {
+        actionHtml = `
+          <div style="position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+            <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+            <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+              <div onclick="deleteGlobalComment('${c.id}', 'vibe', '${postId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444; white-space:nowrap;">Delete</div>
+            </div>
+          </div>
+        `;
+      } else {
+        actionHtml = `
+          <div class="hf-lcp-like-wrap">
+            <span id="comment-like-count-hflcp-${c.id}" class="hf-lcp-like-count">${c.likeCount || 0}</span>
+            <button onclick="toggleCommentLike('${c.id}',this,'hflcp')" class="hf-lcp-like-btn">${c.liked ? '❤️' : '🤍'}</button>
+          </div>
+        `;
+      }
+
       html += `
-        <div class="hf-lcp-comment">
+        <div class="hf-lcp-comment" id="vibe-comment-${c.id}">
           <div class="hf-lcp-avatar" onclick="showUserProfile('${c.user_id}')">${pic}</div>
           <div class="hf-lcp-bubble">
             <div class="hf-lcp-accent"></div>
             <div class="hf-lcp-meta">
               <span class="hf-lcp-author" onclick="showUserProfile('${c.user_id}')">@${author}</span>
-              <div class="hf-lcp-like-wrap">
-                <span id="comment-like-count-hflcp-${c.id}" class="hf-lcp-like-count">${c.likeCount || 0}</span>
-                <button onclick="toggleCommentLike('${c.id}',this,'hflcp')" class="hf-lcp-like-btn">${c.liked ? '❤️' : '🤍'}</button>
-              </div>
+              ${actionHtml}
             </div>
-            <div class="hf-lcp-text">${c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+            <div class="hf-lcp-text" id="comment-text-${c.id}">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
           </div>
         </div>`;
     });
@@ -5926,12 +6047,12 @@ async function homeFeedToggleComments(postId) {
 
 async function homeFeedSubmitCommentPanel() {
   if (!currentUser) return showMessage('⚠️ Login first', 'error');
-  const panel  = document.getElementById('hf-left-comment-panel');
+  const panel = document.getElementById('hf-left-comment-panel');
   const postId = panel?.dataset.postId;
   if (!postId) return;
   const input = document.getElementById('hf-lcp-input');
-  const btn   = input?.nextElementSibling;
-  const text  = input?.value.trim();
+  const btn = input?.nextElementSibling;
+  const text = input?.value.trim();
   if (!text) return;
 
   if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
@@ -5944,13 +6065,25 @@ async function homeFeedSubmitCommentPanel() {
       if (countEl) countEl.textContent = parseInt(countEl.textContent || '0') + 1;
       document.getElementById('hf-lcp-emoji-picker').style.display = 'none';
 
-      const list   = document.getElementById('hf-lcp-list');
+      const list = document.getElementById('hf-lcp-list');
       const author = currentUser.username || 'You';
-      const pic    = currentUser.profile_pic
+      const pic = currentUser.profile_pic
         ? `<img src="${currentUser.profile_pic}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
         : '👤';
+      const newId = data.comment.id || data.comment._id;
+      const isOwn = true;
+      let actionHtml = `
+        <div style="position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+          <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+          <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+            <div onclick="deleteGlobalComment('${newId}', 'vibe', '${postId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444; white-space:nowrap;">Delete</div>
+          </div>
+        </div>
+      `;
+
       const newC = document.createElement('div');
       newC.className = 'hf-lcp-comment';
+      newC.id = `vibe-comment-${newId}`;
       newC.style.animation = 'vxFadeIn 0.4s ease both';
       newC.innerHTML = `
         <div class="hf-lcp-avatar hf-lcp-avatar-own" onclick="showUserProfile('${currentUser.id}')">${pic}</div>
@@ -5958,8 +6091,9 @@ async function homeFeedSubmitCommentPanel() {
           <div class="hf-lcp-accent hf-lcp-accent-own"></div>
           <div class="hf-lcp-meta">
             <span class="hf-lcp-author hf-lcp-author-own" onclick="showUserProfile('${currentUser.id}')">@${author}</span>
+            ${actionHtml}
           </div>
-          <div class="hf-lcp-text">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+          <div class="hf-lcp-text" id="comment-text-${newId}">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
         </div>`;
       if (list.firstChild?.textContent?.includes('No comments') || list.firstChild?.textContent?.includes('first')) list.innerHTML = '';
       list.appendChild(newC);
@@ -6034,26 +6168,44 @@ async function homeFeedToggleLike(postId, btn) {
   try {
     const data = await apiCall(`/api/posts/${postId}/like`, 'POST');
     const liked = data.liked;
-    const countEl = btn.querySelector('.hf-like-count');
-    const iconEl = btn.querySelector('.hf-like-icon');
-    if (iconEl) iconEl.textContent = liked ? '❤️' : '🤍';
-    if (countEl) countEl.textContent = data.likeCount ?? (parseInt(countEl.textContent) + (liked ? 1 : -1));
-    btn.classList.toggle('hf-liked', liked);
+
+    // Sync state across ALL cloned cards for this post in the triple-buffer feed
+    const allCards = document.querySelectorAll(`[id="hf-post-${postId}"]`);
+    allCards.forEach(card => {
+      const b = card.querySelector('.hf-like-btn');
+      if (!b) return;
+      const countEl = b.querySelector('.hf-like-count');
+      const iconEl = b.querySelector('.hf-like-icon');
+      if (iconEl) iconEl.innerHTML = liked ? '&#10084;&#65039;' : '&#129293;';
+      if (countEl) countEl.textContent = data.likeCount ?? (parseInt(countEl.textContent) + (liked ? 1 : -1));
+      b.classList.toggle('hf-liked', liked);
+    });
   } catch (err) { showMessage('❌ ' + (err.message || 'Failed'), 'error'); }
 }
 
 // Double-click post card to auto-like (only if not already liked)
-async function homeFeedDoubleLike(postId) {
-  const card = document.getElementById(`hf-post-${postId}`);
+async function homeFeedDoubleLike(postId, cardElement) {
+  const card = cardElement || document.getElementById(`hf-post-${postId}`);
   if (!card) return;
 
   /* ── Heart burst animation ── */
   const burst = document.createElement('div');
   burst.className = 'hf-heart-burst';
-  burst.textContent = '❤️';
+  burst.innerHTML = `
+    <svg viewBox="0 0 32 32" style="width:140px; height:140px; filter:drop-shadow(0 0 20px rgba(255,48,64,0.7));">
+      <defs>
+        <linearGradient id="hfHeartGradBurst" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff4757" />
+          <stop offset="50%" stop-color="#ff1e38" />
+          <stop offset="100%" stop-color="#c0001a" />
+        </linearGradient>
+      </defs>
+      <path fill="url(#hfHeartGradBurst)" d="M16 29C16 29 3 20 3 10C3 5.5 6.5 2 11 2C13.5 2 15 3.5 16 5C17 3.5 18.5 2 21 2C25.5 2 29 5.5 29 10C29 20 16 29 16 29Z" />
+    </svg>
+  `;
   card.style.position = 'relative';
   card.appendChild(burst);
-  setTimeout(() => burst.remove(), 700);
+  setTimeout(() => burst.remove(), 900);
 
   const likeBtn = card.querySelector('.hf-like-btn');
   if (!likeBtn) return;
@@ -6269,8 +6421,7 @@ function resetPostForm() {
 async function chatNowWithUser(userId) {
   if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }
   if (userId === currentUser.id) return;
-  await showUserProfile(userId);
-  setTimeout(() => { openDmDrawer(userId); }, 380);
+  openDmDrawer(userId);
 }
 
 // ── POST MESSAGE BUTTON: check mutual follow then open DM ─────────────────
@@ -6915,10 +7066,36 @@ async function loadComments(postId) {
     data.comments.forEach(comment => {
       const author = comment.users?.username || 'User';
       const time = new Date(comment.created_at).toLocaleString();
-      const isOwn = currentUser && comment.user_id === currentUser.id;
+      const isOwn = currentUser && (comment.userId || comment.user_id || comment.users?.id) === currentUser.id;
+
+      let actionHtml = '';
+      if (isOwn) {
+        actionHtml = `
+          <div style="position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+            <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+            <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+              <div onclick="deleteGlobalComment('${comment.id}', 'vibe', '${postId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444; white-space:nowrap;">Delete</div>
+            </div>
+          </div>
+        `;
+      } else {
+        actionHtml = `
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button onclick="toggleCommentLike('${comment.id}', this, 'cml')"
+             style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;outline:none;transition:transform 0.2s;line-height:1;"
+             onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+              ${comment.is_liked || comment.liked ? '❤️' : '🤍'}
+            </button>
+            <span id="comment-like-count-cml-${comment.id}"
+              style="font-size:12px;color:rgba(255,255,255,0.4);min-width:14px;">
+              ${comment.like_count || comment.likeCount || comment.likes || 0}
+            </span>
+          </div>
+        `;
+      }
 
       html += `
-       <div class="comment-item" style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
+       <div class="comment-item" id="vibe-comment-${comment.id}" style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
          border-radius:12px;padding:15px;margin-bottom:10px;">
          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
            <div style="display:flex;align-items:center;gap:10px;">
@@ -6933,25 +7110,9 @@ async function loadComments(postId) {
                <div style="font-weight:600;color:#4f74a3;">@${author}</div>
              </div>
            </div>
-           <div style="display:flex; align-items:center; gap:6px;">
-             <button onclick="toggleCommentLike('${comment.id}', this, 'cml')"
-              style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px;outline:none;transition:transform 0.2s;line-height:1;"
-              onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-               ${comment.is_liked || comment.liked ? '❤️' : '🤍'}
-             </button>
-             <span id="comment-like-count-cml-${comment.id}"
-               style="font-size:12px;color:rgba(255,255,255,0.4);min-width:14px;">
-               ${comment.like_count || comment.likeCount || comment.likes || 0}
-             </span>
-             ${isOwn ?
-          `<button onclick="deleteComment('${comment.id}','${postId}')" 
-               style="background:rgba(255,107,107,0.2);color:#ff6b6b;border:none;
-               padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>` :
-          ''
-        }
-           </div>
+           ${actionHtml}
          </div>
-         <div style="color:#e0e0e0;line-height:1.5;">${comment.content}</div>
+         <div style="color:#e0e0e0;line-height:1.5;" id="comment-text-${comment.id}">${comment.content}</div>
        </div>
      `;
     });
@@ -7025,28 +7186,32 @@ function sharePost(postId, postContent = '', author = '') {
      <div style="background:rgba(15,25,45,0.9);border:1px solid rgba(79,116,163,0.2);
        border-radius:12px;padding:20px;margin:20px 0;">
        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;">
-         <button onclick="shareVia('copy','${postUrl}')" class="share-option-btn">
-           <span style="font-size:32px;">📋</span>
-           <span>Copy Link</span>
-         </button>
-         <button onclick="shareVia('whatsapp','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">💬</span>
-           <span>WhatsApp</span>
-         </button>
-         <button onclick="shareVia('twitter','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">🐦</span>
-           <span>Twitter</span>
-         </button>
-         <button onclick="shareVia('native','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
-           <span style="font-size:32px;">📤</span>
-           <span>More</span>
-         </button>
-       </div>
-     </div>
-     <div style="background:rgba(79,116,163,0.1);padding:12px;border-radius:8px;">
-       <input type="text" value="${postUrl}" readonly id="shareUrlInput" 
-         style="width:100%;background:transparent;border:none;color:#4f74a3;text-align:center;font-size:14px;">
-     </div>
+          <button onclick="shareVia('copy','${postUrl}')" class="share-option-btn">
+            <div style="background:rgba(255,107,53,0.15);color:#ff6b35;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </div>
+            <span>Copy Link</span>
+          </button>
+          <button onclick="shareVia('whatsapp','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
+            <div style="background:rgba(37,211,102,0.15);color:#25d366;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+              <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.533 5.856L0 24l6.335-1.521A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.003-1.367l-.36-.213-3.727.976.994-3.629-.234-.373A9.818 9.818 0 0 1 2.182 12C2.182 6.573 6.573 2.182 12 2.182c5.427 0 9.818 4.391 9.818 9.818 0 5.427-4.391 9.818-9.818 9.818z"/></svg>
+            </div>
+            <span>WhatsApp</span>
+          </button>
+          <button onclick="shareVia('twitter','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
+            <div style="background:rgba(29,155,240,0.15);color:#1d9bf0;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+              <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+            </div>
+            <span>Twitter</span>
+          </button>
+          <button onclick="shareVia('native','${postUrl}','${encodeURIComponent(shareText)}')" class="share-option-btn">
+            <div style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </div>
+            <span>More</span>
+          </button>
+        </div>
+      </div>
    </div>
  `;
 
@@ -7219,15 +7384,15 @@ function showPostImagePreviewModal(files, onConfirm) {
       <!-- Aspect ratio pills -->
       <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
         <span style="font-size:11px;color:rgba(255,255,255,0.35);margin-right:2px;">Crop ratio:</span>
-        ${[['Free','free'],['1:1','1'],['4:5','0.8'],['16:9','1.7778'],['4:3','1.3333']]
-          .map(([label, val]) =>
-            `<button class="vxPrvRatioBtn" data-ratio="${val}" onclick="vxPrvSetRatio('${val}',this)"
+        ${[['Free', 'free'], ['1:1', '1'], ['4:5', '0.8'], ['16:9', '1.7778'], ['4:3', '1.3333']]
+      .map(([label, val]) =>
+        `<button class="vxPrvRatioBtn" data-ratio="${val}" onclick="vxPrvSetRatio('${val}',this)"
               style="padding:5px 14px;border-radius:20px;border:1px solid rgba(124,92,252,0.35);
-                     background:${val==='free'?'rgba(124,92,252,0.25)':'rgba(124,92,252,0.07)'};
-                     color:rgba(210,190,255,${val==='free'?'1':'0.65'});
-                     font-size:12px;cursor:pointer;transition:.15s;font-weight:${val==='free'?'700':'400'};"
+                     background:${val === 'free' ? 'rgba(124,92,252,0.25)' : 'rgba(124,92,252,0.07)'};
+                     color:rgba(210,190,255,${val === 'free' ? '1' : '0.65'});
+                     font-size:12px;cursor:pointer;transition:.15s;font-weight:${val === 'free' ? '700' : '400'};"
             >${label}</button>`
-          ).join('')}
+      ).join('')}
         <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.3);">Drag to reposition · Pinch/scroll to zoom</span>
       </div>
 
@@ -7279,11 +7444,11 @@ function showPostImagePreviewModal(files, onConfirm) {
   document.body.appendChild(modal);
 
   // Store state directly on the modal node
-  modal._imageFiles      = imageFiles;
-  modal._otherFiles      = otherFiles;
-  modal._onConfirm       = onConfirm;
+  modal._imageFiles = imageFiles;
+  modal._otherFiles = otherFiles;
+  modal._onConfirm = onConfirm;
   modal._processedImages = [];
-  modal._currentIdx      = 0;
+  modal._currentIdx = 0;
 
   _vxLoadPreviewImage(0);
 }
@@ -7348,7 +7513,7 @@ function _vxUpdateLivePreviews() {
 }
 
 /* ── Set aspect ratio from pill buttons ── */
-window.vxPrvSetRatio = function(val, btn) {
+window.vxPrvSetRatio = function (val, btn) {
   document.querySelectorAll('.vxPrvRatioBtn').forEach(b => {
     b.style.background = 'rgba(124,92,252,0.07)';
     b.style.color = 'rgba(210,190,255,0.65)';
@@ -7365,7 +7530,7 @@ window.vxPrvSetRatio = function(val, btn) {
 };
 
 /* ── Confirm current crop; advance to next image or finish ── */
-window.vxPrvConfirmCurrent = function() {
+window.vxPrvConfirmCurrent = function () {
   const modal = document.getElementById('vxPostPreviewModal');
   if (!modal || !window._vxActiveCropper) return;
 
@@ -8890,7 +9055,7 @@ function openRvCropModal(src) {
   if (!modal) return;
 
   // Destroy previous cropper if any
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
 
   const cropImg = document.getElementById('rvCropImage');
   if (!cropImg) return;
@@ -8905,7 +9070,7 @@ function openRvCropModal(src) {
 
   // Init Cropper after image loads
   cropImg.onload = () => {
-    if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} }
+    if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } }
     _rvCropper = new Cropper(cropImg, {
       aspectRatio: 1,        // default: Square (same as rv-card)
       viewMode: 1,           // crop box stays inside canvas
@@ -8931,9 +9096,11 @@ function setRvAspect(ratio, btn) {
   if (_rvCropper) {
     _rvCropper.setAspectRatio(isNaN(ratio) ? NaN : ratio);
     // For free ratio, enable movable crop box
-    _rvCropper.setCropBoxData({ left: 0, top: 0,
+    _rvCropper.setCropBoxData({
+      left: 0, top: 0,
       width: _rvCropper.getCanvasData().width,
-      height: _rvCropper.getCanvasData().height });
+      height: _rvCropper.getCanvasData().height
+    });
   }
 }
 
@@ -8980,14 +9147,14 @@ function rvCancelCrop() {
 function rvCloseCropModal() {
   const modal = document.getElementById('rvCropModal');
   if (modal) modal.style.display = 'none';
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
 }
 
 function clearRvPreview() {
   rvMediaFile = null;
   rvMediaType = null;
   _rvCropRawSrc = null;
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch(e) {} _rvCropper = null; }
+  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
   const idle = document.getElementById('rvDropIdle');
   const prev = document.getElementById('rvDropPreview');
   const img = document.getElementById('rvPreviewImg');
@@ -9093,8 +9260,12 @@ function previewRealVibe() {
     ? `<video src="${mediaURL}" autoplay muted loop playsinline style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block;"></video>`
     : `<img src="${mediaURL}" style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block;">`;
 
-  const captionHtml = caption
-    ? `<p style="margin:.6rem 0 0;font-size:.88rem;color:rgba(220,210,255,.85);line-height:1.45;">${caption}</p>`
+  let captionFormatted = '';
+  if (caption) {
+    captionFormatted = escapeHtml(caption).replace(/#(\w+)/g, '<span class="vibe-card-tag">#$1</span>');
+  }
+  const captionHtml = captionFormatted
+    ? `<p style="margin:.6rem 0 0;font-size:.88rem;color:rgba(220,210,255,.85);line-height:1.45;">${captionFormatted}</p>`
     : '';
 
   const overlay = document.getElementById('rvPreviewOverlay');
@@ -9328,9 +9499,12 @@ function buildRvCard(vibe) {
     : `<img class="rv-card-media" src="${mediaSrc}" alt="${escapeHtml(vibe.caption || '')}" loading="lazy" onclick="openRvMediaViewer('${mediaSrc.replace(/'/g, "\\\\'")}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='${directSrc}'}">`;
 
   // Caption block
-  const captionHtml = vibe.caption
-    ? `<div class="rv-card-caption-wrap"><p class="rv-card-caption">${escapeHtml(vibe.caption)}</p></div>`
-    : '';
+  let captionHtml = '';
+  if (vibe.caption) {
+    let captionText = escapeHtml(vibe.caption);
+    captionText = captionText.replace(/#(\w+)/g, '<span class="vibe-card-tag">#$1</span>');
+    captionHtml = `<div class="rv-card-caption-wrap"><p class="rv-card-caption">${captionText}</p></div>`;
+  }
 
   // Expiry progress
   const totalHrs = isRoyal ? 600 : 360;
@@ -9487,14 +9661,40 @@ function renderRvComments(comments) {
   list.innerHTML = comments.map(c => {
     const u = c.users || {};
     const uid = u.id || '';
+    const isOwn = currentUser && uid === currentUser.id;
+    const isLiked = Array.isArray(c.likes_users) ? c.likes_users.includes(currentUser?.id) : !!c.liked;
+    const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || 0);
     const clickAttr = uid ? `onclick="showUserProfile('${uid}')" style="cursor:pointer;"` : '';
     const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username || 'U').charAt(0).toUpperCase()}</span>`;
-    return `<div class="rv-comment-item">
-      <div class="rv-comment-avatar" ${clickAttr}>${av}</div>
-      <div class="rv-comment-body">
-        <span class="rv-comment-author" ${clickAttr}>${escapeHtml(u.username || 'User')}</span>
-        <p class="rv-comment-text">${escapeHtml(c.content)}</p>
+    
+    let actionHtml = '';
+    if (isOwn) {
+      actionHtml = `
+        <div style="position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+          <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+          <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+            <div onclick="deleteGlobalComment('${c.id}', 'rv', '${rvActiveCommentVibeId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444;">Delete</div>
+          </div>
+        </div>
+      `;
+    } else {
+      actionHtml = `
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+          <button onclick="toggleCommentLike('${c.id}', this, 'rv')" style="background:none;border:none;cursor:pointer;padding:0;font-size:14px;margin-bottom:2px;">${isLiked ? '❤️' : '🤍'}</button>
+          <span id="comment-like-count-rv-${c.id}" style="font-size:11px;color:rgba(255,255,255,0.45);">${likeCount || ''}</span>
+        </div>
+      `;
+    }
+
+    return `<div class="rv-comment-item" id="rv-comment-${c.id}" style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div style="display:flex; gap:10px;">
+        <div class="rv-comment-avatar" ${clickAttr}>${av}</div>
+        <div class="rv-comment-body">
+          <span class="rv-comment-author" ${clickAttr}>${escapeHtml(u.username || 'User')}</span>
+          <p class="rv-comment-text" id="comment-text-${c.id}">${escapeHtml(c.content)}</p>
+        </div>
       </div>
+      ${actionHtml}
     </div>`;
   }).join('');
 }
@@ -10055,7 +10255,14 @@ async function openTwitterComments(postId) {
   if (!currentUser) return showMessage('⚠️ Login to comment', 'error');
 
   // Remove stale drawer
-  document.getElementById('zvCommentDrawer')?.remove();
+  document.getElementById('zvCommentOverlay')?.remove();
+
+  // Create overlay backdrop — clicking it closes the comment drawer
+  const overlay = document.createElement('div');
+  overlay.id = 'zvCommentOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.45);';
+  overlay.addEventListener('click', () => { document.getElementById('zvCommentDrawer')?.remove(); overlay.remove(); });
+  document.body.appendChild(overlay);
 
   const drawer = document.createElement('div');
   drawer.id = 'zvCommentDrawer';
@@ -10088,7 +10295,7 @@ async function openTwitterComments(postId) {
     <!-- Handle bar -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;">
       <span style="font-size:15px;font-weight:700;color:#fff;">💬 Comments</span>
-      <button onclick="document.getElementById('zvCommentDrawer')?.remove()"
+      <button onclick="document.getElementById('zvCommentDrawer')?.remove(); document.getElementById('zvCommentOverlay')?.remove();"
         style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:22px;cursor:pointer;line-height:1;">✕</button>
     </div>
 
@@ -10130,7 +10337,7 @@ async function zvLoadComments(postId) {
     list.innerHTML = data.comments.map(c => {
       const author = c.users?.username || 'User';
       const time = formatTimeAgo(new Date(c.created_at));
-      const isOwn = currentUser && c.user_id === currentUser.id;
+      const isOwn = currentUser && (c.userId || c.user_id || c.users?.id) === currentUser.id;
       const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || c.like_count || 0);
       // API returns likes_users[] not is_liked/liked — derive liked state from the array
       const isLiked = Array.isArray(c.likes_users)
@@ -10140,21 +10347,34 @@ async function zvLoadComments(postId) {
         ? `<img src="${c.users.profile_pic}">`
         : '👤';
 
+      let actionHtml = '';
+      if (isOwn) {
+        actionHtml = `
+          <div style="position:relative; display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+            <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+            <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+              <div onclick="deleteGlobalComment('${c.id}', 'zv', '${postId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444;">Delete</div>
+            </div>
+          </div>
+        `;
+      } else {
+        actionHtml = `
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+            <button class="zv-like-btn" onclick="toggleCommentLike('${c.id}', this, 'zv')">${isLiked ? '❤️' : '🤍'}</button>
+            <div class="zv-like-count" id="comment-like-count-zv-${c.id}">${likeCount || ''}</div>
+          </div>
+        `;
+      }
+
       return `
         <div class="zv-comment-item" id="zv-comment-${c.id}">
           <div class="zv-comment-avatar">${avatar}</div>
           <div class="zv-comment-body">
             <div class="zv-comment-username">@${author}</div>
-            <div class="zv-comment-text">${c.content}</div>
+            <div class="zv-comment-text" id="comment-text-${c.id}">${c.content}</div>
             <div class="zv-comment-time">${time}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
-            <button class="zv-like-btn" onclick="toggleCommentLike('${c.id}', this, 'zv')">${isLiked ? '❤️' : '🤍'}</button>
-            <div class="zv-like-count" id="comment-like-count-zv-${c.id}">${likeCount || ''}</div>
-          </div>
-          ${isOwn ? `
-          <button onclick="zvDeleteComment('${c.id}','${postId}')"
-            style="background:none;border:none;color:rgba(255,80,80,0.5);cursor:pointer;font-size:15px;flex-shrink:0;align-self:flex-start;padding:2px;">🗑️</button>` : ''}
+          ${actionHtml}
         </div>`;
     }).join('');
 
@@ -10870,7 +11090,7 @@ function appendWhatsAppMessage(msg) {
   messageHTML += `
     <div class="message-bubble">
       ${baseMediaHTML}
-      <div class="message-text">${escapeHtml(msg.text || msg.content || '')}</div>
+      <div class="message-text">${linkifyUrls(escapeHtml(msg.text || msg.content || ''))}</div>
       <div class="message-meta">
         <span class="message-time">${timeLabel}</span>
         ${isOwn ? `<span class="message-status">${msg.isTemp ? '⏳' : '✓'}</span>` : ''}
@@ -11212,7 +11432,7 @@ function appendWhatsAppMessageFixed(msg) {
   }
 
   const contentRaw = msg.text || msg.content || '';
-  const contentText = typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw;
+  const contentText = linkifyUrls(typeof escapeHtml === 'function' ? escapeHtml(contentRaw) : contentRaw);
 
   // Reply quote (shown if this message is a reply)
   let replyQuoteHTML = '';
@@ -11264,32 +11484,30 @@ function appendWhatsAppMessageFixed(msg) {
     }
   }
 
-  // Options bar (shown on hover)
-  const optionsBar = `
-    <div class="msg-options-bar">
-      <button class="msg-opt-btn reply-opt" onclick="replyToWhatsAppMsg('${messageId}')" title="Reply">↩️</button>
-      ${!isOwn ? `<button class="msg-opt-btn" onclick="showEmojiReactPicker('${messageId}', this)" title="React">😊</button>` : ''}
-      ${isOwn ? `<button class="msg-opt-btn" onclick="editChatMsg('${messageId}')" title="Edit">✏️</button>` : ''}
-      ${isOwn ? `<button class="msg-opt-btn delete-opt" onclick="deleteChatMsg('${messageId}')" title="Delete">🗑️</button>` : ''}
-    </div>
+  // 3-dot dropdown menu trigger
+  const optionsBtn = `
+    <button onclick="ghostShowMessageMenu(event, '${messageId}', ${isOwn})" title="Message Actions" style="background:transparent; border:none; color:rgba(255,255,255,0.4); font-size:18px; cursor:pointer; padding:4px 8px; margin: 0 4px; opacity:0; transition:opacity 0.2s; border-radius:50%;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">⋮</button>
   `;
 
   // Emoji reaction row
   const reactBar = `<div class="msg-react-bar" id="reacts-${messageId}"></div>`;
 
   messageHTML += `
-    ${optionsBar}
-    <div class="message-bubble" id="bubble-${messageId}">
-      ${replyQuoteHTML}
-      ${mediaHTML}
-      <div class="message-text">${contentText}</div>
-      <div class="message-meta">
-        <span class="message-time">${timeLabel}</span>
-        ${isOwn ? `<span class="message-status" id="status-${messageId}" style="margin-left:auto;">${isTemp ? '<span class="tick tick-sending" style="font-size:10px;">⏳</span>' : '<span class="tick tick-sent" style="font-size:10px;">✓</span>'}</span>` : ''}
+    <div style="display:flex; align-items:center; flex-direction:${isOwn ? 'row-reverse' : 'row'};" onmouseenter="this.querySelector('button').style.opacity='1'" onmouseleave="this.querySelector('button').style.opacity='0'">
+      <div class="message-bubble" id="bubble-${messageId}">
+        ${replyQuoteHTML}
+        ${mediaHTML}
+        <div class="message-text">${contentText}</div>
+        <div class="message-meta">
+          <span class="message-time">${timeLabel}</span>
+          ${isOwn ? `<span class="message-status" id="status-${messageId}" style="margin-left:auto;">${isTemp ? '<span class="tick tick-sending" style="font-size:10px;">⏳</span>' : '<span class="tick tick-sent" style="font-size:10px;">✓</span>'}</span>` : ''}
+        </div>
+        ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
       </div>
-      ${isOwn ? '<div class="message-tail own-tail"></div>' : '<div class="message-tail other-tail"></div>'}
+      ${optionsBtn}
     </div>
     ${reactBar}
+
 
     ${isOwn ? `
       <div class="community-msg-header own-header" style="display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:3px;">
@@ -11341,7 +11559,7 @@ async function sendWhatsAppMessageFixed() {
     requireGhostName(() => sendWhatsAppMessageFixed());
     return;
   }
-  if (!communitySafetyCheck(content)) return; // bad words / mute
+  // Ghost mode has no rules for content and bypasses mutes!
   // ───────────────────────────────────────────────────────────────────
 
   const ghostName = getGhostName();
@@ -11617,7 +11835,7 @@ function initCommunityChat() {
       setupCommunitySocketListeners();
     }
 
-    if (isChatMuted()) showCommunityMutedBanner(muteTimeLeft());
+    // Ghost mode bypasses mutes, so we don't show the muted banner here
 
     const messagesArea = document.getElementById('chatMessages') || document.getElementById('whatsappMessages');
     if (messagesArea) {
@@ -12333,8 +12551,7 @@ async function sendWhatsAppMessageWithMedia() {
 
   // ── SAFETY CHECKS ──────────────────────────────────────────────────
   if (!hasGhostName()) { requireGhostName(() => sendWhatsAppMessageWithMedia()); return; }
-  if (isChatMuted()) { showCommunityMutedBanner(muteTimeLeft()); return; }
-  if (content && !communitySafetyCheck(content)) return;
+  // Ghost mode has no rules for content and bypasses mutes!
   // ───────────────────────────────────────────────────────────────────
 
   if (!content && !selectedWhatsAppMedia) {
@@ -12472,23 +12689,23 @@ async function sendWhatsAppMessageWithMedia() {
 // MESSAGE OPTIONS: REACT, EDIT, DELETE, SEEN
 // ==========================================
 
-const REACT_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
-
 function showEmojiReactPicker(msgId, btn) {
   // Remove any existing picker
   document.querySelectorAll('.emoji-react-picker').forEach(p => p.remove());
 
   const picker = document.createElement('div');
-  picker.className = 'emoji-react-picker';
-  picker.innerHTML = REACT_EMOJIS.map(e =>
+  picker.className = 'emoji-react-picker dm-emoji-picker'; // Use new grid layout
+  picker.innerHTML = DM_EMOJIS.map(e =>
     `<button class="react-emoji-btn" onclick="addMsgReaction('${msgId}','${e}',this)">${e}</button>`
   ).join('');
 
   // Position near button
   const rect = btn.getBoundingClientRect();
   picker.style.position = 'fixed';
-  picker.style.top = (rect.top - 55) + 'px';
-  picker.style.left = rect.left + 'px';
+  let topY = rect.top - 230;
+  if (topY < 10) topY = rect.bottom + 10;
+  picker.style.top = topY + 'px';
+  picker.style.left = Math.max(10, rect.left - 180) + 'px';
   document.body.appendChild(picker);
 
   // Close on outside click
@@ -12507,18 +12724,18 @@ function showEmojiReactPicker(msgId, btn) {
 function _gcReactKey() {
   // Try live currentUser first; fall back to the persisted user object so
   // reads/writes work even while currentUser is still null during page load.
-  const uid = (currentUser && currentUser.id) || (function() {
-    try { var u = JSON.parse(localStorage.getItem('user') || '{}'); return u.id || null; } catch(e) { return null; }
+  const uid = (currentUser && currentUser.id) || (function () {
+    try { var u = JSON.parse(localStorage.getItem('user') || '{}'); return u.id || null; } catch (e) { return null; }
   })();
   return uid ? ('vx_my_reactions_' + uid) : 'vx_my_reactions_anon';
 }
 function _gcReactLoad() {
   try {
     return JSON.parse(localStorage.getItem(_gcReactKey()) || '{}');
-  } catch(e) { return {}; }
+  } catch (e) { return {}; }
 }
 function _gcReactSave(map) {
-  try { localStorage.setItem(_gcReactKey(), JSON.stringify(map)); } catch(e) {}
+  try { localStorage.setItem(_gcReactKey(), JSON.stringify(map)); } catch (e) { }
 }
 function _gcReactSet(msgId, emoji) {
   const m = _gcReactLoad();
@@ -12866,7 +13083,7 @@ function leaveGroup() {
 function toggleNotifications() {
   // BUG FIX (BUG-9): Persist the preference and actually suppress notifications.
   const status = document.getElementById('notifStatus');
-  const isOn = (status ? status.textContent : (localStorage.getItem('vx_notif_enabled') !== 'false')) ;
+  const isOn = (status ? status.textContent : (localStorage.getItem('vx_notif_enabled') !== 'false'));
   const turningOff = isOn === 'On' || isOn === true;
   const newState = turningOff ? 'Off' : 'On';
   if (status) status.textContent = newState;
@@ -13049,6 +13266,8 @@ function renderVibeFeed(posts) {
   // Attach tap / double-tap listeners (use global index i for IDs)
   feed.querySelectorAll('.vibe-card').forEach((card, i) => {
     let lastTap = 0;
+
+    // Custom tap logic (great for mobile)
     card.addEventListener('click', e => {
       if (e.target.closest('.vibe-card-actions') ||
         e.target.closest('.vibe-card-info') ||
@@ -13060,6 +13279,14 @@ function renderVibeFeed(posts) {
       lastTap = now;
       const vid = card.querySelector('.vibe-card-bg-video');
       if (vid) vibeToggleVideo(card, i, vid);
+    });
+
+    // Native double click logic (perfect for desktop)
+    card.addEventListener('dblclick', e => {
+      if (e.target.closest('.vibe-card-actions') ||
+        e.target.closest('.vibe-card-info') ||
+        e.target.closest('.vibe-card-delete-btn')) return;
+      vibeDoubleTapLike(card, i);
     });
   });
 
@@ -13188,18 +13415,55 @@ function buildVibeCard(post, idx) {
 
   return `
   <div class="vibe-card${isRealVibe ? ' vx-realvibe-premium' : ''}" data-id="${post.id}" data-idx="${idx}">
-    ${bgLayer}
-    <div class="vibe-card-overlay"></div>
-    ${moreMedia}
-    ${stickersHtml}
-    ${deleteBtn}
 
-    <!-- Tap-to-play hint -->
-    <div class="vibe-play-hint" id="vph_${idx}">
-      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <!-- Clean media area — no user info overlay (YouTube Shorts style) -->
+    <div class="vibe-card-media">
+      ${bgLayer}
+      <div class="vibe-card-overlay"></div>
+      ${moreMedia}
+      ${stickersHtml}
+      ${deleteBtn}
+      <div class="vibe-play-hint" id="vph_${idx}">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div class="vibe-card-progress">
+        <div class="vibe-card-progress-fill" id="vprog_${idx}"></div>
+      </div>
     </div>
 
-    <!-- Bottom-left: user & caption -->
+    <!-- Right action rail — OUTSIDE the media -->
+    <div class="vibe-card-actions">
+      <div class="vibe-action ${isLiked ? 'vibe-liked' : ''}"
+           id="vact_like_${idx}"
+           onclick="vibeToggleLike('${post.id}', ${idx})">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24" ${isLiked ? 'style="fill:#ff3040;stroke:#ff3040"' : ''}>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <span class="vibe-action-label" id="vlike_count_${idx}">${likes}</span>
+      </div>
+      <div class="vibe-action" onclick="vibeOpenComments('${post.id}', ${idx})">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+       <span class="vibe-action-label" id="vcomment_count_${idx}" data-post-id="${post.id}">${comments}</span>
+      </div>
+      <div class="vibe-action" onclick="vibeOpenShare('${post.id}', '${caption.replace(/'/g, '')}')">
+        <div class="vibe-action-bubble">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+        <span class="vibe-action-label" id="vshare_count_${post.id}">${shares}</span>
+      </div>
+      <div class="vibe-disc-wrap" onclick="showUserProfile('${userId}')">
+        <div class="vibe-disc">
+          ${avatar ? `<img src="${avatar}" alt="">` : (username.charAt(0).toUpperCase() || '🎵')}
+        </div>
+        <div class="vibe-disc-center"></div>
+      </div>
+    </div>
+
+    <!-- User info — BELOW the media -->
     <div class="vibe-card-info">
       <div class="vibe-card-user">
         ${avHtml}
@@ -13211,64 +13475,15 @@ function buildVibeCard(post, idx) {
         ${!isOwn ? `<button class="vibe-follow-btn" id="vfb_${idx}" data-uid="${userId}"
           onclick="vibeToggleFollow('${userId}', '${username}')">${(_followState[userId]?.isFollowing || post.is_following_author) ? '✓ Following' : '+ Follow'}</button>` : ''}
       </div>
-
       ${caption ? `
       <div class="vibe-card-caption ${shortCap ? '' : 'expanded'}"
            id="vcap_${idx}">${captionText}</div>
       ${shortCap ? `<button class="vibe-caption-more"
           onclick="toggleVibeCaption(${idx})">more</button>` : ''}
       ` : ''}
-
       ${musicHtml}
-
-      <div class="vibe-card-time" data-ts="${post.created_at || post.timestamp || ''}">
-        ${postTime}
-      </div>
     </div>
 
-    <!-- Right action rail -->
-    <div class="vibe-card-actions">
-      <!-- Like -->
-      <div class="vibe-action ${isLiked ? 'vibe-liked' : ''}"
-           id="vact_like_${idx}"
-           onclick="vibeToggleLike('${post.id}', ${idx})">
-        <div class="vibe-action-bubble">
-          <svg viewBox="0 0 24 24" ${isLiked ? 'style="fill:#ff3040;stroke:#ff3040"' : ''}>
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        </div>
-        <span class="vibe-action-label" id="vlike_count_${idx}">${likes}</span>
-      </div>
-
-      <!-- Comment -->
-      <div class="vibe-action" onclick="vibeOpenComments('${post.id}', ${idx})">
-        <div class="vibe-action-bubble">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-       <span class="vibe-action-label" id="vcomment_count_${idx}" data-post-id="${post.id}">${comments}</span>
-      </div>
-
-      <!-- Share -->
-      <div class="vibe-action" onclick="vibeOpenShare('${post.id}', '${caption.replace(/'/g, '')}')">
-        <div class="vibe-action-bubble">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </div>
-        <span class="vibe-action-label" id="vshare_count_${idx}">${shares}</span>
-      </div>
-
-      <!-- Creator disc -->
-      <div class="vibe-disc-wrap" onclick="showUserProfile('${userId}')">
-        <div class="vibe-disc">
-          ${avatar ? `<img src="${avatar}" alt="">` : (username.charAt(0).toUpperCase() || '🎵')}
-        </div>
-        <div class="vibe-disc-center"></div>
-      </div>
-    </div>
-
-    <!-- Progress bar -->
-    <div class="vibe-card-progress">
-      <div class="vibe-card-progress-fill" id="vprog_${idx}"></div>
-    </div>
   </div>`;
 }
 
@@ -13369,9 +13584,22 @@ function vibeToggleVideo(card, idx, vid) {
 function vibeDoubleTapLike(card, idx) {
   const burst = document.createElement('div');
   burst.className = 'vibe-heart-burst';
-  burst.textContent = '❤️';
+
+  // Vibrant glowing SVG instead of plain text emoji
+  burst.innerHTML = `
+    <svg viewBox="0 0 32 32" style="width:140px; height:140px; filter:drop-shadow(0 0 20px rgba(255,48,64,0.7));">
+      <defs>
+        <linearGradient id="heartGradBurst" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff4757" />
+          <stop offset="50%" stop-color="#ff1e38" />
+          <stop offset="100%" stop-color="#c0001a" />
+        </linearGradient>
+      </defs>
+      <path fill="url(#heartGradBurst)" d="M16 29C16 29 3 20 3 10C3 5.5 6.5 2 11 2C13.5 2 15 3.5 16 5C17 3.5 18.5 2 21 2C25.5 2 29 5.5 29 10C29 20 16 29 16 29Z" />
+    </svg>
+  `;
   card.appendChild(burst);
-  setTimeout(() => burst.remove(), 750);
+  setTimeout(() => burst.remove(), 900);
 
   const likeEl = document.getElementById('vact_like_' + idx);
   if (likeEl && !likeEl.classList.contains('vibe-liked')) {
@@ -13492,19 +13720,36 @@ async function vibeOpenComments(postId, idx) {
         ? c.likes_users.includes(currentUser?.id)
         : !!c.is_liked;
       const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || 0);
+      const isOwn = currentUser && uid === currentUser.id;
+      let actionHtml = '';
+      if (isOwn) {
+        actionHtml = `
+          <div style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; margin-left:auto;">
+            <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+            <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+              <div onclick="deleteGlobalComment('${c.id}', 'vibe', '${postId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444;">Delete</div>
+            </div>
+          </div>
+        `;
+      } else {
+        actionHtml = `
+          <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
+            <button onclick="toggleCommentLike('${c.id}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
+              ${isLikedByMe ? '❤️' : '🤍'}
+            </button>
+            <span id="comment-like-count-vibe-${c.id}" style="font-size:11px; color:rgba(255,255,255,0.45);">${likeCount}</span>
+          </div>
+        `;
+      }
+
       return `
-      <div class="vibe-comment-item">
+      <div class="vibe-comment-item" id="vibe-comment-${c.id}">
         ${av}
         <div class="vibe-comment-body">
           <div class="vibe-comment-username" ${clickAttr}>@${u.username || 'User'}</div>
-          <div class="vibe-comment-text">${c.content || ''}</div>
+          <div class="vibe-comment-text" id="comment-text-${c.id}">${c.content || ''}</div>
         </div>
-        <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
-          <button onclick="toggleCommentLike('${c.id}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
-            ${isLikedByMe ? '❤️' : '🤍'}
-          </button>
-          <span id="comment-like-count-vibe-${c.id}" style="font-size:11px; color:rgba(255,255,255,0.45);">${likeCount}</span>
-        </div>
+        ${actionHtml}
       </div>`;
     }).join('');
   } catch (e) {
@@ -13533,20 +13778,27 @@ async function submitVibeComment() {
       ? `<div class="vibe-comment-av" ${ownClickAttr}><img src="${u.profilePic}" alt=""></div>`
       : `<div class="vibe-comment-av" ${ownClickAttr}>${(u.username || '?').charAt(0).toUpperCase()}</div>`;
 
+    const isOwn = true;
+    let actionHtml = `
+      <div style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; margin-left:auto;">
+        <button onclick="toggleCommentMenu(this)" style="background:none; border:none; cursor:pointer; padding:4px; font-size:16px; color:#fff;">&#8942;</button>
+        <div class="comment-action-menu" style="display:none; position:absolute; right:100%; top:0; background:#222; border-radius:8px; padding:4px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5); min-width:80px;">
+          <div onclick="deleteGlobalComment('${newCommentId}', 'vibe', '${vibeActiveCommentPostId}')" style="padding:8px 12px; cursor:pointer; font-size:13px; color:#ff4444;">Delete</div>
+        </div>
+      </div>
+    `;
+
     const newItem = document.createElement('div');
     newItem.className = 'vibe-comment-item';
+    newItem.id = `vibe-comment-${newCommentId}`;
     newItem.innerHTML = `
       ${av}
       <div class="vibe-comment-body">
         <div class="vibe-comment-username" ${ownClickAttr}>@${u.username}</div>
-        <div class="vibe-comment-text">${content}</div>
+        <div class="vibe-comment-text" id="comment-text-${newCommentId}">${content}</div>
       </div>
-      <div class="vibe-comment-actions" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-left: auto;">
-        <button onclick="toggleCommentLike('${newCommentId}', this, 'vibe')" class="vibe-comment-like" style="background:none; border:none; cursor:pointer; padding:0; font-size:14px; margin-bottom:2px;">
-          🤍
-        </button>
-        <span id="comment-like-count-vibe-${newCommentId}" style="font-size:11px; color:rgba(255,255,255,0.45);">0</span>
-      </div>`;
+      ${actionHtml}
+    `;
 
     const list = document.getElementById('vibeCommentsList');
     if (list) {
@@ -13576,25 +13828,38 @@ function vibeOpenShare(postId, caption) {
   openVibeDrawer('vibeShareDrawer');
 }
 
+async function incrementVibeShareCount() {
+  if (!vibeActiveSharePostId) return;
+  try {
+    await apiCall(`/api/posts/${vibeActiveSharePostId}/share`, 'POST');
+    const shareSpan = document.getElementById(`vshare_count_${vibeActiveSharePostId}`);
+    if (shareSpan) {
+      const current = parseInt(shareSpan.textContent.replace(/\D/g, '')) || 0;
+      shareSpan.textContent = vibeFmt(current + 1);
+    }
+  } catch (err) {
+    console.error('Share count update failed:', err);
+  }
+}
+
 function vibeShareWhatsApp() {
   const url = encodeURIComponent(window.location.href + '?post=' + vibeActiveSharePostId);
   window.open('https://wa.me/?text=Check+this+vibe+on+VibeXpert+%F0%9F%94%A5+' + url, '_blank');
+  incrementVibeShareCount();
   closeVibeDrawer('vibeShareDrawer');
 }
 
 function vibeShareCopy() {
   navigator.clipboard?.writeText(window.location.href + '?post=' + vibeActiveSharePostId)
     .then(() => showMessage('🔗 Link copied!', 'success'));
+  incrementVibeShareCount();
   closeVibeDrawer('vibeShareDrawer');
 }
 
 function vibeShareToChat() {
   showMessage('📤 Shared to College Chat!', 'success');
+  incrementVibeShareCount();
   closeVibeDrawer('vibeShareDrawer');
-  // API call to post to community_messages
-  if (vibeActiveSharePostId) {
-    apiCall('/api/posts/' + vibeActiveSharePostId + '/share', 'POST').catch(() => { });
-  }
 }
 
 function vibeShareNative() {
@@ -13602,6 +13867,8 @@ function vibeShareNative() {
     navigator.share({
       title: 'Check this on VibeXpert!',
       url: window.location.href + '?post=' + vibeActiveSharePostId
+    }).then(() => {
+      incrementVibeShareCount();
     }).catch(() => { });
   } else {
     vibeShareCopy();
@@ -13750,13 +14017,13 @@ function openVibeUpload() {
 
   if (activePageId === 'posts') {
     // Vibers: college only
-    vibeDestination = 'community';
+    vibeDestination = 'both';
     if (zvPills) zvPills.style.display = 'none';
     if (vibersPills) vibersPills.style.display = 'flex';
     const commBtn = document.getElementById('destRadioCommunity');
     if (commBtn) commBtn.classList.add('active');
   } else {
-    // Zero Velocity (home): profile+college default
+    // Zero Velocity (home): community default
     vibeDestination = 'both';
     if (zvPills) zvPills.style.display = 'flex';
     if (vibersPills) vibersPills.style.display = 'none';
@@ -13893,12 +14160,23 @@ function clearVibeMedia() {
 
 function setVibeDest(dest, row) {
   vibeDestination = dest;
-  const bothBtn = document.getElementById('destRadioBoth');
-  const profBtn = document.getElementById('destRadioProfile');
-  const commBtn = document.getElementById('destRadioCommunity');
-  if (bothBtn) bothBtn.classList.toggle('active', dest === 'both');
-  if (profBtn) profBtn.classList.toggle('active', dest === 'profile');
-  if (commBtn) commBtn.classList.toggle('active', dest === 'community');
+  document.querySelectorAll('.vibe-dest-pill').forEach(b => b.classList.remove('active'));
+  if (row) {
+    row.classList.add('active');
+  } else {
+    if (dest === 'profile') {
+      const p = document.getElementById('destRadioProfile');
+      if (p) p.classList.add('active');
+    } else {
+      const b = document.getElementById('destRadioBoth');
+      const c = document.getElementById('destRadioCommunity');
+      if (b && b.closest('.vibe-dest-pills') && b.closest('.vibe-dest-pills').style.display !== 'none') {
+        b.classList.add('active');
+      } else if (c) {
+        c.classList.add('active');
+      }
+    }
+  }
 }
 
 function updateVibeCharCount(textarea) {
@@ -14331,6 +14609,8 @@ async function submitVibePost() {
   const btn = document.getElementById('vibePostBtn');
   const postingOverlay = document.getElementById('vibePostingOverlay');
 
+  console.log('📤 submitVibePost called', { caption, filesCount: vibeSelectedFiles?.length, dest: vibeDestination, user: currentUser?.username });
+
   if (!currentUser) return showMessage('⚠️ Login first', 'error');
 
   if (!vibeSelectedFiles.length && !caption) {
@@ -14343,8 +14623,15 @@ async function submitVibePost() {
 
   // Fix: treat null/undefined communityJoined as false only when explicitly checking community post
   const isJoined = currentUser.communityJoined || currentUser.community_joined || false;
+  console.log('📤 Community check:', { isJoined, communityJoined: currentUser.communityJoined, community_joined: currentUser.community_joined, college: currentUser.college });
   if ((vibeDestination === 'community' || vibeDestination === 'both') && !isJoined) {
-    return showMessage('⚠️ Join your college community first to post there', 'error');
+    // If destination is 'both' but user hasn't joined community, fall back to 'profile' so the post still goes through
+    if (vibeDestination === 'both') {
+      console.log('📤 User not in community, falling back to profile destination');
+      vibeDestination = 'profile';
+    } else {
+      return showMessage('⚠️ Join your college community first to post there', 'error');
+    }
   }
 
   if (btn) { btn.disabled = true; const t = document.getElementById('vibePostBtnText'); if (t) t.textContent = '⏳ Posting...'; }
@@ -14374,18 +14661,10 @@ async function submitVibePost() {
     // We no longer cross-check _vibePageContext here; doing so caused conflicts when
     // context was stale or vibeDestination had been manually overridden by the user.
     const effectiveDest = vibeDestination;
-    if (effectiveDest === 'both') {
-      // Post to profile first, then to community
-      const [profileRes, communityRes] = await Promise.all([
-        apiCall('/api/posts', 'POST', buildFormData('profile')),
-        apiCall('/api/posts', 'POST', buildFormData('community'))
-      ]);
-      // Use profile post as the "primary" result for UI feedback
-      data = profileRes && profileRes.success ? profileRes : communityRes;
-    } else {
-      const formData = buildFormData(effectiveDest);
-      data = await apiCall('/api/posts', 'POST', formData);
-    }
+    const formData = buildFormData(effectiveDest);
+    console.log('📤 Calling API with dest:', effectiveDest);
+    data = await apiCall('/api/posts', 'POST', formData);
+    console.log('📤 API response:', data);
 
     if (data && data.success) {
       // ── Success overlay ─────────────────────────────────────────────────
@@ -14439,6 +14718,10 @@ async function submitVibePost() {
               lastTap = now;
               const vid = card.querySelector('.vibe-card-bg-video');
               if (vid) vibeToggleVideo(card, idx, vid);
+            });
+            card.addEventListener('dblclick', e => {
+              if (e.target.closest('.vibe-card-actions') || e.target.closest('.vibe-card-info') || e.target.closest('.vibe-card-delete-btn')) return;
+              vibeDoubleTapLike(card, idx);
             });
           }
         }
@@ -14632,12 +14915,19 @@ async function openDmDrawer(userId) {
     window._dmReceiverName = profile.username || 'User'; // Store for bubble avatar initials
     const online = !profile.last_seen;
     if (statusEl) {
-      const statusSpan = statusEl.querySelector('span:last-child');
-      if (statusSpan) statusSpan.textContent = online ? 'Online' : (profile.status_text || 'Offline');
-      else statusEl.textContent = online ? '● Online' : '● ' + (profile.status_text || 'Offline');
-      statusEl.style.color = online ? '#22c55e' : '#ef4444'; // BUG FIX (BUG-18): was #a78bfa (purple) for offline
+      // The user wants the text completely removed in all scenarios
+      statusEl.style.display = 'none';
+      
       const ring = document.getElementById('dmOnlineRing');
-      if (ring) ring.style.background = online ? '#22c55e' : '#ef4444';
+      if (online) {
+        if (ring) {
+          ring.style.display = 'block';
+          ring.style.background = '#22c55e';
+          ring.style.boxShadow = '0 0 6px rgba(34,197,94,0.6)';
+        }
+      } else {
+        if (ring) ring.style.display = 'none';
+      }
     }
     if (profile.profile_pic && avatarImg) {
       avatarImg.src = profile.profile_pic;
@@ -14879,20 +15169,10 @@ function _buildDmBubble(m, isOptimistic) {
       }).join('') + `</div>`;
   }
 
-  // Hover reaction bar (quick-react on hover)
-  const hoverReactHtml = isOptimistic ? '' : `<div class="dm-hover-react-bar">
-    <button onclick="dmToggleReact('${msgId}','👍')">👍</button>
-    <button onclick="dmToggleReact('${msgId}','❤️')">❤️</button>
-    <button onclick="dmToggleReact('${msgId}','😂')">😂</button>
-    <button onclick="dmToggleReact('${msgId}','😮')">😮</button>
-    <button onclick="dmToggleReact('${msgId}','🔥')">🔥</button>
-  </div>`;
+  // Hover reaction bar removed
 
-  // Quick action buttons (reply + react)
-  const actionsHtml = isOptimistic ? '' : `<div class="dm-msg-actions ${own ? 'dm-actions-left' : 'dm-actions-right'}">
-    <button class="dm-action-btn" title="Reply" onclick="dmSetReply('${msgId}','${escapeHtml((m.content || '').replace(/'/g, "&#39;"))}')">↩</button>
-    <button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker('${msgId}',this)">😊</button>
-  </div>`;
+  // Dots button for message actions (hidden natively until hover)
+  const dotsBtn = isOptimistic ? '' : `<button class="dm-dots-btn" onclick="dmToggleMsgMenu(event, this)" data-msg-id="${msgId}" data-own="${own}" data-content="${escapeHtml((m.content || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;"))}" title="More">⋮</button>`;
 
   // Avatar indicator for received messages (initials + online dot)
   let avatarHtml = '';
@@ -14902,21 +15182,40 @@ function _buildDmBubble(m, isOptimistic) {
   }
 
   return `<div class="dm-msg-row ${own ? 'dm-own' : 'dm-other'}" id="dm-msg-${msgId}" ${isOptimistic ? 'data-opt="' + msgId + '"' : ''}>
-    ${hoverReactHtml}
     ${avatarHtml}
-    ${actionsHtml}
     <div class="dm-msg-wrap">
       ${replyHtml}
-      <div class="dm-bubble ${own ? 'dm-bubble-own' : 'dm-bubble-other'}">
-        ${m.media_url ? renderDmMedia(m) : escapeHtml(m.content || '')}
+      <div class="dm-bubble-row">
+        ${own ? dotsBtn : ''}
+        <div class="dm-bubble ${own ? 'dm-bubble-own' : 'dm-bubble-other'}">
+          ${m.media_url ? renderDmMedia(m) : linkifyUrls(escapeHtml(m.content || ''))}
+        </div>
+        ${!own ? dotsBtn : ''}
       </div>
+      ${reactionsHtml}
       <div class="dm-msg-meta ${own ? 'dm-meta-own' : 'dm-meta-other'}">
         <span class="dm-msg-time">${time}</span>
         ${tickHtml}
       </div>
     </div>
-    ${reactionsHtml}
   </div>`;
+}
+
+function _dmDateLabel(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((today - msgDay) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  if (diff < 7) return d.toLocaleDateString('en-US', { weekday: 'long' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: now.getFullYear() !== d.getFullYear() ? 'numeric' : undefined });
+}
+
+function _dmDateSeparator(label) {
+  return `<div class="dm-date-separator"><span>${label}</span></div>`;
 }
 
 function renderDmMessages(messages, container) {
@@ -14924,7 +15223,17 @@ function renderDmMessages(messages, container) {
     container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:32px;text-align:center;"><div style="font-size:48px;">💬</div><div style="color:rgba(255,255,255,0.7);font-size:15px;font-weight:600;">No messages yet</div><div style="color:rgba(255,255,255,0.35);font-size:13px;">Be the first to say hi!</div></div>';
     return;
   }
-  container.innerHTML = messages.map(m => _buildDmBubble(m, false)).join('');
+  let html = '';
+  let lastDateLabel = '';
+  for (const m of messages) {
+    const label = _dmDateLabel(m.created_at);
+    if (label && label !== lastDateLabel) {
+      html += _dmDateSeparator(label);
+      lastDateLabel = label;
+    }
+    html += _buildDmBubble(m, false);
+  }
+  container.innerHTML = html;
   // Scroll to bottom after paint
   requestAnimationFrame(() => {
     container.scrollTop = container.scrollHeight;
@@ -14935,9 +15244,74 @@ function renderDmMessages(messages, container) {
 
 function renderDmMedia(m) {
   if (!m.media_url) return escapeHtml(m.content || '');
-  if (m.media_type === 'image') return `<img src="${proxyMediaUrl(m.media_url)}" style="max-width:100%;border-radius:8px;" loading="lazy">`;
+  if (m.media_type === 'image') return `<img src="${proxyMediaUrl(m.media_url)}" style="max-width:100%;border-radius:8px;cursor:pointer;" loading="lazy" onclick="openDmLightbox(this.src)">`;
   if (m.media_type === 'video') return `<video src="${proxyMediaUrl(m.media_url)}" controls style="max-width:100%;border-radius:8px;"></video>`;
-  return `<a href="${m.media_url}" target="_blank" style="color:#7aa3d4;">${escapeHtml(m.content || 'File')}</a>`;
+
+  // For PDFs/documents: fix Cloudinary URL (/image/upload/ → /raw/upload/) and show styled file card
+  let docUrl = m.media_url;
+  if (docUrl.includes('cloudinary.com') && docUrl.includes('/image/upload/')) {
+    docUrl = docUrl.replace('/image/upload/', '/raw/upload/');
+  }
+  // Determine file icon from name/url
+  const fileName = m.media_name || m.content || docUrl.split('/').pop()?.split('?')[0] || 'File';
+  const ext = fileName.split('.').pop().toLowerCase();
+  let fIcon = '📎';
+  if (ext === 'pdf') fIcon = '📄';
+  else if (['doc', 'docx'].includes(ext)) fIcon = '📝';
+  else if (['xls', 'xlsx', 'csv'].includes(ext)) fIcon = '📊';
+  else if (['ppt', 'pptx'].includes(ext)) fIcon = '📑';
+  else if (['zip', 'rar', '7z'].includes(ext)) fIcon = '🗜️';
+  else if (['txt'].includes(ext)) fIcon = '📃';
+
+  // PDF: open in browser tab (browsers have built-in PDF viewer)
+  // Other docs: download so they open in their native desktop apps (Word, PowerPoint, etc.)
+  const isPdf = (ext === 'pdf');
+  const downloadAttr = isPdf ? '' : `download="${escapeHtml(fileName)}"`;
+  const actionLabel = isPdf ? 'View' : 'Download';
+  const actionIcon = isPdf ? '↗' : '⬇';
+
+  return `<a href="${docUrl}" target="_blank" rel="noopener noreferrer" ${downloadAttr} style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#c4b5fd;background:rgba(130,90,255,0.1);border:1px solid rgba(130,90,255,0.2);border-radius:10px;padding:8px 12px;transition:all 0.2s;" onmouseenter="this.style.background='rgba(130,90,255,0.2)'" onmouseleave="this.style.background='rgba(130,90,255,0.1)'">
+    <span style="font-size:24px;flex-shrink:0;">${fIcon}</span>
+    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;">${escapeHtml(fileName)}</span>
+    <span style="font-size:10px;opacity:0.6;flex-shrink:0;background:rgba(130,90,255,0.15);padding:2px 6px;border-radius:4px;">${actionLabel} ${actionIcon}</span>
+  </a>`;
+}
+
+// ── DM Image Lightbox ────────────────────────────────────────────────
+function openDmLightbox(src) {
+  // Remove existing lightbox if any
+  let lb = document.getElementById('dmLightbox');
+  if (lb) lb.remove();
+
+  lb = document.createElement('div');
+  lb.id = 'dmLightbox';
+  lb.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:dmLbFadeIn 0.25s ease;';
+
+  lb.innerHTML = `
+    <button onclick="closeDmLightbox()" style="position:absolute;top:18px;left:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all 0.2s;z-index:10;" onmouseenter="this.style.background='rgba(239,68,68,0.7)';this.style.transform='scale(1.1)'" onmouseleave="this.style.background='rgba(255,255,255,0.1)';this.style.transform='scale(1)'">✕</button>
+    <img src="${src}" style="max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);object-fit:contain;animation:dmLbZoomIn 0.3s ease;" alt="Full image">
+  `;
+
+  // Close on clicking background
+  lb.addEventListener('click', function (e) {
+    if (e.target === lb) closeDmLightbox();
+  });
+
+  // Close on Escape key
+  lb._escHandler = function (e) {
+    if (e.key === 'Escape') closeDmLightbox();
+  };
+  document.addEventListener('keydown', lb._escHandler);
+
+  document.body.appendChild(lb);
+}
+
+function closeDmLightbox() {
+  const lb = document.getElementById('dmLightbox');
+  if (!lb) return;
+  if (lb._escHandler) document.removeEventListener('keydown', lb._escHandler);
+  lb.style.animation = 'dmLbFadeOut 0.2s ease forwards';
+  setTimeout(() => lb.remove(), 200);
 }
 
 function formatDmTime(ts) {
@@ -15006,8 +15380,179 @@ function dmScrollToMessage(msgId) {
   }
 }
 
+// ── Unsend DM message ──────────────────────────────────────────────────
+window.unsendDmMessage = function (msgId) {
+  // Build a small confirm popup inline
+  const existing = document.querySelector('.dm-unsend-confirm');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'dm-unsend-confirm';
+  overlay.innerHTML = `
+    <div class="dm-unsend-dialog">
+      <div class="dm-unsend-icon">🚫</div>
+      <div class="dm-unsend-title">Unsend Message</div>
+      <div class="dm-unsend-desc">This message will be removed for everyone. This cannot be undone.</div>
+      <div class="dm-unsend-actions">
+        <button class="dm-unsend-cancel" id="dmUnsendCancel">Cancel</button>
+        <button class="dm-unsend-confirm-btn" id="dmUnsendConfirmBtn">Unsend</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // Cancel
+  overlay.querySelector('#dmUnsendCancel').onclick = () => overlay.remove();
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  // Confirm
+  overlay.querySelector('#dmUnsendConfirmBtn').onclick = async () => {
+    overlay.remove();
+
+    // Optimistic UI: animate and remove the row
+    const row = document.getElementById('dm-msg-' + msgId);
+    if (row) {
+      row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'scale(0.9)';
+      setTimeout(() => row.remove(), 260);
+    }
+
+    if (typeof showMessage === 'function') showMessage('Message unsent', 'success');
+
+    // API call
+    try {
+      await apiCall(`/api/dm/messages/${msgId}`, 'DELETE');
+    } catch (err) {
+      console.warn('Unsend API error (non-fatal):', err);
+    }
+  };
+};
+
+// ── Dots menu for DM messages ──────────────────────────────────────────────
+window.dmToggleMsgMenu = function (event, btn) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  const msgId = btn.getAttribute('data-msg-id');
+  const isOwn = btn.getAttribute('data-own') === 'true';
+  const safeContent = btn.getAttribute('data-content') || '';
+
+  // Close any existing menu first
+  const existing = document.querySelector('.dm-dots-menu');
+  if (existing) {
+    const wasSameMsg = existing.dataset.msgId === msgId;
+    existing.remove();
+    if (wasSameMsg) return; // toggle off if same button clicked
+  }
+
+  const menu = document.createElement('div');
+  menu.className = 'dm-dots-menu';
+  menu.dataset.msgId = msgId;
+
+  // Prevent JS inline syntax errors
+  const jsSafeContent = safeContent.replace(/'/g, "\\'").replace(/\r?\n/g, '\\n');
+
+  let menuItems = `
+    <button class="dm-dots-menu-item" onclick="dmCloseMsgMenu(); dmSetReply('${msgId}','${jsSafeContent}')">
+      <span class="dm-dots-menu-icon">↩️</span>
+      <span>Reply</span>
+    </button>
+    <button class="dm-dots-menu-item" onclick="dmCloseMsgMenu(); dmShowEmojiPicker('${msgId}',this)">
+      <span class="dm-dots-menu-icon">😊</span>
+      <span>React</span>
+    </button>
+  `;
+
+  if (isOwn) {
+    menuItems += `
+      <div class="dm-dots-menu-divider"></div>
+      <button class="dm-dots-menu-item dm-dots-menu-danger" onclick="dmCloseMsgMenu(); unsendDmMessage('${msgId}')">
+        <span class="dm-dots-menu-icon">🚫</span>
+        <span>Unsend</span>
+      </button>
+    `;
+  }
+
+  menu.innerHTML = menuItems;
+
+  // Append inside the DM drawer so positioning works correctly and isn't blocked by stacking contexts
+  const drawer = document.getElementById('dmDrawer');
+  (drawer || document.body).appendChild(menu);
+
+  // Position relative to the button inside the fixed panel
+  const btnRect = btn.getBoundingClientRect();
+  const drawerRect = drawer ? drawer.getBoundingClientRect() : { left: 0, top: 0 };
+  const menuWidth = 155;
+  const menuHeight = isOwn ? 140 : 90;
+
+  let left = btnRect.left - drawerRect.left;
+  if (isOwn) {
+    left = left - menuWidth; // open to the left for own messages
+  } else {
+    left = left + btnRect.width; // open to the right for other messages
+  }
+
+  let top = btnRect.top - drawerRect.top + btnRect.height + 4;
+
+  // Keep within panel bounds
+  const containerW = drawer ? drawer.offsetWidth : window.innerWidth;
+  const containerH = drawer ? drawer.offsetHeight : window.innerHeight;
+
+  if (left < 8) left = 8;
+  if (left + menuWidth > containerW - 8) left = containerW - menuWidth - 8;
+  if (top + menuHeight > containerH - 8) top = btnRect.top - drawerRect.top - menuHeight - 4; // flip above
+
+  menu.style.cssText = `position:absolute;top:${top}px;left:${left}px;z-index:999999;`;
+
+  // Close on any outside click safely
+  setTimeout(() => {
+    document.addEventListener('click', function _closeDmMenu(e) {
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', _closeDmMenu);
+      }
+    });
+  }, 10);
+};
+
+window.dmCloseMsgMenu = function () {
+  document.querySelector('.dm-dots-menu')?.remove();
+};
+
 // ── Emoji picker for reactions ──────────────────────────────────────────────
-const DM_EMOJIS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+const DM_EMOJIS = [
+  // Smileys & Emotions
+  '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊',
+  '😇', '🥰', '😍', '🤩', '😘', '😗', '😋', '😛', '😜', '🤪',
+  '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '😐', '😑', '😶', '🙄',
+  '😏', '😣', '😥', '😮', '🤐', '😯', '😪', '😫', '🥱', '😴',
+  '😌', '😔', '🤤', '😷', '🤒', '🤕', '🤢', '🤮', '🥵', '🥶',
+  '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕',
+  '😟', '🙁', '😮', '😯', '😲', '😳', '🥺', '😢', '😭', '😤',
+  '😠', '😡', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹',
+  // Gestures & People
+  '👍', '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌', '👐', '🤲',
+  '🤝', '🙏', '✌️', '🤞', '🤟', '🤘', '🤙', '💪', '🖐️', '✋',
+  '👋', '🤚', '👌', '🤌', '🫶', '🫰', '🫵',
+  // Hearts & Symbols
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
+  '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟',
+  // Celebrations
+  '🎉', '🎊', '🎈', '🎁', '🎂', '🥂', '🍾', '✨', '🌟', '⭐',
+  '🔥', '💯', '💥', '💫', '🎯', '🏆', '🥇', '🎶', '🎵', '🎤',
+  // Nature & Animals
+  '🌹', '🌸', '🌺', '🌻', '🌼', '🍀', '🌈', '☀️', '🌙', '⛅',
+  '🐶', '🐱', '🐻', '🦁', '🐸', '🐵', '🦊', '🐰', '🐼', '🦄',
+  // Food & Drink
+  '☕', '🍵', '🧋', '🥤', '🍺', '🍷', '🍕', '🍔', '🍟', '🌮',
+  '🍣', '🍜', '🍩', '🍪', '🎂', '🍫', '🍿', '🥐', '🍳', '🥑',
+  // Objects & Miscellaneous
+  '💻', '📱', '⌨️', '🖥️', '📸', '🎮', '🎬', '📚', '✏️', '💡',
+  '🔒', '🔑', '💎', '🛡️', '⚡', '🚀', '✈️', '🏠', '🌍', '🗺️'
+];
 
 function dmShowEmojiPicker(msgId, btn) {
   // Remove any existing picker
@@ -15028,9 +15573,10 @@ function dmShowEmojiPicker(msgId, btn) {
   const drawerRect = drawer ? drawer.getBoundingClientRect() : { left: 0, top: 0 };
 
   // Place above the button, centered
-  const pickerW = 260; // approx width of picker
+  const pickerW = 250;
+  const pickerH = 220;
   let left = btnRect.left - drawerRect.left - pickerW / 2 + 14;
-  let top = btnRect.top - drawerRect.top - 52; // 52px = picker height + gap
+  let top = btnRect.top - drawerRect.top - pickerH - 12;
 
   // Keep within panel bounds
   left = Math.max(8, Math.min(left, (drawer ? drawer.offsetWidth : window.innerWidth) - pickerW - 8));
@@ -15070,7 +15616,14 @@ async function dmToggleReact(msgId, emoji) {
     reactDiv = document.createElement('div');
     reactDiv.className = 'dm-reactions';
     reactDiv.dataset.msgid = msgId;
-    row.appendChild(reactDiv);
+    const wrap = row.querySelector('.dm-msg-wrap');
+    if (wrap) {
+      const meta = wrap.querySelector('.dm-msg-meta');
+      if (meta) wrap.insertBefore(reactDiv, meta);
+      else wrap.appendChild(reactDiv);
+    } else {
+      row.appendChild(reactDiv);
+    }
   }
 
   // Check if we already reacted with this emoji
@@ -15171,9 +15724,15 @@ async function sendDm() {
     if (pendingFile) {
       const fd = new FormData();
       fd.append('receiverId', _dmCurrentReceiverId);
-      if (text) fd.append('content', text);
+      if (text) fd.append('content', text || pendingFile.name);
       if (replyToId) fd.append('replyToId', replyToId);
       fd.append('media', pendingFile, pendingFile.name);
+      // Send media_type hint so backend can use correct Cloudinary resource_type
+      const _ext = (pendingFile.name || '').split('.').pop().toLowerCase();
+      if (pendingFile.type.startsWith('image/')) fd.append('media_type', 'image');
+      else if (pendingFile.type.startsWith('video/')) fd.append('media_type', 'video');
+      else fd.append('media_type', 'document');
+      fd.append('media_name', pendingFile.name);
       const BASE = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
       const authTok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
         sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
@@ -15188,6 +15747,17 @@ async function sendDm() {
     window._dmPendingFile = null;
     const input2 = document.getElementById('dmInput');
     if (input2) input2.placeholder = 'Type a message…';
+    // Hide paste preview
+    const pp = document.getElementById('dmPastePreview');
+    if (pp) pp.style.display = 'none';
+    const ppi = document.getElementById('dmPastePreviewImg');
+    if (ppi) ppi.src = '';
+    // Hide file preview
+    const fp = document.getElementById('dmFilePreview');
+    if (fp) fp.style.display = 'none';
+    // Reset file input
+    const fi = document.getElementById('dmMediaInput');
+    if (fi) fi.value = '';
     if (!data || !data.success) throw new Error(data?.error || 'Send failed');
 
     // Step 3: Upgrade optimistic bubble to confirmed (in-place, no replaceWith)
@@ -15214,18 +15784,22 @@ async function sendDm() {
         metaEl.appendChild(tick);
       }
 
-      // Add reply/react action buttons
-      if (data.dm && data.dm.id && !existing.querySelector('.dm-msg-actions')) {
+      // Add dots action button inside bubble-row
+      if (data.dm && data.dm.id && !existing.querySelector('.dm-dots-btn')) {
         const own = String(data.dm.sender_id) === String(currentUser?.id);
         const msgId = data.dm.id;
-        const safeContent = escapeHtml((data.dm.content || '').replace(/'/g, "&#39;"));
-        const actDiv = document.createElement('div');
-        actDiv.className = 'dm-msg-actions ' + (own ? 'dm-actions-left' : 'dm-actions-right');
-        actDiv.innerHTML =
-          '<button class="dm-action-btn" title="Reply" onclick="dmSetReply(\'' + msgId + '\',\'' + safeContent + '\')">&#8617;</button>' +
-          '<button class="dm-action-btn" title="React" onclick="dmShowEmojiPicker(\'' + msgId + '\',this)">\ud83d\ude0a</button>';
-        const wrap = existing.querySelector('.dm-msg-wrap');
-        if (wrap) existing.insertBefore(actDiv, wrap);
+        const safeContent = escapeHtml((data.dm.content || '')).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+        const dotsBtnHtml = `<button class="dm-dots-btn" onclick="dmToggleMsgMenu(event, this)" data-msg-id="${msgId}" data-own="${own}" data-content="${safeContent}" title="More">⋮</button>`;
+
+        const bubbleRow = existing.querySelector('.dm-bubble-row');
+        if (bubbleRow) {
+          if (own) {
+            bubbleRow.insertAdjacentHTML('afterbegin', dotsBtnHtml);
+          } else {
+            bubbleRow.insertAdjacentHTML('beforeend', dotsBtnHtml);
+          }
+        }
       }
     } else if (data.dm) {
       // Fallback: optimistic gone somehow, append confirmed bubble fresh
@@ -15311,12 +15885,11 @@ function handleDmTyping() {
 function dmShowInputEmoji(btn) {
   // Reuse same emoji picker approach as reactions
   document.querySelectorAll('.dm-emoji-picker').forEach(p => p.remove());
-  const EMOJIS = ['😊', '😂', '❤️', '😍', '👍', '🔥', '🎉', '💯', '😎', '🥺', '✨', '🙏'];
+
   const picker = document.createElement('div');
   picker.className = 'dm-emoji-picker';
-  picker.style.flexWrap = 'wrap';
-  picker.style.maxWidth = '200px';
-  picker.innerHTML = EMOJIS.map(e =>
+
+  picker.innerHTML = DM_EMOJIS.map(e =>
     `<button onclick="document.getElementById('dmInput').value+='${e}';document.getElementById('dmInput').focus();this.closest('.dm-emoji-picker').remove()">${e}</button>`
   ).join('');
 
@@ -15326,8 +15899,14 @@ function dmShowInputEmoji(btn) {
   const btnRect = btn.getBoundingClientRect();
   const drawerRect = drawer ? drawer.getBoundingClientRect() : { left: 0, top: 0 };
   picker.style.position = 'absolute';
-  picker.style.left = Math.max(8, btnRect.left - drawerRect.left - 80) + 'px';
-  picker.style.top = (btnRect.top - drawerRect.top - 90) + 'px';
+
+  const pickerW = 250;
+  const pickerH = 220;
+
+  picker.style.left = Math.max(8, btnRect.left - drawerRect.left - pickerW + 30) + 'px';
+  let topY = btnRect.top - drawerRect.top - pickerH - 12;
+  if (topY < 8) topY = btnRect.bottom - drawerRect.top + 8;
+  picker.style.top = topY + 'px';
   picker.style.opacity = '0';
   picker.style.transform = 'scale(0.8) translateY(8px)';
   requestAnimationFrame(() => {
@@ -15346,13 +15925,115 @@ function dmShowInputEmoji(btn) {
 function handleDmMediaSelect(event) {
   const file = event.target?.files?.[0];
   if (!file) return;
-  // For now, show the filename in the input as a preview
-  const input = document.getElementById('dmInput');
-  if (input) input.placeholder = '📎 ' + file.name;
-  // Store file for sending (future: integrate with sendDm for media upload)
-  window._dmPendingFile = file;
-  showMessage('📎 File attached: ' + file.name, 'success');
+  // Show the image preview above input if it's an image
+  if (file.type.startsWith('image/')) {
+    _dmShowPastePreview(file);
+  } else {
+    // Non-image file (PDF, doc, etc.) — show file preview strip
+    window._dmPendingFile = file;
+    _dmShowFilePreview(file);
+  }
 }
+
+// ── Show file preview strip for non-image files ──────────────────────
+function _dmShowFilePreview(file) {
+  const preview = document.getElementById('dmFilePreview');
+  const iconEl = document.getElementById('dmFilePreviewIcon');
+  const nameEl = document.getElementById('dmFilePreviewName');
+  const sizeEl = document.getElementById('dmFilePreviewSize');
+  if (!preview) return;
+
+  // Determine icon by file extension/type
+  const ext = (file.name || '').split('.').pop().toLowerCase();
+  let icon = '📎';
+  if (ext === 'pdf') icon = '📄';
+  else if (['doc', 'docx'].includes(ext)) icon = '📝';
+  else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = '📊';
+  else if (['ppt', 'pptx'].includes(ext)) icon = '📑';
+  else if (['zip', 'rar', '7z'].includes(ext)) icon = '🗜️';
+  else if (['txt'].includes(ext)) icon = '📃';
+  else if (file.type.startsWith('video/')) icon = '🎥';
+  else if (file.type.startsWith('audio/')) icon = '🎵';
+
+  // Format file size
+  let sizeStr = '';
+  if (file.size < 1024) sizeStr = file.size + ' B';
+  else if (file.size < 1024 * 1024) sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+  else sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+  if (iconEl) iconEl.textContent = icon;
+  if (nameEl) nameEl.textContent = file.name;
+  if (sizeEl) sizeEl.textContent = sizeStr;
+  preview.style.display = 'block';
+}
+
+// ── Clear attached file preview ──────────────────────────────────────
+function dmClearAttachedFile() {
+  window._dmPendingFile = null;
+  const preview = document.getElementById('dmFilePreview');
+  if (preview) preview.style.display = 'none';
+  const input = document.getElementById('dmInput');
+  if (input) input.placeholder = 'Type a message…';
+  // Reset file input
+  const fileInput = document.getElementById('dmMediaInput');
+  if (fileInput) fileInput.value = '';
+}
+
+// ── Clipboard paste image support ────────────────────────────────────
+function _dmShowPastePreview(file) {
+  window._dmPendingFile = file;
+  const preview = document.getElementById('dmPastePreview');
+  const img = document.getElementById('dmPastePreviewImg');
+  if (!preview || !img) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    img.src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function dmClearPastedImage() {
+  window._dmPendingFile = null;
+  const preview = document.getElementById('dmPastePreview');
+  const img = document.getElementById('dmPastePreviewImg');
+  if (preview) preview.style.display = 'none';
+  if (img) img.src = '';
+  const input = document.getElementById('dmInput');
+  if (input) input.placeholder = 'Type a message…';
+  // Also reset file input
+  const fileInput = document.getElementById('dmMediaInput');
+  if (fileInput) fileInput.value = '';
+}
+
+// Attach paste listener to DM input
+(function initDmPasteListener() {
+  function attach() {
+    const input = document.getElementById('dmInput');
+    if (!input || input._dmPasteAttached) return;
+    input._dmPasteAttached = true;
+    input.addEventListener('paste', function (e) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) _dmShowPastePreview(file);
+          return;
+        }
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+  // Re-attach whenever DM drawer opens (input may be re-created)
+  const obs = new MutationObserver(() => attach());
+  obs.observe(document.body, { childList: true, subtree: true });
+})();
 
 function handleIncomingDm(msg) {
   const drawer = document.getElementById('dmDrawer');
@@ -15420,7 +16101,8 @@ async function loadDmConversations() {
     // If we got a debug hint from server, log it
     if (mutualData?.debug) console.log('mutual-follows debug:', mutualData.debug);
 
-    const convs = convData?.conversations || [];
+    // Filter out conversations that have been cleared (empty last_message)
+    const convs = (convData?.conversations || []).filter(c => c.last_message && c.last_message.trim() !== '');
     const mutuals = mutualData?.mutualFollows || [];
 
     // Users already in conversations
@@ -15477,7 +16159,7 @@ async function loadDmConversations() {
         return `
           <div class="dm-contact-card ${unread > 0 ? 'dm-contact-unread' : ''}">
             <div class="dm-contact-left" onclick="chatNowWithUser('${other.id}')">
-              <div class="dm-conv-avatar-wrap">
+              <div class="dm-conv-avatar-wrap" onclick="event.stopPropagation(); showUserProfile('${other.id}')" style="cursor:pointer;" title="View Profile">
                 ${avatarHtml}
                 <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
               </div>
@@ -15492,14 +16174,18 @@ async function loadDmConversations() {
                 </div>
               </div>
             </div>
-            <div class="dm-conv-card-actions">
+            <div class="dm-conv-card-actions" style="position:relative;">
               <button class="dm-chat-now-btn" onclick="chatNowWithUser('${other.id}')">
                 💬 Chat Now
               </button>
-              <button class="dm-del-conv-btn" title="Delete conversation"
-                onclick="event.stopPropagation();deleteDmConversation('${other.id}','${escapeHtml((other.username||'User').replace(/'/g,"&#39;"))}')">
-                🗑️
+              <button class="dm-del-conv-btn" title="Options" onclick="event.stopPropagation(); toggleDmConvMenu('${other.id}', event)">
+                &#8942;
               </button>
+              <div id="dm-conv-menu-${other.id}" class="dm-conv-dropdown" style="display:none; position:absolute; right:0; top:40px; background:#1e1438; border:1px solid #4a3b7d; border-radius:10px; padding:6px; z-index:100; min-width:140px; box-shadow:0 8px 16px rgba(0,0,0,0.6);">
+                <button onclick="event.stopPropagation(); deleteDmConversation('${other.id}','${escapeHtml((other.username || 'User').replace(/'/g, "&#39;"))}'); document.getElementById('dm-conv-menu-${other.id}').style.display='none';" style="background:none; border:none; color:#ef4444; padding:10px 12px; width:100%; text-align:left; cursor:pointer; font-size:14px; font-weight:500; display:flex; align-items:center; gap:10px; border-radius:6px; transition:0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='none'">
+                  <span style="font-size:16px;">🗑️</span> Delete Chat
+                </button>
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -15524,7 +16210,7 @@ async function loadDmConversations() {
         return `
           <div class="dm-contact-card dm-contact-new">
             <div class="dm-contact-left" onclick="chatNowWithUser('${u.id}')">
-              <div class="dm-conv-avatar-wrap">
+              <div class="dm-conv-avatar-wrap" onclick="event.stopPropagation(); showUserProfile('${u.id}')" style="cursor:pointer;" title="View Profile">
                 ${avatarHtml}
                 <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
               </div>
@@ -15541,10 +16227,6 @@ async function loadDmConversations() {
             <div class="dm-conv-card-actions">
               <button class="dm-chat-now-btn dm-chat-now-new" onclick="chatNowWithUser('${u.id}')">
                 💬 Chat Now
-              </button>
-              <button class="dm-del-conv-btn" title="Remove contact"
-                onclick="event.stopPropagation();deleteDmConversation('${u.id}','${escapeHtml((u.username||'User').replace(/'/g,"&#39;"))}')">
-                🗑️
               </button>
             </div>
           </div>`;
@@ -15836,7 +16518,14 @@ function wireNewSocketEvents() {
     if (!reactDiv) {
       reactDiv = document.createElement('div');
       reactDiv.className = 'dm-reactions';
-      row.appendChild(reactDiv);
+      const wrap = row.querySelector('.dm-msg-wrap');
+      if (wrap) {
+        const meta = wrap.querySelector('.dm-msg-meta');
+        if (meta) wrap.insertBefore(reactDiv, meta);
+        else wrap.appendChild(reactDiv);
+      } else {
+        row.appendChild(reactDiv);
+      }
     }
     reactDiv.innerHTML = Object.entries(reactions).map(([e, users]) => {
       const mine = users.includes(currentUser?.id);
@@ -16416,8 +17105,32 @@ function execAppendMessage(msg, isInitial = false) {
       mediaHTML = `<video class="exec-media-img" src="${proxyMediaUrl(msg.media_url)}" controls playsinline></video>`;
     } else if (msg.media_type === 'audio') {
       mediaHTML = `<audio controls src="${proxyMediaUrl(msg.media_url)}" style="width:100%;margin:4px 0;"></audio>`;
-    } else if (msg.media_type === 'pdf' || msg.media_type === 'document') {
-      mediaHTML = `<a class="exec-doc-link" href="${msg.media_url}" target="_blank" rel="noopener">📎 ${escapeHtml(msg.media_name || 'Document')}</a>`;
+    } else if (msg.media_type === 'pdf' || msg.media_type === 'document' || !msg.message_type || (msg.media_name && msg.media_name.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|txt|csv)$/i))) {
+      let docUrl = msg.media_url;
+      if (docUrl.includes('cloudinary.com') && docUrl.includes('/image/upload/')) {
+        docUrl = docUrl.replace('/image/upload/', '/raw/upload/');
+      }
+      const fileName = msg.media_name || docUrl.split('/').pop()?.split('?')[0] || 'Document';
+      const ext = fileName.split('.').pop().toLowerCase();
+      let fIcon = '📎';
+      if (ext === 'pdf') fIcon = '📄';
+      else if (['doc', 'docx'].includes(ext)) fIcon = '📝';
+      else if (['xls', 'xlsx', 'csv'].includes(ext)) fIcon = '📊';
+      else if (['ppt', 'pptx'].includes(ext)) fIcon = '📑';
+      else if (['zip', 'rar', '7z'].includes(ext)) fIcon = '🗜️';
+      else if (['txt'].includes(ext)) fIcon = '📃';
+
+      const isPdf = (ext === 'pdf');
+      const downloadAttr = isPdf ? '' : `download="${escapeHtml(fileName)}"`;
+      const actLabel = isPdf ? 'View ↗' : 'Download ⬇';
+
+      mediaHTML = `
+        <a href="${docUrl}" target="_blank" rel="noopener noreferrer" ${downloadAttr} style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#c4b5fd;background:rgba(30,100,255,0.1);border:1px solid rgba(30,100,255,0.2);border-radius:10px;padding:8px 12px;margin:5px 0;">
+          <span style="font-size:24px;flex-shrink:0;">${fIcon}</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;">${escapeHtml(fileName)}</span>
+          <span style="font-size:10px;opacity:0.6;flex-shrink:0;background:rgba(30,100,255,0.15);padding:2px 6px;border-radius:4px;">${actLabel}</span>
+        </a>
+      `;
     } else {
       mediaHTML = `<img class="exec-media-img" src="${proxyMediaUrl(msg.media_url)}" alt="media" onclick="openImageViewer && openImageViewer(this.src)" loading="lazy">`;
     }
@@ -16443,7 +17156,7 @@ function execAppendMessage(msg, isInitial = false) {
   // Text
   const textContent = msg.is_deleted
     ? '<em class="exec-deleted-text">🚫 This message was deleted</em>'
-    : escapeHtml(msg.content || '');
+    : linkifyUrls(escapeHtml(msg.content || ''));
 
   // Seen-by (own messages only) — show names inline, click for full popup
   const readers = msg.read_by || [];
@@ -16536,8 +17249,6 @@ async function execVotePoll(pollId, optionId, messageId) {
 }
 
 // ── Reactions ─────────────────────────────────────────────────────────
-const EXEC_QUICK_REACTIONS = ['❤️', '😂', '👍', '😮', '😢', '🔥', '🎉', '👏', '💯', '🙌'];
-
 function execBuildReactionsHTML(messageId, reactions) {
   const counts = {};
   (reactions || []).forEach(r => {
@@ -16554,13 +17265,14 @@ function execBuildReactionsHTML(messageId, reactions) {
 function execShowReactionPicker(event, messageId) {
   document.querySelector('.exec-reaction-picker')?.remove();
   const picker = document.createElement('div');
-  picker.className = 'exec-reaction-picker';
-  picker.innerHTML = EXEC_QUICK_REACTIONS.map(e =>
+  picker.className = 'exec-reaction-picker dm-emoji-picker'; // use Grid layout
+  picker.innerHTML = DM_EMOJIS.map(e =>
     `<button onclick="execToggleReaction('${messageId}','${e}');this.closest('.exec-reaction-picker').remove()">${e}</button>`
   ).join('');
-  const x = Math.min(event.clientX, window.innerWidth - 280);
-  const y = event.clientY - 60;
-  picker.style.cssText = `position:fixed;top:${y}px;left:${x}px;z-index:9999;`;
+  const x = Math.min(event.clientX - 120, window.innerWidth - 260);
+  let y = event.clientY - 230;
+  if (y < 10) y = event.clientY + 20;
+  picker.style.cssText = `position:fixed;top:${y}px;left:${Math.max(10, x)}px;z-index:9999;`;
   document.body.appendChild(picker);
   setTimeout(() => document.addEventListener('click', () => picker.remove(), { once: true }), 100);
 }
@@ -16605,7 +17317,7 @@ async function execToggleReaction(messageId, emoji) {
             const pill = document.createElement('button');
             pill.className = 'exec-reaction-pill exec-reaction-mine';
             pill.textContent = emoji + ' 1';
-            pill.onclick = function() { execToggleReaction(messageId, emoji); };
+            pill.onclick = function () { execToggleReaction(messageId, emoji); };
             bar.appendChild(pill);
           }
         }
@@ -16621,7 +17333,7 @@ async function execToggleReaction(messageId, emoji) {
     const data = await apiCall('/api/executive/reactions', 'POST', { message_id: messageId, emoji });
     if (!data) return;
 
-    const msg = execMessages.find(function(m) { return m.id === messageId; });
+    const msg = execMessages.find(function (m) { return m.id === messageId; });
     if (msg) msg.reactions = data.reactions || [];
 
     // Re-render bar from server truth
@@ -16673,6 +17385,40 @@ function execShowMessageMenu(event, messageId, isOwn) {
   const rect = event.currentTarget.getBoundingClientRect();
   menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:9999;`;
   document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 100);
+}
+
+// ── Ghost Mode Action Menu ────────────────────────────────────────────
+window.ghostShowMessageMenu = function (event, messageId, isOwn) {
+  event.stopPropagation();
+  document.querySelector('.exec-context-menu')?.remove();
+
+  const menu = document.createElement('div');
+  // Re-use precisely the same sleek floating UI styling as the Real Identity chat
+  menu.className = 'exec-context-menu';
+  const items = [
+    { label: '↩️ Reply', fn: `replyToWhatsAppMsg('${messageId}')` }
+  ];
+  if (!isOwn) {
+    items.push({ label: '😊 React', fn: `showEmojiReactPicker('${messageId}', document.getElementById('bubble-${messageId}'))` });
+  }
+  if (isOwn) {
+    items.push(
+      { label: '✏️ Edit', fn: `editChatMsg('${messageId}')` },
+      { label: '🗑️ Delete', fn: `deleteChatMsg('${messageId}')`, danger: true }
+    );
+  }
+
+  menu.innerHTML = items.map(i =>
+    `<button class="exec-ctx-item ${i.danger ? 'exec-ctx-danger' : ''}"
+             onclick="${i.fn};this.closest('.exec-context-menu').remove()">${i.label}</button>`
+  ).join('');
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${Math.min(rect.left, window.innerWidth - 180)}px;z-index:99999;`;
+  document.body.appendChild(menu);
+
+  // Close menu automatically on any outside click
   setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 100);
 }
 
@@ -16736,6 +17482,7 @@ async function execSendMessage() {
   // Edit mode
   if (execEditingId) {
     if (!content) return;
+    if (!communitySafetyCheck(content)) return; // Enforce rules for edits
     try {
       await apiCall(`/api/executive/messages/${execEditingId}`, 'PATCH', { content });
       const el = document.getElementById(`exec-msg-${execEditingId}`);
@@ -16751,16 +17498,25 @@ async function execSendMessage() {
     return;
   }
 
-  const fileInput = document.getElementById('execFileInput');
-  const file = fileInput?.files?.[0];
-  if (!content && !file) { input?.focus(); return; }
+  const filesToUpload = window.execMultiFiles || [];
+
+  if (!content && filesToUpload.length === 0) { input?.focus(); return; }
+  
+  if (content && !communitySafetyCheck(content)) return; // Enforce rules for new messages
 
   if (input) { input.value = ''; input.style.height = 'auto'; }
 
-  // Optimistic message
+  const replyId = execReplyTo?.id;
+  execCancelReply();
+
+  // Clone to avoid mutation and clear UI early
+  const files = [...filesToUpload];
+  execClearFilePreview();
+
+  // Optimistic message placeholder
   const tempId = `temp-${Date.now()}`;
   const tempMsg = {
-    id: tempId, sender_id: currentUser?.id, content: content || '',
+    id: tempId, sender_id: currentUser?.id, content: content || (files.length ? 'Uploading...' : ''),
     message_type: 'text', created_at: new Date().toISOString(),
     is_deleted: false, is_edited: false,
     users: { id: currentUser?.id, username: currentUser?.username, profile_pic: currentUser?.profile_pic },
@@ -16771,32 +17527,36 @@ async function execSendMessage() {
   execMessages.push(tempMsg);
   execAppendMessage(tempMsg, false);
 
-  const replyId = execReplyTo?.id;
-  execCancelReply();
-  execClearFilePreview();
-
   try {
-    let response;
-    if (file) {
-      const fd = new FormData();
-      if (content) fd.append('content', content);
-      fd.append('media', file);
-      if (replyId) fd.append('reply_to_id', replyId);
-      response = await apiCall('/api/executive/messages', 'POST', fd);
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const fileObj = files[i];
+        const fd = new FormData();
+        if (i === 0 && content) fd.append('content', content);
+        fd.append('media', fileObj.file);
+        if (replyId && i === 0) fd.append('reply_to_id', replyId);
+
+        const response = await apiCall('/api/executive/messages', 'POST', fd);
+        if (response?.message) {
+          execMessages.push(response.message);
+          execAppendMessage(response.message, false);
+        }
+      }
+      document.getElementById(`exec-msg-${tempId}`)?.remove();
+      const idx = execMessages.findIndex(m => m.id === tempId);
+      if (idx >= 0) execMessages.splice(idx, 1);
     } else {
-      response = await apiCall('/api/executive/messages', 'POST', { content, reply_to_id: replyId || undefined });
+      const response = await apiCall('/api/executive/messages', 'POST', { content, reply_to_id: replyId || undefined });
+      if (!response?.message) throw new Error('No message returned');
+
+      document.getElementById(`exec-msg-${tempId}`)?.remove();
+      const idx = execMessages.findIndex(m => m.id === tempId);
+      if (idx >= 0) execMessages.splice(idx, 1);
+
+      execMessages.push(response.message);
+      execAppendMessage(response.message, false);
     }
 
-    if (!response?.message) throw new Error('No message returned');
-
-    // Swap temp → real
-    document.getElementById(`exec-msg-${tempId}`)?.remove();
-    const idx = execMessages.findIndex(m => m.id === tempId);
-    if (idx >= 0) execMessages.splice(idx, 1);
-    execMessages.push(response.message);
-    execAppendMessage(response.message, false);
-
-    if (fileInput) fileInput.value = '';
     execSendStopTyping();
   } catch (err) {
     console.error('Exec send error:', err);
@@ -16810,35 +17570,108 @@ async function execSendMessage() {
 }
 
 // ── File preview ──────────────────────────────────────────────────────
-function execHandleFileSelect(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  const previewBar = document.getElementById('execFilePreviewBar');
-  const previewImg = document.getElementById('execFilePreviewImg');
-  const previewVid = document.getElementById('execFilePreviewVid');
-  const previewName = document.getElementById('execFilePreviewName');
-  if (previewBar) previewBar.style.display = 'flex';
-  if (previewName) previewName.textContent = file.name;
-  if (file.type.startsWith('image/')) {
-    const url = URL.createObjectURL(file);
-    if (previewImg) { previewImg.src = url; previewImg.style.display = 'block'; }
-    if (previewVid) previewVid.style.display = 'none';
-  } else if (file.type.startsWith('video/')) {
-    const url = URL.createObjectURL(file);
-    if (previewVid) { previewVid.src = url; previewVid.style.display = 'block'; }
-    if (previewImg) previewImg.style.display = 'none';
-  } else {
-    if (previewImg) previewImg.style.display = 'none';
-    if (previewVid) previewVid.style.display = 'none';
+window.execMultiFiles = window.execMultiFiles || [];
+
+function execRenderMultiPreviews() {
+  const bar = document.getElementById('execFilePreviewBar');
+  if (!bar) return;
+  if (window.execMultiFiles.length === 0) {
+    bar.style.display = 'none';
+    return;
   }
+  bar.style.display = 'flex';
+  bar.style.flexWrap = 'wrap';
+  bar.style.gap = '8px';
+  bar.style.padding = '8px 12px';
+  bar.innerHTML = window.execMultiFiles.map((fileObj, index) => {
+    let contentHtml = '';
+    // If it's an image and has a url, show image
+    if (fileObj.file.type.startsWith('image/') && fileObj.url) {
+      contentHtml = `<img src="${fileObj.url}" style="width:100%; height:100%; object-fit:cover;">`;
+    } else {
+      // Document/other file: show styled icon card
+      const ext = (fileObj.file.name || '').split('.').pop().toLowerCase();
+      let icon = '📎';
+      if (ext === 'pdf') icon = '📄';
+      else if (['doc', 'docx'].includes(ext)) icon = '📝';
+      else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = '📊';
+      else if (['ppt', 'pptx'].includes(ext)) icon = '📑';
+      else if (['zip', 'rar', '7z'].includes(ext)) icon = '🗜️';
+      else if (['txt'].includes(ext)) icon = '📃';
+      else if (fileObj.file.type.startsWith('video/')) icon = '🎥';
+      else if (fileObj.file.type.startsWith('audio/')) icon = '🎵';
+
+      contentHtml = `
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111827;">
+          <div style="font-size:20px; line-height:1; flex-shrink:0;">${icon}</div>
+          <div style="font-size:8px; line-height:1.2; color:#9ca3af; margin-top:2px; padding:0 2px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; border-top:1px solid rgba(255,255,255,0.1); padding-top:2px;" title="${escapeHtml(fileObj.file.name)}">
+            ${escapeHtml(fileObj.file.name)}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div style="position:relative; width: 60px; height: 60px; border-radius: 6px; overflow: hidden; background: #1a1a2e; border: 1px solid #333; flex-shrink:0;">
+         ${contentHtml}
+         <button onclick="execRemoveFile(${index})" style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer;" title="Remove">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.execRemoveFile = function (index) {
+  URL.revokeObjectURL(window.execMultiFiles[index].url);
+  window.execMultiFiles.splice(index, 1);
+  execRenderMultiPreviews();
+};
+
+function execHandleFileSelect(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  for (const f of files) {
+    // Create preview URL only for images/videos to avoid trying to parse raw text/dlls as URLs
+    let url = null;
+    if (f.type.startsWith('image/') || f.type.startsWith('video/')) {
+      url = URL.createObjectURL(f);
+    }
+    window.execMultiFiles.push({ file: f, url });
+  }
+  execRenderMultiPreviews();
+  event.target.value = '';
 }
 
 function execClearFilePreview() {
-  const bar = document.getElementById('execFilePreviewBar');
-  if (bar) bar.style.display = 'none';
+  if (window.execMultiFiles) {
+    window.execMultiFiles.forEach(f => URL.revokeObjectURL(f.url));
+    window.execMultiFiles = [];
+  }
+  execRenderMultiPreviews();
   const fi = document.getElementById('execFileInput');
   if (fi) fi.value = '';
 }
+
+document.addEventListener('paste', function (e) {
+  if (e.target && e.target.id === 'execInput') {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    let added = false;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          window.execMultiFiles = window.execMultiFiles || [];
+          window.execMultiFiles.push({ file, url: URL.createObjectURL(file) });
+          added = true;
+        }
+      }
+    }
+    if (added) {
+      e.preventDefault();
+      execRenderMultiPreviews();
+    }
+  }
+});
 
 // ── Voice recording ───────────────────────────────────────────────────
 async function execStartVoiceRecord() {
@@ -17556,10 +18389,11 @@ window.deleteDmConversation = async function (userId, username) {
           }
         }
 
-        // API call — DELETE /api/dm/conversation/:userId
-        const data = await apiCall(`/api/dm/conversation/${userId}`, 'DELETE');
+        // API call — DELETE /api/dm/conversations/:userId/clear
+        const data = await apiCall(`/api/dm/conversations/${userId}/clear`, 'DELETE');
         if (data && data.success) {
           showMessage(`🗑️ Conversation with ${displayName} deleted`, 'success');
+          loadDmConversations(); // Reload to move user to mutual follows
         } else {
           // If endpoint not deployed yet, still show success (local-only delete)
           showMessage(`🗑️ Conversation removed`, 'success');
@@ -17572,6 +18406,28 @@ window.deleteDmConversation = async function (userId, username) {
     }
   );
 };
+
+/* ── TOGGLE CONVERSATION MENU (3 DOTS) ── */
+window.toggleDmConvMenu = function(userId, event) {
+  event.stopPropagation();
+  const menuId = `dm-conv-menu-${userId}`;
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+  // Close all other menus first
+  document.querySelectorAll('.dm-conv-dropdown').forEach(m => {
+    if (m.id !== menuId) m.style.display = 'none';
+  });
+  if (menu.style.display === 'none') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+};
+
+// Close conversation menus when clicking outside
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dm-conv-dropdown').forEach(m => m.style.display = 'none');
+});
 
 /* ── SELECT MODE state ── */
 let _dmSelectModeOn = false;
@@ -17728,3 +18584,105 @@ window.closeDmDrawer = function () {
 };
 
 // End of Profile Messages Delete & Select feature
+
+// ─── Global Comment Edit & Delete Functions ───────────────────────
+window.toggleCommentMenu = function(btn) {
+  const menu = btn.nextElementSibling;
+  const isVisible = menu.style.display === 'block';
+  // Close all other menus
+  document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
+  if (!isVisible) {
+    menu.style.display = 'block';
+  }
+};
+
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.vibe-comment-actions') && !e.target.closest('.zv-comment-actions') && !e.target.closest('.rv-comment-actions') && !e.target.closest('.comment-action-menu') && e.target.textContent !== '⋮') {
+    document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
+  }
+});
+
+window.editGlobalComment = async function(commentId, type, parentId) {
+  document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
+  const textEl = document.getElementById(`comment-text-${commentId}`);
+  if (!textEl) return;
+  const oldText = textEl.textContent;
+  const newText = prompt('Edit your comment:', oldText);
+  if (newText === null || newText.trim() === '' || newText === oldText) return;
+
+  try {
+    let endpoint = '';
+    if (type === 'vibe' || type === 'zv') {
+      endpoint = `/api/posts/${parentId}/comments/${commentId}`;
+    } else if (type === 'rv') {
+      endpoint = `/api/realvibes/${parentId}/comments/${commentId}`;
+    }
+
+    const res = await apiCall(endpoint, 'PUT', { content: newText });
+    if (res.success) {
+      textEl.textContent = newText.trim();
+      showMessage('✏️ Comment updated', 'success');
+    } else {
+      showMessage('❌ Failed to update', 'error');
+    }
+  } catch (e) {
+    showMessage('❌ Error updating comment', 'error');
+  }
+};
+
+window.deleteGlobalComment = async function(commentId, type, parentId) {
+  document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
+  if (!confirm('Are you sure you want to delete this comment?')) return;
+
+  try {
+    let endpoint = '';
+    if (type === 'vibe' || type === 'zv') {
+      endpoint = `/api/posts/${parentId}/comments/${commentId}`;
+    } else if (type === 'rv') {
+      endpoint = `/api/realvibes/${parentId}/comments/${commentId}`;
+    }
+
+    const res = await apiCall(endpoint, 'DELETE');
+    if (res.success) {
+      const prefix = type === 'vibe' ? 'vibe-comment-' : (type === 'zv' ? 'zv-comment-' : 'rv-comment-');
+      const itemEl = document.getElementById(prefix + commentId);
+      if (itemEl) itemEl.remove();
+      showMessage('🗑️ Comment deleted', 'success');
+
+      // Update counters if necessary
+      if (type === 'vibe') {
+        document.querySelectorAll('.vibe-card').forEach(card => {
+          if (card.dataset.id == parentId) {
+            const idx = card.dataset.idx;
+            const cntEl = document.getElementById('vcomment_count_' + idx);
+            if (cntEl) cntEl.textContent = Math.max(0, parseInt(cntEl.textContent) - 1);
+            const title = document.getElementById('vibeCommentTitle');
+            if (title && cntEl) title.textContent = `Comments (${cntEl.textContent})`;
+          }
+        });
+      } else if (type === 'rv') {
+        const card = document.querySelector(`.rv-card[data-vibe-id="${parentId}"]`);
+        if (card) {
+          const countSpan = card.querySelectorAll('.rv-action-btn span')[1];
+          if (countSpan) countSpan.textContent = Math.max(0, parseInt(countSpan.textContent) - 1);
+        }
+      } else if (type === 'zv') {
+        const card = document.getElementById(`twitter-post-${parentId}`);
+        if (card) {
+          const countBtn = card.querySelector('.twitter-action-btn:nth-child(2) span:last-child');
+          if (countBtn) countBtn.textContent = Math.max(0, parseInt(countBtn.textContent) - 1);
+        }
+      }
+    } else {
+      showMessage('❌ Failed to delete', 'error');
+    }
+  } catch (e) {
+    showMessage('❌ Error deleting comment', 'error');
+  }
+};
+
+
+
+
+
