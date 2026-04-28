@@ -1127,8 +1127,8 @@ async function refreshCurrentUser() {
     // If API returned success:false or 404, photos were already applied
     // from localStorage above — nothing more to do.
   } catch (e) {
-    console.warn('[refreshCurrentUser] Could not sync:', e.message);
-    // Photos from localStorage were already applied above — they stay visible.
+    // Suppress sync errors to keep console clean, local data remains active
+    // console.debug('[refreshCurrentUser] Could not sync:', e.message);
   }
 }
 
@@ -3512,139 +3512,56 @@ function hideSearchResults() {
 }
 
 async function showUserProfile(userId) {
+  if (!userId) return;
   hideSearchResults();
-
-  // Close any potentially open comment drawers/panels so they don't block the profile view
-  if (typeof closeAllVibeDrawers === 'function') closeAllVibeDrawers();
-  if (typeof closeRvComments === 'function') closeRvComments();
-  if (typeof closeCommentModal === 'function') closeCommentModal();
-  if (typeof _hfCloseCommentPanel === 'function') _hfCloseCommentPanel();
-  const zvDrawer = document.getElementById('zvCommentsDrawer');
-  if (zvDrawer) {
-    zvDrawer.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
   const searchBox = document.getElementById('searchBox');
   if (searchBox) searchBox.value = '';
+
+  // Close any open DM panels / drawers so the profile page is visible
+  if (typeof closeVxSearchPanel === 'function') try { closeVxSearchPanel(); } catch (_) {}
+  if (typeof closeVxDmPanel === 'function') try { closeVxDmPanel(); } catch (_) {}
+  if (typeof closeVxNotifPanel === 'function') try { closeVxNotifPanel(); } catch (_) {}
+  const dmDrawer = document.getElementById('dmDrawer');
+  if (dmDrawer && dmDrawer.style.display !== 'none') {
+    if (typeof closeDmDrawer === 'function') try { closeDmDrawer(); } catch (_) {}
+  }
 
   // Show cached data INSTANTLY if available (no waiting for network)
   const cached = window._mpcCache && window._mpcCache[userId];
   if (cached) {
-    // Prefer _followState if it exists — it is always more up-to-date than _mpcCache
-    // (e.g. user followed from home feed before opening this profile)
     const knownFollowState = _followState[userId];
     if (knownFollowState && knownFollowState.isFollowing !== undefined) {
       cached.isFollowing = knownFollowState.isFollowing;
     }
     _seedFollowState(userId, cached.isFollowing, cached.followersCount || 0);
     showProfilePage(cached, true);
+  } else {
+    // No cache at all — navigate to profile immediately with minimal placeholder
+    showProfilePage({ id: userId, username: '…', bio: '', college: '' }, false);
   }
 
+  // Fetch fresh profile data from server
   try {
     const data = await apiCall(`/api/profile/${userId}`, 'GET');
+    if (!data) { console.error('[showUserProfile] apiCall returned null for', userId); return; }
     if (data.success && data.user) {
-      // Seed follow state from server — but only if no local follow action has been taken
-      // (prevents the profile fetch from reverting a follow the user just did from home feed / vibe cards)
       const localState = _followState[userId];
       const serverIsFollowing = data.user.isFollowing;
       const effectiveIsFollowing = (localState && localState.isFollowing !== undefined)
-        ? localState.isFollowing   // trust local action over server response
+        ? localState.isFollowing
         : serverIsFollowing;
       data.user.isFollowing = effectiveIsFollowing;
       _seedFollowState(userId, effectiveIsFollowing, data.user.followersCount || 0);
-      // Update cache
       if (!window._mpcCache) window._mpcCache = {};
       window._mpcCache[userId] = data.user;
-      // If we already showed cached data, just update counts silently
-      if (cached) {
-        // Update stats in place without full re-render
-        const followersStat = document.getElementById('profileStatFollowers');
-        const followingStat = document.getElementById('profileStatFollowing');
-        const postsStat = document.getElementById('profileStatPosts');
-        if (followersStat) followersStat.textContent = data.user.followersCount || 0;
-        if (followingStat) followingStat.textContent = data.user.followingCount || 0;
-        if (postsStat) postsStat.textContent = data.user.postCount || 0;
-        // Update target user object with ALL fresh fields including profile_pic, cover, hobbies
-        if (window.currentProfileUser) {
-          Object.assign(window.currentProfileUser, data.user);
-          const tu = window.currentProfileUser;
-          // Refresh avatar
-          const avatarImg = document.getElementById('profilePageAvatarImg');
-          const avatarInitial = document.getElementById('profilePageAvatarInitial');
-          if (tu.profile_pic) {
-            if (avatarImg) { avatarImg.src = tu.profile_pic; avatarImg.style.display = 'block'; avatarImg.onerror = function () { this.style.display = 'none'; if (avatarInitial) avatarInitial.style.display = 'block'; }; }
-            if (avatarInitial) avatarInitial.style.display = 'none';
-          } else {
-            if (avatarImg) { avatarImg.src = ''; avatarImg.style.display = 'none'; }
-            if (avatarInitial) avatarInitial.style.display = 'block';
-          }
-          // Refresh cover photo — always use default
-          const coverImg = document.getElementById('profileCoverImg');
-          if (coverImg) {
-            coverImg.src = 'default-cover.png';
-            coverImg.style.display = 'block';
-          }
-          // Refresh bio
-          const bioEl = document.getElementById('profileBio');
-          if (bioEl) bioEl.textContent = tu.bio || 'Tell the world about yourself...';
-          // Refresh college/email
-          const collegeEl = document.getElementById('profileCollege');
-          const regNoEl = document.getElementById('profileRegNo');
-          if (collegeEl) collegeEl.textContent = tu.college || 'No college set';
-          if (regNoEl) regNoEl.textContent = tu.registration_number || tu.email || 'No email';
-          // Refresh hobbies
-          const _isOwnCached = !!(currentUser && tu && (tu.id === currentUser.id || tu.username === currentUser.username));
-          renderProfileHobbies(tu, _isOwnCached);
-
-          // Refresh Note Bubble dynamically for visitors
-          const noteBubble = document.getElementById('profileNoteBubble');
-          const noteText = document.getElementById('profileNoteText');
-          if (noteBubble && noteText) {
-            tu.note = data.user.note; // Ensure targetUser gets the freshest note
-            const isOwnNote = _isOwnCached;
-            const userNote = tu.note;
-            if (userNote) {
-              noteText.textContent = userNote;
-              noteBubble.style.display = 'block';
-            } else if (isOwnNote) {
-              const localNote = localStorage.getItem('vibeNote_' + currentUser.id);
-              noteText.textContent = localNote || '💭 Tap to add a note';
-              noteBubble.style.display = localNote || isOwnNote ? 'block' : 'none';
-            } else {
-              noteBubble.style.display = 'none';
-            }
-          }
-
-          // ── Always sync follow button with FRESH server isFollowing ───
-          const followBtnFresh = document.getElementById('followBtn');
-          if (followBtnFresh && !_isOwnCached) {
-            followBtnFresh.style.display = 'block';
-            if (data.user.isFollowing) {
-              followBtnFresh.innerHTML = '<span class="follow-check-anim">\u2713</span> Following';
-              followBtnFresh.className = 'btn-secondary follow-btn-following';
-            } else {
-              followBtnFresh.innerHTML = 'Follow';
-              followBtnFresh.className = 'btn-primary follow-btn-not-following';
-            }
-            followBtnFresh.style.opacity = '1';
-            followBtnFresh.disabled = false;
-          }
-          // Sync _followState + _mpcCache with authoritative server value
-          _seedFollowState(userId, data.user.isFollowing, data.user.followersCount || 0);
-          if (window._mpcCache && window._mpcCache[userId]) {
-            window._mpcCache[userId].isFollowing = data.user.isFollowing;
-          }
-          // ─────────────────────────────────────────────────────────────
-        }
-      } else {
-        showProfilePage(data.user, true);
-      }
-    } else if (!cached) {
-      showMessage('User not found', 'error');
+      // Show profile page with real data
+      showProfilePage(data.user, true);
+    } else {
+      console.error('[showUserProfile] API returned no user:', data);
+      if (!cached) showMessage('User not found', 'error');
     }
   } catch (error) {
-    console.error('Show profile error:', error);
+    console.error('[showUserProfile] Error loading profile for', userId, ':', error);
     if (!cached) {
       showMessage('Failed to load profile', 'error');
     }
@@ -3979,7 +3896,8 @@ async function fetchProfileStats(targetUser) {
       }
     }
   } catch (e) {
-    console.log('Could not fetch profile stats:', e);
+    // Suppress error stack traces
+    console.debug('Could not fetch profile stats:', e.message);
   }
 }
 
@@ -5768,6 +5686,16 @@ async function loadHomeFeed() {
     }
 
     _hfAllPosts = posts;
+
+    // Pre-cache user data from feed posts so clicking usernames shows profile instantly
+    if (!window._mpcCache) window._mpcCache = {};
+    posts.forEach(p => {
+      const u = p.users;
+      if (u && u.id && !window._mpcCache[u.id]) {
+        window._mpcCache[u.id] = { id: u.id, username: u.username, profile_pic: u.profile_pic, college: u.college };
+      }
+    });
+
     _renderHomeFeedLoop(container, posts);
     _attachHomeFeedLoopScroll(container, posts);
   } catch (err) {
@@ -5884,7 +5812,7 @@ function buildHomeFeedCard(post) {
       <div class="hf-card-header">
         ${avatar}
         <div class="hf-user-info">
-          <span class="hf-username" onclick="showUserProfile('${escapeHtml(userId)}')">${username}</span>
+          <span class="hf-username" onclick="event.stopPropagation();showUserProfile('${escapeHtml(userId)}')">${username}</span>
           ${college}
           <span class="hf-time">${time}</span>
         </div>
@@ -6901,14 +6829,14 @@ function renderPosts(posts) {
       <div class="enhanced-post" id="post-${post.id}" >
        <div class="enhanced-post-header">
          <div class="enhanced-user-info" style="cursor:pointer;">
-           <div class="enhanced-user-avatar" onclick="showUserProfile('${authorId}')">
+           <div class="enhanced-user-avatar" onclick="event.stopPropagation();showUserProfile('${authorId}')">
              ${post.users?.profile_pic ?
         `<img src="${post.users.profile_pic}" class="enhanced-user-avatar">` :
         '👤'
       }
            </div>
            <div class="enhanced-user-details">
-             <div class="enhanced-username" onclick="showUserProfile('${authorId}')" style="cursor:pointer;">@${author}</div>
+             <div class="enhanced-username" onclick="event.stopPropagation();showUserProfile('${authorId}')" style="cursor:pointer;">@${author}</div>
              <div class="enhanced-post-meta">
                ${authorCollege}
                <span>${time}</span>
@@ -7145,7 +7073,7 @@ async function loadComments(postId) {
         }
              </div>
              <div>
-               <div style="font-weight:600;color:#4f74a3;">@${author}</div>
+               <div style="font-weight:600;color:#4f74a3;cursor:pointer;" onclick="showUserProfile('${comment.userId || comment.user_id || comment.users?.id}')">@${author}</div>
              </div>
            </div>
            ${actionHtml}
@@ -10213,7 +10141,7 @@ function renderTwitterPosts(posts) {
       }
             </div>
             <div class="twitter-user-details">
-              <span class="twitter-username">@${author}</span>
+              <span class="twitter-username" onclick="event.stopPropagation();showUserProfile('${authorId}')" style="cursor:pointer;">@${author}</span>
               <span class="twitter-time">· ${time}</span>
             </div>
           </div>
@@ -13515,7 +13443,7 @@ function buildVibeCard(post, idx) {
       <div class="vibe-card-user">
         ${avHtml}
         <div class="vibe-card-usernames">
-          <div class="vibe-card-username" onclick="showUserProfile('${userId}')" style="cursor:pointer;">
+          <div class="vibe-card-username" onclick="event.stopPropagation();showUserProfile('${userId}')" style="cursor:pointer;">
             @${username}
           </div>
         </div>
@@ -16198,6 +16126,20 @@ async function loadDmConversations() {
     let html = '';
     let total = 0;
 
+    // Pre-cache DM contact user data for instant profile navigation
+    if (!window._mpcCache) window._mpcCache = {};
+    convs.forEach(c => {
+      const u = c.otherUser;
+      if (u && u.id && !window._mpcCache[u.id]) {
+        window._mpcCache[u.id] = { id: u.id, username: u.username, profile_pic: u.profile_pic, college: u.college };
+      }
+    });
+    newContacts.forEach(u => {
+      if (u && u.id && !window._mpcCache[u.id]) {
+        window._mpcCache[u.id] = { id: u.id, username: u.username, profile_pic: u.profile_pic, college: u.college };
+      }
+    });
+
     // ── Section: Active Conversations ─────────────────────────────
     if (convs.length) {
       if (newContacts.length) {
@@ -16224,7 +16166,7 @@ async function loadDmConversations() {
                 <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
               </div>
               <div class="dm-contact-info">
-                <div class="dm-contact-name">
+                <div class="dm-contact-name" onclick="event.stopPropagation(); showUserProfile('${other.id}')" style="cursor:pointer;">
                   ${escapeHtml(other.username || 'User')}
                   ${unread > 0 ? `<span class="dm-conv-badge">${unread > 99 ? '99+' : unread}</span>` : ''}
                 </div>
@@ -16275,7 +16217,7 @@ async function loadDmConversations() {
                 <span class="dm-conv-dot ${online ? 'online' : 'offline'}"></span>
               </div>
               <div class="dm-contact-info">
-                <div class="dm-contact-name">
+                <div class="dm-contact-name" onclick="event.stopPropagation(); showUserProfile('${u.id}')" style="cursor:pointer;">
                   ${escapeHtml(u.username || 'User')}
                   <span class="dm-mutual-tag">Mutual</span>
                 </div>
