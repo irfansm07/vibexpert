@@ -18,7 +18,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
-  <link rel="stylesheet" href="mobile.css" />
+
 </head>
 
 <body class="dark-theme">
@@ -2759,7 +2759,7 @@
       </div>
       <div class="lp-footer-bottom">
         <p>&copy; <span id="footerYear1">2025</span> VibeXpert. All rights reserved.</p>
-        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+
         <script>document.getElementById('footerYear1').textContent = new Date().getFullYear();</script>
       </div>
     </footer>
@@ -4856,7 +4856,7 @@
         /* ── RealVibes specific active state (Golden Glow) ── */
         #nav-realvibe.active {
           background: linear-gradient(135deg, rgba(75, 55, 120, 0.95) 0%, rgba(105, 65, 190, 0.95) 100%) !important;
-          box-shadow: 
+          box-shadow:
             0 0 0 2px #FFD700,
             0 0 12px rgba(255, 215, 0, 0.7),
             0 0 25px rgba(255, 215, 0, 0.4),
@@ -4867,15 +4867,18 @@
         }
 
         @keyframes goldenPulse {
-          0%, 100% {
-            box-shadow: 
+
+          0%,
+          100% {
+            box-shadow:
               0 0 0 2px #FFD700,
               0 0 12px rgba(255, 215, 0, 0.6),
               0 0 25px rgba(255, 215, 0, 0.3),
               inset 0 0 8px rgba(255, 215, 0, 0.2) !important;
           }
+
           50% {
-            box-shadow: 
+            box-shadow:
               0 0 0 2px #FFEA00,
               0 0 18px rgba(255, 234, 0, 0.9),
               0 0 35px rgba(255, 215, 0, 0.5),
@@ -5260,9 +5263,11 @@
           <div class="profile-avatar" id="profileAvatar">
             <img id="profileAvatarImg" src="" alt=""
               style="display:none; width:100%; height:100%; border-radius:50%; object-fit:cover;">
-            <span id="profileAvatarInitial" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+            <span id="profileAvatarInitial"
+              style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
               <svg viewBox="0 0 24 24" fill="currentColor" style="width: 26px; height: 26px;">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                <path
+                  d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
               </svg>
             </span>
           </div>
@@ -5555,7 +5560,8 @@
         <!-- Top Bar -->
         <div class="rv-topbar">
           <div class="rv-topbar-left" style="margin-bottom: -20px;">
-            <span class="rv-logo-icon" style="transform: translateY(-16px); display: inline-block; line-height: 0;">✦</span>
+            <span class="rv-logo-icon"
+              style="transform: translateY(-16px); display: inline-block; line-height: 0;">✦</span>
             <div>
               <h1 class="rv-title">RealVibe</h1>
               <p class="rv-subtitle">Exclusive · Premium · Authentic</p>
@@ -7440,7 +7446,7 @@
               line-height: 1.45;
               margin-bottom: 8px;
               display: -webkit-box;
-              -webkit-line-clamp: 2;
+              /* -webkit-line-clamp: 2; */
               -webkit-box-orient: vertical;
               overflow: hidden;
             }
@@ -8400,8 +8406,12 @@
                 </svg>
               </div>
               <span class="vx-about-section-label">About Me</span>
-              <button id="editBioInlineBtn" class="vx-about-edit-btn" onclick="editProfileBio()" style="display:none;" title="Edit Bio">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <button id="editBioInlineBtn" class="vx-about-edit-btn" onclick="editProfileBio()" style="display:none;"
+                title="Edit Bio">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </button>
             </div>
             <p id="profileBio" class="vx-about-bio">Tell the world about yourself...</p>
@@ -8422,8 +8432,12 @@
                 </svg>
               </div>
               <span class="vx-about-section-label">Education</span>
-              <button id="editEduInlineBtn" class="vx-about-edit-btn" onclick="openEditEducationModal()" style="display:none;" title="Edit Education">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <button id="editEduInlineBtn" class="vx-about-edit-btn" onclick="openEditEducationModal()"
+                style="display:none;" title="Edit Education">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </button>
             </div>
 
@@ -8459,8 +8473,12 @@
                 </svg>
               </div>
               <span class="vx-about-section-label">Hobbies & Interests</span>
-              <button id="editHobbiesInlineBtn" class="vx-about-edit-btn" onclick="openEditHobbiesModal()" style="display:none;" title="Edit Hobbies">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <button id="editHobbiesInlineBtn" class="vx-about-edit-btn" onclick="openEditHobbiesModal()"
+                style="display:none;" title="Edit Hobbies">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </button>
             </div>
 
@@ -8707,6 +8725,7 @@
               align-items: center;
               gap: 4px;
             }
+
             .vx-about-edit-btn:hover {
               background: rgba(139, 92, 246, 0.3);
               color: #c4b5fd;
@@ -9900,7 +9919,7 @@
   </div>
   <!-- ══════ /MY VIBES DETAIL MODAL ══════ -->
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+
   <script src="vibemap.js"></script>
 
   <!-- ══ GLOBAL: Profile photo menu functions ══ -->
@@ -17229,10 +17248,10 @@
         const statusEl = document.getElementById('dmDrawerStatus');
         const ring = document.getElementById('dmOnlineRing');
         if (statusEl) statusEl.style.display = 'none';
-        if (ring) { 
+        if (ring) {
           ring.style.display = 'block';
-          ring.style.background = '#22c55e'; 
-          ring.style.boxShadow = '0 0 6px rgba(34,197,94,0.6)'; 
+          ring.style.background = '#22c55e';
+          ring.style.boxShadow = '0 0 6px rgba(34,197,94,0.6)';
         }
       });
     }
