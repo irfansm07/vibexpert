@@ -6472,15 +6472,13 @@
                   // Clear cached profile data for blocked user
                   if (window._mpcCache && window._mpcCache[profileId]) delete window._mpcCache[profileId];
                   if (window._followState && window._followState[profileId]) delete window._followState[profileId];
-                  if (typeof showMessage === 'function') showMessage('🚫 User blocked successfully', 'success');
-                  else alert('User blocked successfully');
+                  alert('🚫 User blocked successfully!');
                   setTimeout(() => {
                     if (typeof window.showPage === 'function') window.showPage('home');
                     else window.location.reload();
                   }, 1000);
                 } catch (e) {
-                  if (typeof showMessage === 'function') showMessage('Failed to block user. Please try again.', 'error');
-                  else alert('Failed to block user. Please try again.');
+                  alert('Failed to block user. The server rejected the request.');
                 }
               };
             }
