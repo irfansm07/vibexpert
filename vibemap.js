@@ -4026,6 +4026,101 @@ function switchProfileTab(tabName, event) {
   else if (tabName === 'orders') loadOrderHistory();
   else if (tabName === 'vibes') loadMyVibes();
   else if (tabName === 'admin') loadAdminOrders();
+  else if (tabName === 'blocked') loadBlockedUsersTab();
+}
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║          BLOCKED USERS — Profile Tab (inline list)          ║
+// ╚══════════════════════════════════════════════════════════════╝
+async function loadBlockedUsersTab() {
+  const list = document.getElementById('blockedUsersTabList');
+  if (!list) return;
+  list.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading blocked users...</p></div>';
+
+  try {
+    const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+    const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+    const res = await fetch(`${B}/api/users/blocked`, { headers: { 'Authorization': `Bearer ${tok}` } });
+    if (!res.ok) throw new Error('Failed');
+    const data = await res.json();
+    const blocked = data.blocked || [];
+
+    if (blocked.length === 0) {
+      list.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;">
+          <div style="font-size:40px;margin-bottom:12px;">✅</div>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">You haven't blocked anyone.</p>
+          <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Block users from their profile or DM chat menu.</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = blocked.map(u => {
+      const avatar = u.profile_pic
+        ? `<img src="${u.profile_pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      const initial = (u.username || u.name || u.email || '?')[0].toUpperCase();
+      const displayName = u.username || u.name || u.email || 'Unknown';
+      const sub = u.college || u.email || '';
+
+      return `
+        <div class="blocked-tab-item" data-uid="${u.id}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.1);border-radius:14px;transition:all 0.2s;">
+          <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(145deg, #4c1d95, #7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;border:2px solid rgba(239,68,68,0.3);overflow:hidden;">
+            ${avatar}
+            <span style="${u.profile_pic ? 'display:none' : 'display:flex'};align-items:center;justify-content:center;width:100%;height:100%;">${initial}</span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;color:rgba(220,210,255,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayName}</div>
+            ${sub ? `<div style="font-size:11.5px;color:rgba(180,160,220,0.5);margin-top:2px;">${sub}</div>` : ''}
+          </div>
+          <button onclick="unblockFromTab('${u.id}', this)" style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;transition:all 0.2s;white-space:nowrap;flex-shrink:0;"
+            onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.borderColor='rgba(239,68,68,0.5)'"
+            onmouseout="this.style.background='rgba(239,68,68,0.1)';this.style.borderColor='rgba(239,68,68,0.3)'"
+          >Unblock</button>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:40px;margin-bottom:12px;">😕</div>
+        <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">Couldn't load blocked users.</p>
+        <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Check your connection and try again.</p>
+      </div>`;
+  }
+}
+
+// Unblock from the profile tab list
+async function unblockFromTab(uid, btn) {
+  btn.textContent = '…';
+  btn.disabled = true;
+  try {
+    const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+    const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+    const res = await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
+    if (!res.ok) throw new Error('Failed');
+    const item = btn.closest('.blocked-tab-item');
+    const userName = item.querySelector('div[style*="font-weight:600"]')?.textContent || 'User';
+    item.style.transition = 'all 0.25s ease';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      item.remove();
+      const list = document.getElementById('blockedUsersTabList');
+      if (list && !list.querySelector('.blocked-tab-item')) {
+        list.innerHTML = `
+          <div style="text-align:center;padding:40px 20px;">
+            <div style="font-size:40px;margin-bottom:12px;">✅</div>
+            <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">You haven't blocked anyone.</p>
+            <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Block users from their profile or DM chat menu.</p>
+          </div>`;
+      }
+    }, 260);
+    if (typeof showMessage === 'function') showMessage(`✅ ${userName} has been unblocked.`, 'success');
+  } catch (err) {
+    btn.textContent = 'Unblock';
+    btn.disabled = false;
+    if (typeof showMessage === 'function') showMessage('Failed to unblock. Try again.', 'error');
+  }
 }
 
 // ╔══════════════════════════════════════════════════════════════╗

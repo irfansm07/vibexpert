@@ -8858,6 +8858,7 @@
               Shipping</button>
             <button class="profile-tab-btn" id="ordersTabBtn" onclick="switchProfileTab('orders', event)">📦 My
               Orders</button>
+            <button class="profile-tab-btn" id="blockedTabBtn" onclick="switchProfileTab('blocked', event)" style="display:none;">🚫 Blocked</button>
 
           </div>
 
@@ -9015,6 +9016,25 @@
                 <h4 style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:10px;">
                   Activity Heatmap</h4>
                 <div id="activityHeatmap" style="display:grid;grid-template-columns:repeat(26,1fr);gap:2px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- ══ BLOCKED USERS TAB ══ -->
+            <div id="profileTabBlocked" class="tab-pane">
+              <div style="padding:16px 0;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                  <span style="font-size:22px;">🚫</span>
+                  <div>
+                    <h3 style="margin:0;font-size:17px;font-weight:700;color:#fca5a5;">Blocked Users</h3>
+                    <p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,0.5);">Blocked users can't see your profile, message you, or interact with your posts.</p>
+                  </div>
+                </div>
+                <div id="blockedUsersTabList" style="display:flex;flex-direction:column;gap:6px;">
+                  <div class="empty-state">
+                    <div class="empty-icon">✅</div>
+                    <p>Loading...</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -10285,7 +10305,7 @@
               profileHamburgerBtn.style.display = isOwn ? 'flex' : 'none';
             }
 
-            const ownOnlyTabs = ['messagesTabBtn', 'cartTabBtn', 'shippingTabBtn', 'ordersTabBtn'];
+            const ownOnlyTabs = ['messagesTabBtn', 'cartTabBtn', 'shippingTabBtn', 'ordersTabBtn', 'blockedTabBtn'];
             ownOnlyTabs.forEach(function (id) {
               const btn = document.getElementById(id);
               if (btn) btn.style.display = isOwn ? '' : 'none';
