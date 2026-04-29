@@ -6441,8 +6441,6 @@
             });
 
             function promptBlockUser() {
-              const btn = document.getElementById('otherUserMenuBtn');
-              if (btn) btn.style.display = 'none'; // visual hack optionally
               const profileId = window.currentProfileUserId;
               if (!profileId) return;
 
@@ -6452,7 +6450,7 @@
                 <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(239, 68, 68, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
                   <div style="font-size:32px;margin-bottom:12px;">🚫</div>
                   <h3 style="margin:0 0 8px;font-size:20px;color:#fca5a5;">Block this user?</h3>
-                  <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">You will no longer be able to interact with this user.</p>
+                  <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">They won't be able to see your profile, message you, or interact with your posts. You can unblock anytime from Settings → Blocked Users.</p>
                   <div style="display:flex;gap:12px;justify-content:center;">
                     <button style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" id="cancelBlockBtn">Cancel</button>
                     <button style="flex:1;padding:12px;border-radius:12px;background:rgba(239, 68, 68, 0.2);border:1px solid rgba(239, 68, 68, 0.5);color:#fca5a5;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'" id="confirmBlockBtn">Confirm Block</button>
@@ -6463,7 +6461,6 @@
 
               document.getElementById('cancelBlockBtn').onclick = () => {
                 document.body.removeChild(modal);
-                if (btn) btn.style.display = 'flex';
               };
               document.getElementById('confirmBlockBtn').onclick = async () => {
                 document.body.removeChild(modal);
@@ -6472,7 +6469,10 @@
                   const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
                   const res = await fetch(`${B}/api/users/${profileId}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
                   if (!res.ok) throw new Error('Failed');
-                  if (typeof showMessage === 'function') showMessage('User blocked successfully', 'success');
+                  // Clear cached profile data for blocked user
+                  if (window._mpcCache && window._mpcCache[profileId]) delete window._mpcCache[profileId];
+                  if (window._followState && window._followState[profileId]) delete window._followState[profileId];
+                  if (typeof showMessage === 'function') showMessage('🚫 User blocked successfully', 'success');
                   else alert('User blocked successfully');
                   setTimeout(() => {
                     if (typeof window.showPage === 'function') window.showPage('home');
@@ -7667,19 +7667,26 @@
               try {
                 const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
                 const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-                await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
+                const res = await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
+                if (!res.ok) throw new Error('Failed');
                 // Remove the card with animation
                 const item = btn.closest('.bum-item');
+                const userName = item.querySelector('.bum-name')?.textContent || 'User';
                 item.style.transition = 'all 0.25s ease';
                 item.style.opacity = '0'; item.style.transform = 'translateX(20px)';
                 setTimeout(() => {
                   item.remove();
                   const list = document.getElementById('bumList');
                   if (!list.querySelector('.bum-item')) {
-                    list.innerHTML = '<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.</p></div>';
+                    list.innerHTML = '<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.<br><span style="font-size:12px;opacity:0.6;">You haven\'t blocked anyone.</span></p></div>';
                   }
                 }, 260);
-              } catch (err) { btn.textContent = 'Unblock'; btn.disabled = false; }
+                if (typeof showMessage === 'function') showMessage(`✅ ${userName} has been unblocked.`, 'success');
+              } catch (err) {
+                btn.textContent = 'Unblock';
+                btn.disabled = false;
+                if (typeof showMessage === 'function') showMessage('Failed to unblock. Try again.', 'error');
+              }
             }
 
             /* ════════════════════════════════════════
@@ -16809,21 +16816,51 @@
         const uid = window._vxCurrentDmUid;
         const name = document.getElementById('vxChatUserName')?.textContent || 'this user';
         if (!uid) return;
-        const confirmed = window.confirm(`Block ${name}? They won't be able to message you.`);
-        if (!confirmed) return;
-        const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-        const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-        try {
-          await fetch(`${B}/api/users/${uid}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' } });
-          // Go back to DM list
-          window.vxCloseDmChat();
-          // Show brief toast
-          const toast = document.createElement('div');
-          toast.textContent = `🚫 ${name} has been blocked.`;
-          toast.style.cssText = 'position:fixed;bottom:90px;right:108px;background:rgba(239,68,68,0.9);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;animation:vxFadeIn 0.2s ease;';
-          document.body.appendChild(toast);
-          setTimeout(() => toast.remove(), 3000);
-        } catch (err) { alert('Could not block user. Try again.'); }
+
+        // Create styled confirmation modal
+        const confirmModal = document.createElement('div');
+        confirmModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999999;';
+        confirmModal.innerHTML = `
+          <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(239, 68, 68, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
+            <div style="font-size:32px;margin-bottom:12px;">🚫</div>
+            <h3 style="margin:0 0 8px;font-size:20px;color:#fca5a5;">Block ${name}?</h3>
+            <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">They won't be able to message you or see your profile. You can unblock anytime from your profile menu.</p>
+            <div style="display:flex;gap:12px;justify-content:center;">
+              <button id="vxBlockCancelBtn" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
+              <button id="vxBlockConfirmBtn" style="flex:1;padding:12px;border-radius:12px;background:rgba(239, 68, 68, 0.2);border:1px solid rgba(239, 68, 68, 0.5);color:#fca5a5;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'">Block</button>
+            </div>
+          </div>`;
+        document.body.appendChild(confirmModal);
+
+        confirmModal.addEventListener('click', function (e) { if (e.target === confirmModal) confirmModal.remove(); });
+        document.getElementById('vxBlockCancelBtn').onclick = () => confirmModal.remove();
+        document.getElementById('vxBlockConfirmBtn').onclick = async () => {
+          confirmModal.remove();
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
+          const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+          try {
+            const res = await fetch(`${B}/api/users/${uid}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' } });
+            if (!res.ok) throw new Error('Failed');
+            // Clear cached data
+            if (window._mpcCache && window._mpcCache[uid]) delete window._mpcCache[uid];
+            if (window._followState && window._followState[uid]) delete window._followState[uid];
+            // Go back to DM list
+            window.vxCloseDmChat();
+            // Show brief toast
+            if (typeof showMessage === 'function') {
+              showMessage(`🚫 ${name} has been blocked.`, 'success');
+            } else {
+              const toast = document.createElement('div');
+              toast.textContent = `🚫 ${name} has been blocked.`;
+              toast.style.cssText = 'position:fixed;bottom:90px;right:108px;background:rgba(239,68,68,0.9);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;animation:vxFadeIn 0.2s ease;';
+              document.body.appendChild(toast);
+              setTimeout(() => toast.remove(), 3000);
+            }
+          } catch (err) {
+            if (typeof showMessage === 'function') showMessage('Could not block user. Try again.', 'error');
+            else alert('Could not block user. Try again.');
+          }
+        };
       };
 
       window.vxCloseDmChat = function () {
