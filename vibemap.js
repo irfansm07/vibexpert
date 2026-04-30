@@ -4040,7 +4040,7 @@ async function loadBlockedUsersTab() {
   try {
     const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
     const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-    const res = await fetch(`${B}/api/users/blocked`, { headers: { 'Authorization': `Bearer ${tok}` } });
+    const res = await fetch(`${B}/api/users/blocked?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${tok}` } });
     if (!res.ok) throw new Error('Failed');
     const data = await res.json();
     const blocked = data.blocked || [];
