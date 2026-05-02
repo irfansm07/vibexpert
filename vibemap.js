@@ -3642,6 +3642,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   if (nameEl) nameEl.textContent = targetUser.name || targetUser.username;
   if (userEl) userEl.textContent = `@${targetUser.username}`;
 
+
   // Ownership Visibility
   const isOwn = currentUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
 
@@ -3774,10 +3775,8 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
 
   // Toggle inline edit buttons in the About Me card
   const editBioInlineBtn = document.getElementById('editBioInlineBtn');
-  const editEduInlineBtn = document.getElementById('editEduInlineBtn');
   const editHobbiesInlineBtn = document.getElementById('editHobbiesInlineBtn');
   if (editBioInlineBtn) editBioInlineBtn.style.display = isOwn ? 'flex' : 'none';
-  if (editEduInlineBtn) editEduInlineBtn.style.display = isOwn ? 'flex' : 'none';
   if (editHobbiesInlineBtn) editHobbiesInlineBtn.style.display = isOwn ? 'flex' : 'none';
 
   // Handle Follow Button
@@ -5366,28 +5365,23 @@ function openEditEducationModal() {
   if (!currentUser) return;
   const modal = document.getElementById('educationEditModal');
   const collegeInput = document.getElementById('modalCollegeText');
-  const mailInput = document.getElementById('modalMailText');
 
   if (modal) {
     if (collegeInput) collegeInput.value = currentUser.college || '';
-    if (mailInput) mailInput.value = currentUser.registration_number || '';
     modal.style.display = 'flex';
   }
 }
 
 async function saveEducationFromModal() {
   const collegeInput = document.getElementById('modalCollegeText');
-  const mailInput = document.getElementById('modalMailText');
 
   if (!currentUser) return;
 
   const newCollege = collegeInput ? collegeInput.value.trim() : (currentUser.college || '');
-  const newMail = mailInput ? mailInput.value.trim() : (currentUser.registration_number || '');
 
   const collegeChanged = currentUser.college !== newCollege;
-  const mailChanged = currentUser.registration_number !== newMail;
 
-  if (!collegeChanged && !mailChanged) {
+  if (!collegeChanged) {
     closeModal('educationEditModal');
     return;
   }
@@ -5400,8 +5394,6 @@ async function saveEducationFromModal() {
     };
     // Only send college if it actually changed (server manages college via verification)
     if (collegeChanged) updatePayload.college = newCollege;
-    // Only send registration_number if it actually changed (server locks it after college join)
-    if (mailChanged) updatePayload.registration_number = newMail;
 
     const result = await apiCall('/api/profile/update', 'PUT', updatePayload);
 
