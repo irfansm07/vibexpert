@@ -1586,7 +1586,7 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
 
       // ── Expired / invalid token — auto-logout & redirect to login ──
       if ((response.status === 401 || response.status === 403) &&
-          /token|expired|unauthorized/i.test(data.error || data.message || '')) {
+        /token|expired|unauthorized/i.test(data.error || data.message || '')) {
         console.warn('🔒 Session expired — logging out automatically.');
         // Clear stale credentials
         localStorage.removeItem('authToken');
@@ -2373,6 +2373,49 @@ function scrollToBottom() {
 // COMMUNITIES & CHAT
 // ========================================
 
+function showCollegeSearch() {
+  const userSearch = document.querySelector('.header-search-wrap.search-container');
+  const collegeSearch = document.getElementById('collegeSearchWrap');
+  if (userSearch) userSearch.style.display = 'none';
+  if (collegeSearch) collegeSearch.style.display = '';
+}
+
+function hideCollegeSearch() {
+  const userSearch = document.querySelector('.header-search-wrap.search-container');
+  const collegeSearch = document.getElementById('collegeSearchWrap');
+  if (userSearch) userSearch.style.display = '';
+  if (collegeSearch) collegeSearch.style.display = 'none';
+  const inp = document.getElementById('collegeSearchInput');
+  if (inp) inp.value = '';
+}
+
+function filterCollegeCards(query) {
+  const q = (query || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('collegeSearchClear');
+  if (clearBtn) clearBtn.style.display = q ? '' : 'none';
+  const grid = document.getElementById('collegeCardsGrid');
+  if (!grid) return;
+  let anyVisible = false;
+  grid.querySelectorAll('.card').forEach(card => {
+    const match = !q || (card.getAttribute('data-search') || '').includes(q);
+    card.style.display = match ? '' : 'none';
+    if (match) anyVisible = true;
+  });
+  let noRes = document.getElementById('collegeNoResults');
+  if (!anyVisible) {
+    if (!noRes) {
+      noRes = document.createElement('p');
+      noRes.id = 'collegeNoResults';
+      noRes.style.cssText = 'color:rgba(255,255,255,0.4);font-size:14px;text-align:center;width:100%;margin:20px 0;grid-column:1/-1;';
+      noRes.textContent = 'No college found. Try a different name.';
+      grid.appendChild(noRes);
+    }
+    noRes.style.display = '';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
+
 function loadCommunities() {
   const container = document.getElementById('communitiesContainer');
   if (!container) return;
@@ -2385,99 +2428,99 @@ function loadCommunities() {
 
     container.innerHTML = `
     <div class="join-community-container"
-        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 20px; overflow-y: auto;">
+        style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; padding: 20px; overflow-y: auto;">
         <div class="join-icon" style="font-size: 80px; margin-bottom: 10px; margin-top: 40px;">🤝</div>
         <h2 style="margin-bottom: 5px; color: var(--text-color);">Join a Community</h2>
         <p style="margin-bottom: 20px; color: var(--text-muted); max-width: 400px;">Connect with students from your
             university. Select your college to start chatting and sharing vibes!</p>
             
         <h2 class="title" style="margin-top: 10px; margin-bottom: 15px; color: var(--text-color);">500+ Active Universities</h2>
-        <div class="cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; padding-bottom: 40px;">
-          <div class="card" onclick="selectUniversity('nit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+        <div class="cards" id="collegeCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 900px; padding-bottom: 40px;">
+          <div class="card" onclick="selectUniversity('nit')" data-search="nit colleges national institutes of technology nit trichy nit warangal nit surathkal nit calicut nit rourkela nit kurukshetra nit durgapur nit allahabad nit nagpur nit bhopal nit jaipur nit silchar nit agartala nit hamirpur nit srinagar nit patna nit raipur nit surat nit delhi nit manipur nit goa" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏛️</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">NIT Colleges</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">National Institutes of Technology</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('iit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('iit')" data-search="iit colleges indian institutes of technology iit bombay iit delhi iit madras iit kanpur iit kharagpur iit roorkee iit guwahati iit hyderabad iit indore iit jodhpur iit patna iit ropar iit bhubaneswar iit gandhinagar iit tirupati iit palakkad iit dharwad iit jammu iit bhilai iit goa iit mandi iit varanasi bhu" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏰</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">IIT Colleges</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Indian Institutes of Technology</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('vit')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('vit')" data-search="vit colleges vellore institute of technology vit vellore vit bhopal vit chennai vit amaravati vit ap vit pune" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🎓</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">VIT Colleges</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">VIT Bhopal & Other Campuses</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('iiser')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('iiser')" data-search="iiser research institutes indian institute of science education iiser pune iiser kolkata iiser mohali iiser bhopal iiser thiruvananthapuram iiser tirupati iiser berhampur iisc bangalore" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔬</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">IISER</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Research Institutes</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('bits')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('bits')" data-search="bits pilani birla institute of technology science bits goa bits hyderabad bits dubai bits mesra bits noida bits jaipur" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">⚙️</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">BITS</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Pilani & Campuses</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('amrita')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('amrita')" data-search="amrita vishwa vidyapeetham amrita university amrita coimbatore amrita kochi amrita chennai amrita bengaluru amrita amaravati amrita mysuru" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌸</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Amrita</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Vishwa Vidyapeetham</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('symbiosis')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('symbiosis')" data-search="symbiosis institutes sit siu symbiosis international university symbiosis pune symbiosis law school symbiosis nagpur symbiosis hyderabad symbiosis noida symbiosis bangalore" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🤝</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Symbiosis</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Institutes</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('top_universities')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('top_universities')" data-search="top universities premier institutions jadavpur anna osmania calcutta mumbai pune banaras bhu hyderabad university mysore manipal thapar srm jain christ du delhi university" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏆</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Top Universities</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Premier Institutions</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('delhi_colleges')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('delhi_colleges')" data-search="delhi colleges university of delhi du st stephens miranda house lady shri ram lsr hindu college kirori mal ramjas hansraj daulat ram gargi pgdav ip university indraprastha jamia millia ignou ambedkar aiims delhi" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🏙️</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Delhi Colleges</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">University of Delhi</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('engineering')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('engineering')" data-search="engineering colleges coep pune mnnit allahabad pec chandigarh rvce bangalore msrit psg coimbatore thapar patiala dtu nsit iiit hyderabad iiit delhi iiit allahabad iiit bangalore lnmiit jaipur daiict gandhinagar" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔧</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Engineering</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Engineering Colleges</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('private_universities')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('private_universities')" data-search="private universities manipal shiv nadar op jindal ashoka bennett lpu lovely professional chandigarh university upes dehradun presidency reva nitte kl srm ktr jss sharda galgotias mdi gurgaon xlri ximb" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">💼</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Private Universities</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Top Private Institutions</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('agricultural')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('agricultural')" data-search="agricultural universities iari icar gbpuat pantnagar pau ludhiana angrau guntur tnau coimbatore bckv kalyani ouat bhubaneswar jnkvv jabalpur rau pusa kerala agricultural university sam higginbottom shuats" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌾</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Agricultural</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Agricultural Universities</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('medical')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('medical')" data-search="medical colleges aiims delhi aiims bhopal aiims jodhpur aiims rishikesh aiims patna aiims raipur maulana azad grant medical kmc kasturba manipal jipmer pondicherry afmc pune bmc bangalore scb cuttack mamc kgmu lucknow pgimer chandigarh cmch vellore christian medical college" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">⚕️</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Medical</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Medical Colleges</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('research')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('research')" data-search="research institutes tifr tata institute fundamental research iisc indian institute of science ncbs insa isro drdo csir iict iicb ncl barc hbni imsc icts rri jncasr niser bhubaneswar" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🔭</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Research</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Research Institutes</p>
             <button style="padding: 8px 20px; border-radius: 20px; background: rgba(79, 116, 163, 0.2); border: 1px solid rgba(79, 116, 163, 0.4); color: white; cursor: pointer; width: 100%;">Join</button>
           </div>
-          <div class="card" onclick="selectUniversity('other')" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
+          <div class="card" onclick="selectUniversity('other')" data-search="other universities central state jnu jawaharlal nehru hcu hyderabad central amu aligarh muslim bhu allahabad rajasthan university mdu rohtak gndu amritsar kumaun lucknow university agra vikram ujjain barkatullah bhopal rani durgavati jabalpur devi ahilya indore mits gwalior" style="background: rgba(15, 25, 45, 0.6); border: 1px solid rgba(79, 116, 163, 0.2); padding: 20px; border-radius: 15px; cursor: pointer; transition: transform 0.2s;">
             <div class="icon" style="font-size: 35px; margin-bottom: 10px;">🌟</div>
             <h3 style="color: var(--text-color); margin-bottom: 5px; font-size: 18px;">Other Universities</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Central & State Universities</p>
@@ -2486,6 +2529,7 @@ function loadCommunities() {
         </div>
     </div>
     `;
+    showCollegeSearch();
     return;
   }
 
@@ -3518,12 +3562,12 @@ async function showUserProfile(userId) {
   if (searchBox) searchBox.value = '';
 
   // Close any open DM panels / drawers so the profile page is visible
-  if (typeof closeVxSearchPanel === 'function') try { closeVxSearchPanel(); } catch (_) {}
-  if (typeof closeVxDmPanel === 'function') try { closeVxDmPanel(); } catch (_) {}
-  if (typeof closeVxNotifPanel === 'function') try { closeVxNotifPanel(); } catch (_) {}
+  if (typeof closeVxSearchPanel === 'function') try { closeVxSearchPanel(); } catch (_) { }
+  if (typeof closeVxDmPanel === 'function') try { closeVxDmPanel(); } catch (_) { }
+  if (typeof closeVxNotifPanel === 'function') try { closeVxNotifPanel(); } catch (_) { }
   const dmDrawer = document.getElementById('dmDrawer');
   if (dmDrawer && dmDrawer.style.display !== 'none') {
-    if (typeof closeDmDrawer === 'function') try { closeDmDrawer(); } catch (_) {}
+    if (typeof closeDmDrawer === 'function') try { closeDmDrawer(); } catch (_) { }
   }
 
   // Show cached data INSTANTLY if available (no waiting for network)
@@ -4026,101 +4070,6 @@ function switchProfileTab(tabName, event) {
   else if (tabName === 'orders') loadOrderHistory();
   else if (tabName === 'vibes') loadMyVibes();
   else if (tabName === 'admin') loadAdminOrders();
-  else if (tabName === 'blocked') loadBlockedUsersTab();
-}
-
-// ╔══════════════════════════════════════════════════════════════╗
-// ║          BLOCKED USERS — Profile Tab (inline list)          ║
-// ╚══════════════════════════════════════════════════════════════╝
-async function loadBlockedUsersTab() {
-  const list = document.getElementById('blockedUsersTabList');
-  if (!list) return;
-  list.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading blocked users...</p></div>';
-
-  try {
-    const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-    const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-    const res = await fetch(`${B}/api/users/blocked?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${tok}` } });
-    if (!res.ok) throw new Error('Failed');
-    const data = await res.json();
-    const blocked = data.blocked || [];
-
-    if (blocked.length === 0) {
-      list.innerHTML = `
-        <div style="text-align:center;padding:40px 20px;">
-          <div style="font-size:40px;margin-bottom:12px;">✅</div>
-          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">You haven't blocked anyone.</p>
-          <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Block users from their profile or DM chat menu.</p>
-        </div>`;
-      return;
-    }
-
-    list.innerHTML = blocked.map(u => {
-      const avatar = u.profile_pic
-        ? `<img src="${u.profile_pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        : '';
-      const initial = (u.username || u.name || u.email || '?')[0].toUpperCase();
-      const displayName = u.username || u.name || u.email || 'Unknown';
-      const sub = u.college || u.email || '';
-
-      return `
-        <div class="blocked-tab-item" data-uid="${u.id}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.1);border-radius:14px;transition:all 0.2s;">
-          <div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(145deg, #4c1d95, #7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;border:2px solid rgba(239,68,68,0.3);overflow:hidden;">
-            ${avatar}
-            <span style="${u.profile_pic ? 'display:none' : 'display:flex'};align-items:center;justify-content:center;width:100%;height:100%;">${initial}</span>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:14px;font-weight:600;color:rgba(220,210,255,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayName}</div>
-            ${sub ? `<div style="font-size:11.5px;color:rgba(180,160,220,0.5);margin-top:2px;">${sub}</div>` : ''}
-          </div>
-          <button onclick="unblockFromTab('${u.id}', this)" style="padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;transition:all 0.2s;white-space:nowrap;flex-shrink:0;"
-            onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.borderColor='rgba(239,68,68,0.5)'"
-            onmouseout="this.style.background='rgba(239,68,68,0.1)';this.style.borderColor='rgba(239,68,68,0.3)'"
-          >Unblock</button>
-        </div>`;
-    }).join('');
-  } catch (err) {
-    list.innerHTML = `
-      <div style="text-align:center;padding:40px 20px;">
-        <div style="font-size:40px;margin-bottom:12px;">😕</div>
-        <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">Couldn't load blocked users.</p>
-        <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Check your connection and try again.</p>
-      </div>`;
-  }
-}
-
-// Unblock from the profile tab list
-async function unblockFromTab(uid, btn) {
-  btn.textContent = '…';
-  btn.disabled = true;
-  try {
-    const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-    const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-    const res = await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
-    if (!res.ok) throw new Error('Failed');
-    const item = btn.closest('.blocked-tab-item');
-    const userName = item.querySelector('div[style*="font-weight:600"]')?.textContent || 'User';
-    item.style.transition = 'all 0.25s ease';
-    item.style.opacity = '0';
-    item.style.transform = 'translateX(20px)';
-    setTimeout(() => {
-      item.remove();
-      const list = document.getElementById('blockedUsersTabList');
-      if (list && !list.querySelector('.blocked-tab-item')) {
-        list.innerHTML = `
-          <div style="text-align:center;padding:40px 20px;">
-            <div style="font-size:40px;margin-bottom:12px;">✅</div>
-            <p style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;">You haven't blocked anyone.</p>
-            <p style="color:rgba(255,255,255,0.35);font-size:12px;margin:6px 0 0;">Block users from their profile or DM chat menu.</p>
-          </div>`;
-      }
-    }, 260);
-    if (typeof showMessage === 'function') showMessage(`✅ ${userName} has been unblocked.`, 'success');
-  } catch (err) {
-    btn.textContent = 'Unblock';
-    btn.disabled = false;
-    if (typeof showMessage === 'function') showMessage('Failed to unblock. Try again.', 'error');
-  }
 }
 
 // ╔══════════════════════════════════════════════════════════════╗
@@ -5724,6 +5673,7 @@ let _hfAllPosts = [];          // master list of fetched posts
 let _hfLoopScrolling = false;  // debounce flag for silent jump-back
 
 async function loadHomeFeed() {
+  hideCollegeSearch();
   if (_homeFeedLoading) return;
   _homeFeedLoading = true;
 
@@ -8630,6 +8580,7 @@ function loadTrending() {
 }
 
 async function loadVibeshopPage() {
+  hideCollegeSearch();
   console.log('🛍️ Redirecting to VibeShop with SSO...');
 
   if (!currentUser) {
@@ -9475,6 +9426,7 @@ function showRvLiveToast() {
 
 // ── Load feed ──────────────────────────────────────────────────
 async function loadRealVibes() {
+  hideCollegeSearch();
   const feed = document.getElementById('rvFeed');
   if (!feed) return;
 
@@ -9727,7 +9679,7 @@ function renderRvComments(comments) {
     const likeCount = typeof c.likes === 'number' ? c.likes : (c.likes_users?.length || 0);
     const clickAttr = uid ? `onclick="showUserProfile('${uid}')" style="cursor:pointer;"` : '';
     const av = u.profile_pic ? `<img src="${u.profile_pic}" alt="">` : `<span>${(u.username || 'U').charAt(0).toUpperCase()}</span>`;
-    
+
     let actionHtml = '';
     if (isOwn) {
       actionHtml = `
@@ -14987,7 +14939,7 @@ async function openDmDrawer(userId) {
     if (statusEl) {
       // The user wants the text completely removed in all scenarios
       statusEl.style.display = 'none';
-      
+
       const ring = document.getElementById('dmOnlineRing');
       if (online) {
         if (ring) {
@@ -17614,7 +17566,7 @@ async function execSendMessage() {
   const filesToUpload = window.execMultiFiles || [];
 
   if (!content && filesToUpload.length === 0) { input?.focus(); return; }
-  
+
   if (content && !communitySafetyCheck(content)) return; // Enforce rules for new messages
 
   if (input) { input.value = ''; input.style.height = 'auto'; }
@@ -18521,7 +18473,7 @@ window.deleteDmConversation = async function (userId, username) {
 };
 
 /* ── TOGGLE CONVERSATION MENU (3 DOTS) ── */
-window.toggleDmConvMenu = function(userId, event) {
+window.toggleDmConvMenu = function (userId, event) {
   event.stopPropagation();
   const menuId = `dm-conv-menu-${userId}`;
   const menu = document.getElementById(menuId);
@@ -18699,7 +18651,7 @@ window.closeDmDrawer = function () {
 // End of Profile Messages Delete & Select feature
 
 // ─── Global Comment Edit & Delete Functions ───────────────────────
-window.toggleCommentMenu = function(btn) {
+window.toggleCommentMenu = function (btn) {
   const menu = btn.nextElementSibling;
   const isVisible = menu.style.display === 'block';
   // Close all other menus
@@ -18716,7 +18668,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-window.editGlobalComment = async function(commentId, type, parentId) {
+window.editGlobalComment = async function (commentId, type, parentId) {
   document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
   const textEl = document.getElementById(`comment-text-${commentId}`);
   if (!textEl) return;
@@ -18744,7 +18696,7 @@ window.editGlobalComment = async function(commentId, type, parentId) {
   }
 };
 
-window.deleteGlobalComment = async function(commentId, type, parentId) {
+window.deleteGlobalComment = async function (commentId, type, parentId) {
   document.querySelectorAll('.comment-action-menu').forEach(m => m.style.display = 'none');
   if (!confirm('Are you sure you want to delete this comment?')) return;
 
@@ -18794,8 +18746,3 @@ window.deleteGlobalComment = async function(commentId, type, parentId) {
     showMessage('❌ Error deleting comment', 'error');
   }
 };
-
-
-
-
-
