@@ -5104,6 +5104,22 @@
         <div class="search-results header-search-results" id="searchResults" style="display:none;"></div>
       </div>
 
+      <!-- ══ COLLEGE SEARCH BAR (shown only on Join Community screen) ══ -->
+      <div id="collegeSearchWrap" class="header-search-wrap" style="display:none;">
+        <div class="header-search-inner">
+          <svg class="header-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input type="text" id="collegeSearchInput" class="header-search-input"
+            placeholder="Search college or university (e.g. IIT Bombay, BITS Pilani...)"
+            oninput="filterCollegeCards(this.value)">
+          <div class="header-search-clear" id="collegeSearchClear"
+            onclick="document.getElementById('collegeSearchInput').value='';filterCollegeCards('');"
+            style="display:none;">✕</div>
+        </div>
+      </div>
+
       <style>
         /* ── Search results dropdown ── */
         .header-search-results {
@@ -6407,9 +6423,6 @@
           </button>
 
           <div class="profile-hamburger-menu" id="otherUserDropdownMenu" style="display:none;">
-            <div class="phm-item phm-blocked-item" onclick="promptBlockUser(); closeOtherUserMenu()">
-              <span class="phm-icon">🚫</span> Block User
-            </div>
             <div class="phm-item" style="color: #fca5a5;" onclick="promptReportUser(); closeOtherUserMenu()">
               <span class="phm-icon">🚩</span> Report User
             </div>
@@ -6440,48 +6453,7 @@
               }
             });
 
-            function promptBlockUser() {
-              const profileId = window.currentProfileUserId;
-              if (!profileId) return;
 
-              const modal = document.createElement('div');
-              modal.style = "position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999999;";
-              modal.innerHTML = `
-                <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(239, 68, 68, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
-                  <div style="font-size:32px;margin-bottom:12px;">🚫</div>
-                  <h3 style="margin:0 0 8px;font-size:20px;color:#fca5a5;">Block this user?</h3>
-                  <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">They won't be able to see your profile, message you, or interact with your posts. You can unblock anytime from Settings → Blocked Users.</p>
-                  <div style="display:flex;gap:12px;justify-content:center;">
-                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" id="cancelBlockBtn">Cancel</button>
-                    <button style="flex:1;padding:12px;border-radius:12px;background:rgba(239, 68, 68, 0.2);border:1px solid rgba(239, 68, 68, 0.5);color:#fca5a5;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'" id="confirmBlockBtn">Confirm Block</button>
-                  </div>
-                </div>
-              `;
-              document.body.appendChild(modal);
-
-              document.getElementById('cancelBlockBtn').onclick = () => {
-                document.body.removeChild(modal);
-              };
-              document.getElementById('confirmBlockBtn').onclick = async () => {
-                document.body.removeChild(modal);
-                try {
-                  const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-                  const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-                  const res = await fetch(`${B}/api/users/${profileId}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
-                  if (!res.ok) throw new Error('Failed');
-                  // Clear cached profile data for blocked user
-                  if (window._mpcCache && window._mpcCache[profileId]) delete window._mpcCache[profileId];
-                  if (window._followState && window._followState[profileId]) delete window._followState[profileId];
-                  alert('🚫 User blocked successfully!');
-                  setTimeout(() => {
-                    if (typeof window.showPage === 'function') window.showPage('home');
-                    else window.location.reload();
-                  }, 1000);
-                } catch (e) {
-                  alert('Failed to block user. The server rejected the request.');
-                }
-              };
-            }
 
             function promptReportUser() {
               const profileId = window.currentProfileUserId;
@@ -6548,9 +6520,7 @@
             <div class="phm-item phm-id-item" onclick="showMyIdToast(); closeProfileHamburgerMenu()"><span
                 class="phm-icon">🪪</span> My ID</div>
             <div class="phm-divider"></div>
-            <div class="phm-item phm-blocked-item" onclick="showBlockedUsersModal(); closeProfileHamburgerMenu()">
-              <span class="phm-icon">🚫</span> Blocked Users
-            </div>
+
             <div class="phm-item phm-activity-item" onclick="showMyActivityModal(); closeProfileHamburgerMenu()">
               <span class="phm-icon">⚡</span> My Activity
             </div>
@@ -6827,15 +6797,7 @@
               color: #e879f9;
             }
 
-            /* ── Blocked Users item ── */
-            .phm-blocked-item {
-              color: rgba(252, 165, 165, 0.85) !important;
-            }
 
-            .phm-blocked-item:hover {
-              background: rgba(239, 68, 68, 0.1) !important;
-              color: #fca5a5 !important;
-            }
 
             /* ── My Activity item ── */
             .phm-activity-item {
@@ -6847,188 +6809,7 @@
               color: #6ee7b7 !important;
             }
 
-            /* ════════════════════════════════════
-               BLOCKED USERS MODAL
-            ════════════════════════════════════ */
-            #blockedUsersModal {
-              display: none;
-              position: fixed;
-              inset: 0;
-              z-index: 100000;
-              background: rgba(0, 0, 0, 0.75);
-              backdrop-filter: blur(5px);
-              align-items: center;
-              justify-content: center;
-            }
 
-            .bum-box {
-              background: linear-gradient(145deg, #0f0d24, #130f2a);
-              border: 1px solid rgba(239, 68, 68, 0.25);
-              border-radius: 22px;
-              width: 400px;
-              max-width: 94vw;
-              max-height: 82vh;
-              display: flex;
-              flex-direction: column;
-              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(239, 68, 68, 0.1);
-              overflow: hidden;
-              animation: phmSlideIn 0.22s ease both;
-            }
-
-            .bum-header {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              padding: 18px 20px 14px;
-              border-bottom: 1px solid rgba(239, 68, 68, 0.12);
-              flex-shrink: 0;
-            }
-
-            .bum-title {
-              display: flex;
-              align-items: center;
-              gap: 10px;
-            }
-
-            .bum-title-icon {
-              font-size: 22px;
-            }
-
-            .bum-title-text {
-              font-size: 17px;
-              font-weight: 700;
-              color: #fca5a5;
-            }
-
-            .bum-close {
-              width: 30px;
-              height: 30px;
-              border-radius: 50%;
-              background: rgba(255, 255, 255, 0.06);
-              border: none;
-              color: rgba(255, 255, 255, 0.45);
-              font-size: 16px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              transition: background 0.15s;
-            }
-
-            .bum-close:hover {
-              background: rgba(239, 68, 68, 0.2);
-              color: #fca5a5;
-            }
-
-            .bum-list {
-              flex: 1;
-              overflow-y: auto;
-              padding: 10px 12px;
-            }
-
-            .bum-list::-webkit-scrollbar {
-              width: 4px;
-            }
-
-            .bum-list::-webkit-scrollbar-thumb {
-              background: rgba(239, 68, 68, 0.3);
-              border-radius: 4px;
-            }
-
-            .bum-item {
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              padding: 12px 10px;
-              border-radius: 12px;
-              transition: background 0.15s;
-              margin-bottom: 4px;
-            }
-
-            .bum-item:hover {
-              background: rgba(239, 68, 68, 0.07);
-            }
-
-            .bum-avatar {
-              width: 44px;
-              height: 44px;
-              border-radius: 50%;
-              flex-shrink: 0;
-              background: linear-gradient(145deg, #4c1d95, #7c3aed);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 18px;
-              font-weight: 700;
-              color: #fff;
-              border: 2px solid rgba(239, 68, 68, 0.3);
-            }
-
-            .bum-info {
-              flex: 1;
-              min-width: 0;
-            }
-
-            .bum-name {
-              font-size: 14px;
-              font-weight: 600;
-              color: rgba(220, 210, 255, 0.9);
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-
-            .bum-sub {
-              font-size: 11.5px;
-              color: rgba(180, 160, 220, 0.5);
-              margin-top: 2px;
-            }
-
-            .bum-unblock-btn {
-              padding: 6px 14px;
-              border-radius: 20px;
-              font-size: 12px;
-              font-weight: 600;
-              cursor: pointer;
-              background: rgba(239, 68, 68, 0.1);
-              border: 1px solid rgba(239, 68, 68, 0.3);
-              color: #fca5a5;
-              transition: all 0.2s;
-              white-space: nowrap;
-              flex-shrink: 0;
-            }
-
-            .bum-unblock-btn:hover {
-              background: rgba(239, 68, 68, 0.25);
-              color: #fff;
-            }
-
-            .bum-empty {
-              text-align: center;
-              padding: 40px 20px;
-              color: rgba(200, 180, 255, 0.4);
-            }
-
-            .bum-empty-icon {
-              font-size: 44px;
-              margin-bottom: 10px;
-            }
-
-            .bum-loading {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              padding: 40px;
-            }
-
-            .bum-spinner {
-              width: 32px;
-              height: 32px;
-              border-radius: 50%;
-              border: 3px solid rgba(239, 68, 68, 0.15);
-              border-top-color: #ef4444;
-              animation: spin 0.8s linear infinite;
-            }
 
             @keyframes spin {
               to {
@@ -7553,24 +7334,7 @@
             <div class="myid-value" id="myIdValue">#000000</div>
             <button class="myid-copy-btn" onclick="copyMyId()">📋 Copy</button>
           </div>
-          <!-- ════ BLOCKED USERS MODAL ════ -->
-          <div id="blockedUsersModal"
-            style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);align-items:center;justify-content:center;">
-            <div class="bum-box">
-              <div class="bum-header">
-                <div class="bum-title">
-                  <span class="bum-title-icon">🚫</span>
-                  <span class="bum-title-text">Blocked Users</span>
-                </div>
-                <button class="bum-close" onclick="closeBlockedUsersModal()">✕</button>
-              </div>
-              <div class="bum-list" id="bumList">
-                <div class="bum-loading">
-                  <div class="bum-spinner"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <!-- ════ MY ACTIVITY MODAL ════ -->
           <div id="myActivityModal"
@@ -7616,76 +7380,7 @@
           </div>
 
           <script>
-            /* ════════════════════════════════════════
-               BLOCKED USERS MODAL
-            ════════════════════════════════════════ */
-            function showBlockedUsersModal() {
-              const modal = document.getElementById('blockedUsersModal');
-              modal.style.display = 'flex';
-              loadBlockedUsers();
-            }
-            function closeBlockedUsersModal() {
-              document.getElementById('blockedUsersModal').style.display = 'none';
-            }
-            document.getElementById('blockedUsersModal').addEventListener('click', function (e) {
-              if (e.target === this) closeBlockedUsersModal();
-            });
 
-            async function loadBlockedUsers() {
-              const list = document.getElementById('bumList');
-              list.innerHTML = '<div class="bum-loading"><div class="bum-spinner"></div></div>';
-              try {
-                const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-                const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-                const res = await fetch(`${B}/api/users/blocked`, { headers: { 'Authorization': `Bearer ${tok}` } });
-                if (!res.ok) throw new Error('Failed');
-                const data = await res.json();
-                const users = data.blocked || data.users || data || [];
-                if (!users.length) {
-                  list.innerHTML = `<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.<br><span style="font-size:12px;opacity:0.6;">You haven't blocked anyone yet.</span></p></div>`;
-                  return;
-                }
-                list.innerHTML = users.map(u => `
-                  <div class="bum-item">
-                    <div class="bum-avatar">${u.profile_pic ? `<img src="${u.profile_pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (u.username || '?').charAt(0).toUpperCase()}</div>
-                    <div class="bum-info">
-                      <div class="bum-name">${u.username || u.name || 'Unknown'}</div>
-                      <div class="bum-sub">${u.college || u.email || 'VibeXpert user'}</div>
-                    </div>
-                    <button class="bum-unblock-btn" onclick="unblockUser('${u.id}', this)">Unblock</button>
-                  </div>`).join('');
-              } catch (err) {
-                list.innerHTML = `<div class="bum-empty"><div class="bum-empty-icon">😕</div><p>Couldn't load blocked users.<br><span style="font-size:12px;opacity:0.6;">Check your connection and try again.</span></p></div>`;
-              }
-            }
-
-            async function unblockUser(uid, btn) {
-              btn.textContent = '…';
-              btn.disabled = true;
-              try {
-                const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-                const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-                const res = await fetch(`${B}/api/users/${uid}/unblock`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}` } });
-                if (!res.ok) throw new Error('Failed');
-                // Remove the card with animation
-                const item = btn.closest('.bum-item');
-                const userName = item.querySelector('.bum-name')?.textContent || 'User';
-                item.style.transition = 'all 0.25s ease';
-                item.style.opacity = '0'; item.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                  item.remove();
-                  const list = document.getElementById('bumList');
-                  if (!list.querySelector('.bum-item')) {
-                    list.innerHTML = '<div class="bum-empty"><div class="bum-empty-icon">✅</div><p>No blocked users.<br><span style="font-size:12px;opacity:0.6;">You haven\'t blocked anyone.</span></p></div>';
-                  }
-                }, 260);
-                if (typeof showMessage === 'function') showMessage(`✅ ${userName} has been unblocked.`, 'success');
-              } catch (err) {
-                btn.textContent = 'Unblock';
-                btn.disabled = false;
-                if (typeof showMessage === 'function') showMessage('Failed to unblock. Try again.', 'error');
-              }
-            }
 
             /* ════════════════════════════════════════
                MY ACTIVITY MODAL — v2 (posts + likes + comments, no follows)
@@ -8856,7 +8551,6 @@
               Shipping</button>
             <button class="profile-tab-btn" id="ordersTabBtn" onclick="switchProfileTab('orders', event)">📦 My
               Orders</button>
-            <button class="profile-tab-btn" id="blockedTabBtn" onclick="switchProfileTab('blocked', event)" style="display:none;">🚫 Blocked</button>
 
           </div>
 
@@ -9014,25 +8708,6 @@
                 <h4 style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:10px;">
                   Activity Heatmap</h4>
                 <div id="activityHeatmap" style="display:grid;grid-template-columns:repeat(26,1fr);gap:2px;">
-                </div>
-              </div>
-            </div>
-
-            <!-- ══ BLOCKED USERS TAB ══ -->
-            <div id="profileTabBlocked" class="tab-pane">
-              <div style="padding:16px 0;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                  <span style="font-size:22px;">🚫</span>
-                  <div>
-                    <h3 style="margin:0;font-size:17px;font-weight:700;color:#fca5a5;">Blocked Users</h3>
-                    <p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,0.5);">Blocked users can't see your profile, message you, or interact with your posts.</p>
-                  </div>
-                </div>
-                <div id="blockedUsersTabList" style="display:flex;flex-direction:column;gap:6px;">
-                  <div class="empty-state">
-                    <div class="empty-icon">✅</div>
-                    <p>Loading...</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -10303,7 +9978,7 @@
               profileHamburgerBtn.style.display = isOwn ? 'flex' : 'none';
             }
 
-            const ownOnlyTabs = ['messagesTabBtn', 'cartTabBtn', 'shippingTabBtn', 'ordersTabBtn', 'blockedTabBtn'];
+            const ownOnlyTabs = ['messagesTabBtn', 'cartTabBtn', 'shippingTabBtn', 'ordersTabBtn'];
             ownOnlyTabs.forEach(function (id) {
               const btn = document.getElementById(id);
               if (btn) btn.style.display = isOwn ? '' : 'none';
@@ -13588,15 +13263,7 @@
               onmouseleave="this.style.background='none';this.style.color='rgba(200,180,255,0.7)'">
               <span style="font-size:16px;">🧹</span> Clear Chat
             </button>
-            <div style="height:1px;background:rgba(124,92,252,0.12);margin:0 12px;"></div>
-            <!-- Block user -->
-            <button onclick="vxBlockUser()" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;
-                     background:none;border:none;color:rgba(200,180,255,0.7);font-size:13px;
-                     font-weight:500;cursor:pointer;text-align:left;transition:background 0.15s;"
-              onmouseenter="this.style.background='rgba(239,68,68,0.12)';this.style.color='#fca5a5'"
-              onmouseleave="this.style.background='none';this.style.color='rgba(200,180,255,0.7)'">
-              <span style="font-size:16px;">🚫</span> Block User
-            </button>
+          </div>
           </div>
         </div>
       </div>
@@ -16828,58 +16495,7 @@
         } catch (err) { alert('Could not clear chat. Try again.'); }
       };
 
-      /* Block User */
-      window.vxBlockUser = async function () {
-        document.getElementById('vxChatMenu').style.display = 'none';
-        const uid = window._vxCurrentDmUid;
-        const name = document.getElementById('vxChatUserName')?.textContent || 'this user';
-        if (!uid) return;
 
-        // Create styled confirmation modal
-        const confirmModal = document.createElement('div');
-        confirmModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:999999;';
-        confirmModal.innerHTML = `
-          <div style="background:linear-gradient(145deg, #0f0d24, #130f2a);border:1px solid rgba(239, 68, 68, 0.25);border-radius:22px;width:340px;padding:24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.85);color:#fff;">
-            <div style="font-size:32px;margin-bottom:12px;">🚫</div>
-            <h3 style="margin:0 0 8px;font-size:20px;color:#fca5a5;">Block ${name}?</h3>
-            <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.7);">They won't be able to message you or see your profile. You can unblock anytime from your profile menu.</p>
-            <div style="display:flex;gap:12px;justify-content:center;">
-              <button id="vxBlockCancelBtn" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
-              <button id="vxBlockConfirmBtn" style="flex:1;padding:12px;border-radius:12px;background:rgba(239, 68, 68, 0.2);border:1px solid rgba(239, 68, 68, 0.5);color:#fca5a5;font-weight:600;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'">Block</button>
-            </div>
-          </div>`;
-        document.body.appendChild(confirmModal);
-
-        confirmModal.addEventListener('click', function (e) { if (e.target === confirmModal) confirmModal.remove(); });
-        document.getElementById('vxBlockCancelBtn').onclick = () => confirmModal.remove();
-        document.getElementById('vxBlockConfirmBtn').onclick = async () => {
-          confirmModal.remove();
-          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || '';
-          const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
-          try {
-            const res = await fetch(`${B}/api/users/${uid}/block`, { method: 'POST', headers: { 'Authorization': `Bearer ${tok}`, 'Content-Type': 'application/json' } });
-            if (!res.ok) throw new Error('Failed');
-            // Clear cached data
-            if (window._mpcCache && window._mpcCache[uid]) delete window._mpcCache[uid];
-            if (window._followState && window._followState[uid]) delete window._followState[uid];
-            // Go back to DM list
-            window.vxCloseDmChat();
-            // Show brief toast
-            if (typeof showMessage === 'function') {
-              showMessage(`🚫 ${name} has been blocked.`, 'success');
-            } else {
-              const toast = document.createElement('div');
-              toast.textContent = `🚫 ${name} has been blocked.`;
-              toast.style.cssText = 'position:fixed;bottom:90px;right:108px;background:rgba(239,68,68,0.9);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:99999;animation:vxFadeIn 0.2s ease;';
-              document.body.appendChild(toast);
-              setTimeout(() => toast.remove(), 3000);
-            }
-          } catch (err) {
-            if (typeof showMessage === 'function') showMessage('Could not block user. Try again.', 'error');
-            else alert('Could not block user. Try again.');
-          }
-        };
-      };
 
       window.vxCloseDmChat = function () {
         vxStopMsgPoll();
@@ -16914,7 +16530,17 @@
       let _notifs = [], _tab = 'all';
       // BUG FIX (BUG-10): Removed auto markRead() 1.5s after panel open.
       // markRead() is now only called by clearAllVxNotifs (explicit user action).
-      async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com'; const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || []; renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); } catch (e) { const l = document.getElementById('vxNotifList'); if (l) l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No notifications yet.</p></div>`; } }
+      async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com'; const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
+        // Enrich notifications with profile pics from cached user data
+        _notifs.forEach(function(n) {
+          if (n.fromPic || n.from_pic || n.actor_avatar || n.from_avatar || n.avatar || n.profile_pic) return;
+          var uid = n.from || n.actor_id || n.from_id || n.follower_id || '';
+          if (!uid) return;
+          // Check _mpcCache (feed post authors), _users (DM contacts), _dmContactCache
+          var cached = (window._mpcCache && window._mpcCache[uid]) || ((window._users || []).find(function(u) { return String(u.id) === String(uid); })) || (window._dmContactCache && window._dmContactCache[uid]);
+          if (cached && cached.profile_pic) n.fromPic = cached.profile_pic;
+        });
+        renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); } catch (e) { const l = document.getElementById('vxNotifList'); if (l) l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No notifications yet.</p></div>`; } }
       function renderNotif(notifs, tab) {
         const l = document.getElementById('vxNotifList');
         if (!l) return;
@@ -16937,19 +16563,24 @@
         }
         const cfg = {
           follow: { badge: '➕', cls: 'follow', hint: 'Follow back' },
+          new_follow: { badge: '➕', cls: 'follow', hint: 'Follow back' },
           like: { badge: '♥', cls: 'like', hint: 'View my vibes' },
+          post_liked: { badge: '♥', cls: 'like', hint: 'View my vibes' },
           comment: { badge: '💬', cls: 'comment', hint: 'View my vibes' },
+          new_comment: { badge: '💬', cls: 'comment', hint: 'View my vibes' },
           message: { badge: '✉', cls: 'message', hint: 'Messages' },
           dm: { badge: '✉', cls: 'message', hint: 'Messages' },
+          new_dm: { badge: '✉', cls: 'message', hint: 'Messages' },
+          post_shared: { badge: '🔗', cls: 'other', hint: 'View my vibes' },
           mention: { badge: '@', cls: 'other', hint: '' },
           default: { badge: '🔔', cls: 'other', hint: '' }
         };
         l.innerHTML = f.map((n, i) => {
           const type = (n.type || 'default').toLowerCase();
           const c = cfg[type] || cfg.default;
-          const actor = n.actor_name || n.from_name || n.username || 'Someone';
-          const actorId = n.actor_id || n.from_id || n.follower_id || '';
-          const avatarUrl = n.actor_avatar || n.from_avatar || n.avatar || '';
+          const actor = n.actor_name || n.from_name || n.fromUsername || n.username || 'Someone';
+          const actorId = n.actor_id || n.from_id || n.from || n.follower_id || '';
+          const avatarUrl = n.actor_avatar || n.from_avatar || n.fromPic || n.from_pic || n.avatar || n.profile_pic || '';
           const initials = actor.charAt(0).toUpperCase();
           let text = n.message || n.text || '';
           if (!text) {
@@ -16959,7 +16590,7 @@
             else if (type === 'message' || type === 'dm') text = `<strong>${actor}</strong> sent you a message`;
             else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`;
           }
-          const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="${actor}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">` : '';
+          const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="${actor}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;">${initials}</span>` : '';
           const delay = Math.min(i * 0.04, 0.3);
           const timeStr = relTime(n.created_at || n.timestamp || n.createdAt);
           // Sanitize IDs so single-quotes never break the inline onclick attribute
@@ -17014,13 +16645,13 @@
         // Safe reference to the current logged-in user
         const cu = (typeof currentUser !== 'undefined') ? currentUser : null;
 
-        if (type === 'follow') {
+        if (type === 'follow' || type === 'new_follow') {
           // ── Go to the profile of the person who followed you ──
           if (actorId && typeof window.showUserProfile === 'function') {
             window.showUserProfile(actorId);
           }
           // No actorId → nothing useful to show; avoid wrongly redirecting to own profile
-        } else if (type === 'like' || type === 'comment') {
+        } else if (type === 'like' || type === 'comment' || type === 'post_liked' || type === 'new_comment' || type === 'post_shared') {
           // ── Go to own profile → My Vibes tab ──
           if (typeof window.showPage === 'function') {
             window.showPage('profile');
