@@ -3439,7 +3439,7 @@ function openAnnouncementsChannel() {
 
 function searchChatMessages() {
   const query = document.getElementById('chatSearchBox')?.value.toLowerCase() || '';
-  const messages = document.querySelectorAll('.whatsapp-message');
+  const messages = document.querySelectorAll('.whatsapp-message, .exec-message-wrapper, .chat-message');
   messages.forEach(msg => {
     const text = msg.textContent.toLowerCase();
     msg.style.display = text.includes(query) ? '' : 'none';
