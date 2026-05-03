@@ -6855,7 +6855,15 @@ function _seedFollowState(userId, isFollowing, followersCount) {
 // ═══════════════════════════════════════════════════════════════
 // CENTRAL BLOCKING ENGINE
 // ═══════════════════════════════════════════════════════════════
-let _blockState = {}; // userId -> boolean
+let _blockState = _loadBlockStateFromStorage(); // userId -> boolean
+
+function _saveBlockStateToStorage(state) {
+  if (currentUser) localStorage.setItem(`vx_blocks_${currentUser.id}`, JSON.stringify(state));
+}
+function _loadBlockStateFromStorage() {
+  const saved = currentUser ? localStorage.getItem(`vx_blocks_${currentUser.id}`) : null;
+  return saved ? JSON.parse(saved) : {};
+}
 
 async function fetchBlockedUsers() {
   if (!currentUser) return;
@@ -6863,13 +6871,15 @@ async function fetchBlockedUsers() {
     const data = await apiCall('/api/users/blocked');
     if (data && data.blocked) {
       _blockState = {};
-      data.blocked.forEach(u => { _blockState[u.id] = true; });
+      data.blocked.forEach(u => { _blockState[String(u.id)] = true; });
+      _saveBlockStateToStorage(_blockState);
     }
   } catch (e) { console.warn('[fetchBlockedUsers] error:', e); }
 }
 
 function updateBlockButtonUI(targetUserId) {
-  const isBlocked = !!_blockState[targetUserId];
+  if (!targetUserId) return;
+  const isBlocked = !!_blockState[String(targetUserId)];
   const btn = document.getElementById('blockBtn');
   const content = document.getElementById('blockBtnContent');
   const dmBlockBtn = document.getElementById('dmBlockBtn');
@@ -6898,17 +6908,20 @@ async function toggleBlockUser(targetUserId, targetUsername) {
   try {
     const result = await apiCall(`/api/users/${uid}/${action}`, 'POST');
     if (result && result.success) {
-      _blockState[uid] = !isBlocked;
+      const sUid = String(uid);
+      _blockState[sUid] = !isBlocked;
+      _saveBlockStateToStorage(_blockState);
+      
       showMessage(`✨ User ${isBlocked ? 'unblocked' : 'blocked'} successfully`, 'success');
 
-      updateBlockButtonUI(uid);
+      updateBlockButtonUI(sUid);
 
       if (!isBlocked) {
         // If just blocked, also unfollow them locally
-        if (_followState[uid]) {
-          _followState[uid].isFollowing = false;
+        if (_followState[sUid]) {
+          _followState[sUid].isFollowing = false;
           _saveFollowStateToStorage(_followState);
-          _syncAllFollowUI(uid, false, _followState[uid].followersCount);
+          _syncAllFollowUI(sUid, false, _followState[sUid].followersCount);
         }
         // Close DM if open
         if (typeof closeDmDrawer === 'function') closeDmDrawer();
