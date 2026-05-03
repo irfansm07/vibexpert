@@ -1763,6 +1763,50 @@ function logout() {
   location.reload();
 }
 
+async function confirmDeleteAccount() {
+  // First confirmation
+  const firstConfirm = confirm('⚠️ Are you sure you want to delete your account?\n\nThis action is permanent and cannot be undone. All your data, posts, messages, and followers will be deleted.');
+  if (!firstConfirm) return;
+
+  // Second confirmation for safety
+  const secondConfirm = confirm('🚨 FINAL WARNING\n\nYour account and ALL associated data will be permanently deleted.\n\nClick OK to proceed with deletion.');
+  if (!secondConfirm) return;
+
+  try {
+    const token = getToken();
+    if (!token) { showMessage('⚠️ Please login first', 'error'); return; }
+
+    showMessage('🗑️ Deleting your account...', 'info');
+
+    const res = await fetch(`${API_URL}/api/user/delete-account`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMessage('❌ ' + (data.error || 'Failed to delete account'), 'error');
+      return;
+    }
+
+    showMessage('✅ Your account has been deleted successfully.', 'success');
+
+    // Clear everything and go to login page
+    setTimeout(() => {
+      if (socket) { socket.disconnect(); socket = null; }
+      currentUser = null;
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    }, 1500);
+
+  } catch (err) {
+    console.error('❌ Delete account error:', err);
+    showMessage('❌ Failed to delete account. Please try again.', 'error');
+  }
+}
+
 // ========================================
 // ENHANCED COMMUNITY CHAT
 // ========================================
@@ -8971,7 +9015,7 @@ function closeRvCreatorModal() {
   const modal = document.getElementById('realVibeCreatorModal');
   if (modal) modal.style.display = 'none';
   clearRvPreview();
-  rvCloseCropModal();
+
   closeRvPreviewOverlay();
   const rvEmojiPicker = document.getElementById('rvEmojiPicker');
   if (rvEmojiPicker) rvEmojiPicker.style.display = 'none';
