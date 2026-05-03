@@ -6481,6 +6481,9 @@
             <div class="phm-divider"></div>
             <div class="phm-item phm-id-item" onclick="showMyIdToast(); closeProfileHamburgerMenu()"><span
                 class="phm-icon">🪪</span> My ID</div>
+            <div class="phm-item" onclick="showBlockedUsersModal(); closeProfileHamburgerMenu()">
+              <span class="phm-icon">🚫</span> Blocked Users
+            </div>
             <div class="phm-divider"></div>
 
             <div class="phm-item phm-activity-item" onclick="showMyActivityModal(); closeProfileHamburgerMenu()">
@@ -7843,6 +7846,13 @@
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 Message
+              </span>
+            </button>
+
+            <button id="blockBtn" class="vx-profile-btn vx-block-btn" style="display:none;" onclick="toggleBlockUser()">
+              <span class="vx-btn-bg" style="background:rgba(239,68,68,0.1)"></span>
+              <span class="vx-btn-content" id="blockBtnContent" style="color:#f87171">
+                🚫 Block
               </span>
             </button>
 
@@ -10099,6 +10109,10 @@
           style="background:rgba(130,90,255,0.08);border:1px solid rgba(130,90,255,0.15);color:rgba(200,180,255,0.6);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;line-height:1;"
           onmouseenter="this.style.background='rgba(130,90,255,0.18)';this.style.color='rgba(200,180,255,0.9)'"
           onmouseleave="this.style.background=this.classList.contains('dm-select-active')?'rgba(239,68,68,0.18)':'rgba(130,90,255,0.08)';this.style.color=this.classList.contains('dm-select-active')?'rgba(255,140,140,1)':'rgba(200,180,255,0.6)'">☑</button>
+        <button id="dmBlockBtn" onclick="toggleBlockFromChat()" title="Block user"
+          style="background:rgba(255,60,80,0.08);border:1px solid rgba(255,60,80,0.15);color:rgba(255,100,110,0.7);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;"
+          onmouseenter="this.style.background='rgba(255,60,80,0.18)';this.style.color='rgba(255,100,110,1)'"
+          onmouseleave="this.style.background='rgba(255,60,80,0.08)';this.style.color='rgba(255,100,110,0.7)'">🚫</button>
         <button id="dmMinimizeBtn" onclick="minimizeDmPanel(event)" title="Minimize"
           style="background:rgba(130,90,255,0.08);border:1px solid rgba(130,90,255,0.15);color:rgba(200,180,255,0.6);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;line-height:1;font-weight:700;"
           onmouseenter="this.style.background='rgba(130,90,255,0.18)';this.style.color='rgba(200,180,255,0.9)'"
