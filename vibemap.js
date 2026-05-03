@@ -1031,8 +1031,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (activePage && activePage.id === 'communities') {
               if (typeof loadCommunities === 'function') loadCommunities();
             }
+            // Also refresh block state once user is fully synced
+            if (typeof fetchBlockedUsers === 'function') fetchBlockedUsers();
           });
-          // Fetch blocked users on startup
+          
+          // Initial load from storage if available
+          if (currentUser) {
+            _blockState = _loadBlockStateFromStorage();
+          }
+          
+          // Initial fetch
           if (typeof fetchBlockedUsers === 'function') fetchBlockedUsers();
           // Load home feed on startup via showPage so display:flex + all
           // layout state is set identically to navigating to home manually.
@@ -6873,6 +6881,11 @@ async function fetchBlockedUsers() {
       _blockState = {};
       data.blocked.forEach(u => { _blockState[String(u.id)] = true; });
       _saveBlockStateToStorage(_blockState);
+      
+      // Sync UI if profile is currently open
+      if (window.currentProfileUser) {
+        updateBlockButtonUI(window.currentProfileUser.id);
+      }
     }
   } catch (e) { console.warn('[fetchBlockedUsers] error:', e); }
 }
