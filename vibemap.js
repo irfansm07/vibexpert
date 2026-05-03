@@ -6875,15 +6875,22 @@ function _loadBlockStateFromStorage() {
 
 async function fetchBlockedUsers() {
   if (!currentUser) return;
+  console.log('🛡️ fetchBlockedUsers starting...');
   try {
     const data = await apiCall('/api/users/blocked');
+    console.log('🛡️ fetchBlockedUsers result:', data);
     if (data && data.blocked) {
       _blockState = {};
-      data.blocked.forEach(u => { _blockState[String(u.id)] = true; });
+      data.blocked.forEach(u => { 
+        const sid = String(u.id);
+        _blockState[sid] = true; 
+        console.log(`🛡️ Marking ${sid} as blocked`);
+      });
       _saveBlockStateToStorage(_blockState);
       
       // Sync UI if profile is currently open
       if (window.currentProfileUser) {
+        console.log('🛡️ Syncing profile UI for:', window.currentProfileUser.id);
         updateBlockButtonUI(window.currentProfileUser.id);
       }
     }
@@ -6911,17 +6918,20 @@ function updateBlockButtonUI(targetUserId) {
 async function toggleBlockUser(targetUserId, targetUsername) {
   const uid = targetUserId || (window.currentProfileUser && window.currentProfileUser.id);
   const uname = targetUsername || (window.currentProfileUser && window.currentProfileUser.username) || 'this user';
-  if (!uid) return;
+  if (!uid) { console.warn('🛡️ toggleBlockUser: no uid provided'); return; }
 
-  const isBlocked = !!_blockState[uid];
+  const sUid = String(uid);
+  const isBlocked = !!_blockState[sUid];
   const action = isBlocked ? 'unblock' : 'block';
+
+  console.log(`🛡️ toggleBlockUser: ${action}ing ${sUid} (${uname})`);
 
   if (!confirm(`Are you sure you want to ${action} ${uname}?`)) return;
 
   try {
-    const result = await apiCall(`/api/users/${uid}/${action}`, 'POST');
+    const result = await apiCall(`/api/users/${sUid}/${action}`, 'POST');
+    console.log(`🛡️ toggleBlockUser ${action} result:`, result);
     if (result && result.success) {
-      const sUid = String(uid);
       _blockState[sUid] = !isBlocked;
       _saveBlockStateToStorage(_blockState);
       
