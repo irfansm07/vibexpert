@@ -16517,14 +16517,15 @@
           new_dm: { badge: '✉', cls: 'message', hint: 'Messages' },
           post_shared: { badge: '🔗', cls: 'other', hint: 'View my vibes' },
           mention: { badge: '@', cls: 'other', hint: '' },
+          platform: { badge: '📢', cls: 'other', hint: '' },
           default: { badge: '🔔', cls: 'other', hint: '' }
         };
         l.innerHTML = f.map((n, i) => {
           const type = (n.type || 'default').toLowerCase();
           const c = cfg[type] || cfg.default;
-          const actor = n.actor_name || n.from_name || n.fromUsername || n.username || 'Someone';
+          const actor = type === 'platform' ? 'VibeXpert' : (n.actor_name || n.from_name || n.fromUsername || n.username || 'Someone');
           const actorId = n.actor_id || n.from_id || n.from || n.follower_id || '';
-          const avatarUrl = n.actor_avatar || n.from_avatar || n.fromPic || n.from_pic || n.avatar || n.profile_pic || '';
+          const avatarUrl = type === 'platform' ? 'favicon.png' : (n.actor_avatar || n.from_avatar || n.fromPic || n.from_pic || n.avatar || n.profile_pic || '');
           const initials = actor.charAt(0).toUpperCase();
           let text = n.message || n.text || '';
           if (!text) {
@@ -16532,7 +16533,11 @@
             else if (type === 'like') text = `<strong>${actor}</strong> liked your post`;
             else if (type === 'comment') text = `<strong>${actor}</strong> commented on your post`;
             else if (type === 'message' || type === 'dm') text = `<strong>${actor}</strong> sent you a message`;
+            else if (type === 'platform') text = `<strong>${n.title || 'Notification'}</strong>: ${n.message || ''}`;
             else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`;
+          }
+          if (type === 'platform') {
+             text = `<strong>${n.title || 'Notification'}</strong><br>${n.message || ''}`;
           }
           const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="${actor}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;">${initials}</span>` : '';
           const delay = Math.min(i * 0.04, 0.3);
