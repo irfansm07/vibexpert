@@ -6979,6 +6979,9 @@ async function showBlockedUsersModal() {
       <div id="blockedUsersList" style="flex:1;overflow-y:auto;padding:12px;">
         <div style="color:#888;text-align:center;padding:40px;">⏳ Loading...</div>
       </div>
+      <div style="padding:10px;text-align:center;background:rgba(255,255,255,0.02);">
+        <button onclick="runBlockDiagnostics()" style="background:none;border:none;color:#a78bfa;font-size:11px;cursor:pointer;text-decoration:underline;">Run Diagnostics</button>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -18940,3 +18943,15 @@ window.deleteGlobalComment = async function (commentId, type, parentId) {
     showMessage('❌ Error deleting comment', 'error');
   }
 };
+async function runBlockDiagnostics() {
+  console.log('🧪 Starting Block Diagnostics...');
+  try {
+    const res = await fetch(`${API_URL}/api/debug/blocks`);
+    const data = await res.json();
+    console.log('🧪 Diagnostic Result:', data);
+    alert(`Diagnostics Complete!\nTotal Blocks in DB: ${data.diagnostics.totalBlocksInDb}\nTotal Users: ${data.diagnostics.totalUsersInDb}\nMy ID: ${currentUser?.id}`);
+  } catch (e) {
+    console.error('🧪 Diagnostic Failed:', e);
+    alert('Failed to run diagnostics. Check console.');
+  }
+}
