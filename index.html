@@ -16615,37 +16615,11 @@
       /* ── Boot ── */
       // DUP FIX (DUP-7): Store interval ID so re-login doesn't stack multiple pollBadges timers.
       let _vxBadgePollTimer = null;
-      function updateMobileNav() {
-        const nav = document.getElementById('vxMobileNav');
-        const isLogged = !!(localStorage.getItem('authToken') || localStorage.getItem('vx_token'));
-        if (nav) nav.style.display = (isLogged && window.innerWidth <= 768) ? 'flex' : 'none';
-      }
-
-      function hookShowPage() {
-        if (window._vxHooked) return;
-        window._vxHooked = true;
-        const oldShowPage = window.showPage;
-        window.showPage = function(page) {
-          if (typeof oldShowPage === 'function') oldShowPage(page);
-          
-          // Update active state in mobile nav
-          document.querySelectorAll('.vx-mobile-nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('onclick')?.includes(`'${page}'`)) {
-              item.classList.add('active');
-            }
-          });
-          updateMobileNav();
-        };
-      }
-
       function boot() {
         hookShowPage();
         pollBadges();
-        updateMobileNav();
         if (_vxBadgePollTimer) clearInterval(_vxBadgePollTimer);
         _vxBadgePollTimer = setInterval(pollBadges, 30000);
-        window.addEventListener('resize', updateMobileNav);
       }
 
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
@@ -16653,30 +16627,6 @@
       document.addEventListener('vx:login', function () { setTimeout(hookShowPage, 200); });
     })();
   </script>
-    <!-- ══ MOBILE BOTTOM NAVIGATION ══ -->
-    <nav class="vx-mobile-nav" id="vxMobileNav" style="display: none;">
-      <div class="vx-mobile-nav-item active" onclick="showPage('home')">
-        <div class="vx-mobile-nav-icon">🏠</div>
-        <span>Home</span>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('realvibes')">
-        <div class="vx-mobile-nav-icon">✨</div>
-        <span>RealVibes</span>
-      </div>
-      <div class="vx-mobile-nav-item vx-mobile-nav-post" onclick="showModal('postDestinationModal')">
-        <div class="vx-mobile-nav-icon">➕</div>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('messages')">
-        <div class="vx-mobile-nav-icon">💬</div>
-        <span>Chat</span>
-        <span class="vx-mobile-badge" id="vxMobileDmBadge" style="display:none;"></span>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('profile')">
-        <div class="vx-mobile-nav-icon">👤</div>
-        <span>Profile</span>
-      </div>
-    </nav>
-
   <script>
     (function () {
       // ── Particle Canvas ──
