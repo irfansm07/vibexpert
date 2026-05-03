@@ -3362,6 +3362,13 @@ function initializeSocket() {
   socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
   socket.on('online_count', (count) => updateOnlineCount(count));
 
+  // ── Real-time: Global Platform Notifications ──────────────────────────
+  socket.on('new_platform_notification', (data) => {
+    if (typeof showPlatformBroadcast === 'function') {
+      showPlatformBroadcast(data.title, data.message);
+    }
+  });
+
   // ── Real-time: RealVibe Status Update ────────────────────────────────
   socket.on('realvibe_status_update', (data) => {
     if (data.status === 'approved') {
@@ -6452,6 +6459,67 @@ function showVibePostSuccessAndReload(customMsg, isPending) {
 
 // ── Legacy aliases — kept so any old calls still work ──
 function showVibeOnlineToast(msg, isPending) { showVibePostSuccessAndReload(msg, isPending); }
+
+// ── Global Platform Broadcast UI ───────────────────────────────────────
+function showPlatformBroadcast(title, message) {
+  // Remove existing
+  const old = document.getElementById('platformBroadcastPopup');
+  if (old) old.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'platformBroadcastPopup';
+  // Use absolute positioning for global reach
+  popup.style.cssText = `
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 1000000;
+    width: 380px;
+    max-width: 90vw;
+    background: rgba(18, 16, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    border-radius: 20px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(124, 58, 237, 0.2);
+    transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    opacity: 0;
+  `;
+
+  popup.innerHTML = `
+    <div style="flex-shrink:0; width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #7c3aed, #a78bfa); display:flex; align-items:center; justify-content:center; box-shadow: 0 8px 15px rgba(124, 58, 237, 0.3);">
+       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="24" height="24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+    </div>
+    <div style="flex:1; min-width:0;">
+      <h4 style="margin:0; color:#fff; font-size:15px; font-weight:700; letter-spacing:0.2px;">${title}</h4>
+      <p style="margin:2px 0 0; color:rgba(255,255,255,0.7); font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${message}</p>
+    </div>
+    <button onclick="this.parentElement.remove()" style="flex-shrink:0; background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:4px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  `;
+
+  document.body.appendChild(popup);
+
+  // Trigger animation
+  setTimeout(() => {
+    popup.style.transform = 'translateX(-50%) translateY(0)';
+    popup.style.opacity = '1';
+  }, 100);
+
+  // Auto remove after 10 seconds
+  setTimeout(() => {
+    if (popup.parentElement) {
+      popup.style.transform = 'translateX(-50%) translateY(-100px)';
+      popup.style.opacity = '0';
+      setTimeout(() => popup.remove(), 600);
+    }
+  }, 10000);
+}
 function showVibeSuccessToast() { showVibePostSuccessAndReload(); }
 function showVibeSuccessPopup() { showVibePostSuccessAndReload(); }
 
