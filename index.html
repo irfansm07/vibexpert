@@ -5517,7 +5517,7 @@
           }
         }
 
-        function submitCollegeRequest() {
+        async function submitCollegeRequest() {
           const nameInput = document.getElementById('reqCollegeName');
           const emailInput = document.getElementById('reqCollegeEmail');
           const msg = document.getElementById('reqCollegeMsg');
@@ -5544,20 +5544,40 @@
           if (btn) btn.innerHTML = '⏳ Submitting...';
           if (btn) btn.disabled = true;
 
-          // Simulate API call delay
-          setTimeout(() => {
-            if (msg) {
-              msg.textContent = '🎉 Request sent! We will reach out soon.';
-              msg.style.color = '#a78bfa';
+          try {
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_URL}/api/college-requests`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({ collegeName: name, collegeEmail: email })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+              if (msg) {
+                msg.textContent = '🎉 Request sent! We will reach out soon.';
+                msg.style.color = '#a78bfa';
+              }
+              setTimeout(() => {
+                closeCollegeRequestModal();
+              }, 1800);
+            } else {
+              throw new Error(data.error || 'Failed to submit request');
             }
+          } catch (err) {
+            if (msg) {
+              msg.textContent = err.message || 'Error connecting to server.';
+              msg.style.color = '#fca5a5';
+            }
+          } finally {
             if (btn) {
               btn.innerHTML = '🚀 Submit Request';
               btn.disabled = false;
             }
-            setTimeout(() => {
-              closeCollegeRequestModal();
-            }, 1800);
-          }, 1200);
+          }
         }
       </script>
 
