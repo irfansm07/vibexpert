@@ -18946,12 +18946,30 @@ window.deleteGlobalComment = async function (commentId, type, parentId) {
 async function runBlockDiagnostics() {
   console.log('🧪 Starting Block Diagnostics...');
   try {
-    const res = await fetch(`${API_URL}/api/debug/blocks`);
+    const url = `${API_URL}/api/debug/blocks`;
+    console.log('🧪 Fetching from:', url);
+    const res = await fetch(url);
     const data = await res.json();
-    console.log('🧪 Diagnostic Result:', data);
-    alert(`Diagnostics Complete!\nTotal Blocks in DB: ${data.diagnostics.totalBlocksInDb}\nTotal Users: ${data.diagnostics.totalUsersInDb}\nMy ID: ${currentUser?.id}`);
+    console.log('🧪 Raw Diagnostic Result:', data);
+    
+    if (!data.success) {
+      alert(`Backend Error: ${data.error || 'Unknown error'}\nCheck if the server is still deploying.`);
+      return;
+    }
+
+    if (!data.diagnostics) {
+      alert(`Invalid response from server. It might be an old version.\nResponse: ${JSON.stringify(data)}`);
+      return;
+    }
+
+    alert(`Diagnostics Complete!\n
+      - Total Blocks in DB: ${data.diagnostics.totalBlocksInDb}
+      - Total Users in DB: ${data.diagnostics.totalUsersInDb}
+      - Supabase URL: ${data.config.supabaseUrl}
+      - My ID: ${currentUser?.id}
+    `);
   } catch (e) {
     console.error('🧪 Diagnostic Failed:', e);
-    alert('Failed to run diagnostics. Check console.');
+    alert(`Failed to run diagnostics.\nError: ${e.message}\nMake sure your backend is running and reachable.`);
   }
 }
