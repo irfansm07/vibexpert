@@ -3362,6 +3362,17 @@ function initializeSocket() {
   socket.on('message_deleted', ({ id }) => removeMessageFromChat(id));
   socket.on('online_count', (count) => updateOnlineCount(count));
 
+  // ── Real-time: RealVibe Status Update ────────────────────────────────
+  socket.on('realvibe_status_update', (data) => {
+    if (data.status === 'approved') {
+      showVibeOnlineToast(data.message, false);
+      if (typeof loadRealVibes === 'function') loadRealVibes();
+    } else if (data.status === 'rejected') {
+      if (typeof showMessage === 'function') showMessage(data.message || 'Your RealVibe was rejected.', 'error');
+      if (typeof loadRealVibes === 'function') loadRealVibes();
+    }
+  });
+
   // ── Real-time: like count ─────────────────────────────────────────────
   socket.on('post_liked', (data) => {
     // Vibe-feed card (identified by data-id on the .vibe-card)
@@ -6389,26 +6400,30 @@ async function createPost() {
 }
 
 // ── Post Success: show popup then refresh feed in-place (no hard reload) ──
-function showVibePostSuccessAndReload() {
+function showVibePostSuccessAndReload(customMsg, isPending) {
   // Remove any stale copies
   ['vibeOnlineToast', 'vibeSuccessPopup'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.remove();
   });
 
+  const title = isPending ? 'Admin Processing...' : 'Successfully Posted!';
+  const subtitle = customMsg || (isPending ? 'Your vibe is being reviewed by admin.' : 'Your vibe is now live on Vibers 🚀');
+
   // Build the success popup
   const popup = document.createElement('div');
   popup.id = 'vibeSuccessPopup';
   popup.innerHTML = `
     <div class="vsp-bg-glow" ></div>
-    <div class="vsp-icon-ring">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
+    <div class="vsp-icon-ring" style="${isPending ? 'background: #f59e0b;' : ''}">
+      ${isPending ? 
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' :
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><polyline points="20 6 9 17 4 12"/></svg>'
+      }
     </div>
     <div class="vsp-text">
-      <strong>Successfully Posted!</strong>
-      <span>Your vibe is now live on Vibers 🚀</span>
+      <strong>${title}</strong>
+      <span>${subtitle}</span>
     </div>
     <div class="vsp-timer-bar"><div class="vsp-timer-fill"></div></div>
   `;
@@ -6436,7 +6451,7 @@ function showVibePostSuccessAndReload() {
 }
 
 // ── Legacy aliases — kept so any old calls still work ──
-function showVibeOnlineToast() { showVibePostSuccessAndReload(); }
+function showVibeOnlineToast(msg, isPending) { showVibePostSuccessAndReload(msg, isPending); }
 function showVibeSuccessToast() { showVibePostSuccessAndReload(); }
 function showVibeSuccessPopup() { showVibePostSuccessAndReload(); }
 
@@ -9307,9 +9322,9 @@ async function publishRealVibe() {
 
     // ✅ Success
     closeRvCreatorModal();
-    showVibeOnlineToast();
+    showVibeOnlineToast(data.message, data.pending);
 
-    if (data.vibe) {
+    if (data.vibe && !data.pending) {
       _rvAllVibes.unshift(data.vibe);
       renderRvFeed(_rvAllVibes);
     } else {
