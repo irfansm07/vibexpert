@@ -188,9 +188,9 @@
     <!-- ══ HERO ══ -->
     <section class="lp-hero">
       <div class="lp-hero-content">
-        <div class="lp-badge">
+        <div class="lp-badge" data-reveal>
           <span class="lp-live-dot"></span>
-          India's #1 College Social Platform
+          <span style="letter-spacing: 2px;">INDIA'S #1 COLLEGE SOCIAL ECOSYSTEM</span>
         </div>
         <div class="lp-hero-name">VibeXpert</div>
         <h1 class="lp-hero-title">
@@ -198,91 +198,57 @@
           <span class="ht-2">SHARE.</span>
           <span class="ht-3">VIBE.</span>
         </h1>
-        <p class="lp-hero-sub">The ultimate social platform built exclusively for college students across India. Your
-          campus, your people, your vibe.</p>
+        <p class="lp-hero-sub">The ultimate social architecture built exclusively for the next generation of college students. Your campus, your people, your vibe.</p>
         <div class="lp-hero-btns">
-          <button class="btn-primary" onclick="showAuthPopup()">Join Free →</button>
+          <button class="btn-primary" onclick="showAuthPopup()">Get Started Free →</button>
           <button class="btn-ghost"
-            onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">Explore
-            Features</button>
+            onclick="document.getElementById('lp-about').scrollIntoView({behavior:'smooth'})">Discover The Vibe</button>
         </div>
       </div>
     </section>
 
-    <!-- ══ WHAT IS VIBEXPERT — 3 Flip Cards ══ -->
+    <!-- ══ WHAT IS VIBEXPERT — Premium Flip Cards ══ -->
     <section class="lp-section" id="lp-about">
       <div class="lp-container">
-        <h2 class="lp-section-title" data-reveal>What is VibeXpert?</h2>
+        <h2 class="lp-section-title" data-reveal>The VibeXpert Ecosystem</h2>
         <div class="lp-section-accent" data-reveal></div>
-        <p class="lp-what-hint" data-reveal>Tap a card to learn more 💡</p>
+        <p class="lp-what-hint" data-reveal>Interactive Exploration 💡</p>
+        
         <div class="lp-what-grid">
 
-          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="chat">
-            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
-              <div class="lp-what-shine"></div>
-              <div class="lp-what-card-bg">
-                <div class="what-particle what-p1"></div>
-                <div class="what-particle what-p2"></div>
-                <div class="what-particle what-p3"></div>
-                <div class="what-particle what-p4"></div>
-                <div class="what-particle what-p5"></div>
-                <div class="what-particle what-p6"></div>
-              </div>
-              <div class="lp-what-front">
-                <div class="lp-what-icon">💬</div>
-                <h3>Real-Time Chat</h3>
-              </div>
-              <div class="lp-what-back">
-                <h3>Real-Time Chat</h3>
-                <p>Engage in live conversations with your college group instantly. Group chats, DMs, ghost mode, emojis,
-                  stickers, and push notifications — all in real time.</p>
-              </div>
+          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
+            <div class="lp-what-front">
+              <div class="lp-what-icon">💬</div>
+              <h3>Hyper-Real Chat</h3>
+              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal architecture</p>
+            </div>
+            <div class="lp-what-back">
+              <h3>Low-Latency Fabric</h3>
+              <p>Experience zero-lag communication with high-fidelity media sharing, custom stickers, and encrypted ghost mode for the ultimate privacy.</p>
             </div>
           </div>
 
-          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="creative">
-            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
-              <div class="lp-what-shine"></div>
-              <div class="lp-what-card-bg">
-                <div class="what-particle what-p1"></div>
-                <div class="what-particle what-p2"></div>
-                <div class="what-particle what-p3"></div>
-                <div class="what-particle what-p4"></div>
-                <div class="what-particle what-p5"></div>
-                <div class="what-particle what-p6"></div>
-              </div>
-              <div class="lp-what-front">
-                <div class="lp-what-icon">📱</div>
-                <h3>Post Creation</h3>
-              </div>
-              <div class="lp-what-back">
-                <h3>Post Creation</h3>
-                <p>Share photos, videos, music, and stickers. Crop, edit, and decorate your content with powerful
-                  creative tools built for campus life.</p>
-              </div>
+          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
+            <div class="lp-what-front">
+              <div class="lp-what-icon">📱</div>
+              <h3>Social Canvas</h3>
+              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal tools</p>
+            </div>
+            <div class="lp-what-back">
+              <h3>Creative Freedom</h3>
+              <p>Sophisticated post creation with native cropping, atmospheric filters, and integrated music vibes to make every story a masterpiece.</p>
             </div>
           </div>
 
-          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="campus">
-            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
-              <div class="lp-what-shine"></div>
-              <div class="lp-what-card-bg">
-                <div class="what-particle what-p1"></div>
-                <div class="what-particle what-p2"></div>
-                <div class="what-particle what-p3"></div>
-                <div class="what-particle what-p4"></div>
-                <div class="what-particle what-p5"></div>
-                <div class="what-particle what-p6"></div>
-              </div>
-              <div class="lp-what-front">
-                <div class="lp-what-icon">🎓</div>
-                <h3>College Communities</h3>
-              </div>
-              <div class="lp-what-back">
-                <h3>College Communities</h3>
-                <p>Verified college email system. Private chat rooms, campus updates, and real-time online indicators —
-                  your entire campus in one place.</p>
-              </div>
+          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
+            <div class="lp-what-front">
+              <div class="lp-what-icon">🎓</div>
+              <h3>Nexus Hubs</h3>
+              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal network</p>
+            </div>
+            <div class="lp-what-back">
+              <h3>Verified Campus</h3>
+              <p>A secure, email-verified perimeter ensuring you only connect with real students from your institute. Your campus, digitized.</p>
             </div>
           </div>
 
@@ -6481,9 +6447,6 @@
             <div class="phm-divider"></div>
             <div class="phm-item phm-id-item" onclick="showMyIdToast(); closeProfileHamburgerMenu()"><span
                 class="phm-icon">🪪</span> My ID</div>
-            <div class="phm-item" onclick="showBlockedUsersModal(); closeProfileHamburgerMenu()">
-              <span class="phm-icon">🚫</span> Blocked Users
-            </div>
             <div class="phm-divider"></div>
 
             <div class="phm-item phm-activity-item" onclick="showMyActivityModal(); closeProfileHamburgerMenu()">
@@ -16718,24 +16681,31 @@
         });
       }
 
-      // ── Why-item cursor spotlight ──
-      document.querySelectorAll('.lp-why-item').forEach(function (item) {
-        item.addEventListener('mousemove', function (e) {
-          var r = item.getBoundingClientRect();
-          item.style.setProperty('--mouse-x', (e.clientX - r.left) + 'px');
-          item.style.setProperty('--mouse-y', (e.clientY - r.top) + 'px');
+      // ── Card Mouse Spotlight ──
+      document.querySelectorAll('.lp-what-item').forEach(function(item) {
+        item.addEventListener('mousemove', function(e) {
+          var rect = item.getBoundingClientRect();
+          var x = ((e.clientX - rect.left) / rect.width) * 100;
+          var y = ((e.clientY - rect.top) / rect.height) * 100;
+          item.style.setProperty('--mouse-x', x + '%');
+          item.style.setProperty('--mouse-y', y + '%');
         });
       });
 
       // ── Scroll Reveal ──
       var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry, i) {
+        entries.forEach(function (entry) {
           if (entry.isIntersecting) {
-            setTimeout(function () { entry.target.classList.add('in-view'); }, i * 80);
+            entry.target.classList.add('in-view');
+            // Stagger children if they have [data-reveal-child]
+            var children = entry.target.querySelectorAll('[data-reveal-child]');
+            children.forEach(function(child, i) {
+              setTimeout(function() { child.classList.add('in-view'); }, i * 100);
+            });
             obs.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+      }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
       document.querySelectorAll('[data-reveal]').forEach(function (el) { obs.observe(el); });
 
       // ── Stat Counter ──
