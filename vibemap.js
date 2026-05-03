@@ -8886,9 +8886,6 @@ let _rvAllVibes = [];
 let _rvUsedPhotos = 0;
 let _rvUsedVideos = 0;
 let _rvPlan = 'noble';
-// Cropper.js instance
-let _rvCropper = null;
-let _rvCropRawSrc = null;
 
 // ── Open creator — gate check ──────────────────────────────────
 async function openRealVibeCreator() {
@@ -9043,122 +9040,30 @@ function handleRvFile(e) {
     };
     reader.readAsDataURL(file);
   } else {
-    // Photos: open crop & adjust modal first
+    // Photos: show directly in drop zone (no crop needed)
+    rvMediaFile = file;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      _rvCropRawSrc = ev.target.result;
-      openRvCropModal(_rvCropRawSrc);
+      const vid = document.getElementById('rvPreviewVideo');
+      const img = document.getElementById('rvPreviewImg');
+      const badge = document.getElementById('rvVideoBadge');
+      const idle = document.getElementById('rvDropIdle');
+      const prev = document.getElementById('rvDropPreview');
+      if (img) { img.src = ev.target.result; img.style.display = 'block'; }
+      if (vid) vid.style.display = 'none';
+      if (badge) badge.style.display = 'none';
+      if (idle) idle.style.display = 'none';
+      if (prev) prev.style.display = 'flex';
+      const btn = document.getElementById('rvPublishBtn');
+      if (btn) btn.disabled = false;
     };
     reader.readAsDataURL(file);
   }
 }
 
-// ── Crop Modal ─────────────────────────────────────────────────
-function openRvCropModal(src) {
-  const modal = document.getElementById('rvCropModal');
-  if (!modal) return;
-
-  // Destroy previous cropper if any
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
-
-  const cropImg = document.getElementById('rvCropImage');
-  if (!cropImg) return;
-  cropImg.src = src;
-
-  // Reset ratio buttons to Square (default)
-  document.querySelectorAll('.rv-ratio-btn').forEach(b => b.classList.remove('active'));
-  const squareBtn = document.querySelector('.rv-ratio-btn[data-label="1:1"]');
-  if (squareBtn) squareBtn.classList.add('active');
-
-  modal.style.display = 'flex';
-
-  // Init Cropper after image loads
-  cropImg.onload = () => {
-    if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } }
-    _rvCropper = new Cropper(cropImg, {
-      aspectRatio: 1,        // default: Square (same as rv-card)
-      viewMode: 1,           // crop box stays inside canvas
-      dragMode: 'move',      // user moves image, not the box
-      autoCropArea: 1,       // fill all available space by default
-      restore: false,
-      guides: true,
-      center: true,
-      highlight: false,
-      cropBoxMovable: false, // box is fixed; user moves image
-      cropBoxResizable: false,
-      toggleDragModeOnDblclick: false,
-      background: true,
-    });
-  };
-  // If image already loaded (cached)
-  if (cropImg.complete && cropImg.naturalWidth) cropImg.onload();
-}
-
-function setRvAspect(ratio, btn) {
-  document.querySelectorAll('.rv-ratio-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (_rvCropper) {
-    _rvCropper.setAspectRatio(isNaN(ratio) ? NaN : ratio);
-    // For free ratio, enable movable crop box
-    _rvCropper.setCropBoxData({
-      left: 0, top: 0,
-      width: _rvCropper.getCanvasData().width,
-      height: _rvCropper.getCanvasData().height
-    });
-  }
-}
-
-function rvApplyCrop() {
-  if (!_rvCropper) return;
-  const canvas = _rvCropper.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1920, imageSmoothingQuality: 'high' });
-  if (!canvas) return;
-
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    // Store as the file to upload
-    rvMediaFile = new File([blob], 'realvibe.jpg', { type: 'image/jpeg' });
-    rvMediaType = 'image';
-
-    // Show cropped result in drop zone
-    const croppedURL = canvas.toDataURL('image/jpeg', 0.92);
-    const img = document.getElementById('rvPreviewImg');
-    const vid = document.getElementById('rvPreviewVideo');
-    const badge = document.getElementById('rvVideoBadge');
-    const idle = document.getElementById('rvDropIdle');
-    const prev = document.getElementById('rvDropPreview');
-
-    if (img) { img.src = croppedURL; img.style.display = 'block'; }
-    if (vid) vid.style.display = 'none';
-    if (badge) badge.style.display = 'none';
-    if (idle) idle.style.display = 'none';
-    if (prev) prev.style.display = 'flex';
-
-    const btn = document.getElementById('rvPublishBtn');
-    if (btn) btn.disabled = false;
-
-    // Close crop modal
-    rvCloseCropModal();
-  }, 'image/jpeg', 0.92);
-}
-
-function rvCancelCrop() {
-  rvCloseCropModal();
-  // Clear file input so user can re-pick
-  const fi = document.getElementById('rvFileInput');
-  if (fi) fi.value = '';
-}
-
-function rvCloseCropModal() {
-  const modal = document.getElementById('rvCropModal');
-  if (modal) modal.style.display = 'none';
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
-}
-
 function clearRvPreview() {
   rvMediaFile = null;
   rvMediaType = null;
-  _rvCropRawSrc = null;
-  if (_rvCropper) { try { _rvCropper.destroy(); } catch (e) { } _rvCropper = null; }
   const idle = document.getElementById('rvDropIdle');
   const prev = document.getElementById('rvDropPreview');
   const img = document.getElementById('rvPreviewImg');
