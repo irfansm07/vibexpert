@@ -11,8 +11,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body {
+html, body {
   overflow-x: hidden;
   width: 100%;
 }
@@ -21,7 +20,7 @@ body {
    2. LOADING SCREEN
 ────────────────────────────────────────── */
 @media (max-width: 480px) {
-  #loadingScreen>div {
+  #loadingScreen > div {
     width: 140px !important;
     height: 140px !important;
   }
@@ -35,18 +34,15 @@ body {
     width: 60vw !important;
     height: 60vw !important;
   }
-
   .lp-bg-logo-container {
     opacity: 0.22 !important;
   }
 }
-
 @media (max-width: 480px) {
   .lp-bg-logo-wrapper {
     width: 80vw !important;
     height: 80vw !important;
   }
-
   .lp-bg-logo-container {
     opacity: 0.18 !important;
   }
@@ -60,27 +56,22 @@ body {
     padding: 0 20px;
     height: 62px;
   }
-
   .lp-nav-logo {
     font-size: 20px;
   }
-
   .lp-nav-cta {
     padding: 8px 20px;
     font-size: 13px;
   }
 }
-
 @media (max-width: 480px) {
   .lp-nav {
     padding: 0 16px;
     height: 58px;
   }
-
   .lp-nav-logo {
     font-size: 18px;
   }
-
   .lp-nav-cta {
     padding: 7px 16px;
     font-size: 12px;
@@ -111,42 +102,35 @@ body {
     gap: 30px;
     min-height: 100svh;
   }
-
   .lp-hero-content {
     max-width: 100%;
     padding: 0;
   }
-
   .lp-hero-name {
     font-size: clamp(3.2rem, 18vw, 5.5rem) !important;
     letter-spacing: -1px;
   }
-
   .lp-hero-title {
     font-size: clamp(1.3rem, 5.5vw, 2rem) !important;
     gap: 0.3em;
     flex-wrap: wrap;
     justify-content: center;
   }
-
   .lp-hero-sub {
     font-size: clamp(0.95rem, 3.5vw, 1.1rem) !important;
     padding: 0 4px;
   }
-
   .lp-badge {
     font-size: 10px;
     letter-spacing: 1px;
     padding: 7px 16px;
     margin-bottom: 1.4rem;
   }
-
   .lp-hero-btns {
     gap: 12px;
     flex-direction: column;
     align-items: center;
   }
-
   .btn-primary,
   .btn-ghost {
     padding: 14px 36px;
@@ -161,37 +145,31 @@ body {
   .lp-hero {
     padding: 100px 16px 50px;
   }
-
   .lp-hero-name {
     font-size: clamp(2.8rem, 20vw, 4.5rem) !important;
     margin-bottom: 0.8rem;
   }
-
   .lp-hero-title {
     font-size: clamp(1.1rem, 6vw, 1.6rem) !important;
     flex-wrap: wrap;
     gap: 0.2em;
   }
-
   .lp-hero-sub {
     font-size: 0.92rem !important;
     margin-bottom: 2rem;
   }
-
   .lp-badge {
     font-size: 9px;
     letter-spacing: 0.8px;
     padding: 6px 14px;
     margin-bottom: 1.2rem;
   }
-
   .btn-primary,
   .btn-ghost {
     padding: 13px 28px;
     font-size: 13.5px;
     max-width: 280px;
   }
-
   .lp-hero-content::before,
   .lp-hero-content::after {
     display: none;
@@ -202,20 +180,16 @@ body {
   .lp-hero {
     padding: 95px 14px 45px;
   }
-
   .lp-hero-name {
     font-size: clamp(2.5rem, 22vw, 4rem) !important;
   }
-
   .lp-hero-title {
     font-size: clamp(1rem, 6.5vw, 1.4rem) !important;
   }
-
   .lp-badge {
     font-size: 8.5px;
     letter-spacing: 0.5px;
   }
-
   .btn-primary,
   .btn-ghost {
     padding: 12px 24px;
@@ -231,11 +205,9 @@ body {
   .lp-section {
     padding: 70px 20px;
   }
-
   .lp-container {
     padding: 0;
   }
-
   .lp-section-title {
     font-size: clamp(1.6rem, 7vw, 2.5rem) !important;
     margin-bottom: 0.8rem;
@@ -247,11 +219,9 @@ body {
   .lp-section {
     padding: 60px 16px;
   }
-
   .lp-section-title {
     font-size: clamp(1.4rem, 8vw, 2rem) !important;
   }
-
   .lp-what-hint {
     font-size: 0.9rem;
   }
@@ -261,7 +231,6 @@ body {
   .lp-section {
     padding: 50px 14px;
   }
-
   .lp-section-title {
     font-size: clamp(1.3rem, 8.5vw, 1.8rem) !important;
   }
@@ -275,23 +244,19 @@ body {
     grid-template-columns: 1fr !important;
     gap: 20px;
   }
-
   .lp-what-flip-wrapper {
     height: 220px !important;
     max-width: 420px;
     margin: 0 auto;
     width: 100%;
   }
-
   .lp-what-icon {
     font-size: 2.5rem;
   }
-
   .lp-what-front h3,
   .lp-what-back h3 {
     font-size: 1.1rem;
   }
-
   .lp-what-back p {
     font-size: 0.86rem;
   }
@@ -301,22 +266,18 @@ body {
   .lp-what-flip-wrapper {
     height: 200px !important;
   }
-
   .lp-what-front,
   .lp-what-back {
     padding: 24px 20px;
   }
-
   .lp-what-icon {
     font-size: 2.2rem;
     margin-bottom: 0.8rem;
   }
-
   .lp-what-front h3,
   .lp-what-back h3 {
     font-size: 1rem;
   }
-
   .lp-what-back p {
     font-size: 0.83rem;
     line-height: 1.6;
@@ -331,28 +292,24 @@ body {
     padding-left: 0;
     padding-right: 0;
   }
-
   .lp-coverflow-desc {
     font-size: 0.95rem;
     padding: 0 20px;
     margin-bottom: 2.5rem;
   }
-
   .coverflow-wrapper {
     padding: 0 12px;
   }
-
   /* Reduce floating emoji size */
-  #cfVibeBg>div[style*="font-size:110px"],
-  #cfVibeBg>div[style*="font-size:90px"],
-  #cfVibeBg>div[style*="font-size:95px"],
-  #cfVibeBg>div[style*="font-size:85px"] {
+  #cfVibeBg > div[style*="font-size:110px"],
+  #cfVibeBg > div[style*="font-size:90px"],
+  #cfVibeBg > div[style*="font-size:95px"],
+  #cfVibeBg > div[style*="font-size:85px"] {
     font-size: 60px !important;
     opacity: 0.07 !important;
   }
-
-  #cfVibeBg>div[style*="font-size:80px"],
-  #cfVibeBg>div[style*="font-size:75px"] {
+  #cfVibeBg > div[style*="font-size:80px"],
+  #cfVibeBg > div[style*="font-size:75px"] {
     display: none !important;
   }
 }
@@ -363,39 +320,31 @@ body {
     padding: 0 16px;
     margin-bottom: 2rem;
   }
-
   .coverflow-scene {
     height: 320px !important;
   }
-
   .coverflow-card {
     width: 170px !important;
     height: 250px !important;
   }
-
   .coverflow-card-inner {
     border-radius: 12px !important;
   }
-
   .coverflow-nav {
     margin-top: 20px;
     gap: 10px;
   }
-
   .coverflow-btn {
     width: 38px;
     height: 38px;
   }
-
   .coverflow-btn svg {
     width: 15px;
     height: 15px;
   }
-
   .cf-card-title {
     font-size: 12px !important;
   }
-
   .cf-card-desc {
     font-size: 10px !important;
   }
@@ -405,7 +354,6 @@ body {
   .coverflow-scene {
     height: 290px !important;
   }
-
   .coverflow-card {
     width: 155px !important;
     height: 230px !important;
@@ -427,30 +375,24 @@ body {
     padding: 70px 20px;
     min-height: auto;
   }
-
   .kf-content {
     max-width: 100%;
   }
-
   .kf-features-list {
     grid-template-columns: 1fr !important;
     gap: 12px;
   }
-
   .kf-ghost-mode .kf-title {
     font-size: clamp(2.2rem, 9vw, 3.5rem) !important;
   }
-
   .kf-subtitle {
     font-size: clamp(0.85rem, 3vw, 1rem) !important;
     letter-spacing: 2px;
   }
-
   .kf-desc {
     font-size: 0.95rem !important;
     margin-bottom: 30px;
   }
-
   /* Reduce large background emoji decorations on kf pages */
   .kf-page [style*="font-size:300px"],
   .kf-page [style*="font-size:120px"],
@@ -459,7 +401,6 @@ body {
   .kf-page [style*="font-size:70px"] {
     display: none !important;
   }
-
   .kf-page [style*="font-size:55px"],
   .kf-page [style*="font-size:60px"] {
     font-size: 36px !important;
@@ -471,31 +412,24 @@ body {
   .kf-page {
     padding: 60px 16px;
   }
-
   .kf-ghost-mode .kf-title {
     font-size: clamp(1.9rem, 10vw, 2.8rem) !important;
   }
-
   .kf-feature-item {
     padding: 12px 14px;
   }
-
   .kf-feature-item strong {
     font-size: 13px;
   }
-
   .kf-feature-item p {
     font-size: 11.5px;
   }
-
   .kf-feature-icon {
     font-size: 20px;
   }
-
   .kf-badge {
     padding: 5px 14px 5px 10px;
   }
-
   .kf-badge-label {
     font-size: 10px;
     letter-spacing: 2px;
@@ -506,7 +440,6 @@ body {
   .kf-page {
     padding: 55px 14px;
   }
-
   .kf-ghost-mode .kf-title {
     font-size: clamp(1.7rem, 11vw, 2.4rem) !important;
   }
@@ -519,13 +452,11 @@ body {
   .lp-features-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-
   .lp-features-grid .feature-card:nth-child(4) {
     grid-column: auto !important;
     justify-self: center !important;
     margin: 0 !important;
   }
-
   .lp-features-grid .feature-card:nth-child(5) {
     grid-column: auto !important;
     justify-self: center !important;
@@ -538,20 +469,16 @@ body {
     grid-template-columns: 1fr !important;
     gap: 20px;
   }
-
   .feature-card {
     max-width: 100% !important;
     padding: 32px 24px 28px;
   }
-
   .feature-card h3 {
     font-size: 1.15rem;
   }
-
   .feature-desc {
     font-size: 0.9rem;
   }
-
   .feature-card .feature-icon-wrap {
     width: 56px;
     height: 56px;
@@ -563,11 +490,9 @@ body {
   .feature-card {
     padding: 28px 20px 24px;
   }
-
   .feature-card h3 {
     font-size: 1.1rem;
   }
-
   .feature-desc {
     font-size: 0.88rem;
   }
@@ -581,11 +506,9 @@ body {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 16px;
   }
-
   .lp-stat-num {
     font-size: clamp(1.8rem, 7vw, 2.5rem) !important;
   }
-
   .lp-stat-label {
     font-size: 0.8rem;
   }
@@ -596,7 +519,6 @@ body {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 14px;
   }
-
   .lp-stat-num {
     font-size: clamp(1.6rem, 8vw, 2.2rem) !important;
   }
@@ -607,15 +529,12 @@ body {
     grid-template-columns: 1fr 1fr !important;
     gap: 12px;
   }
-
   .lp-stat {
     padding: 20px 12px;
   }
-
   .lp-stat-num {
     font-size: 1.5rem !important;
   }
-
   .lp-stat-label {
     font-size: 0.75rem;
   }
@@ -636,23 +555,19 @@ body {
     grid-template-columns: 1fr !important;
     gap: 18px;
   }
-
   .lp-why-flip-wrapper {
     height: 200px !important;
     max-width: 420px;
     margin: 0 auto;
     width: 100%;
   }
-
   .lp-why-icon {
     font-size: 2.4rem;
   }
-
   .lp-why-front h4,
   .lp-why-back h4 {
     font-size: 1.05rem;
   }
-
   .lp-why-back p {
     font-size: 0.86rem;
   }
@@ -662,22 +577,18 @@ body {
   .lp-why-flip-wrapper {
     height: 185px !important;
   }
-
   .lp-why-front,
   .lp-why-back {
     padding: 24px 20px;
   }
-
   .lp-why-icon {
     font-size: 2.1rem;
     margin-bottom: 0.7rem;
   }
-
   .lp-why-front h4,
   .lp-why-back h4 {
     font-size: 1rem;
   }
-
   .lp-why-back p {
     font-size: 0.83rem;
   }
@@ -690,69 +601,46 @@ body {
   .lp-testi-section {
     padding: 70px 0;
   }
-
   .lp-testi-card {
     min-width: 280px !important;
     padding: 22px;
   }
-
   .lp-testi-avatar {
     font-size: 2rem;
   }
-
   .lp-testi-text {
     font-size: 0.86rem;
     line-height: 1.65;
   }
-
   .lp-testi-author {
     font-size: 0.92rem;
   }
-
   .lp-marquee-track {
     gap: 16px;
     animation-duration: 22s;
   }
-
   /* Testimonial orbs — reduce on mobile */
-  .testi-orb-1 {
-    width: 300px;
-    height: 300px;
-  }
-
-  .testi-orb-2 {
-    width: 250px;
-    height: 250px;
-  }
-
-  .testi-orb-3 {
-    display: none;
-  }
-
-  .testi-orb-4 {
-    display: none;
-  }
+  .testi-orb-1 { width: 300px; height: 300px; }
+  .testi-orb-2 { width: 250px; height: 250px; }
+  .testi-orb-3 { display: none; }
+  .testi-orb-4 { display: none; }
 }
 
 @media (max-width: 480px) {
   .lp-testi-section {
     padding: 55px 0;
   }
-
   .lp-testi-card {
     min-width: 250px !important;
     padding: 18px;
   }
-
   .lp-testi-text {
     font-size: 0.83rem;
   }
-
   .lp-marquee-track {
     gap: 12px;
     animation-duration: 20s;
   }
-
   /* Reduce sparkles on mobile */
   .testi-sparkle {
     display: none;
@@ -764,11 +652,9 @@ body {
     min-width: 230px !important;
     padding: 16px;
   }
-
   .lp-testi-avatar {
     font-size: 1.8rem;
   }
-
   .lp-testi-text {
     font-size: 0.8rem;
   }
@@ -787,19 +673,16 @@ body {
   .lp-cta {
     padding: 80px 20px;
   }
-
   .lp-cta-title {
     font-size: clamp(1.8rem, 7vw, 2.8rem) !important;
     margin-bottom: 1.5rem;
     line-height: 1.15;
   }
-
   .lp-cta-buttons {
     flex-direction: column;
     align-items: center;
     gap: 12px;
   }
-
   .lp-cta-buttons .btn-primary,
   .lp-cta-buttons .btn-ghost {
     width: 100%;
@@ -811,12 +694,10 @@ body {
   .lp-cta {
     padding: 60px 16px;
   }
-
   .lp-cta-title {
     font-size: clamp(1.5rem, 8vw, 2.2rem) !important;
     margin-bottom: 1.2rem;
   }
-
   .lp-cta::before {
     width: 300px;
     height: 300px;
@@ -827,7 +708,6 @@ body {
   .lp-cta {
     padding: 50px 14px;
   }
-
   .lp-cta-title {
     font-size: clamp(1.3rem, 9vw, 1.9rem) !important;
   }
@@ -840,24 +720,19 @@ body {
   .lp-footer {
     padding: 3rem 20px 1.5rem;
   }
-
   .lp-footer-grid {
     grid-template-columns: 1fr !important;
     gap: 2rem;
   }
-
   .lp-footer-brand h3 {
     font-size: 1.2rem;
   }
-
   .lp-footer-brand p {
     font-size: 0.88rem;
   }
-
   .lp-footer-col h4 {
     margin-bottom: 0.75rem;
   }
-
   .lp-footer-bottom {
     font-size: 0.8rem;
     margin-top: 2rem;
@@ -868,11 +743,9 @@ body {
   .lp-footer {
     padding: 2.5rem 16px 1.2rem;
   }
-
   .lp-footer-grid {
     gap: 1.5rem;
   }
-
   .lp-social {
     width: 36px;
     height: 36px;
@@ -897,7 +770,6 @@ body {
     height: 54px !important;
     font-size: 22px !important;
   }
-
   #vxAiWindow {
     width: calc(100vw - 24px) !important;
     left: 12px !important;
@@ -916,7 +788,6 @@ body {
     height: 50px !important;
     font-size: 20px !important;
   }
-
   #vxAiWindow {
     width: calc(100vw - 16px) !important;
     left: 8px !important;
@@ -925,54 +796,43 @@ body {
     max-height: calc(100svh - 100px) !important;
     border-radius: 16px !important;
   }
-
   #vxAiHeader {
     padding: 12px 14px 10px !important;
   }
-
   .vxai-avatar {
     width: 34px !important;
     height: 34px !important;
     font-size: 17px !important;
   }
-
   .vxai-header-name {
     font-size: 13px !important;
   }
-
   .vxai-header-status {
     font-size: 10px !important;
   }
-
   #vxAiMessages {
     padding: 12px 10px !important;
   }
-
   .vxai-bubble {
     font-size: 12.5px !important;
     padding: 9px 12px !important;
   }
-
   #vxAiSuggestions {
     padding: 0 10px 8px !important;
     gap: 5px !important;
   }
-
   .vxai-chip {
     padding: 4px 10px !important;
     font-size: 10.5px !important;
   }
-
   #vxAiInputArea {
     padding: 10px 10px 12px !important;
     gap: 8px !important;
   }
-
   #vxAiInput {
     font-size: 12.5px !important;
     padding: 9px 12px !important;
   }
-
   #vxAiSendBtn {
     width: 36px !important;
     height: 36px !important;
@@ -1005,27 +865,22 @@ body {
     width: 400px;
     height: 400px;
   }
-
   .lp-orb-2 {
     width: 350px;
     height: 350px;
   }
-
   .lp-orb-3 {
     width: 250px;
     height: 250px;
   }
-
   .ghost-orb-1 {
     width: 300px;
     height: 300px;
   }
-
   .ghost-orb-2 {
     width: 250px;
     height: 250px;
   }
-
   .ghost-orb-3 {
     display: none;
   }
@@ -1038,14 +893,12 @@ body {
     top: -80px;
     left: -60px;
   }
-
   .lp-orb-2 {
     width: 240px;
     height: 240px;
     bottom: -60px;
     right: -60px;
   }
-
   .lp-orb-3 {
     display: none;
   }
@@ -1055,7 +908,6 @@ body {
    20. AUTH POPUP (from vibemap.css context)
 ────────────────────────────────────────── */
 @media (max-width: 768px) {
-
   .auth-popup,
   .auth-modal,
   #authPopup,
@@ -1066,7 +918,6 @@ body {
     margin: 0 auto;
     border-radius: 20px !important;
   }
-
   .auth-popup-inner,
   .popup-body {
     padding: 28px 24px !important;
@@ -1074,7 +925,6 @@ body {
 }
 
 @media (max-width: 480px) {
-
   .auth-popup,
   .auth-modal,
   #authPopup,
@@ -1085,27 +935,22 @@ body {
     max-height: 90svh !important;
     overflow-y: auto !important;
   }
-
   .auth-popup-inner,
   .popup-body {
     padding: 24px 18px !important;
   }
-
   .auth-title,
   .popup-title {
     font-size: 1.4rem !important;
   }
-
   .auth-input,
   .popup-input,
   input[type="email"],
   input[type="password"],
   input[type="text"] {
-    font-size: 16px !important;
-    /* Prevents iOS zoom on focus */
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
     padding: 12px 14px !important;
   }
-
   .auth-btn,
   .popup-btn,
   button[type="submit"] {
@@ -1120,74 +965,23 @@ body {
        overflowing on smaller screens
 ────────────────────────────────────────── */
 @media (max-width: 768px) {
-
   /* Ghost floating emoji decorations — scale down across all kf-pages */
-  [style*="font-size:300px"] {
-    font-size: 0 !important;
-    visibility: hidden !important;
-  }
-
-  [style*="font-size:250px"] {
-    font-size: 0 !important;
-    visibility: hidden !important;
-  }
-
-  [style*="font-size:200px"] {
-    font-size: 0 !important;
-    visibility: hidden !important;
-  }
-
-  [style*="font-size:150px"] {
-    font-size: 80px !important;
-    opacity: 0.05 !important;
-  }
-
-  [style*="font-size:120px"] {
-    font-size: 60px !important;
-    opacity: 0.06 !important;
-  }
-
-  [style*="font-size:110px"] {
-    font-size: 55px !important;
-    opacity: 0.06 !important;
-  }
-
-  [style*="font-size:100px"] {
-    font-size: 50px !important;
-    opacity: 0.07 !important;
-  }
-
-  [style*="font-size:90px"] {
-    font-size: 45px !important;
-    opacity: 0.07 !important;
-  }
+  [style*="font-size:300px"] { font-size: 0 !important; visibility: hidden !important; }
+  [style*="font-size:250px"] { font-size: 0 !important; visibility: hidden !important; }
+  [style*="font-size:200px"] { font-size: 0 !important; visibility: hidden !important; }
+  [style*="font-size:150px"] { font-size: 80px !important; opacity: 0.05 !important; }
+  [style*="font-size:120px"] { font-size: 60px !important; opacity: 0.06 !important; }
+  [style*="font-size:110px"] { font-size: 55px !important; opacity: 0.06 !important; }
+  [style*="font-size:100px"] { font-size: 50px !important; opacity: 0.07 !important; }
+  [style*="font-size:90px"]  { font-size: 45px !important; opacity: 0.07 !important; }
 }
 
 @media (max-width: 480px) {
-  [style*="font-size:80px"] {
-    font-size: 36px !important;
-    opacity: 0.06 !important;
-  }
-
-  [style*="font-size:75px"] {
-    font-size: 32px !important;
-    opacity: 0.06 !important;
-  }
-
-  [style*="font-size:70px"] {
-    font-size: 30px !important;
-    opacity: 0.05 !important;
-  }
-
-  [style*="font-size:60px"] {
-    font-size: 26px !important;
-    opacity: 0.05 !important;
-  }
-
-  [style*="font-size:55px"] {
-    font-size: 24px !important;
-    opacity: 0.05 !important;
-  }
+  [style*="font-size:80px"]  { font-size: 36px !important; opacity: 0.06 !important; }
+  [style*="font-size:75px"]  { font-size: 32px !important; opacity: 0.06 !important; }
+  [style*="font-size:70px"]  { font-size: 30px !important; opacity: 0.05 !important; }
+  [style*="font-size:60px"]  { font-size: 26px !important; opacity: 0.05 !important; }
+  [style*="font-size:55px"]  { font-size: 24px !important; opacity: 0.05 !important; }
 }
 
 /* ──────────────────────────────────────────
@@ -1199,19 +993,15 @@ body {
     max-width: 100% !important;
     border-radius: 16px !important;
   }
-
   .cf-lightbox-title {
     font-size: 17px !important;
   }
-
   .cf-lightbox-desc {
     font-size: 12.5px !important;
   }
-
   .cf-lightbox-info {
     padding: 14px 16px 20px !important;
   }
-
   .cf-lightbox-img {
     max-height: 45vh !important;
   }
@@ -1240,20 +1030,16 @@ body {
    25. GLOBAL FOCUS OUTLINES FOR TOUCH
 ────────────────────────────────────────── */
 @media (max-width: 768px) {
-
   button:focus-visible,
   a:focus-visible {
     outline: 2px solid rgba(168, 85, 247, 0.7);
     outline-offset: 3px;
   }
-
   /* Ensure minimum tap target size */
-  button,
-  a {
+  button, a {
     min-height: 44px;
     min-width: 44px;
   }
-
   /* Override for small decorative buttons */
   .lp-social,
   .coverflow-dot,
@@ -1270,13 +1056,9 @@ body {
   .about-us-page {
     overflow-x: hidden !important;
   }
-
   /* Reduce animation intensity on mobile for performance */
-  .lp-orb-1,
-  .lp-orb-2,
-  .lp-orb-3,
-  .ghost-orb-1,
-  .ghost-orb-2 {
+  .lp-orb-1, .lp-orb-2, .lp-orb-3,
+  .ghost-orb-1, .ghost-orb-2 {
     animation-duration: 30s !important;
   }
 }
@@ -1289,16 +1071,13 @@ body {
     padding-top: 80px;
     min-height: auto;
   }
-
   .lp-hero-name {
     font-size: clamp(2.5rem, 12vw, 4rem) !important;
   }
-
   .kf-page {
     min-height: auto;
     padding: 50px 24px;
   }
-
   #vxAiWindow {
     height: 300px !important;
     bottom: 80px !important;
@@ -1313,15 +1092,12 @@ body {
   .navbar {
     padding: 0.75rem 1.25rem;
   }
-
   .navbar-links {
     display: none;
   }
-
   .hero-section {
     padding: 0 20px;
   }
-
   .hero-content {
     padding: 0 16px;
   }
@@ -1331,19 +1107,15 @@ body {
   .navbar {
     padding: 0.65rem 1rem;
   }
-
   .navbar-logo {
     font-size: 1.25rem;
   }
-
   .hero-title {
     font-size: clamp(2.8rem, 14vw, 4.5rem) !important;
   }
-
   .hero-subtitle {
     font-size: clamp(0.95rem, 3.5vw, 1.1rem) !important;
   }
-
   .hero-cta {
     padding: 0.85rem 1.6rem;
     font-size: 1rem;
@@ -1357,7 +1129,6 @@ body {
   #vxAiLauncher {
     bottom: calc(28px + env(safe-area-inset-bottom)) !important;
   }
-
   .lp-nav {
     padding-top: env(safe-area-inset-top);
   }
@@ -1368,7 +1139,6 @@ body {
     #vxAiLauncher {
       bottom: calc(18px + env(safe-area-inset-bottom)) !important;
     }
-
     #vxAiWindow {
       bottom: calc(80px + env(safe-area-inset-bottom)) !important;
     }
@@ -1383,40 +1153,32 @@ body {
   .lp-hero-name {
     font-size: clamp(2.3rem, 24vw, 3.5rem) !important;
   }
-
   .lp-hero-title {
     font-size: clamp(0.95rem, 7vw, 1.3rem) !important;
   }
-
   .lp-badge {
     font-size: 8px !important;
     letter-spacing: 0.3px;
     padding: 5px 12px;
   }
-
   .lp-section-title {
     font-size: clamp(1.2rem, 9vw, 1.6rem) !important;
   }
-
   .lp-section {
     padding: 45px 12px;
   }
-
   .btn-primary,
   .btn-ghost {
     padding: 11px 22px !important;
     font-size: 12.5px !important;
     max-width: 240px !important;
   }
-
   .kf-ghost-mode .kf-title {
     font-size: clamp(1.5rem, 12vw, 2.2rem) !important;
   }
-
   .lp-cta-title {
     font-size: clamp(1.2rem, 10vw, 1.7rem) !important;
   }
-
   .lp-testi-card {
     min-width: 210px !important;
   }
