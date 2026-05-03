@@ -237,52 +237,55 @@ html, body {
 }
 
 /* ──────────────────────────────────────────
-   8. WHAT IS VIBEXPERT — FLIP CARDS
+   8. WHAT IS VIBEXPERT — FLIP CARDS (V3)
 ────────────────────────────────────────── */
 @media (max-width: 768px) {
   .lp-what-grid {
     grid-template-columns: 1fr !important;
-    gap: 20px;
+    gap: 24px;
   }
-  .lp-what-flip-wrapper {
-    height: 220px !important;
-    max-width: 420px;
+  .lp-what-item {
+    height: 380px !important;
+    max-width: 440px;
     margin: 0 auto;
     width: 100%;
   }
   .lp-what-icon {
-    font-size: 2.5rem;
+    font-size: 3.2rem;
   }
   .lp-what-front h3,
   .lp-what-back h3 {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
   }
   .lp-what-back p {
-    font-size: 0.86rem;
+    font-size: 0.95rem;
+    padding: 0 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .lp-what-flip-wrapper {
-    height: 200px !important;
+  .lp-what-item {
+    height: 340px !important;
   }
   .lp-what-front,
   .lp-what-back {
-    padding: 24px 20px;
+    padding: 32px 24px;
+    border-radius: 24px;
   }
   .lp-what-icon {
-    font-size: 2.2rem;
-    margin-bottom: 0.8rem;
+    font-size: 2.8rem;
+    margin-bottom: 16px;
   }
   .lp-what-front h3,
   .lp-what-back h3 {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
   .lp-what-back p {
-    font-size: 0.83rem;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 }
+
 
 /* ──────────────────────────────────────────
    9. COVERFLOW GALLERY SECTION
@@ -1149,37 +1152,210 @@ html, body {
    30. TYPOGRAPHY SCALE OVERRIDES
        Ensure no text overflows on small screens
 ────────────────────────────────────────── */
-@media (max-width: 360px) {
-  .lp-hero-name {
-    font-size: clamp(2.3rem, 24vw, 3.5rem) !important;
+/* ──────────────────────────────────────────
+   31. PREMIUM MOBILE BOTTOM NAV
+────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .vx-mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: hsla(var(--h-purple), 40%, 6%, 0.95);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid var(--glass-border);
+    display: flex !important;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px 10px; /* Extra bottom padding for safe area */
+    z-index: 10000;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
   }
-  .lp-hero-title {
-    font-size: clamp(0.95rem, 7vw, 1.3rem) !important;
+
+  .vx-mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
+    cursor: pointer;
+    min-width: 60px;
+    position: relative;
   }
-  .lp-badge {
-    font-size: 8px !important;
-    letter-spacing: 0.3px;
-    padding: 5px 12px;
+
+  .vx-mobile-nav-item.active {
+    color: var(--purple);
   }
-  .lp-section-title {
-    font-size: clamp(1.2rem, 9vw, 1.6rem) !important;
+
+  .vx-mobile-nav-icon {
+    font-size: 22px;
+    transition: transform 0.3s;
   }
-  .lp-section {
-    padding: 45px 12px;
+
+  .vx-mobile-nav-item.active .vx-mobile-nav-icon {
+    transform: translateY(-4px) scale(1.1);
+    filter: drop-shadow(0 0 10px var(--purple-glow));
   }
-  .btn-primary,
-  .btn-ghost {
-    padding: 11px 22px !important;
-    font-size: 12.5px !important;
-    max-width: 240px !important;
+
+  /* Central Post Button */
+  .vx-mobile-nav-post {
+    background: linear-gradient(135deg, var(--purple), var(--violet));
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    justify-content: center;
+    color: #fff;
+    margin-top: -30px;
+    border: 4px solid var(--bg-deep);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
   }
-  .kf-ghost-mode .kf-title {
-    font-size: clamp(1.5rem, 12vw, 2.2rem) !important;
-  }
-  .lp-cta-title {
-    font-size: clamp(1.2rem, 10vw, 1.7rem) !important;
-  }
-  .lp-testi-card {
-    min-width: 210px !important;
+
+  .vx-mobile-nav-post .vx-mobile-nav-icon {
+    font-size: 24px;
+    transform: none !important;
   }
 }
+
+/* ──────────────────────────────────────────
+   32. APP COMPONENTS — COMPREHENSIVE FIX
+────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Profile Tabs Scroll */
+  .profile-nav-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    gap: 8px !important;
+    padding: 8px 4px !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .profile-nav-tabs::-webkit-scrollbar { display: none; }
+  .profile-tab-btn {
+    flex: 0 0 auto !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+
+  /* Profile Stats */
+  [style*="grid-template-columns:1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 1px !important;
+  }
+  .stat-value { font-size: 18px !important; }
+  
+  /* My Vibes Stats Bar */
+  .mv-stats-bar {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .mv-stat-divider { display: none !important; }
+
+  /* Grids */
+  .mv-grid, #achievementsGrid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  /* Subscription Plans */
+  .plans-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .plan-card {
+    max-width: 100% !important;
+    padding: 32px 24px !important;
+  }
+
+  /* Modals */
+  .modal-box {
+    width: 92vw !important;
+    padding: 24px 20px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Edit Profile */
+  .edit-profile-form {
+    padding: 0 !important;
+  }
+  
+  /* Photo Editor */
+  .filter-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+/* ──────────────────────────────────────────
+   33. APP HEADER & NAVIGATION (MOBILE)
+────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Hide legacy app nav as we now use Bottom Nav */
+  .header .nav {
+    display: none !important;
+  }
+
+  .header {
+    height: 60px !important;
+    padding: 0 16px !important;
+  }
+
+  .header .logo {
+    font-size: 1.2rem !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  /* Optimize Search Bar for Mobile */
+  .header-search-wrap {
+    flex: 1 !important;
+    margin-left: 12px !important;
+    max-width: 180px !important;
+  }
+
+  .header-search-inner {
+    height: 34px !important;
+    padding: 0 10px !important;
+  }
+
+  .header-search-input {
+    font-size: 13px !important;
+  }
+
+  .header-search-icon {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* User Info in Header */
+  .user-info {
+    gap: 8px !important;
+  }
+  
+  .user-name {
+    display: none !important; /* Hide name to save space */
+  }
+
+  /* Floating Buttons */
+  #vxAiLauncher {
+    bottom: 84px !important; /* Move up above Bottom Nav */
+  }
+}
+
+@media (max-width: 480px) {
+  .header-search-wrap {
+    max-width: 140px !important;
+  }
+  
+  /* Ensure the main content doesn't get hidden by bottom nav */
+  .page, main {
+    padding-bottom: 80px !important;
+  }
+}
+
