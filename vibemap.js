@@ -3,7 +3,9 @@
 // Enhanced Community Chat + All Features
 // ========================================
 
-const API_URL = 'https://vibexpert-backend-main.onrender.com';
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:8080' 
+  : 'https://vibexpert-backend-main.onrender.com';
 
 // ── Media Proxy ────────────────────────────────────────────────────────────────
 // Routes Supabase storage URLs through our Render backend to bypass Indian mobile

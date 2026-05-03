@@ -16474,7 +16474,7 @@
       let _notifs = [], _tab = 'all';
       // BUG FIX (BUG-10): Removed auto markRead() 1.5s after panel open.
       // markRead() is now only called by clearAllVxNotifs (explicit user action).
-      async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || 'https://vibexpert-backend-main.onrender.com'; const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
+      async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://vibexpert-backend-main.onrender.com'); const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
         // Enrich notifications with profile pics from cached user data
         _notifs.forEach(function(n) {
           if (n.fromPic || n.from_pic || n.actor_avatar || n.from_avatar || n.avatar || n.profile_pic) return;
