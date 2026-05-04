@@ -6481,9 +6481,6 @@
             <div class="phm-divider"></div>
             <div class="phm-item phm-id-item" onclick="showMyIdToast(); closeProfileHamburgerMenu()"><span
                 class="phm-icon">🪪</span> My ID</div>
-            <div class="phm-item" onclick="showBlockedUsersModal(); closeProfileHamburgerMenu()">
-              <span class="phm-icon">🚫</span> Blocked Users
-            </div>
             <div class="phm-divider"></div>
 
             <div class="phm-item phm-activity-item" onclick="showMyActivityModal(); closeProfileHamburgerMenu()">
@@ -6491,7 +6488,8 @@
             </div>
             <div class="phm-divider"></div>
             <div class="phm-item phm-logout" onclick="logout()"><span class="phm-icon">🚪</span> Logout</div>
-            <div class="phm-item phm-delete-account" onclick="confirmDeleteAccount(); closeProfileHamburgerMenu()" style="color:#ef4444;"><span class="phm-icon">🗑️</span> Delete Account</div>
+            <div class="phm-item phm-delete-account" onclick="confirmDeleteAccount(); closeProfileHamburgerMenu()"
+              style="color:#ef4444;"><span class="phm-icon">🗑️</span> Delete Account</div>
           </div>
 
           <style>
@@ -13222,71 +13220,71 @@
               <span style="font-size:16px;">🧹</span> Clear Chat
             </button>
           </div>
-          </div>
         </div>
-      </div>
-      <!-- Chat messages -->
-      <div class="vx-chat-messages" id="vxChatMessages">
-        <div class="vx-chat-welcome" id="vxChatWelcome">
-          <div class="vx-chat-welcome-avatar" id="vxChatWelcomeAvatar"></div>
-          <div class="vx-chat-welcome-name" id="vxChatWelcomeName"></div>
-          <p class="vx-chat-welcome-text">Say hello! Start your conversation.</p>
-        </div>
-      </div>
-      <!-- Reply preview bar -->
-      <div id="vxReplyBar"
-        style="display:none;flex-shrink:0;padding:6px 12px;margin:0 8px;background:rgba(124,92,252,0.08);border-left:3px solid rgba(124,92,252,0.6);border-radius:0 8px 8px 0;align-items:center;gap:8px;">
-        <div style="flex:1;min-width:0;">
-          <div
-            style="font-size:10px;color:rgba(160,130,255,0.9);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">
-            ↩ Replying</div>
-          <div id="vxReplyPreview"
-            style="font-size:11.5px;color:rgba(200,180,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          </div>
-        </div>
-        <button onclick="vxCancelReply()"
-          style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:6px;transition:.15s;flex-shrink:0;"
-          onmouseenter="this.style.color='rgba(255,255,255,.8)'"
-          onmouseleave="this.style.color='rgba(255,255,255,.4)'">✕</button>
-      </div>
-      <!-- Attach preview bar -->
-      <div id="vxAttachBar"
-        style="display:none;flex-shrink:0;padding:6px 12px;align-items:center;gap:10px;background:rgba(124,92,252,0.06);border-top:1px solid rgba(124,92,252,0.1);">
-        <div id="vxAttachThumb" style="flex-shrink:0;font-size:28px;"></div>
-        <div style="flex:1;min-width:0;">
-          <div id="vxAttachName"
-            style="font-size:12px;font-weight:600;color:rgba(220,210,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          </div>
-          <div id="vxAttachSize" style="font-size:11px;color:rgba(180,160,255,.5);margin-top:2px;"></div>
-        </div>
-        <button onclick="vxCancelAttach()"
-          style="background:rgba(255,60,80,.08);border:1px solid rgba(255,60,80,.18);color:rgba(255,100,110,.7);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:6px;transition:.15s;"
-          onmouseenter="this.style.background='rgba(255,60,80,.22)'"
-          onmouseleave="this.style.background='rgba(255,60,80,.08)'">✕</button>
-      </div>
-      <!-- Chat input -->
-      <div class="vx-chat-input-bar">
-        <button class="vx-attach-trigger" onclick="vxToggleAttachMenu(event)" title="Attach">📎</button>
-        <div class="vx-chat-input-wrap">
-          <input type="text" id="vxChatInput" class="vx-chat-input" placeholder="Type a message…"
-            onkeydown="if(event.key==='Enter')vxSendDmMsg()" autocomplete="off">
-          <button class="vx-chat-emoji-btn" onclick="vxToggleEmojiPicker()" title="Emoji">😊</button>
-        </div>
-        <button class="vx-chat-send-btn" onclick="vxSendDmMsg()" title="Send">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </button>
-        <!-- hidden file inputs -->
-        <input type="file" id="vxPhotoInput" style="display:none;" accept="image/*,video/*"
-          onchange="vxHandleAttach(event)">
-        <input type="file" id="vxPdfInput" style="display:none;" accept=".pdf,application/pdf"
-          onchange="vxHandleAttach(event)">
-        <input type="file" id="vxFileInput" style="display:none;" accept="*/*" onchange="vxHandleAttach(event)">
       </div>
     </div>
+    <!-- Chat messages -->
+    <div class="vx-chat-messages" id="vxChatMessages">
+      <div class="vx-chat-welcome" id="vxChatWelcome">
+        <div class="vx-chat-welcome-avatar" id="vxChatWelcomeAvatar"></div>
+        <div class="vx-chat-welcome-name" id="vxChatWelcomeName"></div>
+        <p class="vx-chat-welcome-text">Say hello! Start your conversation.</p>
+      </div>
+    </div>
+    <!-- Reply preview bar -->
+    <div id="vxReplyBar"
+      style="display:none;flex-shrink:0;padding:6px 12px;margin:0 8px;background:rgba(124,92,252,0.08);border-left:3px solid rgba(124,92,252,0.6);border-radius:0 8px 8px 0;align-items:center;gap:8px;">
+      <div style="flex:1;min-width:0;">
+        <div
+          style="font-size:10px;color:rgba(160,130,255,0.9);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">
+          ↩ Replying</div>
+        <div id="vxReplyPreview"
+          style="font-size:11.5px;color:rgba(200,180,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        </div>
+      </div>
+      <button onclick="vxCancelReply()"
+        style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:6px;transition:.15s;flex-shrink:0;"
+        onmouseenter="this.style.color='rgba(255,255,255,.8)'"
+        onmouseleave="this.style.color='rgba(255,255,255,.4)'">✕</button>
+    </div>
+    <!-- Attach preview bar -->
+    <div id="vxAttachBar"
+      style="display:none;flex-shrink:0;padding:6px 12px;align-items:center;gap:10px;background:rgba(124,92,252,0.06);border-top:1px solid rgba(124,92,252,0.1);">
+      <div id="vxAttachThumb" style="flex-shrink:0;font-size:28px;"></div>
+      <div style="flex:1;min-width:0;">
+        <div id="vxAttachName"
+          style="font-size:12px;font-weight:600;color:rgba(220,210,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        </div>
+        <div id="vxAttachSize" style="font-size:11px;color:rgba(180,160,255,.5);margin-top:2px;"></div>
+      </div>
+      <button onclick="vxCancelAttach()"
+        style="background:rgba(255,60,80,.08);border:1px solid rgba(255,60,80,.18);color:rgba(255,100,110,.7);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:6px;transition:.15s;"
+        onmouseenter="this.style.background='rgba(255,60,80,.22)'"
+        onmouseleave="this.style.background='rgba(255,60,80,.08)'">✕</button>
+    </div>
+    <!-- Chat input -->
+    <div class="vx-chat-input-bar">
+      <button class="vx-attach-trigger" onclick="vxToggleAttachMenu(event)" title="Attach">📎</button>
+      <div class="vx-chat-input-wrap">
+        <input type="text" id="vxChatInput" class="vx-chat-input" placeholder="Type a message…"
+          onkeydown="if(event.key==='Enter')vxSendDmMsg()" autocomplete="off">
+        <button class="vx-chat-emoji-btn" onclick="vxToggleEmojiPicker()" title="Emoji">😊</button>
+      </div>
+      <button class="vx-chat-send-btn" onclick="vxSendDmMsg()" title="Send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13" />
+          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </svg>
+      </button>
+      <!-- hidden file inputs -->
+      <input type="file" id="vxPhotoInput" style="display:none;" accept="image/*,video/*"
+        onchange="vxHandleAttach(event)">
+      <input type="file" id="vxPdfInput" style="display:none;" accept=".pdf,application/pdf"
+        onchange="vxHandleAttach(event)">
+      <input type="file" id="vxFileInput" style="display:none;" accept="*/*" onchange="vxHandleAttach(event)">
+    </div>
+  </div>
 
   </div>
 
@@ -16488,17 +16486,21 @@
       let _notifs = [], _tab = 'all';
       // BUG FIX (BUG-10): Removed auto markRead() 1.5s after panel open.
       // markRead() is now only called by clearAllVxNotifs (explicit user action).
-      async function loadVxNotifications(tab) { _tab = tab || 'all'; skeleton('vxNotifList', 6); try { const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://vibexpert-backend-main.onrender.com'); const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
-        // Enrich notifications with profile pics from cached user data
-        _notifs.forEach(function(n) {
-          if (n.fromPic || n.from_pic || n.actor_avatar || n.from_avatar || n.avatar || n.profile_pic) return;
-          var uid = n.from || n.actor_id || n.from_id || n.follower_id || '';
-          if (!uid) return;
-          // Check _mpcCache (feed post authors), _users (DM contacts), _dmContactCache
-          var cached = (window._mpcCache && window._mpcCache[uid]) || ((window._users || []).find(function(u) { return String(u.id) === String(uid); })) || (window._dmContactCache && window._dmContactCache[uid]);
-          if (cached && cached.profile_pic) n.fromPic = cached.profile_pic;
-        });
-        renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0); } catch (e) { const l = document.getElementById('vxNotifList'); if (l) l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No notifications yet.</p></div>`; } }
+      async function loadVxNotifications(tab) {
+        _tab = tab || 'all'; skeleton('vxNotifList', 6); try {
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://vibexpert-backend-main.onrender.com'); const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
+          // Enrich notifications with profile pics from cached user data
+          _notifs.forEach(function (n) {
+            if (n.fromPic || n.from_pic || n.actor_avatar || n.from_avatar || n.avatar || n.profile_pic) return;
+            var uid = n.from || n.actor_id || n.from_id || n.follower_id || '';
+            if (!uid) return;
+            // Check _mpcCache (feed post authors), _users (DM contacts), _dmContactCache
+            var cached = (window._mpcCache && window._mpcCache[uid]) || ((window._users || []).find(function (u) { return String(u.id) === String(uid); })) || (window._dmContactCache && window._dmContactCache[uid]);
+            if (cached && cached.profile_pic) n.fromPic = cached.profile_pic;
+          });
+          renderNotif(_notifs, _tab); setBadge('vxNotifBadge', 0);
+        } catch (e) { const l = document.getElementById('vxNotifList'); if (l) l.innerHTML = `<div class="vx-panel-empty"><div class="vx-panel-empty-icon">🔔</div><p>No notifications yet.</p></div>`; }
+      }
       function renderNotif(notifs, tab) {
         const l = document.getElementById('vxNotifList');
         if (!l) return;
@@ -16551,7 +16553,7 @@
             else text = `<strong>${actor}</strong> ${n.action || 'interacted with you'}`;
           }
           if (type === 'platform') {
-             text = `<strong>${n.title || 'Notification'}</strong><br>${n.message || ''}`;
+            text = `<strong>${n.title || 'Notification'}</strong><br>${n.message || ''}`;
           }
           const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="${actor}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;">${initials}</span>` : '';
           const delay = Math.min(i * 0.04, 0.3);

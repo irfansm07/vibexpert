@@ -1031,16 +1031,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (activePage && activePage.id === 'communities') {
               if (typeof loadCommunities === 'function') loadCommunities();
             }
-            // Also refresh block state once user is fully synced
-            if (typeof fetchBlockedUsers === 'function') fetchBlockedUsers();
           });
-          
-          // Initial load from storage if available
-          if (currentUser) {
-            _blockState = _loadBlockStateFromStorage();
-          }
-          
-          // Initial fetch
+          // Fetch blocked users on startup
           if (typeof fetchBlockedUsers === 'function') fetchBlockedUsers();
           // Load home feed on startup via showPage so display:flex + all
           // layout state is set identically to navigating to home manually.
@@ -6863,43 +6855,21 @@ function _seedFollowState(userId, isFollowing, followersCount) {
 // ═══════════════════════════════════════════════════════════════
 // CENTRAL BLOCKING ENGINE
 // ═══════════════════════════════════════════════════════════════
-let _blockState = _loadBlockStateFromStorage(); // userId -> boolean
-
-function _saveBlockStateToStorage(state) {
-  if (currentUser) localStorage.setItem(`vx_blocks_${currentUser.id}`, JSON.stringify(state));
-}
-function _loadBlockStateFromStorage() {
-  const saved = currentUser ? localStorage.getItem(`vx_blocks_${currentUser.id}`) : null;
-  return saved ? JSON.parse(saved) : {};
-}
+let _blockState = {}; // userId -> boolean
 
 async function fetchBlockedUsers() {
   if (!currentUser) return;
-  console.log('🛡️ fetchBlockedUsers starting...');
   try {
     const data = await apiCall('/api/users/blocked');
-    console.log('🛡️ fetchBlockedUsers result:', data);
     if (data && data.blocked) {
       _blockState = {};
-      data.blocked.forEach(u => { 
-        const sid = String(u.id);
-        _blockState[sid] = true; 
-        console.log(`🛡️ Marking ${sid} as blocked`);
-      });
-      _saveBlockStateToStorage(_blockState);
-      
-      // Sync UI if profile is currently open
-      if (window.currentProfileUser) {
-        console.log('🛡️ Syncing profile UI for:', window.currentProfileUser.id);
-        updateBlockButtonUI(window.currentProfileUser.id);
-      }
+      data.blocked.forEach(u => { _blockState[u.id] = true; });
     }
   } catch (e) { console.warn('[fetchBlockedUsers] error:', e); }
 }
 
 function updateBlockButtonUI(targetUserId) {
-  if (!targetUserId) return;
-  const isBlocked = !!_blockState[String(targetUserId)];
+  const isBlocked = !!_blockState[targetUserId];
   const btn = document.getElementById('blockBtn');
   const content = document.getElementById('blockBtnContent');
   const dmBlockBtn = document.getElementById('dmBlockBtn');
@@ -6918,33 +6888,27 @@ function updateBlockButtonUI(targetUserId) {
 async function toggleBlockUser(targetUserId, targetUsername) {
   const uid = targetUserId || (window.currentProfileUser && window.currentProfileUser.id);
   const uname = targetUsername || (window.currentProfileUser && window.currentProfileUser.username) || 'this user';
-  if (!uid) { console.warn('🛡️ toggleBlockUser: no uid provided'); return; }
+  if (!uid) return;
 
-  const sUid = String(uid);
-  const isBlocked = !!_blockState[sUid];
+  const isBlocked = !!_blockState[uid];
   const action = isBlocked ? 'unblock' : 'block';
-
-  console.log(`🛡️ toggleBlockUser: ${action}ing ${sUid} (${uname})`);
 
   if (!confirm(`Are you sure you want to ${action} ${uname}?`)) return;
 
   try {
-    const result = await apiCall(`/api/users/${sUid}/${action}`, 'POST');
-    console.log(`🛡️ toggleBlockUser ${action} result:`, result);
+    const result = await apiCall(`/api/users/${uid}/${action}`, 'POST');
     if (result && result.success) {
-      _blockState[sUid] = !isBlocked;
-      _saveBlockStateToStorage(_blockState);
-      
+      _blockState[uid] = !isBlocked;
       showMessage(`✨ User ${isBlocked ? 'unblocked' : 'blocked'} successfully`, 'success');
 
-      updateBlockButtonUI(sUid);
+      updateBlockButtonUI(uid);
 
       if (!isBlocked) {
         // If just blocked, also unfollow them locally
-        if (_followState[sUid]) {
-          _followState[sUid].isFollowing = false;
+        if (_followState[uid]) {
+          _followState[uid].isFollowing = false;
           _saveFollowStateToStorage(_followState);
-          _syncAllFollowUI(sUid, false, _followState[sUid].followersCount);
+          _syncAllFollowUI(uid, false, _followState[uid].followersCount);
         }
         // Close DM if open
         if (typeof closeDmDrawer === 'function') closeDmDrawer();
@@ -6962,51 +6926,6 @@ function toggleBlockFromChat() {
   if (typeof _dmCurrentReceiverId !== 'undefined' && _dmCurrentReceiverId) {
     const uname = document.getElementById('dmDrawerName')?.textContent || 'this user';
     toggleBlockUser(_dmCurrentReceiverId, uname);
-  }
-}
-
-async function showBlockedUsersModal() {
-  const modal = document.createElement('div');
-  modal.className = 'vx-modal-overlay';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;';
-
-  modal.innerHTML = `
-    <div style="background:#0d0b1e;border:1px solid rgba(167,139,250,0.2);border-radius:24px;width:380px;max-width:90vw;height:500px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,0.9);">
-      <div style="padding:20px;border-bottom:1px solid rgba(167,139,250,0.1);display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;color:#a78bfa;font-size:18px;">Blocked Users</h3>
-        <button onclick="this.closest('.vx-modal-overlay').remove()" style="background:none;border:none;color:#888;cursor:pointer;font-size:20px;">✕</button>
-      </div>
-      <div id="blockedUsersList" style="flex:1;overflow-y:auto;padding:12px;">
-        <div style="color:#888;text-align:center;padding:40px;">⏳ Loading...</div>
-      </div>
-      <div style="padding:10px;text-align:center;background:rgba(255,255,255,0.02);">
-        <button onclick="runBlockDiagnostics()" style="background:none;border:none;color:#a78bfa;font-size:11px;cursor:pointer;text-decoration:underline;">Run Diagnostics</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  try {
-    const data = await apiCall('/api/users/blocked');
-    const list = document.getElementById('blockedUsersList');
-    if (!data || !data.blocked || data.blocked.length === 0) {
-      list.innerHTML = '<div style="color:#555;text-align:center;padding:40px;font-style:italic;">No blocked users</div>';
-      return;
-    }
-
-    list.innerHTML = data.blocked.map(u => `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:14px;margin-bottom:8px;">
-        <img src="${proxyMediaUrl(u.profile_pic) || 'default-avatar.png'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid rgba(167,139,250,0.3);">
-        <div style="flex:1;min-width:0;">
-          <div style="color:#fff;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name || u.username}</div>
-          <div style="color:#888;font-size:12px;">@${u.username}</div>
-        </div>
-        <button onclick="toggleBlockUser('${u.id}', '${u.username}').then(() => { document.querySelector('.vx-modal-overlay')?.remove(); showBlockedUsersModal(); })" 
-          style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);color:#22c55e;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;">Unblock</button>
-      </div>
-    `).join('');
-  } catch (e) {
-    document.getElementById('blockedUsersList').innerHTML = '<div style="color:#ff6b6b;text-align:center;padding:40px;">Failed to load</div>';
   }
 }
 
@@ -18943,33 +18862,3 @@ window.deleteGlobalComment = async function (commentId, type, parentId) {
     showMessage('❌ Error deleting comment', 'error');
   }
 };
-async function runBlockDiagnostics() {
-  console.log('🧪 Starting Block Diagnostics...');
-  try {
-    const url = `${API_URL}/api/debug/blocks`;
-    console.log('🧪 Fetching from:', url);
-    const res = await fetch(url);
-    const data = await res.json();
-    console.log('🧪 Raw Diagnostic Result:', data);
-    
-    if (!data.success) {
-      alert(`Backend Error: ${data.error || 'Unknown error'}\nCheck if the server is still deploying.`);
-      return;
-    }
-
-    if (!data.diagnostics) {
-      alert(`Invalid response from server. It might be an old version.\nResponse: ${JSON.stringify(data)}`);
-      return;
-    }
-
-    alert(`Diagnostics Complete!\n
-      - Total Blocks in DB: ${data.diagnostics.totalBlocksInDb}
-      - Total Users in DB: ${data.diagnostics.totalUsersInDb}
-      - Supabase URL: ${data.config.supabaseUrl}
-      - My ID: ${currentUser?.id}
-    `);
-  } catch (e) {
-    console.error('🧪 Diagnostic Failed:', e);
-    alert(`Failed to run diagnostics.\nError: ${e.message}\nMake sure your backend is running and reachable.`);
-  }
-}
