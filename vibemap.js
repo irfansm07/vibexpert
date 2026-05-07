@@ -18859,16 +18859,34 @@ window._vxMyBlockedIds = new Set();
 // In-memory set of user IDs that have blocked the current user
 window._vxBlockedByIds = new Set();
 
-/* ── Load blocked list from server (call on login) ── */
+/* ── Load blocked list from server AND persist to localStorage ── */
 async function _vxLoadBlockedList() {
   try {
     const res = await apiCall('/api/users/blocked');
     if (res && res.blocked) {
       window._vxMyBlockedIds = new Set((res.blocked || []).map(u => String(u.id)));
+      // ✅ PERSIST to localStorage so it survives page reload
+      localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
+      console.log('[Block] Blocked list loaded and saved to localStorage:', Array.from(window._vxMyBlockedIds));
     }
   } catch (e) {
     console.warn('[Block] Could not load blocked list:', e);
   }
+}
+
+/* ── Load blocked list from localStorage (called before server sync) ── */
+function _vxLoadBlockedListFromStorage() {
+  try {
+    const stored = localStorage.getItem('_vxMyBlockedIds');
+    if (stored) {
+      window._vxMyBlockedIds = new Set(JSON.parse(stored));
+      console.log('[Block] Restored blocked list from localStorage:', Array.from(window._vxMyBlockedIds));
+      return true;
+    }
+  } catch (e) {
+    console.warn('[Block] Could not restore blocked list from localStorage:', e);
+  }
+  return false;
 }
 
 /* ── Update Block button in profile page ── */
@@ -18908,6 +18926,8 @@ window.toggleBlockProfileUser = async function (btn) {
   if (isBlocked) {
     // Unblock immediately — no confirmation needed
     window._vxMyBlockedIds.delete(String(targetId));
+    // ✅ PERSIST the change to localStorage
+    localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
     _vxUpdateProfileBlockBtn(targetId);
     _vxUpdateDmDrawerBlockState(targetId);
     try {
@@ -18915,6 +18935,7 @@ window.toggleBlockProfileUser = async function (btn) {
       showMessage(`✅ @${username} unblocked`, 'success');
     } catch (e) {
       window._vxMyBlockedIds.add(String(targetId));
+      localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
       _vxUpdateProfileBlockBtn(targetId);
       _vxUpdateDmDrawerBlockState(targetId);
       showMessage('❌ Unblock failed. Please try again.', 'error');
@@ -18926,6 +18947,8 @@ window.toggleBlockProfileUser = async function (btn) {
       `Block <strong style="color:#ff8080">@${username}</strong>? They won't be able to send you messages and you won't see each other's content.`,
       async () => {
         window._vxMyBlockedIds.add(String(targetId));
+        // ✅ PERSIST the change to localStorage
+        localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
         _vxUpdateProfileBlockBtn(targetId);
         _vxUpdateDmDrawerBlockState(targetId);
         try {
@@ -18933,6 +18956,7 @@ window.toggleBlockProfileUser = async function (btn) {
           showMessage(`🚫 @${username} blocked`, 'success');
         } catch (e) {
           window._vxMyBlockedIds.delete(String(targetId));
+          localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
           _vxUpdateProfileBlockBtn(targetId);
           _vxUpdateDmDrawerBlockState(targetId);
           showMessage('❌ Block failed. Please try again.', 'error');
@@ -18984,6 +19008,8 @@ window.dmUnblockCurrentUser = async function () {
 
   try {
     window._vxMyBlockedIds.delete(String(targetId));
+    // ✅ PERSIST the change to localStorage
+    localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
     _vxUpdateDmDrawerBlockState(targetId);
     _vxUpdateProfileBlockBtn(targetId);
     await apiCall(`/api/users/${targetId}/unblock`, 'POST');
@@ -18991,6 +19017,7 @@ window.dmUnblockCurrentUser = async function () {
     showMessage(`✅ ${name} unblocked`, 'success');
   } catch (e) {
     window._vxMyBlockedIds.add(String(targetId));
+    localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
     _vxUpdateDmDrawerBlockState(targetId);
     _vxUpdateProfileBlockBtn(targetId);
     showMessage('❌ Unblock failed. Please try again.', 'error');
@@ -19063,6 +19090,9 @@ const _vxOrigShowProfilePage = window.showProfilePage || (typeof showProfilePage
 (function _bootBlockSystem() {
   const tryBoot = () => {
     if (!currentUser || !currentUser.id) { setTimeout(tryBoot, 800); return; }
+    // ✅ Step 1: Restore from localStorage immediately
+    _vxLoadBlockedListFromStorage();
+    // Step 2: Then sync with server in the background
     _vxLoadBlockedList();
   };
   if (document.readyState === 'loading') {
