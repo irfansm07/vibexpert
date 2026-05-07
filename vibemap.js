@@ -3,10 +3,11 @@
 // Enhanced Community Chat + All Features
 // ========================================
 
-window.API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
-  ? 'http://localhost:5501'
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.') || window.location.protocol === 'file:' || window.location.hostname === '';
+const API_URL = (isLocal && window.location.port !== '5501')
+  ? (window.location.hostname && window.location.hostname !== '' ? `http://${window.location.hostname}:5501` : 'http://localhost:5501')
   : 'https://vibexpert-backend-main.onrender.com';
-const API_URL = window.API_URL;
+window.API_URL = API_URL;
 
 // ── Media Proxy ────────────────────────────────────────────────────────────────
 // Routes Supabase storage URLs through our Render backend to bypass Indian mobile
@@ -925,7 +926,8 @@ let colleges = {};
 // Load colleges on startup
 async function loadColleges() {
   try {
-    const response = await fetch('/colleges.json');
+    const url = typeof API_URL !== 'undefined' ? `${API_URL}/colleges.json` : '/colleges.json';
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -1033,8 +1035,6 @@ document.addEventListener('DOMContentLoaded', function () {
               if (typeof loadCommunities === 'function') loadCommunities();
             }
           });
-          // Fetch blocked users on startup
-          if (typeof fetchBlockedUsers === 'function') fetchBlockedUsers();
           // Load home feed on startup via showPage so display:flex + all
           // layout state is set identically to navigating to home manually.
           setTimeout(() => showPage('home'), 100);
@@ -1572,7 +1572,14 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
     const response = await fetch(url, options);
     clearTimeout(timeoutId);
 
-    const data = await response.json();
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error(`Unexpected response from server (Status ${response.status}). Please ensure the backend is running.`);
+    }
     if (!response.ok) {
       const err = new Error(data.error || data.message || 'Request failed');
       err.status = response.status;
@@ -3852,7 +3859,7 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
       followBtn.style.display = 'none';
     } else {
       followBtn.style.display = 'block';
-      // Prefer _followState — it is always most up-to-date
+      // Prefer _followState — it is always most up-to-date (e.g. followed from home feed/vibe cards)
       const knownState = _followState[targetUser.id];
       const isFollowing = (knownState && knownState.isFollowing !== undefined)
         ? knownState.isFollowing
@@ -3866,17 +3873,6 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
         followBtn.className = 'btn-primary follow-btn-not-following';
         followBtn.style.opacity = '1';
       }
-    }
-  }
-
-  // Handle Block Button
-  const blockBtn = document.getElementById('blockBtn');
-  if (blockBtn) {
-    if (isOwn) {
-      blockBtn.style.display = 'none';
-    } else {
-      blockBtn.style.display = 'block';
-      updateBlockButtonUI(targetUser.id);
     }
   }
 
@@ -6565,11 +6561,7 @@ function resetPostForm() {
 
 // ── CHAT NOW: Navigate to user's profile then auto-open DM drawer ─────
 async function chatNowWithUser(userId) {
-  if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }// ── Block gate: don't open drawer if user is locally blocked ──
-if (_blockState && _blockState[userId]) {
-    showMessage('🚫 This user is blocked. Unblock from their profile to message them.', 'error');
-    return;
-}
+  if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }
   if (userId === currentUser.id) return;
   openDmDrawer(userId);
 }
@@ -6855,83 +6847,6 @@ function _seedFollowState(userId, isFollowing, followersCount) {
   if (!userId) return;
   _followState[userId] = { isFollowing, followersCount };
   _saveFollowStateToStorage(_followState);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CENTRAL BLOCKING ENGINE
-// ═══════════════════════════════════════════════════════════════
-let _blockState = {}; // userId -> boolean
-
-async function fetchBlockedUsers() {
-  if (!currentUser) return;
-  try {
-    const data = await apiCall('/api/users/blocked');
-    if (data && data.blocked) {
-      _blockState = {};
-      data.blocked.forEach(u => { _blockState[u.id] = true; });
-    }
-  } catch (e) { console.warn('[fetchBlockedUsers] error:', e); }
-}
-
-function updateBlockButtonUI(targetUserId) {
-  const isBlocked = !!_blockState[targetUserId];
-  const btn = document.getElementById('blockBtn');
-  const content = document.getElementById('blockBtnContent');
-  const dmBlockBtn = document.getElementById('dmBlockBtn');
-
-  if (btn && content) {
-    btn.style.display = 'block';
-    content.innerHTML = isBlocked ? '🚫 Unblock' : '🚫 Block';
-    content.style.color = isBlocked ? '#22c55e' : '#f87171';
-  }
-  if (dmBlockBtn) {
-    dmBlockBtn.innerHTML = isBlocked ? '✅' : '🚫';
-    dmBlockBtn.title = isBlocked ? 'Unblock user' : 'Block user';
-  }
-}
-
-async function toggleBlockUser(targetUserId, targetUsername) {
-  const uid = targetUserId || (window.currentProfileUser && window.currentProfileUser.id);
-  const uname = targetUsername || (window.currentProfileUser && window.currentProfileUser.username) || 'this user';
-  if (!uid) return;
-
-  const isBlocked = !!_blockState[uid];
-  const action = isBlocked ? 'unblock' : 'block';
-
-  if (!confirm(`Are you sure you want to ${action} ${uname}?`)) return;
-
-  try {
-    const result = await apiCall(`/api/users/${uid}/${action}`, 'POST');
-    if (result && result.success) {
-      _blockState[uid] = !isBlocked;
-      showMessage(`✨ User ${isBlocked ? 'unblocked' : 'blocked'} successfully`, 'success');
-
-      updateBlockButtonUI(uid);
-
-      if (!isBlocked) {
-        // If just blocked, also unfollow them locally
-        if (_followState[uid]) {
-          _followState[uid].isFollowing = false;
-          _saveFollowStateToStorage(_followState);
-          _syncAllFollowUI(uid, false, _followState[uid].followersCount);
-        }
-        // Close DM if open
-        if (typeof closeDmDrawer === 'function') closeDmDrawer();
-      }
-
-      // Refresh feed to remove/restore content
-      if (typeof renderPosts === 'function') renderPosts(1, true);
-    }
-  } catch (e) {
-    showMessage(`❌ Failed to ${action} user`, 'error');
-  }
-}
-
-function toggleBlockFromChat() {
-  if (typeof _dmCurrentReceiverId !== 'undefined' && _dmCurrentReceiverId) {
-    const uname = document.getElementById('dmDrawerName')?.textContent || 'this user';
-    toggleBlockUser(_dmCurrentReceiverId, uname);
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -15109,22 +15024,10 @@ async function openDmDrawer(userId) {
   } catch (e) {
     console.error('DM load error:', e);
 
-    // ── Blocked user: show clean blocked state ──
-    if (e.status === 403) {
-        area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;
-            justify-content:center;height:100%;gap:14px;padding:32px;text-align:center;">
-            <div style="font-size:52px;">🚫</div>
-            <div style="color:#f87171;font-size:16px;font-weight:700;">Blocked</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:13px;max-width:220px;line-height:1.5;">
-                You cannot message this user while they are blocked.
-                Unblock from their profile to chat.
-            </div>
-        </div>`;
-        return;
-    }
-
-    // ... existing error handling continues below
+    // Give a useful, specific error message
     let errorMsg = 'Could not load messages';
+    let hint = '';
+    const msg = (e.message || '').toLowerCase();
 
     if (e.status === 401 || e.status === 403) {
       errorMsg = 'Session expired';
@@ -15901,7 +15804,7 @@ async function sendDm() {
       else if (pendingFile.type.startsWith('video/')) fd.append('media_type', 'video');
       else fd.append('media_type', 'document');
       fd.append('media_name', pendingFile.name);
-      const BASE = window.API_URL || 'https://vibexpert-backend-main.onrender.com';
+      const BASE = API_URL || 'https://vibexpert-backend-main.onrender.com';
       const authTok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') ||
         sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || '';
       const r = await fetch(`${BASE}/api/dm/send`, { method: 'POST', headers: { 'Authorization': `Bearer ${authTok}` }, body: fd });
@@ -15988,17 +15891,6 @@ async function sendDm() {
 
   } catch (e) {
     console.error('DM send error:', e);
-  
-    // ── Block enforcement: remove optimistic bubble immediately ──
-    if (e.status === 403) {
-        const failEl = area.querySelector('[data-opt="' + optId + '"]');
-        if (failEl) failEl.remove();
-        showMessage('🚫 Cannot send — user is blocked.', 'error');
-        if (input) input.value = text;  // restore input
-        return;
-    }
-
-    // ... rest of existing catch code
 
     // Mark optimistic bubble as failed
     const failEl = area.querySelector('[data-opt="' + optId + '"]');
@@ -16684,14 +16576,7 @@ function wireNewSocketEvents() {
   sock.off('new_follow');
   sock.off('lost_follow');
 
-  sock.on('new_dm', (msg) => {
-    // Drop silently if sender is locally blocked
-    if (msg && msg.sender_id && _blockState && _blockState[msg.sender_id]) {
-        console.log('[DM] Dropping new_dm from blocked user:', msg.sender_id);
-        return;
-    }
-    handleIncomingDm(msg);
-  });
+  sock.on('new_dm', (msg) => handleIncomingDm(msg));
 
   // Blue ticks: mark all visible sent messages as read when other person opens the chat
   sock.on('dm_read', ({ readBy, conversationWith }) => {
