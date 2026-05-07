@@ -1776,19 +1776,76 @@ function logout() {
 }
 
 async function confirmDeleteAccount() {
-  // First confirmation
-  const firstConfirm = confirm('⚠️ Are you sure you want to delete your account?\n\nThis action is permanent and cannot be undone. All your data, posts, messages, and followers will be deleted.');
-  if (!firstConfirm) return;
+  if (!currentUser) { showMessage('⚠️ Please login first', 'error'); return; }
 
-  // Second confirmation for safety
-  const secondConfirm = confirm('🚨 FINAL WARNING\n\nYour account and ALL associated data will be permanently deleted.\n\nClick OK to proceed with deletion.');
-  if (!secondConfirm) return;
+  // ── Step 1: show custom confirm modal ──────────────────────────────────────
+  const confirmed = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.id = '_vxDeleteAccountOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2147483640;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);';
+
+    overlay.innerHTML = `
+      <div style="background:linear-gradient(135deg,#0f0a1e,#1a0a2e);border:1px solid rgba(239,68,68,0.4);border-radius:20px;padding:32px 28px;max-width:420px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.8),0 0 60px rgba(239,68,68,0.08);animation:vxFadeIn .22s ease;">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-size:48px;line-height:1;margin-bottom:12px;">🗑️</div>
+          <h2 style="font-size:20px;font-weight:700;color:#f87171;margin:0 0 8px;">Delete Account</h2>
+          <p style="color:rgba(220,180,255,0.75);font-size:14px;line-height:1.6;margin:0;">
+            This will <strong style="color:#f87171;">permanently delete</strong> everything — your posts, messages, RealVibes, followers, and your college slot will be freed.<br><br>
+            <strong style="color:#fbbf24;">This action cannot be undone.</strong>
+          </p>
+        </div>
+        <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px;margin-bottom:24px;">
+          <p style="font-size:13px;color:rgba(255,180,180,0.8);margin:0 0 10px;font-weight:600;">Type <span style="color:#f87171;font-family:monospace;">DELETE</span> to confirm:</p>
+          <input id="_vxDeleteConfirmInput" type="text" placeholder="Type DELETE here…"
+            style="width:100%;box-sizing:border-box;background:rgba(0,0,0,0.4);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;outline:none;font-family:monospace;letter-spacing:0.05em;"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button id="_vxDeleteCancelBtn" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(124,92,252,0.3);background:rgba(124,92,252,0.1);color:rgba(200,180,255,0.8);font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>
+          <button id="_vxDeleteConfirmBtn" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#f87171;font-size:14px;font-weight:600;cursor:pointer;opacity:0.4;pointer-events:none;transition:.15s;">Delete Forever</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const input = document.getElementById('_vxDeleteConfirmInput');
+    const confirmBtn = document.getElementById('_vxDeleteConfirmBtn');
+    const cancelBtn = document.getElementById('_vxDeleteCancelBtn');
+
+    input.addEventListener('input', () => {
+      const valid = input.value.trim() === 'DELETE';
+      confirmBtn.style.opacity = valid ? '1' : '0.4';
+      confirmBtn.style.pointerEvents = valid ? 'auto' : 'none';
+      confirmBtn.style.background = valid ? 'rgba(239,68,68,0.22)' : 'rgba(239,68,68,0.12)';
+    });
+
+    confirmBtn.addEventListener('click', () => { overlay.remove(); resolve(true); });
+    cancelBtn.addEventListener('click', () => { overlay.remove(); resolve(false); });
+    overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+
+    setTimeout(() => input.focus(), 80);
+  });
+
+  if (!confirmed) return;
+
+  // ── Step 2: show progress overlay ─────────────────────────────────────────
+  const progress = document.createElement('div');
+  progress.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:2147483641;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  progress.innerHTML = `
+    <div style="width:48px;height:48px;border:3px solid rgba(239,68,68,0.2);border-top-color:#f87171;border-radius:50%;animation:rvSpin .8s linear infinite;"></div>
+    <p id="_vxDeleteProgress" style="color:rgba(255,180,180,0.85);font-size:15px;font-weight:500;text-align:center;max-width:280px;line-height:1.5;">Deleting account data…</p>`;
+  document.body.appendChild(progress);
+
+  const setProgress = txt => {
+    const el = document.getElementById('_vxDeleteProgress');
+    if (el) el.textContent = txt;
+  };
 
   try {
     const token = getToken();
-    if (!token) { showMessage('⚠️ Please login first', 'error'); return; }
+    if (!token) { progress.remove(); showMessage('⚠️ Session expired. Please login again.', 'error'); return; }
 
-    showMessage('🗑️ Deleting your account...', 'info');
+    setProgress('Removing posts, media & messages…');
 
     const res = await fetch(`${API_URL}/api/user/delete-account`, {
       method: 'DELETE',
@@ -1798,15 +1855,16 @@ async function confirmDeleteAccount() {
     const data = await res.json();
 
     if (!res.ok) {
+      progress.remove();
       showMessage('❌ ' + (data.error || 'Failed to delete account'), 'error');
       return;
     }
 
-    showMessage('✅ Your account has been deleted successfully.', 'success');
+    setProgress('✅ Account deleted. Redirecting…');
 
-    // Clear everything and go to login page
     setTimeout(() => {
-      if (socket) { socket.disconnect(); socket = null; }
+      progress.remove();
+      try { if (typeof socket !== 'undefined' && socket) { socket.disconnect(); socket = null; } } catch {}
       currentUser = null;
       localStorage.clear();
       sessionStorage.clear();
@@ -1815,6 +1873,7 @@ async function confirmDeleteAccount() {
 
   } catch (err) {
     console.error('❌ Delete account error:', err);
+    progress.remove();
     showMessage('❌ Failed to delete account. Please try again.', 'error');
   }
 }
