@@ -18,7 +18,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
-
+  <script>
+    (function() {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.') || window.location.protocol === 'file:' || window.location.hostname === '';
+      window.API_URL = (isLocal && window.location.port !== '5501')
+        ? (window.location.hostname && window.location.hostname !== '' ? `http://${window.location.hostname}:5501` : 'http://localhost:5501')
+        : 'https://vibexpert-backend-main.onrender.com';
+    })();
+  </script>
 </head>
 
 <body class="dark-theme">
@@ -188,9 +195,9 @@
     <!-- ══ HERO ══ -->
     <section class="lp-hero">
       <div class="lp-hero-content">
-        <div class="lp-badge" data-reveal>
+        <div class="lp-badge">
           <span class="lp-live-dot"></span>
-          <span style="letter-spacing: 2px;">INDIA'S #1 COLLEGE SOCIAL ECOSYSTEM</span>
+          India's #1 College Social Platform
         </div>
         <div class="lp-hero-name">VibeXpert</div>
         <h1 class="lp-hero-title">
@@ -198,57 +205,91 @@
           <span class="ht-2">SHARE.</span>
           <span class="ht-3">VIBE.</span>
         </h1>
-        <p class="lp-hero-sub">The ultimate social architecture built exclusively for the next generation of college students. Your campus, your people, your vibe.</p>
+        <p class="lp-hero-sub">The ultimate social platform built exclusively for college students across India. Your
+          campus, your people, your vibe.</p>
         <div class="lp-hero-btns">
-          <button class="btn-primary" onclick="showAuthPopup()">Get Started Free →</button>
+          <button class="btn-primary" onclick="showAuthPopup()">Join Free →</button>
           <button class="btn-ghost"
-            onclick="document.getElementById('lp-about').scrollIntoView({behavior:'smooth'})">Discover The Vibe</button>
+            onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">Explore
+            Features</button>
         </div>
       </div>
     </section>
 
-    <!-- ══ WHAT IS VIBEXPERT — Premium Flip Cards ══ -->
+    <!-- ══ WHAT IS VIBEXPERT — 3 Flip Cards ══ -->
     <section class="lp-section" id="lp-about">
       <div class="lp-container">
-        <h2 class="lp-section-title" data-reveal>The VibeXpert Ecosystem</h2>
+        <h2 class="lp-section-title" data-reveal>What is VibeXpert?</h2>
         <div class="lp-section-accent" data-reveal></div>
-        <p class="lp-what-hint" data-reveal>Interactive Exploration 💡</p>
-        
+        <p class="lp-what-hint" data-reveal>Tap a card to learn more 💡</p>
         <div class="lp-what-grid">
 
-          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
-            <div class="lp-what-front">
-              <div class="lp-what-icon">💬</div>
-              <h3>Hyper-Real Chat</h3>
-              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal architecture</p>
-            </div>
-            <div class="lp-what-back">
-              <h3>Low-Latency Fabric</h3>
-              <p>Experience zero-lag communication with high-fidelity media sharing, custom stickers, and encrypted ghost mode for the ultimate privacy.</p>
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="chat">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">💬</div>
+                <h3>Real-Time Chat</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>Real-Time Chat</h3>
+                <p>Engage in live conversations with your college group instantly. Group chats, DMs, ghost mode, emojis,
+                  stickers, and push notifications — all in real time.</p>
+              </div>
             </div>
           </div>
 
-          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
-            <div class="lp-what-front">
-              <div class="lp-what-icon">📱</div>
-              <h3>Social Canvas</h3>
-              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal tools</p>
-            </div>
-            <div class="lp-what-back">
-              <h3>Creative Freedom</h3>
-              <p>Sophisticated post creation with native cropping, atmospheric filters, and integrated music vibes to make every story a masterpiece.</p>
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="creative">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">📱</div>
+                <h3>Post Creation</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>Post Creation</h3>
+                <p>Share photos, videos, music, and stickers. Crop, edit, and decorate your content with powerful
+                  creative tools built for campus life.</p>
+              </div>
             </div>
           </div>
 
-          <div class="lp-what-item" data-reveal onclick="this.classList.toggle('flipped')">
-            <div class="lp-what-front">
-              <div class="lp-what-icon">🎓</div>
-              <h3>Nexus Hubs</h3>
-              <p style="margin-top: 15px; opacity: 0.6; font-size: 14px;">Tap to reveal network</p>
-            </div>
-            <div class="lp-what-back">
-              <h3>Verified Campus</h3>
-              <p>A secure, email-verified perimeter ensuring you only connect with real students from your institute. Your campus, digitized.</p>
+          <div class="lp-what-flip-wrapper" data-reveal data-what-theme="campus">
+            <div class="lp-what-item" onclick="this.classList.toggle('flipped')">
+              <div class="lp-what-shine"></div>
+              <div class="lp-what-card-bg">
+                <div class="what-particle what-p1"></div>
+                <div class="what-particle what-p2"></div>
+                <div class="what-particle what-p3"></div>
+                <div class="what-particle what-p4"></div>
+                <div class="what-particle what-p5"></div>
+                <div class="what-particle what-p6"></div>
+              </div>
+              <div class="lp-what-front">
+                <div class="lp-what-icon">🎓</div>
+                <h3>College Communities</h3>
+              </div>
+              <div class="lp-what-back">
+                <h3>College Communities</h3>
+                <p>Verified college email system. Private chat rooms, campus updates, and real-time online indicators —
+                  your entire campus in one place.</p>
+              </div>
             </div>
           </div>
 
@@ -7813,13 +7854,6 @@
               </span>
             </button>
 
-            <button id="blockBtn" class="vx-profile-btn vx-block-btn" style="display:none;" onclick="toggleBlockUser()">
-              <span class="vx-btn-bg" style="background:rgba(239,68,68,0.1)"></span>
-              <span class="vx-btn-content" id="blockBtnContent" style="color:#f87171">
-                🚫 Block
-              </span>
-            </button>
-
           </div>
 
           <style>
@@ -10073,10 +10107,6 @@
           style="background:rgba(130,90,255,0.08);border:1px solid rgba(130,90,255,0.15);color:rgba(200,180,255,0.6);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;line-height:1;"
           onmouseenter="this.style.background='rgba(130,90,255,0.18)';this.style.color='rgba(200,180,255,0.9)'"
           onmouseleave="this.style.background=this.classList.contains('dm-select-active')?'rgba(239,68,68,0.18)':'rgba(130,90,255,0.08)';this.style.color=this.classList.contains('dm-select-active')?'rgba(255,140,140,1)':'rgba(200,180,255,0.6)'">☑</button>
-        <button id="dmBlockBtn" onclick="toggleBlockFromChat()" title="Block user"
-          style="background:rgba(255,60,80,0.08);border:1px solid rgba(255,60,80,0.15);color:rgba(255,100,110,0.7);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;"
-          onmouseenter="this.style.background='rgba(255,60,80,0.18)';this.style.color='rgba(255,100,110,1)'"
-          onmouseleave="this.style.background='rgba(255,60,80,0.08)';this.style.color='rgba(255,100,110,0.7)'">🚫</button>
         <button id="dmMinimizeBtn" onclick="minimizeDmPanel(event)" title="Minimize"
           style="background:rgba(130,90,255,0.08);border:1px solid rgba(130,90,255,0.15);color:rgba(200,180,255,0.6);border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.25s;line-height:1;font-weight:700;"
           onmouseenter="this.style.background='rgba(130,90,255,0.18)';this.style.color='rgba(200,180,255,0.9)'"
@@ -16454,7 +16484,7 @@
       // markRead() is now only called by clearAllVxNotifs (explicit user action).
       async function loadVxNotifications(tab) {
         _tab = tab || 'all'; skeleton('vxNotifList', 6); try {
-          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = window.API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://vibexpert-backend-main.onrender.com'); const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
+          const tok = localStorage.getItem('authToken') || localStorage.getItem('vx_token') || localStorage.getItem('token') || sessionStorage.getItem('authToken') || sessionStorage.getItem('vx_token') || sessionStorage.getItem('token') || ''; const B = typeof API_URL !== 'undefined' ? API_URL : ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.') || window.location.protocol === 'file:' || window.location.hostname === '') ? (window.location.hostname && window.location.hostname !== '' ? `http://${window.location.hostname}:5501` : 'http://localhost:5501') : 'https://vibexpert-backend-main.onrender.com'); const r = await fetch(`${B}/api/notifications`, { headers: { 'Authorization': `Bearer ${tok}` } }); if (!r.ok) throw 0; const d = await r.json(); _notifs = d.notifications || d || [];
           // Enrich notifications with profile pics from cached user data
           _notifs.forEach(function (n) {
             if (n.fromPic || n.from_pic || n.actor_avatar || n.from_avatar || n.avatar || n.profile_pic) return;
@@ -16620,37 +16650,11 @@
       /* ── Boot ── */
       // DUP FIX (DUP-7): Store interval ID so re-login doesn't stack multiple pollBadges timers.
       let _vxBadgePollTimer = null;
-      function updateMobileNav() {
-        const nav = document.getElementById('vxMobileNav');
-        const isLogged = !!(localStorage.getItem('authToken') || localStorage.getItem('vx_token'));
-        if (nav) nav.style.display = (isLogged && window.innerWidth <= 768) ? 'flex' : 'none';
-      }
-
-      function hookShowPage() {
-        if (window._vxHooked) return;
-        window._vxHooked = true;
-        const oldShowPage = window.showPage;
-        window.showPage = function(page) {
-          if (typeof oldShowPage === 'function') oldShowPage(page);
-          
-          // Update active state in mobile nav
-          document.querySelectorAll('.vx-mobile-nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('onclick')?.includes(`'${page}'`)) {
-              item.classList.add('active');
-            }
-          });
-          updateMobileNav();
-        };
-      }
-
       function boot() {
         hookShowPage();
         pollBadges();
-        updateMobileNav();
         if (_vxBadgePollTimer) clearInterval(_vxBadgePollTimer);
         _vxBadgePollTimer = setInterval(pollBadges, 30000);
-        window.addEventListener('resize', updateMobileNav);
       }
 
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
@@ -16658,30 +16662,6 @@
       document.addEventListener('vx:login', function () { setTimeout(hookShowPage, 200); });
     })();
   </script>
-    <!-- ══ MOBILE BOTTOM NAVIGATION ══ -->
-    <nav class="vx-mobile-nav" id="vxMobileNav" style="display: none;">
-      <div class="vx-mobile-nav-item active" onclick="showPage('home')">
-        <div class="vx-mobile-nav-icon">🏠</div>
-        <span>Home</span>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('realvibes')">
-        <div class="vx-mobile-nav-icon">✨</div>
-        <span>RealVibes</span>
-      </div>
-      <div class="vx-mobile-nav-item vx-mobile-nav-post" onclick="showModal('postDestinationModal')">
-        <div class="vx-mobile-nav-icon">➕</div>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('messages')">
-        <div class="vx-mobile-nav-icon">💬</div>
-        <span>Chat</span>
-        <span class="vx-mobile-badge" id="vxMobileDmBadge" style="display:none;"></span>
-      </div>
-      <div class="vx-mobile-nav-item" onclick="showPage('profile')">
-        <div class="vx-mobile-nav-icon">👤</div>
-        <span>Profile</span>
-      </div>
-    </nav>
-
   <script>
     (function () {
       // ── Particle Canvas ──
@@ -16736,31 +16716,24 @@
         });
       }
 
-      // ── Card Mouse Spotlight ──
-      document.querySelectorAll('.lp-what-item').forEach(function(item) {
-        item.addEventListener('mousemove', function(e) {
-          var rect = item.getBoundingClientRect();
-          var x = ((e.clientX - rect.left) / rect.width) * 100;
-          var y = ((e.clientY - rect.top) / rect.height) * 100;
-          item.style.setProperty('--mouse-x', x + '%');
-          item.style.setProperty('--mouse-y', y + '%');
+      // ── Why-item cursor spotlight ──
+      document.querySelectorAll('.lp-why-item').forEach(function (item) {
+        item.addEventListener('mousemove', function (e) {
+          var r = item.getBoundingClientRect();
+          item.style.setProperty('--mouse-x', (e.clientX - r.left) + 'px');
+          item.style.setProperty('--mouse-y', (e.clientY - r.top) + 'px');
         });
       });
 
       // ── Scroll Reveal ──
       var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
+        entries.forEach(function (entry, i) {
           if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            // Stagger children if they have [data-reveal-child]
-            var children = entry.target.querySelectorAll('[data-reveal-child]');
-            children.forEach(function(child, i) {
-              setTimeout(function() { child.classList.add('in-view'); }, i * 100);
-            });
+            setTimeout(function () { entry.target.classList.add('in-view'); }, i * 80);
             obs.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+      }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
       document.querySelectorAll('[data-reveal]').forEach(function (el) { obs.observe(el); });
 
       // ── Stat Counter ──
