@@ -3,9 +3,10 @@
 // Enhanced Community Chat + All Features
 // ========================================
 
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? 'http://localhost:8080' 
+window.API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+  ? 'http://localhost:5501'
   : 'https://vibexpert-backend-main.onrender.com';
+const API_URL = window.API_URL;
 
 // ── Media Proxy ────────────────────────────────────────────────────────────────
 // Routes Supabase storage URLs through our Render backend to bypass Indian mobile
@@ -6438,10 +6439,10 @@ function showVibePostSuccessAndReload(customMsg, isPending) {
   popup.innerHTML = `
     <div class="vsp-bg-glow" ></div>
     <div class="vsp-icon-ring" style="${isPending ? 'background: #f59e0b;' : ''}">
-      ${isPending ? 
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' :
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><polyline points="20 6 9 17 4 12"/></svg>'
-      }
+      ${isPending ?
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' :
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" width="26" height="26"><polyline points="20 6 9 17 4 12"/></svg>'
+    }
     </div>
     <div class="vsp-text">
       <strong>${title}</strong>
@@ -6564,7 +6565,11 @@ function resetPostForm() {
 
 // ── CHAT NOW: Navigate to user's profile then auto-open DM drawer ─────
 async function chatNowWithUser(userId) {
-  if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }
+  if (!currentUser) { showMessage("⚠️ Please log in first", "error"); return; }// ── Block gate: don't open drawer if user is locally blocked ──
+if (_blockState && _blockState[userId]) {
+    showMessage('🚫 This user is blocked. Unblock from their profile to message them.', 'error');
+    return;
+}
   if (userId === currentUser.id) return;
   openDmDrawer(userId);
 }
@@ -15104,10 +15109,22 @@ async function openDmDrawer(userId) {
   } catch (e) {
     console.error('DM load error:', e);
 
-    // Give a useful, specific error message
+    // ── Blocked user: show clean blocked state ──
+    if (e.status === 403) {
+        area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;
+            justify-content:center;height:100%;gap:14px;padding:32px;text-align:center;">
+            <div style="font-size:52px;">🚫</div>
+            <div style="color:#f87171;font-size:16px;font-weight:700;">Blocked</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:13px;max-width:220px;line-height:1.5;">
+                You cannot message this user while they are blocked.
+                Unblock from their profile to chat.
+            </div>
+        </div>`;
+        return;
+    }
+
+    // ... existing error handling continues below
     let errorMsg = 'Could not load messages';
-    let hint = '';
-    const msg = (e.message || '').toLowerCase();
 
     if (e.status === 401 || e.status === 403) {
       errorMsg = 'Session expired';
@@ -15971,6 +15988,17 @@ async function sendDm() {
 
   } catch (e) {
     console.error('DM send error:', e);
+  
+    // ── Block enforcement: remove optimistic bubble immediately ──
+    if (e.status === 403) {
+        const failEl = area.querySelector('[data-opt="' + optId + '"]');
+        if (failEl) failEl.remove();
+        showMessage('🚫 Cannot send — user is blocked.', 'error');
+        if (input) input.value = text;  // restore input
+        return;
+    }
+
+    // ... rest of existing catch code
 
     // Mark optimistic bubble as failed
     const failEl = area.querySelector('[data-opt="' + optId + '"]');
@@ -16656,7 +16684,14 @@ function wireNewSocketEvents() {
   sock.off('new_follow');
   sock.off('lost_follow');
 
-  sock.on('new_dm', (msg) => handleIncomingDm(msg));
+  sock.on('new_dm', (msg) => {
+    // Drop silently if sender is locally blocked
+    if (msg && msg.sender_id && _blockState && _blockState[msg.sender_id]) {
+        console.log('[DM] Dropping new_dm from blocked user:', msg.sender_id);
+        return;
+    }
+    handleIncomingDm(msg);
+  });
 
   // Blue ticks: mark all visible sent messages as read when other person opens the chat
   sock.on('dm_read', ({ readBy, conversationWith }) => {
