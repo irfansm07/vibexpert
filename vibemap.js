@@ -15750,6 +15750,14 @@ async function sendDm() {
     return;
   }
 
+  // Block guard: prevent sending if either party has blocked the other
+  const iBlockedThem = window._vxMyBlockedIds && window._vxMyBlockedIds.has(String(_dmCurrentReceiverId));
+  const theyBlockedMe = window._vxBlockedByIds && window._vxBlockedByIds.has(String(_dmCurrentReceiverId));
+  if (iBlockedThem || theyBlockedMe) {
+    showMessage(iBlockedThem ? '🚫 Unblock this user to send messages.' : '🚫 You cannot message this user.', 'error');
+    return;
+  }
+
   const replyToId = _dmReplyToId;
   const replyToText = _dmReplyToText;
 
@@ -18782,3 +18790,227 @@ window.deleteGlobalComment = async function (commentId, type, parentId) {
     showMessage('❌ Error deleting comment', 'error');
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════
+// BLOCK / UNBLOCK SYSTEM — Profile page + DM Drawer
+// ═══════════════════════════════════════════════════════════════════════
+
+// In-memory set of user IDs that the current user has blocked
+window._vxMyBlockedIds = new Set();
+// In-memory set of user IDs that have blocked the current user
+window._vxBlockedByIds = new Set();
+
+/* ── Load blocked list from server (call on login) ── */
+async function _vxLoadBlockedList() {
+  try {
+    const res = await apiCall('/api/users/blocked');
+    if (res && res.blocked) {
+      window._vxMyBlockedIds = new Set((res.blocked || []).map(u => String(u.id)));
+    }
+  } catch (e) {
+    console.warn('[Block] Could not load blocked list:', e);
+  }
+}
+
+/* ── Update Block button in profile page ── */
+function _vxUpdateProfileBlockBtn(targetUserId) {
+  const btn = document.getElementById('blockUserBtn');
+  const icon = document.getElementById('blockUserBtnIcon');
+  const label = document.getElementById('blockUserBtnLabel');
+  if (!btn) return;
+
+  const isBlocked = window._vxMyBlockedIds.has(String(targetUserId));
+  btn.dataset.blocked = isBlocked ? '1' : '0';
+  btn.dataset.targetId = String(targetUserId);
+
+  if (isBlocked) {
+    btn.style.background = 'rgba(239,68,68,0.14)';
+    btn.style.borderColor = 'rgba(239,68,68,0.5)';
+    if (icon) icon.textContent = '🔓';
+    if (label) label.textContent = 'Unblock';
+  } else {
+    btn.style.background = 'rgba(239,68,68,0.08)';
+    btn.style.borderColor = 'rgba(239,68,68,0.35)';
+    if (icon) icon.textContent = '🚫';
+    if (label) label.textContent = 'Block';
+  }
+
+  btn.style.display = 'flex';
+}
+
+/* ── Toggle block/unblock from the profile Block button ── */
+window.toggleBlockProfileUser = async function (btn) {
+  const targetId = btn.dataset.targetId;
+  if (!targetId || !currentUser) return;
+
+  const isBlocked = btn.dataset.blocked === '1';
+  const username = document.getElementById('profilePageUsername')?.textContent?.replace('@', '') || 'this user';
+
+  if (isBlocked) {
+    // Unblock immediately — no confirmation needed
+    window._vxMyBlockedIds.delete(String(targetId));
+    _vxUpdateProfileBlockBtn(targetId);
+    _vxUpdateDmDrawerBlockState(targetId);
+    try {
+      await apiCall(`/api/users/${targetId}/unblock`, 'POST');
+      showMessage(`✅ @${username} unblocked`, 'success');
+    } catch (e) {
+      window._vxMyBlockedIds.add(String(targetId));
+      _vxUpdateProfileBlockBtn(targetId);
+      _vxUpdateDmDrawerBlockState(targetId);
+      showMessage('❌ Unblock failed. Please try again.', 'error');
+    }
+  } else {
+    // Confirm before blocking
+    _vxConfirm(
+      '🚫 Block User',
+      `Block <strong style="color:#ff8080">@${username}</strong>? They won't be able to send you messages and you won't see each other's content.`,
+      async () => {
+        window._vxMyBlockedIds.add(String(targetId));
+        _vxUpdateProfileBlockBtn(targetId);
+        _vxUpdateDmDrawerBlockState(targetId);
+        try {
+          await apiCall(`/api/users/${targetId}/block`, 'POST');
+          showMessage(`🚫 @${username} blocked`, 'success');
+        } catch (e) {
+          window._vxMyBlockedIds.delete(String(targetId));
+          _vxUpdateProfileBlockBtn(targetId);
+          _vxUpdateDmDrawerBlockState(targetId);
+          showMessage('❌ Block failed. Please try again.', 'error');
+        }
+      }
+    );
+  }
+};
+
+/* ── Update the DM drawer blocked banner for the current conversation ── */
+function _vxUpdateDmDrawerBlockState(targetUserId) {
+  const banner = document.getElementById('dmBlockedBanner');
+  const bannerMsg = document.getElementById('dmBlockedBannerMsg');
+  const unblockBtn = document.getElementById('dmUnblockBtn');
+  const inputBar = document.querySelector('#dmDrawer .dm-input-bar');
+  const inputEl = document.getElementById('dmInput');
+
+  if (!banner) return;
+
+  const iBlockedThem = window._vxMyBlockedIds.has(String(targetUserId));
+  const theyBlockedMe = window._vxBlockedByIds.has(String(targetUserId));
+  const isBlocked = iBlockedThem || theyBlockedMe;
+
+  if (isBlocked) {
+    banner.style.display = 'block';
+    if (bannerMsg) {
+      bannerMsg.textContent = iBlockedThem
+        ? "You've blocked this user. Unblock to message them."
+        : "This user has blocked you. You can't message them.";
+    }
+    // Show unblock button only if current user did the blocking
+    if (unblockBtn) unblockBtn.style.display = iBlockedThem ? 'inline-block' : 'none';
+    // Disable the input bar
+    if (inputBar) inputBar.style.opacity = '0.3';
+    if (inputBar) inputBar.style.pointerEvents = 'none';
+    if (inputEl) { inputEl.disabled = true; inputEl.placeholder = 'Messaging disabled'; }
+  } else {
+    banner.style.display = 'none';
+    if (inputBar) inputBar.style.opacity = '1';
+    if (inputBar) inputBar.style.pointerEvents = '';
+    if (inputEl) { inputEl.disabled = false; inputEl.placeholder = 'Type a message…'; }
+  }
+}
+
+/* ── Unblock from inside the DM drawer ── */
+window.dmUnblockCurrentUser = async function () {
+  const targetId = window._dmCurrentReceiverId;
+  if (!targetId) return;
+
+  try {
+    window._vxMyBlockedIds.delete(String(targetId));
+    _vxUpdateDmDrawerBlockState(targetId);
+    _vxUpdateProfileBlockBtn(targetId);
+    await apiCall(`/api/users/${targetId}/unblock`, 'POST');
+    const name = document.getElementById('dmDrawerName')?.textContent || 'User';
+    showMessage(`✅ ${name} unblocked`, 'success');
+  } catch (e) {
+    window._vxMyBlockedIds.add(String(targetId));
+    _vxUpdateDmDrawerBlockState(targetId);
+    _vxUpdateProfileBlockBtn(targetId);
+    showMessage('❌ Unblock failed. Please try again.', 'error');
+  }
+};
+
+/* ── Patch showProfilePage to show/hide Block button ── */
+const _vxOrigShowProfilePage = window.showProfilePage || (typeof showProfilePage !== 'undefined' ? showProfilePage : null);
+// We patch via a deferred hook so the original function is fully defined first
+(function _attachBlockHook() {
+  const tryPatch = () => {
+    if (typeof showProfilePage !== 'function') { setTimeout(tryPatch, 200); return; }
+    const _orig = showProfilePage;
+    window.showProfilePage = function (user, _dataAlreadyFresh) {
+      const result = _orig.apply(this, arguments);
+      try {
+        const targetUser = user || currentUser;
+        const isOwn = currentUser && targetUser && (targetUser.id === currentUser.id || targetUser.username === currentUser.username);
+        const blockBtn = document.getElementById('blockUserBtn');
+        if (blockBtn) {
+          if (isOwn || !targetUser) {
+            blockBtn.style.display = 'none';
+          } else {
+            _vxUpdateProfileBlockBtn(targetUser.id);
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+      return result;
+    };
+  };
+  // showProfilePage is defined earlier in this file, so patch immediately after file loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryPatch);
+  } else {
+    setTimeout(tryPatch, 0);
+  }
+})();
+
+/* ── Patch openDmDrawer to check block state ── */
+(function _attachDmBlockHook() {
+  const tryPatch = () => {
+    const _orig = window.openDmDrawer;
+    if (typeof _orig !== 'function') { setTimeout(tryPatch, 300); return; }
+    window.openDmDrawer = async function (userId) {
+      const result = await _orig.apply(this, arguments);
+      // After drawer opens and messages load, apply block state
+      setTimeout(() => _vxUpdateDmDrawerBlockState(userId), 400);
+      return result;
+    };
+  };
+  setTimeout(tryPatch, 500);
+})();
+
+/* ── Handle socket: someone blocked the current user ── */
+(function _attachBlockSocketListener() {
+  const tryAttach = () => {
+    if (!window.socket) { setTimeout(tryAttach, 400); return; }
+    window.socket.on('user_blocked_you', ({ blockerId }) => {
+      window._vxBlockedByIds.add(String(blockerId));
+      // If the DM drawer is currently open with this user, update it
+      if (window._dmCurrentReceiverId && String(window._dmCurrentReceiverId) === String(blockerId)) {
+        _vxUpdateDmDrawerBlockState(blockerId);
+      }
+    });
+  };
+  setTimeout(tryAttach, 500);
+})();
+
+/* ── Load blocked list once user is authenticated ── */
+(function _bootBlockSystem() {
+  const tryBoot = () => {
+    if (!currentUser || !currentUser.id) { setTimeout(tryBoot, 800); return; }
+    _vxLoadBlockedList();
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(tryBoot, 1000));
+  } else {
+    setTimeout(tryBoot, 1000);
+  }
+})();
+
+// End of Block / Unblock System
