@@ -1584,6 +1584,7 @@ async function apiCall(endpoint, method = 'GET', body = null, retries = 2) {
       const err = new Error(data.error || data.message || 'Request failed');
       err.status = response.status;
       err.code = data.code || null;
+      err.isBlocked = data.isBlocked || false; // ✅ FIX: Carry isBlocked flag so callers can detect block-403 vs auth-403
 
       // Daily message limit — show a prominent banner and stop the call chain
       if (response.status === 429 && data.code === 'DAILY_LIMIT_REACHED') {
@@ -1771,6 +1772,9 @@ function logout() {
   currentUser = null;
   // Clear in-memory follow state so it doesn't bleed into next session
   Object.keys(_followState).forEach(k => delete _followState[k]);
+  // ✅ FIX: Clear in-memory block sets on logout
+  window._vxMyBlockedIds = new Set();
+  window._vxBlockedByIds = new Set();
   localStorage.clear();
   location.reload();
 }
@@ -1860,16 +1864,31 @@ async function confirmDeleteAccount() {
       return;
     }
 
-    setProgress('✅ Account deleted. Redirecting…');
+    setProgress('✅ Account permanently deleted. Redirecting to sign in…');
 
     setTimeout(() => {
       progress.remove();
+
+      // ── Full cleanup: disconnect socket, wipe all local state ──
       try { if (typeof socket !== 'undefined' && socket) { socket.disconnect(); socket = null; } } catch {}
+      try { if (typeof io !== 'undefined') io.disconnect?.(); } catch {}
       currentUser = null;
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/';
-    }, 1500);
+      window._token = null;
+
+      // Clear every storage mechanism
+      try { localStorage.clear(); } catch {}
+      try { sessionStorage.clear(); } catch {}
+      // Also clear any cookies set by the app
+      try {
+        document.cookie.split(';').forEach(c => {
+          document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+        });
+      } catch {}
+
+      // Redirect to landing page with flag to auto-open the login popup
+      // (Instagram-style: deleted account → straight to sign in)
+      window.location.replace('/?vx_action=login');
+    }, 1800);
 
   } catch (err) {
     console.error('❌ Delete account error:', err);
@@ -15083,12 +15102,32 @@ async function openDmDrawer(userId) {
   } catch (e) {
     console.error('DM load error:', e);
 
+    // ✅ FIX: Block-specific 403 — show the block banner, not a generic error
+    if (e.status === 403 && (e.isBlocked || /blocked/i.test(e.message || ''))) {
+      // Server confirmed this conversation is blocked (bidirectional).
+      // Determine direction: if this user is NOT in our outgoing blocked set,
+      // it means they blocked us — add them to _vxBlockedByIds and persist.
+      if (!window._vxMyBlockedIds.has(String(userId))) {
+        window._vxBlockedByIds.add(String(userId));
+        try {
+          localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
+        } catch (_) {}
+        console.log('[Block] Server confirmed they blocked us — added to _vxBlockedByIds:', userId);
+      }
+      // Clear the loading spinner and show the block banner
+      area.innerHTML = '';
+      _vxUpdateDmDrawerBlockState(userId);
+      document.getElementById('dmInput')?.focus();
+      if (typeof window._dmScrollAttach === 'function') setTimeout(window._dmScrollAttach, 300);
+      return;
+    }
+
     // Give a useful, specific error message
     let errorMsg = 'Could not load messages';
     let hint = '';
     const msg = (e.message || '').toLowerCase();
 
-    if (e.status === 401 || e.status === 403) {
+    if (e.status === 401 || (e.status === 403 && /token|expired|unauthorized/i.test(msg))) {
       errorMsg = 'Session expired';
       hint = 'Please log out and log back in.';
     } else if (e.status === 503 || msg.includes('migration') || msg.includes('tables')) {
@@ -18862,12 +18901,27 @@ window._vxBlockedByIds = new Set();
 /* ── Load blocked list from server AND persist to localStorage ── */
 async function _vxLoadBlockedList() {
   try {
-    const res = await apiCall('/api/users/blocked');
-    if (res && res.blocked) {
-      window._vxMyBlockedIds = new Set((res.blocked || []).map(u => String(u.id)));
+    // Fetch outgoing blocks (users I blocked) and incoming blocks (users who blocked me) in parallel
+    const [outRes, inRes] = await Promise.allSettled([
+      apiCall('/api/users/blocked'),
+      apiCall('/api/users/blocked-by')
+    ]);
+
+    // ── Outgoing: users I blocked ──
+    if (outRes.status === 'fulfilled' && outRes.value && outRes.value.blocked) {
+      window._vxMyBlockedIds = new Set((outRes.value.blocked || []).map(u => String(u.id)));
       // ✅ PERSIST to localStorage so it survives page reload
       localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds)));
-      console.log('[Block] Blocked list loaded and saved to localStorage:', Array.from(window._vxMyBlockedIds));
+      console.log('[Block] Outgoing blocked list loaded and saved:', Array.from(window._vxMyBlockedIds));
+    }
+
+    // ── Incoming: users who blocked me ──
+    if (inRes.status === 'fulfilled' && inRes.value && inRes.value.blockedByIds) {
+      // Merge with any IDs already discovered via socket events this session
+      (inRes.value.blockedByIds || []).forEach(id => window._vxBlockedByIds.add(String(id)));
+      // ✅ PERSIST to localStorage so it survives page reload
+      localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
+      console.log('[Block] Incoming blocked-by list loaded and saved:', Array.from(window._vxBlockedByIds));
     }
   } catch (e) {
     console.warn('[Block] Could not load blocked list:', e);
@@ -18876,17 +18930,29 @@ async function _vxLoadBlockedList() {
 
 /* ── Load blocked list from localStorage (called before server sync) ── */
 function _vxLoadBlockedListFromStorage() {
+  let restored = false;
   try {
     const stored = localStorage.getItem('_vxMyBlockedIds');
     if (stored) {
       window._vxMyBlockedIds = new Set(JSON.parse(stored));
-      console.log('[Block] Restored blocked list from localStorage:', Array.from(window._vxMyBlockedIds));
-      return true;
+      console.log('[Block] Restored outgoing blocked list from localStorage:', Array.from(window._vxMyBlockedIds));
+      restored = true;
     }
   } catch (e) {
-    console.warn('[Block] Could not restore blocked list from localStorage:', e);
+    console.warn('[Block] Could not restore _vxMyBlockedIds from localStorage:', e);
   }
-  return false;
+  // ✅ FIX: Also restore _vxBlockedByIds (who has blocked me) — was never restored before
+  try {
+    const storedBy = localStorage.getItem('_vxBlockedByIds');
+    if (storedBy) {
+      window._vxBlockedByIds = new Set(JSON.parse(storedBy));
+      console.log('[Block] Restored incoming blocked-by list from localStorage:', Array.from(window._vxBlockedByIds));
+      restored = true;
+    }
+  } catch (e) {
+    console.warn('[Block] Could not restore _vxBlockedByIds from localStorage:', e);
+  }
+  return restored;
 }
 
 /* ── Update Block button in profile page ── */
@@ -19077,6 +19143,10 @@ const _vxOrigShowProfilePage = window.showProfilePage || (typeof showProfilePage
     if (!window.socket) { setTimeout(tryAttach, 400); return; }
     window.socket.on('user_blocked_you', ({ blockerId }) => {
       window._vxBlockedByIds.add(String(blockerId));
+      // ✅ FIX: Persist immediately so it survives reload
+      try {
+        localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
+      } catch (_) {}
       // If the DM drawer is currently open with this user, update it
       if (window._dmCurrentReceiverId && String(window._dmCurrentReceiverId) === String(blockerId)) {
         _vxUpdateDmDrawerBlockState(blockerId);
