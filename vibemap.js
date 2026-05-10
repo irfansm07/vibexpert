@@ -3885,6 +3885,12 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     }
   }
 
+  // ✅ Show Delete Account section only when viewing own profile
+  const delSection = document.getElementById('deleteAccountSection');
+  if (delSection) {
+    delSection.style.display = isOwn ? 'block' : 'none';
+  }
+
   // Load default tab
   switchProfileTab('info');
 }
