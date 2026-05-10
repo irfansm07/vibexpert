@@ -81,7 +81,6 @@
   <!-- ========================================
    VIBEXPERT LANDING PAGE — Neon Campus Nights v2
    ======================================== -->
-  <link rel="stylesheet" href="landing.css" />
   <div id="aboutUsPage" class="about-us-page">
 
     <!-- BG Layers -->
@@ -6495,8 +6494,6 @@
             </div>
             <div class="phm-divider"></div>
             <div class="phm-item phm-logout" onclick="logout()"><span class="phm-icon">🚪</span> Logout</div>
-            <div class="phm-item phm-delete-account" onclick="confirmDeleteAccount(); closeProfileHamburgerMenu()"
-              style="color:#ef4444;"><span class="phm-icon">🗑️</span> Delete Account</div>
           </div>
 
           <style>
@@ -7852,15 +7849,6 @@
                 </svg>
                 Message
               </span>
-            </button>
-
-            <!-- ── Block / Unblock button ── -->
-            <button id="blockUserBtn" style="display:none;position:relative;height:48px;min-width:110px;padding:0 18px;border-radius:14px;border:1.5px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:rgba(255,120,120,0.85);font-size:13.5px;font-weight:700;cursor:pointer;letter-spacing:0.02em;transition:all 0.22s;display:none;align-items:center;justify-content:center;gap:7px;"
-              onmouseenter="this.style.background='rgba(239,68,68,0.2)';this.style.borderColor='rgba(239,68,68,0.6)';this.style.color='#ff8080'"
-              onmouseleave="this.style.background=this.dataset.blocked==='1'?'rgba(239,68,68,0.14)':'rgba(239,68,68,0.08)';this.style.borderColor=this.dataset.blocked==='1'?'rgba(239,68,68,0.5)':'rgba(239,68,68,0.35)';this.style.color='rgba(255,120,120,0.85)'"
-              onclick="toggleBlockProfileUser(this)">
-              <span id="blockUserBtnIcon">🚫</span>
-              <span id="blockUserBtnLabel">Block</span>
             </button>
 
           </div>
@@ -9583,33 +9571,6 @@
 
   <script src="vibemap.js"></script>
 
-  <!-- ══ AUTO-OPEN LOGIN POPUP (triggered after account deletion) ══ -->
-  <script>
-    (function () {
-      if (window.location.search.includes('vx_action=login')) {
-        try { window.history.replaceState({}, '', window.location.pathname); } catch {}
-        function tryOpenAuthPopup(attempts) {
-          if (typeof showAuthPopup === 'function') {
-            showAuthPopup();
-            setTimeout(function () {
-              var msg = document.getElementById('message');
-              if (msg) {
-                msg.innerHTML = '<div style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px 14px;color:#86efac;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px;">&#x2705; Account permanently deleted. Please sign in to a different account or create a new one.</div>';
-              }
-            }, 200);
-          } else if ((attempts || 0) < 40) {
-            setTimeout(function () { tryOpenAuthPopup((attempts || 0) + 1); }, 100);
-          }
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function () { tryOpenAuthPopup(0); });
-        } else {
-          tryOpenAuthPopup(0);
-        }
-      }
-    })();
-  </script>
-
   <!-- ══ GLOBAL: Profile photo menu functions ══ -->
 
   <!-- ══ PHOTO EDIT MODAL ══ -->
@@ -10205,17 +10166,6 @@
         <button onclick="toggleDmSelectMode()"
           style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;">Cancel</button>
       </div>
-    </div>
-    <!-- ── Blocked Banner (shown when either party has blocked the other) ── -->
-    <div id="dmBlockedBanner" style="display:none;flex-shrink:0;padding:14px 16px;background:rgba(239,68,68,0.08);border-top:1px solid rgba(239,68,68,0.2);text-align:center;">
-      <div style="font-size:22px;margin-bottom:6px;">🚫</div>
-      <div id="dmBlockedBannerMsg" style="font-size:13px;font-weight:600;color:rgba(255,120,120,0.9);margin-bottom:10px;">You've blocked this user</div>
-      <button id="dmUnblockBtn" onclick="dmUnblockCurrentUser()"
-        style="background:rgba(239,68,68,0.18);border:1.5px solid rgba(239,68,68,0.4);color:#ff8080;border-radius:10px;padding:7px 20px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;"
-        onmouseenter="this.style.background='rgba(239,68,68,0.32)';this.style.color='#ffaaaa'"
-        onmouseleave="this.style.background='rgba(239,68,68,0.18)';this.style.color='#ff8080'">
-        Unblock
-      </button>
     </div>
     <!-- Refined pill-shaped input bar -->
     <div class="dm-input-bar" style="flex-shrink:0;padding:10px 12px 14px;">
