@@ -3618,6 +3618,12 @@ async function showUserProfile(userId) {
         window._vxBlockedByIds = window._vxBlockedByIds || new Set();
         window._vxBlockedByIds.add(String(userId));
         try { localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds))); } catch (_) {}
+      } else {
+        // Server says they are NOT blocking us — remove from local set to stay in sync
+        if (window._vxBlockedByIds && window._vxBlockedByIds.has(String(userId))) {
+          window._vxBlockedByIds.delete(String(userId));
+          try { localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds))); } catch (_) {}
+        }
       }
 
       // Show profile page with real data
@@ -3866,6 +3872,17 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
   // Pre-fetch My Vibes silently so it's instant when the tab is clicked
   if (isOwn) {
     setTimeout(() => _prefetchMyVibes(), 600);
+  }
+
+  // ✅ FIX: Directly initialize the Block button state here (reliable).
+  // The deferred monkey-patch may race with the DOMContentLoaded timeline.
+  const blockBtn = document.getElementById('blockUserBtn');
+  if (blockBtn) {
+    if (isOwn || !targetUser.id) {
+      blockBtn.style.display = 'none';
+    } else {
+      _vxUpdateProfileBlockBtn(targetUser.id);
+    }
   }
 
   // Load default tab
@@ -18419,7 +18436,8 @@ window.toggleCommentLike = async function (commentId, btn, prefix = 'mv') {
 })();
 
 /* ── Helper: show custom confirm dialog ── */
-function _vxConfirm(title, body, onConfirm) {
+function _vxConfirm(title, body, onConfirm, confirmLabel) {
+  const btnLabel = confirmLabel || '✅ Confirm';
   const ov = document.createElement('div');
   ov.className = 'vx-confirm-overlay';
   ov.innerHTML = `
@@ -18428,7 +18446,7 @@ function _vxConfirm(title, body, onConfirm) {
       <p>${body}</p>
       <div class="vx-confirm-actions">
         <button class="vx-confirm-cancel" id="_vxCancelBtn">Cancel</button>
-        <button class="vx-confirm-delete" id="_vxConfirmBtn">🗑️ Delete</button>
+        <button class="vx-confirm-delete" id="_vxConfirmBtn">${btnLabel}</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -18910,7 +18928,8 @@ window.toggleBlockProfileUser = async function (btn) {
           _vxUpdateDmDrawerBlockState(targetId);
           showMessage('❌ Block failed. Please try again.', 'error');
         }
-      }
+      },
+      '🚫 Block'
     );
   }
 };
