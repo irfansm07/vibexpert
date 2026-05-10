@@ -38,7 +38,6 @@ function parseMusicField(music) {
 // Replace this with your real rewards logic if/when you add that feature back.
 function checkAndUpdateRewards(action) {
   // no-op placeholder — add reward logic here when needed
-  console.log('[Rewards] action:', action);
 }
 
 
@@ -542,170 +541,6 @@ document.addEventListener('click', function (event) {
     emojiPickerVisible = false;
   }
 });
-
-// Voice Recording Functions
-let voiceRecorder = null;
-let voiceRecordingStartTime = null;
-let voiceRecordingTimer = null;
-let voiceRecordingStream = null;
-let voiceAudioChunks = [];
-let isVoiceRecording = false;
-
-function toggleVoiceRecording() {
-  if (isVoiceRecording) {
-    stopVoiceRecording();
-  } else {
-    startVoiceRecording();
-  }
-}
-
-async function startVoiceRecording() {
-  try {
-    // Request microphone access
-    voiceRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    voiceRecorder = new MediaRecorder(voiceRecordingStream);
-    voiceAudioChunks = [];
-
-    voiceRecorder.ondataavailable = (event) => {
-      voiceAudioChunks.push(event.data);
-    };
-
-    voiceRecorder.onstop = () => {
-      const audioBlob = new Blob(voiceAudioChunks, { type: 'audio/wav' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Create voice message element
-      const voiceMessage = {
-        type: 'voice',
-        url: audioUrl,
-        duration: Math.floor((Date.now() - voiceRecordingStartTime) / 1000),
-        timestamp: new Date().toISOString()
-      };
-
-      // Send voice message
-      sendVoiceMessage(voiceMessage);
-    };
-
-    // Start recording
-    voiceRecorder.start();
-    voiceRecordingStartTime = Date.now();
-    isVoiceRecording = true;
-
-    // Update UI
-    const voiceBtn = document.querySelector('.voice-btn');
-    const voiceRecorderEl = document.getElementById('voiceRecorder');
-    const voiceTimer = document.querySelector('.voice-timer');
-
-    voiceBtn.classList.add('recording');
-    voiceRecorderEl.style.display = 'block';
-
-    // Start timer
-    voiceRecordingTimer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - voiceRecordingStartTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      voiceTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }, 1000);
-
-  } catch (error) {
-    console.error('Voice recording error:', error);
-    showMessage('🎤 Microphone access denied', 'error');
-  }
-}
-
-function stopVoiceRecording() {
-  if (voiceRecorder && voiceRecorder.state !== 'inactive') {
-    voiceRecorder.stop();
-  }
-
-  if (voiceRecordingStream) {
-    voiceRecordingStream.getTracks().forEach(track => track.stop());
-  }
-
-  if (voiceRecordingTimer) {
-    clearInterval(voiceRecordingTimer);
-  }
-
-  // Reset UI
-  const voiceBtn = document.querySelector('.voice-btn');
-  const voiceRecorderEl = document.getElementById('voiceRecorder');
-  const voiceTimer = document.querySelector('.voice-timer');
-
-  voiceBtn.classList.remove('recording');
-  voiceRecorderEl.style.display = 'none';
-  voiceTimer.textContent = '00:00';
-
-  isVoiceRecording = false;
-}
-
-function cancelVoiceRecording() {
-  stopVoiceRecording();
-  voiceAudioChunks = [];
-}
-
-function sendVoiceMessage(voiceMessage) {
-  const chatMessages = document.getElementById('chatMessages');
-  if (!chatMessages) return;
-
-  const messageEl = document.createElement('div');
-  messageEl.className = 'chat-message right';
-
-  const durationMinutes = Math.floor(voiceMessage.duration / 60);
-  const durationSeconds = voiceMessage.duration % 60;
-  const durationText = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
-
-  messageEl.innerHTML = `
-    <div class="text">
-      <div class="voice-message-player">
-        <button class="voice-play-btn" onclick="playVoiceMessage('${voiceMessage.url}', this)">▶️</button>
-        <div class="voice-info">
-          <div class="voice-duration">🎤 Voice message • ${durationText}</div>
-          <div class="voice-waveform">
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-            <div class="waveform-bar"></div>
-          </div>
-        </div>
-      </div>
-      <audio src="${voiceMessage.url}" style="display:none;"></audio>
-    </div>
-    <div class="message-time">${formatTime(new Date(voiceMessage.timestamp))}</div>
-  `;
-
-  chatMessages.appendChild(messageEl);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-
-  // Simulate sending to server
-  console.log('Voice message sent:', voiceMessage);
-}
-
-function playVoiceMessage(audioUrl, playBtn) {
-  const audioEl = playBtn.parentElement.nextElementSibling;
-
-  if (audioEl.paused) {
-    // Stop any other playing audio
-    document.querySelectorAll('audio').forEach(audio => {
-      if (!audio.paused) {
-        audio.pause();
-        const otherBtn = audio.previousElementSibling.querySelector('.voice-play-btn');
-        if (otherBtn) otherBtn.textContent = '▶️';
-      }
-    });
-
-    audioEl.play();
-    playBtn.textContent = '⏸️';
-
-    audioEl.onended = () => {
-      playBtn.textContent = '▶️';
-    };
-  } else {
-    audioEl.pause();
-    playBtn.textContent = '▶️';
-  }
-}
 
 // Avatar Animation Functions
 function handleAvatarMove(event, avatarId) {
@@ -1870,23 +1705,37 @@ async function confirmDeleteAccount() {
       progress.remove();
 
       // ── Full cleanup: disconnect socket, wipe all local state ──
-      try { if (typeof socket !== 'undefined' && socket) { socket.disconnect(); socket = null; } } catch {}
-      try { if (typeof io !== 'undefined') io.disconnect?.(); } catch {}
+      try { if (typeof socket !== 'undefined' && socket) { socket.disconnect(); socket = null; } } catch { }
+      try { if (typeof io !== 'undefined') io.disconnect?.(); } catch { }
       currentUser = null;
       window._token = null;
 
+      // Stop any socket-reconnect or badge-poll intervals so they don't
+      // fire with the dead token while the page is still unloading.
+      try { if (window._badgePollInterval) clearInterval(window._badgePollInterval); } catch { }
+      try { if (window._socketReconnectTimer) clearInterval(window._socketReconnectTimer); } catch { }
+
       // Clear every storage mechanism
-      try { localStorage.clear(); } catch {}
-      try { sessionStorage.clear(); } catch {}
+      try { localStorage.clear(); } catch { }
+      try { sessionStorage.clear(); } catch { }
+
+      // Belt-and-braces: explicitly remove every token key the app may have
+      // written, in case localStorage.clear() is blocked by a browser quirk.
+      ['authToken', 'token', 'vx_token', 'user', 'vx_ghost_name',
+        'vx_chat_strikes', 'vx_chat_muted_until', '_vxMyBlockedIds', '_vxBlockedByIds'
+      ].forEach(k => {
+        try { localStorage.removeItem(k); } catch { }
+        try { sessionStorage.removeItem(k); } catch { }
+      });
+
       // Also clear any cookies set by the app
       try {
         document.cookie.split(';').forEach(c => {
           document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
         });
-      } catch {}
+      } catch { }
 
       // Redirect to landing page with flag to auto-open the login popup
-      // (Instagram-style: deleted account → straight to sign in)
       window.location.replace('/?vx_action=login');
     }, 1800);
 
@@ -3750,6 +3599,27 @@ async function showUserProfile(userId) {
       _seedFollowState(userId, effectiveIsFollowing, data.user.followersCount || 0);
       if (!window._mpcCache) window._mpcCache = {};
       window._mpcCache[userId] = data.user;
+
+      // ✅ FIX: Sync block state from MongoDB via profile API response.
+      // This ensures the block button is correct on page reload without waiting
+      // for the separate _vxLoadBlockedList call to complete.
+      if (data.user.isBlockedByMe) {
+        window._vxMyBlockedIds = window._vxMyBlockedIds || new Set();
+        window._vxMyBlockedIds.add(String(userId));
+        try { localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds))); } catch (_) {}
+      } else {
+        // Server says not blocked — remove from local set to stay in sync
+        if (window._vxMyBlockedIds && window._vxMyBlockedIds.has(String(userId))) {
+          window._vxMyBlockedIds.delete(String(userId));
+          try { localStorage.setItem('_vxMyBlockedIds', JSON.stringify(Array.from(window._vxMyBlockedIds))); } catch (_) {}
+        }
+      }
+      if (data.user.isBlockingMe) {
+        window._vxBlockedByIds = window._vxBlockedByIds || new Set();
+        window._vxBlockedByIds.add(String(userId));
+        try { localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds))); } catch (_) {}
+      }
+
       // Show profile page with real data
       showProfilePage(data.user, true);
     } else {
@@ -15111,7 +14981,7 @@ async function openDmDrawer(userId) {
         window._vxBlockedByIds.add(String(userId));
         try {
           localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
-        } catch (_) {}
+        } catch (_) { }
         console.log('[Block] Server confirmed they blocked us — added to _vxBlockedByIds:', userId);
       }
       // Clear the loading spinner and show the block banner
@@ -18923,6 +18793,19 @@ async function _vxLoadBlockedList() {
       localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
       console.log('[Block] Incoming blocked-by list loaded and saved:', Array.from(window._vxBlockedByIds));
     }
+
+    // ✅ FIX: After MongoDB sync, refresh UI if profile page or DM drawer is open.
+    // Without this, block state appears reset after reload until the user manually opens a profile.
+    try {
+      const blockBtn = document.getElementById('blockUserBtn');
+      if (blockBtn && blockBtn.dataset.targetId && blockBtn.dataset.targetId !== 'undefined') {
+        _vxUpdateProfileBlockBtn(blockBtn.dataset.targetId);
+      }
+      if (window._dmCurrentReceiverId) {
+        _vxUpdateDmDrawerBlockState(String(window._dmCurrentReceiverId));
+      }
+    } catch (_) { /* non-fatal UI refresh */ }
+
   } catch (e) {
     console.warn('[Block] Could not load blocked list:', e);
   }
@@ -19146,7 +19029,7 @@ const _vxOrigShowProfilePage = window.showProfilePage || (typeof showProfilePage
       // ✅ FIX: Persist immediately so it survives reload
       try {
         localStorage.setItem('_vxBlockedByIds', JSON.stringify(Array.from(window._vxBlockedByIds)));
-      } catch (_) {}
+      } catch (_) { }
       // If the DM drawer is currently open with this user, update it
       if (window._dmCurrentReceiverId && String(window._dmCurrentReceiverId) === String(blockerId)) {
         _vxUpdateDmDrawerBlockState(blockerId);
