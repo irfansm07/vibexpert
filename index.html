@@ -7852,8 +7852,7 @@
             </button>
 
             <!-- Block / Unblock button — shown only on other users' profiles -->
-            <button id="blockUserBtn"
-              onclick="toggleBlockProfileUser(this)"
+            <button id="blockUserBtn" onclick="toggleBlockProfileUser(this)"
               style="display:none;align-items:center;gap:8px;padding:0 18px;height:48px;min-width:110px;border-radius:14px;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-size:13px;font-weight:700;cursor:pointer;transition:.18s;font-family:inherit;">
               <span id="blockUserBtnIcon">🚫</span>
               <span id="blockUserBtnLabel">Block</span>
@@ -8522,10 +8521,12 @@
             <div id="profileTabInfo" class="tab-pane">
               <!-- Danger Zone — shown only on own profile via JS (showProfilePage sets display) -->
               <div id="deleteAccountSection" style="display:none;margin:28px 0 8px;">
-                <div style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.18);border-radius:16px;padding:20px 20px 18px;">
+                <div
+                  style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.18);border-radius:16px;padding:20px 20px 18px;">
                   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                     <span style="font-size:20px;">⚠️</span>
-                    <h4 style="margin:0;font-size:14px;font-weight:700;color:#fca5a5;letter-spacing:0.02em;">Danger Zone</h4>
+                    <h4 style="margin:0;font-size:14px;font-weight:700;color:#fca5a5;letter-spacing:0.02em;">Danger Zone
+                    </h4>
                   </div>
                   <p style="margin:0 0 16px;font-size:12.5px;color:rgba(255,200,200,0.6);line-height:1.6;">
                     Permanently deletes your account, posts, RealVibes, messages, and all data. This cannot be undone.
