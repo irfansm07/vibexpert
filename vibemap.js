@@ -761,7 +761,7 @@ let colleges = {};
 // Load colleges on startup
 async function loadColleges() {
   try {
-    const url = typeof API_URL !== 'undefined' ? `${API_URL}/colleges.json` : '/colleges.json';
+    const url = './colleges.json';
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3883,12 +3883,6 @@ function showProfilePage(user, _dataAlreadyFresh = false) {
     } else {
       _vxUpdateProfileBlockBtn(targetUser.id);
     }
-  }
-
-  // ✅ Show Delete Account section only when viewing own profile
-  const delSection = document.getElementById('deleteAccountSection');
-  if (delSection) {
-    delSection.style.display = isOwn ? 'block' : 'none';
   }
 
   // Load default tab
