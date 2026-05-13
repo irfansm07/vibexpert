@@ -4,8 +4,8 @@
 // ========================================
 
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.hostname.startsWith('10.') || window.location.protocol === 'file:' || window.location.hostname === '';
-const API_URL = (isLocal && window.location.port !== '5501')
-  ? (window.location.hostname && window.location.hostname !== '' ? `http://${window.location.hostname}:5501` : 'http://localhost:5501')
+const API_URL = isLocal
+  ? (window.location.hostname && window.location.hostname !== '' ? `http://${window.location.hostname}:8080` : 'http://localhost:8080')
   : 'https://vibexpert-backend-main.onrender.com';
 window.API_URL = API_URL;
 
